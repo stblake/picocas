@@ -1,0 +1,52 @@
+#include "eval.h"
+#include "parse.h"
+#include "expr.h"
+#include "symtab.h"
+#include "core.h"
+#include "print.h"
+#include "test_utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void test_logexp_forward() {
+    struct {
+        const char* input;
+        const char* expected;
+    } cases[] = {
+        {"Log[E]", "1"},
+        {"Log[1]", "0"},
+        {"Log[0]", "-1 Infinity"},
+        {"Log[Infinity]", "Infinity"},
+        {"Log[2, 8]", "3"},
+        {"Log[b, b]", "1"},
+        {"Exp[0]", "1"},
+        {"Exp[-Infinity]", "0"},
+        {"Exp[Infinity]", "Infinity"},
+        {"Log[10, 10]", "1"},
+        {"Log[E, x]", "Log[x]"},
+        {"Exp[0.0]", "1.0"},
+        {"Log[-1.0]", "0.0 + 3.14159*I"}, 
+        {"Table[Exp[I * n * Pi / 2], {n, 0, 4}]", "{1, I, -1, -I, 1}"},
+        {NULL, NULL}
+    };
+
+    for (int i = 0; cases[i].input != NULL; i++) {
+        Expr* e = parse_expression(cases[i].input);
+        Expr* res = evaluate(e);
+        char* s = expr_to_string(res);
+        ASSERT_MSG(strcmp(s, cases[i].expected) == 0, "Forward %s: expected %s, got %s", cases[i].input, cases[i].expected, s);
+        free(s);
+        expr_free(e);
+        expr_free(res);
+    }
+}
+
+int main() {
+    symtab_init();
+    core_init();
+    
+    TEST(test_logexp_forward);
+    
+    return 0;
+}
