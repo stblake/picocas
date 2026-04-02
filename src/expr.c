@@ -1,0 +1,377 @@
+#include "expr.h"
+#include "arithmetic.h"
+#include <stdbool.h>
+#include <math.h>
+#include <ctype.h>
+#include <string.h>
+
+// Create/allocate a new integer expression. 
+Expr* expr_new_integer(int64_t value) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_INTEGER;
+    e->data.integer = value;
+    return e;
+}
+
+// Create/allocate a new real (double) expression. 
+Expr* expr_new_real(double value) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_REAL;
+    e->data.real = value;
+    return e;
+}
+
+// Create/allocate a new symbol expression. 
+Expr* expr_new_symbol(const char* name) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_SYMBOL;
+    e->data.symbol = strdup(name);
+    if (!e->data.symbol) {
+        free(e);
+        return NULL;
+    }
+    return e;
+}
+
+// Create/allocate a new string expression. 
+Expr* expr_new_string(const char* str) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    
+    e->type = EXPR_STRING;
+    e->data.string = strdup(str);
+    if (!e->data.string) {
+        free(e);
+        return NULL;
+    }
+    return e;
+}
+
+// Create/allocate an expression: h[arg1, arg2, ...]
+Expr* expr_new_function(Expr* head, Expr** args, size_t arg_count) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    
+    e->type = EXPR_FUNCTION;
+    e->data.function.head = head;  
+    if (arg_count > 0) {
+        e->data.function.args = calloc(arg_count, sizeof(Expr*));
+        if (!e->data.function.args) {
+            free(e);
+            return NULL;
+        }
+        if (args) memcpy(e->data.function.args, args, sizeof(Expr*) * arg_count);
+    } else {
+        e->data.function.args = NULL;
+    }
+    e->data.function.arg_count = arg_count;
+    return e;
+}
+
+// Deallocate an expression. 
+void expr_free(Expr* e) {
+    if (!e) return;
+    
+    switch (e->type) {
+        case EXPR_SYMBOL:
+        case EXPR_STRING:
+            if (e->data.symbol) free(e->data.symbol);
+            break;
+        case EXPR_FUNCTION:
+            if (e->data.function.head) expr_free(e->data.function.head);
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                if (e->data.function.args && e->data.function.args[i]) {
+                    expr_free(e->data.function.args[i]);
+                }
+            }
+            if (e->data.function.args) free(e->data.function.args);
+            break;
+        default:
+            break;
+    }
+    free(e);
+}
+
+
+
+// Create a copy of an expression in memory. 
+Expr* expr_copy(Expr* e) {
+    if (!e) return NULL;
+    
+    Expr* copy = malloc(sizeof(Expr));
+    if (!copy) return NULL;
+    
+    memcpy(copy, e, sizeof(Expr));
+    
+    switch (e->type) {
+        case EXPR_SYMBOL:
+        case EXPR_STRING:
+            copy->data.symbol = strdup(e->data.symbol);
+            if (!copy->data.symbol) {
+                free(copy);
+                return NULL;
+            }
+            break;
+        case EXPR_FUNCTION:
+            copy->data.function.head = expr_copy(e->data.function.head);
+            if (e->data.function.arg_count > 0) {
+                copy->data.function.args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+                if (!copy->data.function.args) {
+                    expr_free(copy->data.function.head);
+                    free(copy);
+                    return NULL;
+                }
+                for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                    copy->data.function.args[i] = expr_copy(e->data.function.args[i]);
+                }
+            } else {
+                copy->data.function.args = NULL;
+            }
+            break;
+        default:
+            break;
+    }
+    
+    return copy;
+}
+
+bool expr_eq(const Expr* a, const Expr* b) {
+    if (a == b) return true;
+    if (!a || !b) return false;
+    if (a->type != b->type) return false;
+    
+    switch (a->type) {
+        case EXPR_INTEGER:
+            return a->data.integer == b->data.integer;
+        case EXPR_REAL:
+            if (isnan(a->data.real) && isnan(b->data.real)) return true;
+            return a->data.real == b->data.real;
+        case EXPR_SYMBOL:
+            return strcmp(a->data.symbol, b->data.symbol) == 0;
+        case EXPR_STRING:
+            return strcmp(a->data.string, b->data.string) == 0;
+        case EXPR_FUNCTION: {
+            if (!expr_eq(a->data.function.head, b->data.function.head)) return false;
+            if (a->data.function.arg_count != b->data.function.arg_count) return false;
+            for (size_t i = 0; i < a->data.function.arg_count; i++) {
+                if (!expr_eq(a->data.function.args[i], b->data.function.args[i])) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+static int get_canonical_rank(const Expr* e) {
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational((Expr*)e, NULL, NULL)) return 0;
+    if (is_complex((Expr*)e, NULL, NULL)) return 1;
+    if (e->type == EXPR_STRING) return 2;
+    if (e->type == EXPR_SYMBOL) return 3;
+    return 4; // General function
+}
+
+static double get_numeric_value(const Expr* e) {
+    if (e->type == EXPR_INTEGER) return (double)e->data.integer;
+    if (e->type == EXPR_REAL) return e->data.real;
+    int64_t n, d;
+    if (is_rational((Expr*)e, &n, &d)) return (double)n / d;
+    return 0;
+}
+
+static int string_compare_canonical(const char* s1, const char* s2) {
+    const char* p1 = s1;
+    const char* p2 = s2;
+    while (*p1 && *p2) {
+        char l1 = tolower((unsigned char)*p1);
+        char l2 = tolower((unsigned char)*p2);
+        if (l1 != l2) return (l1 < l2) ? -1 : 1;
+        p1++; p2++;
+    }
+    if (*p1) return 1;
+    if (*p2) return -1;
+    
+    p1 = s1; p2 = s2;
+    while (*p1 && *p2) {
+        if (*p1 != *p2) {
+            if (islower((unsigned char)*p1) && !islower((unsigned char)*p2)) return -1;
+            if (!islower((unsigned char)*p1) && islower((unsigned char)*p2)) return 1;
+            return (*p1 < *p2) ? -1 : 1;
+        }
+        p1++; p2++;
+    }
+    return 0;
+}
+
+static Expr* get_main_factor(Expr* e) {
+    if (e->type != EXPR_FUNCTION) return e;
+    Expr* head = e->data.function.head;
+    if (head->type != EXPR_SYMBOL) return e;
+    
+    if (strcmp(head->data.symbol, "Power") == 0 && e->data.function.arg_count >= 1) {
+        return get_main_factor(e->data.function.args[0]);
+    }
+    if (strcmp(head->data.symbol, "Times") == 0 && e->data.function.arg_count >= 1) {
+        Expr* first = e->data.function.args[0];
+        if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || is_rational(first, NULL, NULL)) {
+            if (e->data.function.arg_count == 2) return get_main_factor(e->data.function.args[1]);
+            return e->data.function.args[1];
+        }
+    }
+    return e;
+}
+
+int expr_compare(const Expr* a, const Expr* b) {
+    if (a == b) return 0;
+    if (!a) return -1;
+    if (!b) return 1;
+
+    // char* sa = expr_to_string_fullform((Expr*)a);
+    // char* sb = expr_to_string_fullform((Expr*)b);
+    // printf("DEBUG: expr_compare(%s, %s)\n", sa, sb);
+    // free(sa); free(sb);
+
+    // Special polynomial order: compare main factors first
+    Expr* ma = get_main_factor((Expr*)a);
+    Expr* mb = get_main_factor((Expr*)b);
+    
+    if (ma != a || mb != b) {
+        int mcmp = expr_compare(ma, mb);
+        if (mcmp != 0) return mcmp;
+    }
+
+    int rank_a = get_canonical_rank(a);
+    int rank_b = get_canonical_rank(b);
+
+    if (rank_a != rank_b) return rank_a - rank_b;
+
+    switch (rank_a) {
+        case 0: { // Number
+            double va = get_numeric_value(a);
+            double vb = get_numeric_value(b);
+            if (va < vb) return -1;
+            if (va > vb) return 1;
+            if (a->type != b->type) return (int)a->type - (int)b->type;
+            return 0;
+        }
+        case 1: { // Complex
+            Expr *re_a, *im_a, *re_b, *im_b;
+            is_complex((Expr*)a, &re_a, &im_a);
+            is_complex((Expr*)b, &re_b, &im_b);
+            int cmp = expr_compare(re_a, re_b);
+            if (cmp != 0) return cmp;
+            double abs_ima = fabs(get_numeric_value(im_a));
+            double abs_imb = fabs(get_numeric_value(im_b));
+            if (abs_ima < abs_imb) return -1;
+            if (abs_ima > abs_imb) return 1;
+            return expr_compare(im_a, im_b);
+        }
+        case 2: // String
+            return string_compare_canonical(a->data.string, b->data.string);
+        case 3: // Symbol
+            return strcmp(a->data.symbol, b->data.symbol);
+        case 4: { // General Function
+            Expr* ha = a->data.function.head;
+            Expr* hb = b->data.function.head;
+            
+            bool plus_a = (ha->type == EXPR_SYMBOL && strcmp(ha->data.symbol, "Plus") == 0);
+            bool plus_b = (hb->type == EXPR_SYMBOL && strcmp(hb->data.symbol, "Plus") == 0);
+            if (plus_a && !plus_b) return 1;
+            if (!plus_a && plus_b) return -1;
+
+            if (ha->type == EXPR_SYMBOL && hb->type == EXPR_SYMBOL) {
+                const char* na = ha->data.symbol;
+                const char* nb = hb->data.symbol;
+                if (strcmp(na, "Times") == 0 && strcmp(nb, "Power") == 0) return -1;
+                if (strcmp(na, "Power") == 0 && strcmp(nb, "Times") == 0) return 1;
+
+                if (strcmp(na, "Times") == 0 && strcmp(nb, "Times") == 0) {
+                    size_t start_a = (a->data.function.arg_count > 0 && 
+                                      (a->data.function.args[0]->type == EXPR_INTEGER || 
+                                       a->data.function.args[0]->type == EXPR_REAL ||
+                                       is_rational(a->data.function.args[0], NULL, NULL))) ? 1 : 0;
+                    size_t start_b = (b->data.function.arg_count > 0 && 
+                                      (b->data.function.args[0]->type == EXPR_INTEGER || 
+                                       b->data.function.args[0]->type == EXPR_REAL ||
+                                       is_rational(b->data.function.args[0], NULL, NULL))) ? 1 : 0;
+                    
+                    size_t count_a = a->data.function.arg_count - start_a;
+                    size_t count_b = b->data.function.arg_count - start_b;
+                    size_t min_count = (count_a < count_b) ? count_a : count_b;
+                    
+                    for (size_t i = 0; i < min_count; i++) {
+                        int cmp = expr_compare(a->data.function.args[start_a + i], b->data.function.args[start_b + i]);
+                        if (cmp != 0) return cmp;
+                    }
+                    if (count_a < count_b) return -1;
+                    if (count_a > count_b) return 1;
+                    
+                    if (start_a > 0 && start_b > 0) return expr_compare(a->data.function.args[0], b->data.function.args[0]);
+                    if (start_a > 0) return -1;
+                    if (start_b > 0) return 1;
+                }
+            }
+
+            if (a->data.function.arg_count < b->data.function.arg_count) return -1;
+            if (a->data.function.arg_count > b->data.function.arg_count) return 1;
+            
+            int head_cmp = expr_compare(ha, hb);
+            if (head_cmp != 0) return head_cmp;
+            
+            for (size_t i = 0; i < a->data.function.arg_count; i++) {
+                int arg_cmp = expr_compare(a->data.function.args[i], b->data.function.args[i]);
+                if (arg_cmp != 0) return arg_cmp;
+            }
+            return 0;
+        }
+    }
+    return 0;
+}
+
+uint64_t expr_hash(const Expr* e) {
+    if (!e) return 0;
+    uint64_t h = 14695981039346656037ULL;
+    const uint64_t prime = 1099511628211ULL;
+
+    h ^= (uint64_t)e->type;
+    h *= prime;
+
+    switch (e->type) {
+        case EXPR_INTEGER: {
+            uint64_t v;
+            memcpy(&v, &e->data.integer, 8);
+            h ^= v; h *= prime;
+            break;
+        }
+        case EXPR_REAL: {
+            uint64_t v;
+            memcpy(&v, &e->data.real, 8);
+            h ^= v; h *= prime;
+            break;
+        }
+        case EXPR_SYMBOL:
+        case EXPR_STRING: {
+            const char* s = e->data.symbol;
+            if (s) {
+                while (*s) {
+                    h ^= (uint8_t)(*s++);
+                    h *= prime;
+                }
+            }
+            break;
+        }
+        case EXPR_FUNCTION: {
+            h ^= expr_hash(e->data.function.head);
+            h *= prime;
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                h ^= expr_hash(e->data.function.args[i]);
+                h *= prime;
+            }
+            break;
+        }
+    }
+    return h;
+}
+

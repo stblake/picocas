@@ -1,0 +1,263 @@
+#include "power.h"
+#include "arithmetic.h"
+#include "times.h"
+#include <math.h>
+#include <complex.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+static int64_t ipow(int64_t base, int64_t exp, bool* overflow) {
+    if (exp < 0) return 0;
+    if (exp == 0) return 1;
+    if (base == 0) return 0;
+    if (base == 1) return 1;
+    if (base == -1) return (exp % 2 == 0) ? 1 : -1;
+
+    __int128_t res = 1;
+    __int128_t b = base;
+    while (exp > 0) {
+        if (exp % 2 == 1) {
+            res *= b;
+            if (res > INT64_MAX || res < INT64_MIN) {
+                *overflow = true;
+                return 0;
+            }
+        }
+        exp /= 2;
+        if (exp > 0) {
+            b *= b;
+        }
+    }
+    return (int64_t)res;
+}
+
+static void factor_out_kth_power(int64_t n, int64_t k, int64_t* out_m, int64_t* out_r) {
+    int64_t m = 1;
+    int64_t r = n;
+    int64_t d = 2;
+    while (d * d <= r) {
+        bool ov = false;
+        int64_t dk = ipow(d, k, &ov);
+        if (ov || dk <= 0 || dk > r) {
+            if (ov || dk > r) break;
+            d++;
+            continue;
+        }
+        while (r % dk == 0) {
+            m *= d;
+            r /= dk;
+        }
+        d++;
+    }
+    *out_m = m;
+    *out_r = r;
+}
+
+Expr* make_power(Expr* base, Expr* exp) {
+    Expr* args[2] = { base, exp };
+    return expr_new_function(expr_new_symbol("Power"), args, 2);
+}
+
+Expr* builtin_power(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    
+    size_t n_args = res->data.function.arg_count;
+    if (n_args == 0) return NULL; 
+    
+    if (n_args > 2) {
+        Expr** sub_args = malloc(sizeof(Expr*) * (n_args - 1));
+        for (size_t i = 0; i < n_args - 1; i++) {
+            sub_args[i] = expr_copy(res->data.function.args[i+1]);
+        }
+        Expr* sub_power = expr_new_function(expr_new_symbol("Power"), sub_args, n_args - 1);
+        free(sub_args);
+        
+        Expr* final_args[2] = { expr_copy(res->data.function.args[0]), sub_power };
+        return expr_new_function(expr_new_symbol("Power"), final_args, 2);
+    }
+
+    if (n_args == 1) return NULL;
+
+    Expr* base = res->data.function.args[0];
+    Expr* exp = res->data.function.args[1];
+
+    if (exp->type == EXPR_INTEGER && exp->data.integer == 0) return expr_new_integer(1);
+    if (exp->type == EXPR_INTEGER && exp->data.integer == 1) return expr_copy(base);
+    if (base->type == EXPR_INTEGER && base->data.integer == 1) return expr_new_integer(1);
+
+    Expr *re_b = NULL, *im_b = NULL, *re_e = NULL, *im_e = NULL;
+    bool base_comp = is_complex(base, &re_b, &im_b);
+    bool exp_comp = is_complex(exp, &re_e, &im_e);
+
+    if (base_comp || exp_comp || base->type == EXPR_REAL || exp->type == EXPR_REAL) {
+        bool base_num = (base->type == EXPR_INTEGER || base->type == EXPR_REAL || is_rational(base, NULL, NULL) || base_comp);
+        bool exp_num = (exp->type == EXPR_INTEGER || exp->type == EXPR_REAL || is_rational(exp, NULL, NULL) || exp_comp);
+
+        if (base_num && exp_num) {
+            bool has_real = (base->type == EXPR_REAL || exp->type == EXPR_REAL || 
+                            (base_comp && (re_b->type == EXPR_REAL || im_b->type == EXPR_REAL)) || 
+                            (exp_comp && (re_e->type == EXPR_REAL || im_e->type == EXPR_REAL)));
+            if (has_real) {
+                double vbase_re = 0, vbase_im = 0, vexp_re = 0, vexp_im = 0;
+                int64_t n, d;
+                
+                if (base_comp) {
+                    vbase_re = (re_b->type == EXPR_REAL) ? re_b->data.real : (re_b->type == EXPR_INTEGER) ? (double)re_b->data.integer : 0;
+                    vbase_im = (im_b->type == EXPR_REAL) ? im_b->data.real : (im_b->type == EXPR_INTEGER) ? (double)im_b->data.integer : 0;
+                    if (is_rational(re_b, &n, &d)) vbase_re = (double)n / d;
+                    if (is_rational(im_b, &n, &d)) vbase_im = (double)n / d;
+                } else {
+                    vbase_re = (base->type == EXPR_REAL) ? base->data.real : (base->type == EXPR_INTEGER) ? (double)base->data.integer : 0;
+                    if (is_rational(base, &n, &d)) vbase_re = (double)n / d;
+                }
+                
+                if (exp_comp) {
+                    vexp_re = (re_e->type == EXPR_REAL) ? re_e->data.real : (re_e->type == EXPR_INTEGER) ? (double)re_e->data.integer : 0;
+                    vexp_im = (im_e->type == EXPR_REAL) ? im_e->data.real : (im_e->type == EXPR_INTEGER) ? (double)im_e->data.integer : 0;
+                    if (is_rational(re_e, &n, &d)) vexp_re = (double)n / d;
+                    if (is_rational(im_e, &n, &d)) vexp_im = (double)n / d;
+                } else {
+                    vexp_re = (exp->type == EXPR_REAL) ? exp->data.real : (exp->type == EXPR_INTEGER) ? (double)exp->data.integer : 0;
+                    if (is_rational(exp, &n, &d)) vexp_re = (double)n / d;
+                }
+
+                double complex z = vbase_re + vbase_im * I;
+                double complex w = vexp_re + vexp_im * I;
+                
+                if (vbase_re < 0.0 && vbase_im == 0.0 && vexp_im == 0.0 && floor(vexp_re) != vexp_re) {
+                    double r = pow(-vbase_re, vexp_re);
+                    double theta = vexp_re * 3.14159265358979323846;
+                    Expr* c_re = expr_new_real(r * cos(theta));
+                    Expr* c_im = expr_new_real(r * sin(theta));
+                    Expr* comp = make_complex(c_re, c_im);
+                    expr_free(c_re);
+                    expr_free(c_im);
+                    return comp;
+                }
+                
+                double complex result = cpow(z, w);
+                double r_re = creal(result);
+                double r_im = cimag(result);
+                
+                if (r_im == 0.0 || (fabs(r_im) < 1e-14 && fabs(r_re) > 1e-14)) {
+                    return expr_new_real(r_re);
+                }
+                
+                Expr* c_re = expr_new_real(r_re);
+                Expr* c_im = expr_new_real(r_im);
+                Expr* comp = make_complex(c_re, c_im);
+                expr_free(c_re);
+                expr_free(c_im);
+                return comp;
+            }
+        }
+    }
+    
+    if (base_comp && exp->type == EXPR_INTEGER) {
+        int64_t e = exp->data.integer;
+        if (e >= 0 && e < 1000) { 
+            Expr** prod_args = malloc(sizeof(Expr*) * (size_t)e);
+            for(int64_t i=0; i<e; i++) prod_args[i] = expr_copy(base);
+            Expr* prod = expr_new_function(expr_new_symbol("Times"), prod_args, (size_t)e);
+            free(prod_args);
+            return prod;
+        }
+    }
+
+    if (base->type == EXPR_INTEGER && exp->type == EXPR_INTEGER) {
+        int64_t b = base->data.integer;
+        int64_t e = exp->data.integer;
+        if (e > 0) {
+            bool overflow = false;
+            int64_t res_val = ipow(b, e, &overflow);
+            if (overflow) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+            return expr_new_integer(res_val);
+        }
+        if (e < 0) {
+            bool overflow = false;
+            int64_t res_val = ipow(b, -e, &overflow);
+            if (overflow) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+            return make_rational(1, res_val);
+        }
+    }
+
+    if (exp->type == EXPR_INTEGER && base->type == EXPR_FUNCTION && strcmp(base->data.function.head->data.symbol, "Times") == 0) {
+        size_t bc = base->data.function.arg_count;
+        Expr** new_args = malloc(sizeof(Expr*) * bc);
+        for (size_t i = 0; i < bc; i++) {
+            Expr* p_args[2] = { expr_copy(base->data.function.args[i]), expr_copy(exp) };
+            new_args[i] = expr_new_function(expr_new_symbol("Power"), p_args, 2);
+        }
+        Expr* result = expr_new_function(expr_new_symbol("Times"), new_args, bc);
+        free(new_args);
+        return result;
+    }
+
+    if (exp->type == EXPR_INTEGER && base->type == EXPR_FUNCTION && strcmp(base->data.function.head->data.symbol, "Power") == 0) {
+        if (base->data.function.arg_count == 2) {
+            Expr* inner_base = base->data.function.args[0];
+            Expr* inner_exp = base->data.function.args[1];
+            Expr* t_args[2] = { expr_copy(inner_exp), expr_copy(exp) };
+            Expr* new_exp = expr_new_function(expr_new_symbol("Times"), t_args, 2);
+            Expr* p_args[2] = { expr_copy(inner_base), new_exp };
+            return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+        }
+    }
+
+    int64_t p, q;
+    if (base->type == EXPR_INTEGER && is_rational(exp, &p, &q) && q > 1) {
+        int64_t n = base->data.integer;
+        if (n < 0) {
+            if (q == 2) {
+                Expr* i_val = expr_new_function(expr_new_symbol("Complex"), (Expr*[]){expr_new_integer(0), expr_new_integer(1)}, 2);
+                Expr* pos_base = expr_new_integer(-n);
+                Expr* tmp_p_args[2] = { pos_base, expr_copy(exp) };
+                Expr* tmp_power = expr_new_function(expr_new_symbol("Power"), tmp_p_args, 2);
+                Expr* rest = builtin_power(tmp_power);
+                if (!rest) rest = tmp_power; else expr_free(tmp_power);
+                if (p == 1) {
+                    Expr* t_args[2] = { i_val, rest };
+                    return expr_new_function(expr_new_symbol("Times"), t_args, 2);
+                } else {
+                    expr_free(i_val);
+                    expr_free(rest);
+                    return NULL;
+                }
+            }
+            return NULL;
+        }
+        int64_t m, r;
+        factor_out_kth_power(n, q, &m, &r);
+        if (m > 1) {
+            Expr* coeff = NULL;
+            if (p == 1) {
+                coeff = expr_new_integer(m);
+            } else {
+                Expr* m_p_args[2] = { expr_new_integer(m), expr_new_integer(p) };
+                Expr* tmp_m_power = expr_new_function(expr_new_symbol("Power"), m_p_args, 2);
+                coeff = builtin_power(tmp_m_power);
+                if (!coeff) coeff = tmp_m_power; else expr_free(tmp_m_power);
+            }
+            Expr* residue = NULL;
+            if (r == 1) {
+                residue = expr_new_integer(1);
+            } else {
+                Expr* r_p_args[2] = { expr_new_integer(r), expr_copy(exp) };
+                residue = expr_new_function(expr_new_symbol("Power"), r_p_args, 2);
+            }
+            Expr* t_args[2] = { coeff, residue };
+            return expr_new_function(expr_new_symbol("Times"), t_args, 2);
+        }
+    }
+
+    return NULL;
+}
+
+Expr* builtin_sqrt(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    Expr* half = make_rational(1, 2);
+    Expr* p_args[2] = { expr_copy(arg), half };
+    return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+}

@@ -1,0 +1,1611 @@
+#include "list.h"
+#include "symtab.h"
+#include "eval.h"
+#include "core.h"
+#include "arithmetic.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+
+Expr* builtin_table(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) return NULL;
+    
+    if (res->data.function.arg_count > 2) {
+        Expr** inner_args = malloc(sizeof(Expr*) * 2);
+        inner_args[0] = expr_copy(res->data.function.args[0]);
+        inner_args[1] = expr_copy(res->data.function.args[res->data.function.arg_count - 1]);
+        Expr* inner_table = expr_new_function(expr_new_symbol("Table"), inner_args, 2);
+        
+        Expr** outer_args = malloc(sizeof(Expr*) * (res->data.function.arg_count - 1));
+        outer_args[0] = inner_table;
+        for (size_t i = 1; i < res->data.function.arg_count - 1; i++) {
+            outer_args[i] = expr_copy(res->data.function.args[i]);
+        }
+        Expr* outer_table = expr_new_function(expr_new_symbol("Table"), outer_args, res->data.function.arg_count - 1);
+        Expr* eval_outer = evaluate(outer_table);
+        expr_free(outer_table);
+        return eval_outer;
+    }
+    
+    Expr* expr = res->data.function.args[0];
+    Expr* spec = res->data.function.args[1];
+    
+    Expr* var_sym = NULL;
+    Expr* imin_e = NULL;
+    Expr* imax_e = NULL;
+    Expr* di_e = NULL;
+    Expr* list_e = NULL;
+    int is_n_times = 0;
+    int is_list_iter = 0;
+    double min_val = 0, max_val = 0, di_val = 0;
+    bool is_real = false;
+
+    if (spec->type == EXPR_FUNCTION && spec->data.function.head->type == EXPR_SYMBOL && strcmp(spec->data.function.head->data.symbol, "List") == 0) {
+        size_t len = spec->data.function.arg_count;
+        if (len == 1) {
+            imax_e = evaluate(spec->data.function.args[0]);
+            is_n_times = 1;
+        } else if (len >= 2) {
+            var_sym = spec->data.function.args[0];
+            if (var_sym->type != EXPR_SYMBOL) return NULL; 
+            
+            if (len == 2) {
+                Expr* bound = evaluate(spec->data.function.args[1]);
+                if (bound->type == EXPR_FUNCTION && bound->data.function.head->type == EXPR_SYMBOL && strcmp(bound->data.function.head->data.symbol, "List") == 0) {
+                    list_e = bound;
+                    is_list_iter = 1;
+                } else {
+                    imin_e = expr_new_integer(1);
+                    imax_e = bound;
+                    di_e = expr_new_integer(1);
+                }
+            } else if (len == 3) {
+                imin_e = evaluate(spec->data.function.args[1]);
+                imax_e = evaluate(spec->data.function.args[2]);
+                di_e = expr_new_integer(1);
+            } else if (len == 4) {
+                imin_e = evaluate(spec->data.function.args[1]);
+                imax_e = evaluate(spec->data.function.args[2]);
+                di_e = evaluate(spec->data.function.args[3]);
+            } else {
+                return NULL;
+            }
+        }
+    } else {
+        imax_e = evaluate(spec);
+        is_n_times = 1;
+    }
+    
+    if (is_n_times) {
+        if (imax_e->type != EXPR_INTEGER) goto L_fail;
+    } else if (!is_list_iter) {
+        if (imin_e->type == EXPR_REAL || imax_e->type == EXPR_REAL || di_e->type == EXPR_REAL) is_real = true;
+        
+        int64_t n, d;
+        if (imin_e->type == EXPR_INTEGER) min_val = (double)imin_e->data.integer;
+        else if (imin_e->type == EXPR_REAL) min_val = imin_e->data.real;
+        else if (is_rational(imin_e, &n, &d)) min_val = (double)n / d;
+        else goto L_fail;
+        
+        if (imax_e->type == EXPR_INTEGER) max_val = (double)imax_e->data.integer;
+        else if (imax_e->type == EXPR_REAL) max_val = imax_e->data.real;
+        else if (is_rational(imax_e, &n, &d)) max_val = (double)n / d;
+        else goto L_fail;
+        
+        if (di_e->type == EXPR_INTEGER) di_val = (double)di_e->data.integer;
+        else if (di_e->type == EXPR_REAL) di_val = di_e->data.real;
+        else if (is_rational(di_e, &n, &d)) di_val = (double)n / d;
+        else goto L_fail;
+        
+        if (di_val == 0) goto L_fail;
+    }
+    
+    size_t results_cap = 16;
+    size_t results_count = 0;
+    Expr** results = malloc(sizeof(Expr*) * results_cap);
+
+    Rule* old_own = NULL;
+    if (var_sym) {
+        SymbolDef* def = symtab_get_def(var_sym->data.symbol);
+        old_own = def->own_values;
+        def->own_values = NULL;
+    }
+
+    if (is_n_times) {
+        int64_t n = imax_e->data.integer;
+        for (int64_t i = 0; i < n; i++) {
+            Expr* eval_expr = evaluate(expr);
+            if (results_count == results_cap) { results_cap *= 2; results = realloc(results, sizeof(Expr*) * results_cap); }
+            results[results_count++] = eval_expr;
+        }
+    } else if (is_list_iter) {
+        for (size_t i = 0; i < list_e->data.function.arg_count; i++) {
+            symtab_add_own_value(var_sym->data.symbol, var_sym, list_e->data.function.args[i]);
+            Expr* eval_expr = evaluate(expr);
+            if (results_count == results_cap) { results_cap *= 2; results = realloc(results, sizeof(Expr*) * results_cap); }
+            results[results_count++] = eval_expr;
+        }
+    } else {
+        double val = min_val;
+        int steps = 0;
+        Expr* curr_e = expr_copy(imin_e);
+        while ((di_val > 0 && val <= max_val + 1e-14) || (di_val < 0 && val >= max_val - 1e-14)) {
+            Expr* i_val = is_real ? expr_new_real(val) : expr_copy(curr_e);
+            symtab_add_own_value(var_sym->data.symbol, var_sym, i_val);
+            
+            Expr* eval_expr = evaluate(expr);
+            if (results_count == results_cap) { results_cap *= 2; results = realloc(results, sizeof(Expr*) * results_cap); }
+            results[results_count++] = eval_expr;
+            
+            expr_free(i_val);
+            
+            Expr* next_args[2] = { expr_copy(curr_e), expr_copy(di_e) };
+            Expr* next_expr = expr_new_function(expr_new_symbol("Plus"), next_args, 2);
+            Expr* next_e = evaluate(next_expr);
+            expr_free(next_expr);
+            expr_free(curr_e);
+            curr_e = next_e;
+            
+            val += di_val;
+            steps++;
+            if (steps > 1000000) break; 
+        }
+        if (curr_e) expr_free(curr_e);
+    }
+
+    if (var_sym) {
+        SymbolDef* def = symtab_get_def(var_sym->data.symbol);
+        Rule* temp_own = def->own_values;
+        while (temp_own) {
+            Rule* next = temp_own->next;
+            expr_free(temp_own->pattern);
+            expr_free(temp_own->replacement);
+            free(temp_own);
+            temp_own = next;
+        }
+        def->own_values = old_own;
+    }
+
+    if (imax_e) expr_free(imax_e);
+    if (imin_e) expr_free(imin_e);
+    if (di_e) expr_free(di_e);
+    if (list_e) expr_free(list_e);
+
+    Expr* result_list = expr_new_function(expr_new_symbol("List"), results, results_count);
+    free(results);
+    return result_list;
+
+L_fail:
+    if (imin_e) expr_free(imin_e);
+    if (imax_e) expr_free(imax_e);
+    if (di_e) expr_free(di_e);
+    if (list_e) expr_free(list_e);
+    return NULL;
+}
+
+static Expr* array_helper(Expr* f, Expr** n_array, Expr** r_array, size_t dim_count, size_t current_dim, Expr** current_args) {
+    if (current_dim == dim_count) {
+        Expr** fn_args = malloc(sizeof(Expr*) * dim_count);
+        for (size_t i = 0; i < dim_count; i++) fn_args[i] = expr_copy(current_args[i]);
+        Expr* fn_expr = expr_new_function(expr_copy(f), fn_args, dim_count);
+        Expr* eval_fn = evaluate(fn_expr);
+        expr_free(fn_expr);
+        return eval_fn;
+    }
+
+    Expr* n_expr = n_array[current_dim];
+    Expr* r_expr = r_array[current_dim];
+    
+    int64_t n_val = n_expr->data.integer;
+    Expr** results = malloc(sizeof(Expr*) * (size_t)n_val);
+    if (n_val == 0) {
+        free(results);
+        return expr_new_function(expr_new_symbol("List"), NULL, 0);
+    }
+    
+    int is_range = 0;
+    Expr* a_expr = NULL;
+    Expr* b_expr = NULL;
+    
+    if (r_expr && r_expr->type == EXPR_FUNCTION && r_expr->data.function.head->type == EXPR_SYMBOL && strcmp(r_expr->data.function.head->data.symbol, "List") == 0 && r_expr->data.function.arg_count == 2) {
+        is_range = 1;
+        a_expr = r_expr->data.function.args[0];
+        b_expr = r_expr->data.function.args[1];
+    }
+    
+    Expr* r_base = NULL;
+    if (!is_range) {
+        r_base = r_expr ? expr_copy(r_expr) : expr_new_integer(1);
+    }
+    
+    for (int64_t i = 0; i < n_val; i++) {
+        Expr* arg = NULL;
+        if (is_range) {
+            if (n_val == 1) {
+                arg = expr_copy(a_expr);
+            } else {
+                Expr* diff = expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(b_expr), expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(a_expr)}, 2)}, 2);
+                Expr* frac = expr_new_function(expr_new_symbol("Divide"), (Expr*[]){expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(i), diff}, 2), expr_new_integer(n_val - 1)}, 2);
+                Expr* sum = expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(a_expr), frac}, 2);
+                arg = evaluate(sum);
+                expr_free(sum);
+            }
+        } else {
+            if (i == 0) {
+                arg = expr_copy(r_base);
+            } else {
+                Expr* sum = expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(r_base), expr_new_integer(i)}, 2);
+                arg = evaluate(sum);
+                expr_free(sum);
+            }
+        }
+        
+        current_args[current_dim] = arg;
+        results[i] = array_helper(f, n_array, r_array, dim_count, current_dim + 1, current_args);
+        expr_free(arg);
+    }
+    
+    if (r_base) expr_free(r_base);
+    
+    return expr_new_function(expr_new_symbol("List"), results, (size_t)n_val);
+}
+
+Expr* builtin_array(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2 || res->data.function.arg_count > 3) return NULL;
+    
+    Expr* f = res->data.function.args[0];
+    Expr* n_spec = res->data.function.args[1];
+    Expr* r_spec = res->data.function.arg_count == 3 ? res->data.function.args[2] : NULL;
+    
+    size_t dim_count = 1;
+    if (n_spec->type == EXPR_FUNCTION && n_spec->data.function.head->type == EXPR_SYMBOL && strcmp(n_spec->data.function.head->data.symbol, "List") == 0) {
+        dim_count = n_spec->data.function.arg_count;
+        if (dim_count == 0) return NULL;
+    }
+    
+    Expr** n_array = malloc(sizeof(Expr*) * dim_count);
+    Expr** r_array = malloc(sizeof(Expr*) * dim_count);
+    
+    if (n_spec->type == EXPR_FUNCTION && n_spec->data.function.head->type == EXPR_SYMBOL && strcmp(n_spec->data.function.head->data.symbol, "List") == 0) {
+        for(size_t i=0; i<dim_count; i++) n_array[i] = n_spec->data.function.args[i];
+    } else {
+        n_array[0] = n_spec;
+    }
+    
+    if (r_spec) {
+        if (r_spec->type == EXPR_FUNCTION && r_spec->data.function.head->type == EXPR_SYMBOL && strcmp(r_spec->data.function.head->data.symbol, "List") == 0 && r_spec->data.function.arg_count == dim_count) {
+            for(size_t i=0; i<dim_count; i++) r_array[i] = r_spec->data.function.args[i];
+        } else {
+            for(size_t i=0; i<dim_count; i++) r_array[i] = r_spec;
+        }
+    } else {
+        for(size_t i=0; i<dim_count; i++) r_array[i] = NULL;
+    }
+    
+    for (size_t i = 0; i < dim_count; i++) {
+        if (n_array[i]->type != EXPR_INTEGER || n_array[i]->data.integer < 0) {
+            free(n_array);
+            free(r_array);
+            return NULL;
+        }
+    }
+    
+    Expr** current_args = malloc(sizeof(Expr*) * dim_count);
+    Expr* result = array_helper(f, n_array, r_array, dim_count, 0, current_args);
+    free(current_args);
+    
+    free(n_array);
+    free(r_array);
+    
+    return result;
+}
+
+static bool get_seq_spec_indices(Expr* spec, int64_t len, int64_t** out_indices, size_t* out_count) {
+    int64_t m = 0, n = 0, s = 1;
+    bool is_all = false;
+    bool is_none = false;
+
+    if (spec->type == EXPR_SYMBOL) {
+        if (strcmp(spec->data.symbol, "All") == 0) {
+            is_all = true;
+        } else if (strcmp(spec->data.symbol, "None") == 0) {
+            is_none = true;
+        } else {
+            return false;
+        }
+    } else if (spec->type == EXPR_INTEGER) {
+        int64_t k = spec->data.integer;
+        if (k >= 0) {
+            m = 1;
+            n = k;
+            if (n > len) return false;
+        } else {
+            m = len + k + 1;
+            n = len;
+            if (m < 1) return false;
+        }
+    } else if (spec->type == EXPR_FUNCTION) {
+        const char* head = spec->data.function.head->type == EXPR_SYMBOL ? spec->data.function.head->data.symbol : "";
+        if (strcmp(head, "UpTo") == 0 && spec->data.function.arg_count == 1 && spec->data.function.args[0]->type == EXPR_INTEGER) {
+            int64_t k = spec->data.function.args[0]->data.integer;
+            if (k >= 0) {
+                m = 1;
+                n = k > len ? len : k;
+            } else {
+                m = len + k + 1;
+                if (m < 1) m = 1;
+                n = len;
+            }
+        } else if (strcmp(head, "List") == 0) {
+            size_t count = spec->data.function.arg_count;
+            if (count >= 1 && count <= 3) {
+                if (spec->data.function.args[0]->type != EXPR_INTEGER) return false;
+                m = spec->data.function.args[0]->data.integer;
+                m = m < 0 ? len + m + 1 : m;
+                
+                if (count == 1) {
+                    n = m;
+                } else {
+                    if (spec->data.function.args[1]->type != EXPR_INTEGER) return false;
+                    n = spec->data.function.args[1]->data.integer;
+                    n = n < 0 ? len + n + 1 : n;
+                    
+                    if (count == 3) {
+                        if (spec->data.function.args[2]->type != EXPR_INTEGER) return false;
+                        s = spec->data.function.args[2]->data.integer;
+                        if (s == 0) return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    if (is_all) {
+        *out_count = (size_t)len;
+        if (len > 0) {
+            *out_indices = malloc(sizeof(int64_t) * (size_t)len);
+            for (int64_t i = 0; i < len; i++) (*out_indices)[i] = i + 1;
+        } else {
+            *out_indices = NULL;
+        }
+        return true;
+    }
+    if (is_none) {
+        *out_count = 0;
+        *out_indices = NULL;
+        return true;
+    }
+
+    int64_t count = 0;
+    if (s > 0) {
+        if (m <= n) count = (n - m) / s + 1;
+    } else if (s < 0) {
+        if (m >= n) count = (m - n) / (-s) + 1;
+    }
+
+    if (count > 0) {
+        int64_t* indices = malloc(sizeof(int64_t) * (size_t)count);
+        int64_t idx = m;
+        for (int64_t i = 0; i < count; i++) {
+            if (idx < 1 || idx > len) {
+                free(indices);
+                return false;
+            }
+            indices[i] = idx;
+            idx += s;
+        }
+        *out_indices = indices;
+        *out_count = (size_t)count;
+    } else {
+        *out_indices = NULL;
+        *out_count = 0;
+    }
+    return true;
+}
+
+static Expr* apply_take_drop(Expr* expr, Expr** specs, size_t nspecs, bool is_take) {
+    if (nspecs == 0) return expr_copy(expr);
+    if (expr->type != EXPR_FUNCTION) return NULL;
+
+    int64_t len = (int64_t)expr->data.function.arg_count;
+    size_t spec_count = 0;
+    int64_t* spec_indices = NULL;
+    if (!get_seq_spec_indices(specs[0], len, &spec_indices, &spec_count)) return NULL;
+
+    Expr** new_args = NULL;
+    size_t new_count = 0;
+
+    if (is_take) {
+        new_count = spec_count;
+        if (new_count > 0) new_args = malloc(sizeof(Expr*) * new_count);
+        for (size_t i = 0; i < new_count; i++) {
+            Expr* sub = expr->data.function.args[spec_indices[i] - 1];
+            new_args[i] = apply_take_drop(sub, specs + 1, nspecs - 1, is_take);
+            if (!new_args[i]) {
+                for (size_t j = 0; j < i; j++) expr_free(new_args[j]);
+                free(new_args);
+                free(spec_indices);
+                return NULL;
+            }
+        }
+    } else {
+        bool* keep = malloc(sizeof(bool) * (size_t)len);
+        for (int64_t i = 0; i < len; i++) keep[i] = true;
+        for (size_t i = 0; i < spec_count; i++) keep[spec_indices[i] - 1] = false;
+
+        for (int64_t i = 0; i < len; i++) if (keep[i]) new_count++;
+        if (new_count > 0) new_args = malloc(sizeof(Expr*) * new_count);
+        
+        size_t idx = 0;
+        for (int64_t i = 0; i < len; i++) {
+            if (keep[i]) {
+                Expr* sub = expr->data.function.args[i];
+                new_args[idx] = apply_take_drop(sub, specs + 1, nspecs - 1, is_take);
+                if (!new_args[idx]) {
+                    for (size_t j = 0; j < idx; j++) expr_free(new_args[j]);
+                    free(new_args);
+                    free(keep);
+                    free(spec_indices);
+                    return NULL;
+                }
+                idx++;
+            }
+        }
+        free(keep);
+    }
+
+    free(spec_indices);
+    return expr_new_function(expr_copy(expr->data.function.head), new_args, new_count);
+}
+
+Expr* builtin_take(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) return NULL;
+    return apply_take_drop(res->data.function.args[0], res->data.function.args + 1, res->data.function.arg_count - 1, true);
+}
+
+Expr* builtin_drop(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) return NULL;
+    return apply_take_drop(res->data.function.args[0], res->data.function.args + 1, res->data.function.arg_count - 1, false);
+}
+
+static void flatten_rec(Expr* e, const char* h, int64_t level, Expr*** results, size_t* count, size_t* cap) {
+    if (level != 0 && e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, h) == 0) {
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            flatten_rec(e->data.function.args[i], h, level == -1 ? -1 : level - 1, results, count, cap);
+        }
+    } else {
+        if (*count == *cap) {
+            *cap *= 2;
+            *results = realloc(*results, sizeof(Expr*) * (*cap));
+        }
+        (*results)[(*count)++] = expr_copy(e);
+    }
+}
+
+Expr* builtin_flatten(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 3) return NULL;
+
+    Expr* list = res->data.function.args[0];
+    if (list->type != EXPR_FUNCTION) return expr_copy(list);
+
+    int64_t n = -1; // -1 means infinity
+    if (res->data.function.arg_count >= 2) {
+        if (res->data.function.args[1]->type != EXPR_INTEGER) return NULL;
+        n = res->data.function.args[1]->data.integer;
+    }
+
+    const char* h = "List";
+    if (res->data.function.arg_count == 3) {
+        if (res->data.function.args[2]->type != EXPR_SYMBOL) return NULL;
+        h = res->data.function.args[2]->data.symbol;
+    }
+
+    size_t cap = 16;
+    size_t count = 0;
+    Expr** results = malloc(sizeof(Expr*) * cap);
+
+    // Initial call: we flatten children of the head if they also have head h.
+    for (size_t i = 0; i < list->data.function.arg_count; i++) {
+        flatten_rec(list->data.function.args[i], h, n, &results, &count, &cap);
+    }
+
+    Expr* result = expr_new_function(expr_copy(list->data.function.head), results, count);
+    free(results);
+    return result;
+}
+
+static Expr* partition_rec(Expr* list, Expr* n_spec, Expr* d_spec, size_t level_idx) {
+    if (list->type != EXPR_FUNCTION) return expr_copy(list);
+
+    // Get n and d for this level
+    int64_t n = -1;
+    bool n_upto = false;
+    Expr* n_e = (n_spec->type == EXPR_FUNCTION && strcmp(n_spec->data.function.head->data.symbol, "List") == 0) ? 
+                (level_idx < n_spec->data.function.arg_count ? n_spec->data.function.args[level_idx] : NULL) : 
+                (level_idx == 0 ? n_spec : NULL);
+    
+    if (!n_e) return expr_copy(list);
+
+    if (n_e->type == EXPR_INTEGER) {
+        n = n_e->data.integer;
+    } else if (n_e->type == EXPR_FUNCTION && strcmp(n_e->data.function.head->data.symbol, "UpTo") == 0 && n_e->data.function.arg_count == 1) {
+        if (n_e->data.function.args[0]->type == EXPR_INTEGER) {
+            n = n_e->data.function.args[0]->data.integer;
+            n_upto = true;
+        }
+    }
+    if (n <= 0) return expr_copy(list);
+
+    int64_t d = n;
+    if (d_spec) {
+        Expr* d_e = (d_spec->type == EXPR_FUNCTION && strcmp(d_spec->data.function.head->data.symbol, "List") == 0) ? 
+                    (level_idx < d_spec->data.function.arg_count ? d_spec->data.function.args[level_idx] : NULL) : 
+                    (level_idx == 0 ? d_spec : NULL);
+        if (d_e && d_e->type == EXPR_INTEGER) {
+            d = d_e->data.integer;
+        }
+    }
+    if (d <= 0) return expr_copy(list);
+
+    size_t len = list->data.function.arg_count;
+    size_t num_sublists = 0;
+    if (n_upto) {
+        num_sublists = (len > 0) ? (len - 1) / d + 1 : 0;
+    } else {
+        if (len >= (size_t)n) {
+            num_sublists = (len - (size_t)n) / (size_t)d + 1;
+        }
+    }
+
+    Expr** sublists = malloc(sizeof(Expr*) * num_sublists);
+    for (size_t i = 0; i < num_sublists; i++) {
+        size_t start = i * (size_t)d;
+        size_t end = start + (size_t)n;
+        if (end > len) end = len;
+        
+        size_t sub_count = end - start;
+        Expr** sub_args = malloc(sizeof(Expr*) * sub_count);
+        for (size_t j = 0; j < sub_count; j++) {
+            sub_args[j] = partition_rec(list->data.function.args[start + j], n_spec, d_spec, level_idx + 1);
+        }
+        sublists[i] = expr_new_function(expr_copy(list->data.function.head), sub_args, sub_count);
+        free(sub_args);
+    }
+
+    Expr* result = expr_new_function(expr_copy(list->data.function.head), sublists, num_sublists);
+    free(sublists);
+    return result;
+}
+
+Expr* builtin_partition(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2 || res->data.function.arg_count > 3) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    Expr* n_spec = res->data.function.args[1];
+    Expr* d_spec = (res->data.function.arg_count == 3) ? res->data.function.args[2] : NULL;
+
+    if (list->type != EXPR_FUNCTION) return expr_copy(list);
+
+    return partition_rec(list, n_spec, d_spec, 0);
+}
+
+static Expr* rotate_rec(Expr* expr, Expr* n_spec, size_t level_idx) {
+    if (expr->type != EXPR_FUNCTION) return expr_copy(expr);
+
+    int64_t n = 0;
+    if (n_spec->type == EXPR_INTEGER) {
+        if (level_idx == 0) n = n_spec->data.integer;
+    } else if (n_spec->type == EXPR_FUNCTION && strcmp(n_spec->data.function.head->data.symbol, "List") == 0) {
+        if (level_idx < n_spec->data.function.arg_count) {
+            Expr* sub_n = n_spec->data.function.args[level_idx];
+            if (sub_n->type == EXPR_INTEGER) n = sub_n->data.integer;
+        }
+    }
+
+    size_t len = expr->data.function.arg_count;
+    Expr** new_args = malloc(sizeof(Expr*) * len);
+
+    if (len > 0) {
+        int64_t offset = n % (int64_t)len;
+        if (offset < 0) offset += (int64_t)len;
+
+        for (size_t i = 0; i < len; i++) {
+            size_t old_idx = (i + (size_t)offset) % len;
+            new_args[i] = rotate_rec(expr->data.function.args[old_idx], n_spec, level_idx + 1);
+        }
+    }
+
+    Expr* result = expr_new_function(expr_copy(expr->data.function.head), new_args, len);
+    free(new_args);
+    return result;
+}
+
+Expr* builtin_rotateleft(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* n_spec = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    
+    Expr* default_n = NULL;
+    if (!n_spec) {
+        default_n = expr_new_integer(1);
+        n_spec = default_n;
+    }
+
+    Expr* ret = rotate_rec(expr, n_spec, 0);
+    if (default_n) expr_free(default_n);
+    return ret;
+}
+
+Expr* builtin_rotateright(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* n_spec = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    
+    Expr* neg_n_spec = NULL;
+    if (!n_spec) {
+        neg_n_spec = expr_new_integer(-1);
+    } else if (n_spec->type == EXPR_INTEGER) {
+        neg_n_spec = expr_new_integer(-n_spec->data.integer);
+    } else if (n_spec->type == EXPR_FUNCTION && strcmp(n_spec->data.function.head->data.symbol, "List") == 0) {
+        Expr** neg_args = malloc(sizeof(Expr*) * n_spec->data.function.arg_count);
+        for (size_t i = 0; i < n_spec->data.function.arg_count; i++) {
+            if (n_spec->data.function.args[i]->type == EXPR_INTEGER) {
+                neg_args[i] = expr_new_integer(-n_spec->data.function.args[i]->data.integer);
+            } else {
+                neg_args[i] = expr_copy(n_spec->data.function.args[i]);
+            }
+        }
+        neg_n_spec = expr_new_function(expr_new_symbol("List"), neg_args, n_spec->data.function.arg_count);
+        free(neg_args);
+    } else {
+        return NULL;
+    }
+
+    Expr* ret = rotate_rec(expr, neg_n_spec, 0);
+    expr_free(neg_n_spec);
+    return ret;
+}
+
+static bool should_reverse_at_level(Expr* level_spec, size_t current_level) {
+    if (!level_spec) return current_level == 1;
+    if (level_spec->type == EXPR_INTEGER) return (size_t)level_spec->data.integer == current_level;
+    if (level_spec->type == EXPR_FUNCTION && strcmp(level_spec->data.function.head->data.symbol, "List") == 0) {
+        for (size_t i = 0; i < level_spec->data.function.arg_count; i++) {
+            if (level_spec->data.function.args[i]->type == EXPR_INTEGER && 
+                (size_t)level_spec->data.function.args[i]->data.integer == current_level) return true;
+        }
+    }
+    return false;
+}
+
+static Expr* reverse_rec(Expr* expr, Expr* level_spec, size_t current_level) {
+    if (expr->type != EXPR_FUNCTION) return expr_copy(expr);
+
+    size_t len = expr->data.function.arg_count;
+    Expr** new_args = malloc(sizeof(Expr*) * len);
+    bool do_rev = should_reverse_at_level(level_spec, current_level);
+
+    for (size_t i = 0; i < len; i++) {
+        size_t src_idx = do_rev ? (len - 1 - i) : i;
+        new_args[i] = reverse_rec(expr->data.function.args[src_idx], level_spec, current_level + 1);
+    }
+
+    Expr* result = expr_new_function(expr_copy(expr->data.function.head), new_args, len);
+    free(new_args);
+    return result;
+}
+
+Expr* builtin_reverse(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* level_spec = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+
+    return reverse_rec(expr, level_spec, 1);
+}
+
+static int get_array_dimensions(Expr* e, int64_t* dims, const char* head_name) {
+    if (e->type != EXPR_FUNCTION || e->data.function.head->type != EXPR_SYMBOL ||
+        strcmp(e->data.function.head->data.symbol, head_name) != 0) {
+        return 0;
+    }
+    dims[0] = (int64_t)e->data.function.arg_count;
+    if (dims[0] == 0) return 1;
+    int64_t sub_dims[64];
+    int depth = get_array_dimensions(e->data.function.args[0], sub_dims, head_name);
+    for (size_t i = 1; i < e->data.function.arg_count; i++) {
+        int64_t cur_dims[64];
+        if (get_array_dimensions(e->data.function.args[i], cur_dims, head_name) != depth) return 1;
+        for (int j = 0; j < depth; j++) if (cur_dims[j] != sub_dims[j]) return 1;
+    }
+    for (int i = 0; i < depth; i++) dims[i + 1] = sub_dims[i];
+    return depth + 1;
+}
+
+static Expr* get_element_at(Expr* e, int64_t* indices, size_t depth) {
+    Expr* curr = e;
+    for (size_t i = 0; i < depth; i++) {
+        curr = curr->data.function.args[indices[i]];
+    }
+    return curr;
+}
+
+static Expr* build_transposed(const char* head, int64_t* out_dims, size_t out_depth, int64_t* out_indices_base, int64_t* current_out_indices, 
+                             int64_t* in_indices, int64_t* perm, size_t in_depth, Expr* original) {
+    if (out_depth == 0) {
+        // level k in list is Subscript[n, k]-th level in result.
+        // So in_indices[k] = out_indices_base[perm[k] - 1]
+        for (size_t k = 0; k < in_depth; k++) {
+            in_indices[k] = out_indices_base[perm[k] - 1];
+        }
+        return expr_copy(get_element_at(original, in_indices, in_depth));
+    }
+
+    size_t len = (size_t)out_dims[0];
+    Expr** args = malloc(sizeof(Expr*) * len);
+    for (size_t i = 0; i < len; i++) {
+        current_out_indices[0] = (int64_t)i;
+        args[i] = build_transposed(head, out_dims + 1, out_depth - 1, out_indices_base, current_out_indices + 1, in_indices, perm, in_depth, original);
+    }
+    Expr* res = expr_new_function(expr_new_symbol(head), args, len);
+    free(args);
+    return res;
+}
+
+Expr* builtin_transpose(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    Expr* list = res->data.function.args[0];
+    if (list->type != EXPR_FUNCTION || list->data.function.head->type != EXPR_SYMBOL) return NULL;
+    const char* head = list->data.function.head->data.symbol;
+
+    int64_t in_dims[64];
+    int in_depth = get_array_dimensions(list, in_dims, head);
+    if (in_depth < 2) return NULL;
+
+    int64_t* perm = malloc(sizeof(int64_t) * in_depth);
+    if (res->data.function.arg_count == 1) {
+        perm[0] = 2; perm[1] = 1;
+        for (int i = 2; i < in_depth; i++) perm[i] = i + 1;
+    } else {
+        Expr* spec = res->data.function.args[1];
+        if (spec->type != EXPR_FUNCTION || strcmp(spec->data.function.head->data.symbol, "List") != 0 || 
+            spec->data.function.arg_count != (size_t)in_depth) {
+            free(perm); return NULL;
+        }
+        for (int i = 0; i < in_depth; i++) {
+            if (spec->data.function.args[i]->type != EXPR_INTEGER) { free(perm); return NULL; }
+            perm[i] = spec->data.function.args[i]->data.integer;
+        }
+    }
+
+    int out_depth = 0;
+    for (int i = 0; i < in_depth; i++) if (perm[i] > out_depth) out_depth = (int)perm[i];
+    
+    int64_t* out_dims = malloc(sizeof(int64_t) * out_depth);
+    for (int i = 0; i < out_depth; i++) out_dims[i] = -1;
+
+    for (int i = 0; i < in_depth; i++) {
+        int target_idx = (int)perm[i] - 1;
+        if (target_idx < 0) { free(perm); free(out_dims); return NULL; }
+        if (out_dims[target_idx] == -1 || in_dims[i] < out_dims[target_idx]) {
+            out_dims[target_idx] = in_dims[i];
+        }
+    }
+
+    int64_t* out_indices_base = calloc(out_depth, sizeof(int64_t));
+    int64_t* in_indices = malloc(sizeof(int64_t) * in_depth);
+
+    Expr* result = build_transposed(head, out_dims, (size_t)out_depth, out_indices_base, out_indices_base, in_indices, perm, (size_t)in_depth, list);
+
+    free(perm); free(out_dims); free(out_indices_base); free(in_indices);
+    return result;
+}
+
+static int compare_expr_ptrs(const void* a, const void* b) {
+    Expr* ea = *(Expr**)a;
+    Expr* eb = *(Expr**)b;
+    return expr_compare(ea, eb);
+}
+
+Expr* builtin_union(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
+    
+    // Find options
+    Expr* same_test = NULL;
+    size_t last_arg = res->data.function.arg_count;
+    for (size_t i = 0; i < res->data.function.arg_count; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(arg->data.function.head->data.symbol, "Rule") == 0 &&
+            arg->data.function.arg_count == 2 &&
+            arg->data.function.args[0]->type == EXPR_SYMBOL &&
+            strcmp(arg->data.function.args[0]->data.symbol, "SameTest") == 0) {
+            same_test = arg->data.function.args[1];
+            if (i < last_arg) last_arg = i;
+        }
+    }
+    
+    if (last_arg == 0) return NULL;
+    
+    // Check if first arg is a function
+    Expr* first_list = res->data.function.args[0];
+    if (first_list->type != EXPR_FUNCTION) return expr_copy(first_list);
+    
+    Expr* common_head = first_list->data.function.head;
+    
+    // Total count of elements
+    size_t total_count = 0;
+    for (size_t i = 0; i < last_arg; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type != EXPR_FUNCTION || !expr_eq(arg->data.function.head, common_head)) {
+            // Heads must match
+            return NULL;
+        }
+        total_count += arg->data.function.arg_count;
+    }
+    
+    if (total_count == 0) return expr_copy(first_list);
+    
+    Expr** all_args = malloc(sizeof(Expr*) * total_count);
+    size_t idx = 0;
+    for (size_t i = 0; i < last_arg; i++) {
+        Expr* arg = res->data.function.args[i];
+        for (size_t j = 0; j < arg->data.function.arg_count; j++) {
+            all_args[idx++] = expr_copy(arg->data.function.args[j]);
+        }
+    }
+    
+    // Sort elements
+    qsort(all_args, total_count, sizeof(Expr*), compare_expr_ptrs);
+    
+    // Remove duplicates
+    Expr** unique_args = malloc(sizeof(Expr*) * total_count);
+    size_t unique_count = 0;
+    
+    if (total_count > 0) {
+        unique_args[unique_count++] = all_args[0];
+        for (size_t i = 1; i < total_count; i++) {
+            bool is_dup = false;
+            if (same_test == NULL) {
+                if (expr_eq(all_args[i], unique_args[unique_count - 1])) {
+                    is_dup = true;
+                }
+            } else {
+                Expr* call_args[2] = { expr_copy(all_args[i]), expr_copy(unique_args[unique_count - 1]) };
+                Expr* call = expr_new_function(expr_copy(same_test), call_args, 2);
+                Expr* eval_res = evaluate(call);
+                if (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0) {
+                    is_dup = true;
+                }
+                expr_free(eval_res);
+                expr_free(call);
+            }
+            
+            if (is_dup) {
+                expr_free(all_args[i]);
+            } else {
+                unique_args[unique_count++] = all_args[i];
+            }
+        }
+    }
+    
+    free(all_args);
+    
+    Expr* result = expr_new_function(expr_copy(common_head), unique_args, unique_count);
+    if (unique_args) free(unique_args);
+    
+    return result;
+}
+
+typedef struct HashNode {
+    Expr* key;
+    size_t index; // Original index or position in unique_elems
+    struct HashNode* next;
+} HashNode;
+
+typedef struct {
+    HashNode** buckets;
+    size_t size;
+} HashTable;
+
+static HashTable* ht_create(size_t size) {
+    HashTable* ht = malloc(sizeof(HashTable));
+    ht->size = size;
+    ht->buckets = calloc(size, sizeof(HashNode*));
+    return ht;
+}
+
+static void ht_free(HashTable* ht, bool free_keys) {
+    for (size_t i = 0; i < ht->size; i++) {
+        HashNode* node = ht->buckets[i];
+        while (node) {
+            HashNode* next = node->next;
+            if (free_keys) expr_free(node->key);
+            free(node);
+            node = next;
+        }
+    }
+    free(ht->buckets);
+    free(ht);
+}
+
+static HashNode* ht_find(HashTable* ht, Expr* key) {
+    uint64_t h = expr_hash(key);
+    size_t bucket = (size_t)(h % ht->size);
+    HashNode* node = ht->buckets[bucket];
+    while (node) {
+        if (expr_eq(node->key, key)) return node;
+        node = node->next;
+    }
+    return NULL;
+}
+
+static void ht_insert(HashTable* ht, Expr* key, size_t index) {
+    uint64_t h = expr_hash(key);
+    size_t bucket = (size_t)(h % ht->size);
+    HashNode* node = malloc(sizeof(HashNode));
+    node->key = key;
+    node->index = index;
+    node->next = ht->buckets[bucket];
+    ht->buckets[bucket] = node;
+}
+
+Expr* builtin_tally(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    Expr* test = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    
+    if (list->type != EXPR_FUNCTION) return expr_new_function(expr_new_symbol("List"), NULL, 0);
+    
+    size_t count = list->data.function.arg_count;
+    if (count == 0) return expr_new_function(expr_new_symbol("List"), NULL, 0);
+    
+    Expr** unique_elems = malloc(sizeof(Expr*) * count);
+    int64_t* multiplicities = malloc(sizeof(int64_t) * count);
+    size_t unique_count = 0;
+
+    if (test == NULL) {
+        HashTable* ht = ht_create(count * 2 + 1);
+        for (size_t i = 0; i < count; i++) {
+            Expr* elem = list->data.function.args[i];
+            HashNode* node = ht_find(ht, elem);
+            if (node) {
+                multiplicities[node->index]++;
+            } else {
+                unique_elems[unique_count] = expr_copy(elem);
+                multiplicities[unique_count] = 1;
+                ht_insert(ht, unique_elems[unique_count], unique_count);
+                unique_count++;
+            }
+        }
+        ht_free(ht, false);
+    } else {
+        // Fallback to O(N^2) for custom test
+        for (size_t i = 0; i < count; i++) {
+            Expr* elem = list->data.function.args[i];
+            int found_idx = -1;
+            for (size_t j = 0; j < unique_count; j++) {
+                Expr* call_args[2] = { expr_copy(elem), expr_copy(unique_elems[j]) };
+                Expr* call = expr_new_function(expr_copy(test), call_args, 2);
+                Expr* eval_res = evaluate(call);
+                if (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0) {
+                    found_idx = (int)j;
+                    expr_free(eval_res);
+                    expr_free(call);
+                    break;
+                }
+                expr_free(eval_res);
+                expr_free(call);
+            }
+            if (found_idx != -1) {
+                multiplicities[found_idx]++;
+            } else {
+                unique_elems[unique_count] = expr_copy(elem);
+                multiplicities[unique_count] = 1;
+                unique_count++;
+            }
+        }
+    }
+    
+    Expr** result_args = malloc(sizeof(Expr*) * unique_count);
+    for (size_t i = 0; i < unique_count; i++) {
+        Expr** pair_args = malloc(sizeof(Expr*) * 2);
+        pair_args[0] = unique_elems[i];
+        pair_args[1] = expr_new_integer(multiplicities[i]);
+        result_args[i] = expr_new_function(expr_new_symbol("List"), pair_args, 2);
+        free(pair_args);
+    }
+    
+    free(unique_elems);
+    free(multiplicities);
+    
+    Expr* result = expr_new_function(expr_new_symbol("List"), result_args, unique_count);
+    free(result_args);
+    
+    return result;
+}
+
+Expr* builtin_deleteduplicates(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    Expr* test = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    
+    if (list->type != EXPR_FUNCTION) return expr_copy(list);
+    
+    size_t count = list->data.function.arg_count;
+    if (count == 0) return expr_copy(list);
+    
+    Expr** unique_args = malloc(sizeof(Expr*) * count);
+    size_t unique_count = 0;
+
+    if (test == NULL) {
+        HashTable* ht = ht_create(count * 2 + 1);
+        for (size_t i = 0; i < count; i++) {
+            Expr* elem = list->data.function.args[i];
+            if (!ht_find(ht, elem)) {
+                Expr* copy = expr_copy(elem);
+                unique_args[unique_count++] = copy;
+                ht_insert(ht, copy, 0);
+            }
+        }
+        ht_free(ht, false);
+    } else {
+        // Fallback to O(N^2) for custom test
+        for (size_t i = 0; i < count; i++) {
+            Expr* elem = list->data.function.args[i];
+            bool is_duplicate = false;
+            for (size_t j = 0; j < unique_count; j++) {
+                Expr* call_args[2] = { expr_copy(elem), expr_copy(unique_args[j]) };
+                Expr* call = expr_new_function(expr_copy(test), call_args, 2);
+                Expr* eval_res = evaluate(call);
+                if (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0) {
+                    is_duplicate = true;
+                    expr_free(eval_res);
+                    expr_free(call);
+                    break;
+                }
+                expr_free(eval_res);
+                expr_free(call);
+            }
+            if (!is_duplicate) {
+                unique_args[unique_count++] = expr_copy(elem);
+            }
+        }
+    }
+    
+    Expr* result = expr_new_function(expr_copy(list->data.function.head), unique_args, unique_count);
+    if (unique_args) free(unique_args);
+    
+    return result;
+}
+
+
+Expr* builtin_split(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    Expr* test = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    
+    if (list->type != EXPR_FUNCTION) return expr_copy(list);
+    
+    size_t count = list->data.function.arg_count;
+    if (count == 0) return expr_copy(list);
+    
+    Expr** result_runs = malloc(sizeof(Expr*) * count);
+    size_t num_runs = 0;
+    
+    size_t run_start = 0;
+    for (size_t i = 1; i <= count; i++) {
+        bool split_here = (i == count);
+        if (!split_here) {
+            Expr* prev = list->data.function.args[i-1];
+            Expr* curr = list->data.function.args[i];
+            bool identical = false;
+            if (test == NULL) {
+                identical = expr_eq(prev, curr);
+            } else {
+                Expr* call_args[2] = { expr_copy(prev), expr_copy(curr) };
+                Expr* call = expr_new_function(expr_copy(test), call_args, 2);
+                Expr* eval_res = evaluate(call);
+                if (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0) {
+                    identical = true;
+                }
+                expr_free(eval_res);
+                expr_free(call);
+            }
+            if (!identical) split_here = true;
+        }
+        
+        if (split_here) {
+            size_t run_len = i - run_start;
+            Expr** run_args = malloc(sizeof(Expr*) * run_len);
+            for (size_t j = 0; j < run_len; j++) {
+                run_args[j] = expr_copy(list->data.function.args[run_start + j]);
+            }
+            result_runs[num_runs++] = expr_new_function(expr_copy(list->data.function.head), run_args, run_len);
+            free(run_args);
+            run_start = i;
+        }
+    }
+    
+    Expr* result = expr_new_function(expr_copy(list->data.function.head), result_runs, num_runs);
+    free(result_runs);
+    return result;
+}
+
+void list_init(void) {
+    symtab_add_builtin("Table", builtin_table);
+    symtab_add_builtin("Range", builtin_range);
+    symtab_add_builtin("Array", builtin_array);
+    symtab_add_builtin("Take", builtin_take);
+    symtab_add_builtin("Drop", builtin_drop);
+    symtab_add_builtin("Flatten", builtin_flatten);
+    symtab_add_builtin("Partition", builtin_partition);
+    symtab_add_builtin("RotateLeft", builtin_rotateleft);
+    symtab_add_builtin("RotateRight", builtin_rotateright);
+    symtab_add_builtin("Reverse", builtin_reverse);
+    symtab_add_builtin("Transpose", builtin_transpose);
+    symtab_add_builtin("Tally", builtin_tally);
+    symtab_add_builtin("Union", builtin_union);
+    symtab_add_builtin("DeleteDuplicates", builtin_deleteduplicates);
+    symtab_add_builtin("Split", builtin_split);
+    symtab_add_builtin("Min", builtin_min);
+    symtab_add_builtin("Max", builtin_max);
+    symtab_add_builtin("ListQ", builtin_listq);
+    symtab_add_builtin("VectorQ", builtin_vectorq);
+    symtab_add_builtin("MatrixQ", builtin_matrixq);
+
+    symtab_get_def("Table")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
+    symtab_get_def("Range")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Array")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Take")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Drop")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Flatten")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Partition")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("RotateLeft")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("RotateRight")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Reverse")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Transpose")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Tally")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Union")->attributes |= ATTR_FLAT | ATTR_ONEIDENTITY | ATTR_PROTECTED | ATTR_READPROTECTED;
+    symtab_get_def("DeleteDuplicates")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Split")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Min")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
+    symtab_get_def("Max")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
+    symtab_get_def("ListQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("VectorQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("MatrixQ")->attributes |= ATTR_PROTECTED;
+}
+
+static bool is_overflow(Expr* e) {
+    return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, "Overflow") == 0;
+}
+
+static bool is_listq(Expr* e) {
+    return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, "List") == 0;
+}
+
+Expr* builtin_listq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (is_listq(arg)) {
+        return expr_new_symbol("True");
+    }
+    return expr_new_symbol("False");
+}
+
+Expr* builtin_vectorq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (!is_listq(arg)) return expr_new_symbol("False");
+
+    Expr* test = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+
+    for (size_t i = 0; i < arg->data.function.arg_count; i++) {
+        Expr* elem = arg->data.function.args[i];
+        if (test == NULL) {
+            if (is_listq(elem)) return expr_new_symbol("False");
+        } else {
+            Expr* call_args[1] = { expr_copy(elem) };
+            Expr* call = expr_new_function(expr_copy(test), call_args, 1);
+            Expr* eval_res = evaluate(call);
+            bool is_true = (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0);
+            expr_free(eval_res);
+            expr_free(call);
+            if (!is_true) return expr_new_symbol("False");
+        }
+    }
+    return expr_new_symbol("True");
+}
+
+Expr* builtin_matrixq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (!is_listq(arg)) return expr_new_symbol("False");
+
+    if (arg->data.function.arg_count == 0) return expr_new_symbol("False");
+
+    Expr* test = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+
+    size_t col_count = 0;
+    bool first_row = true;
+
+    for (size_t i = 0; i < arg->data.function.arg_count; i++) {
+        Expr* row = arg->data.function.args[i];
+        if (!is_listq(row)) return expr_new_symbol("False");
+
+        if (first_row) {
+            col_count = row->data.function.arg_count;
+            first_row = false;
+        } else {
+            if (row->data.function.arg_count != col_count) return expr_new_symbol("False");
+        }
+
+        for (size_t j = 0; j < row->data.function.arg_count; j++) {
+            Expr* elem = row->data.function.args[j];
+            if (test == NULL) {
+                if (is_listq(elem)) return expr_new_symbol("False");
+            } else {
+                Expr* call_args[1] = { expr_copy(elem) };
+                Expr* call = expr_new_function(expr_copy(test), call_args, 1);
+                Expr* eval_res = evaluate(call);
+                bool is_true = (eval_res->type == EXPR_SYMBOL && strcmp(eval_res->data.symbol, "True") == 0);
+                expr_free(eval_res);
+                expr_free(call);
+                if (!is_true) return expr_new_symbol("False");
+            }
+        }
+    }
+
+    return expr_new_symbol("True");
+}
+
+static bool is_infinity(Expr* e) {
+    return e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "Infinity") == 0;
+}
+
+static bool is_minus_infinity(Expr* e) {
+    if (e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Times") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* a1 = e->data.function.args[0];
+        Expr* a2 = e->data.function.args[1];
+        if (a1->type == EXPR_INTEGER && a1->data.integer == -1 && is_infinity(a2)) return true;
+        if (a2->type == EXPR_INTEGER && a2->data.integer == -1 && is_infinity(a1)) return true;
+    }
+    return false;
+}
+
+static Expr* make_minus_infinity(void) {
+    Expr* args[2] = { expr_new_integer(-1), expr_new_symbol("Infinity") };
+    return expr_new_function(expr_new_symbol("Times"), args, 2);
+}
+
+static bool is_real_numeric(Expr* e) {
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational(e, NULL, NULL)) return true;
+    Expr* re, *im;
+    if (is_complex(e, &re, &im)) {
+        if (im->type == EXPR_INTEGER && im->data.integer == 0) return true;
+        if (im->type == EXPR_REAL && im->data.real == 0.0) return true;
+    }
+    return false;
+}
+
+Expr* builtin_min(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t n = res->data.function.arg_count;
+    if (n == 0) return expr_new_symbol("Infinity");
+    
+    // Check for List arguments to flatten
+    bool has_list = false;
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+            strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+            has_list = true;
+            break;
+        }
+    }
+    
+    if (has_list) {
+        size_t new_count = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+                strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+                new_count += arg->data.function.arg_count;
+            } else {
+                new_count++;
+            }
+        }
+        
+        Expr** new_args = malloc(sizeof(Expr*) * new_count);
+        size_t k = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+                strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+                for (size_t j = 0; j < arg->data.function.arg_count; j++) {
+                    new_args[k++] = expr_copy(arg->data.function.args[j]);
+                }
+            } else {
+                new_args[k++] = expr_copy(arg);
+            }
+        }
+        return expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+    }
+    
+    // Check for Overflow[] and -Infinity
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (is_overflow(arg)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+        if (is_minus_infinity(arg)) return expr_copy(arg);
+    }
+    
+    // Combine numbers and remove duplicates
+    size_t unique_count = 0;
+    Expr** unique_args = malloc(sizeof(Expr*) * n);
+    Expr* min_num = NULL;
+    bool needs_simplification = false;
+    
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (is_real_numeric(arg)) {
+            if (min_num == NULL) {
+                min_num = expr_copy(arg);
+            } else {
+                if (expr_compare(arg, min_num) < 0) {
+                    expr_free(min_num);
+                    min_num = expr_copy(arg);
+                }
+                needs_simplification = true;
+            }
+            continue;
+        }
+        
+        if (is_infinity(arg)) {
+            if (n > 1) needs_simplification = true;
+            continue;
+        }
+        
+        if (unique_count > 0 && expr_eq(arg, unique_args[unique_count - 1])) {
+            needs_simplification = true;
+            continue;
+        }
+        unique_args[unique_count++] = expr_copy(arg);
+    }
+    
+    if (needs_simplification) {
+        size_t final_count = unique_count + (min_num ? 1 : 0);
+        if (final_count == 0) {
+            if (min_num) expr_free(min_num);
+            for (size_t i = 0; i < unique_count; i++) expr_free(unique_args[i]);
+            free(unique_args);
+            return expr_new_symbol("Infinity");
+        }
+        Expr** final_args = malloc(sizeof(Expr*) * final_count);
+        size_t k = 0;
+        if (min_num) final_args[k++] = min_num;
+        for (size_t i = 0; i < unique_count; i++) final_args[k++] = unique_args[i];
+        
+        Expr* ret = expr_new_function(expr_copy(res->data.function.head), final_args, final_count);
+        free(final_args);
+        free(unique_args);
+        return ret;
+    }
+    
+    if (min_num) expr_free(min_num);
+    for (size_t i = 0; i < unique_count; i++) expr_free(unique_args[i]);
+    free(unique_args);
+    return NULL;
+}
+
+Expr* builtin_max(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t n = res->data.function.arg_count;
+    if (n == 0) return make_minus_infinity();
+    
+    // Check for List arguments to flatten
+    bool has_list = false;
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+            strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+            has_list = true;
+            break;
+        }
+    }
+    
+    if (has_list) {
+        size_t new_count = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+                strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+                new_count += arg->data.function.arg_count;
+            } else {
+                new_count++;
+            }
+        }
+        
+        Expr** new_args = malloc(sizeof(Expr*) * new_count);
+        size_t k = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && 
+                strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+                for (size_t j = 0; j < arg->data.function.arg_count; j++) {
+                    new_args[k++] = expr_copy(arg->data.function.args[j]);
+                }
+            } else {
+                new_args[k++] = expr_copy(arg);
+            }
+        }
+        return expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+    }
+    
+    // Check for Overflow[] and Infinity
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (is_overflow(arg)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+        if (is_infinity(arg)) return expr_copy(arg);
+    }
+    
+    // Combine numbers and remove duplicates
+    size_t unique_count = 0;
+    Expr** unique_args = malloc(sizeof(Expr*) * n);
+    Expr* max_num = NULL;
+    bool needs_simplification = false;
+    
+    for (size_t i = 0; i < n; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (is_real_numeric(arg)) {
+            if (max_num == NULL) {
+                max_num = expr_copy(arg);
+            } else {
+                if (expr_compare(arg, max_num) > 0) {
+                    expr_free(max_num);
+                    max_num = expr_copy(arg);
+                }
+                needs_simplification = true;
+            }
+            continue;
+        }
+        
+        if (is_minus_infinity(arg)) {
+            if (n > 1) needs_simplification = true;
+            continue;
+        }
+        
+        if (unique_count > 0 && expr_eq(arg, unique_args[unique_count - 1])) {
+            needs_simplification = true;
+            continue;
+        }
+        unique_args[unique_count++] = expr_copy(arg);
+    }
+    
+    if (needs_simplification) {
+        size_t final_count = unique_count + (max_num ? 1 : 0);
+        if (final_count == 0) {
+            if (max_num) expr_free(max_num);
+            for (size_t i = 0; i < unique_count; i++) expr_free(unique_args[i]);
+            free(unique_args);
+            return make_minus_infinity();
+        }
+        Expr** final_args = malloc(sizeof(Expr*) * final_count);
+        size_t k = 0;
+        if (max_num) final_args[k++] = max_num;
+        for (size_t i = 0; i < unique_count; i++) final_args[k++] = unique_args[i];
+        
+        Expr* ret = expr_new_function(expr_copy(res->data.function.head), final_args, final_count);
+        free(final_args);
+        free(unique_args);
+        return ret;
+    }
+    
+    if (max_num) expr_free(max_num);
+    for (size_t i = 0; i < unique_count; i++) expr_free(unique_args[i]);
+    free(unique_args);
+    return NULL;
+}
+
+Expr* builtin_range(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 3) return NULL;
+    
+    size_t len = res->data.function.arg_count;
+    Expr* imin_e = NULL;
+    Expr* imax_e = NULL;
+    Expr* di_e = NULL;
+    
+    if (len == 1) {
+        imin_e = expr_new_integer(1);
+        imax_e = expr_copy(res->data.function.args[0]);
+        di_e = expr_new_integer(1);
+    } else if (len == 2) {
+        imin_e = expr_copy(res->data.function.args[0]);
+        imax_e = expr_copy(res->data.function.args[1]);
+        di_e = expr_new_integer(1);
+    } else if (len == 3) {
+        imin_e = expr_copy(res->data.function.args[0]);
+        imax_e = expr_copy(res->data.function.args[1]);
+        di_e = expr_copy(res->data.function.args[2]);
+    }
+    
+    bool is_real = false;
+    double min_val = 0, max_val = 0, di_val = 0;
+    int64_t n, d;
+    
+    if (imin_e->type == EXPR_REAL || imax_e->type == EXPR_REAL || di_e->type == EXPR_REAL) is_real = true;
+    
+    if (imin_e->type == EXPR_INTEGER) min_val = (double)imin_e->data.integer;
+    else if (imin_e->type == EXPR_REAL) min_val = imin_e->data.real;
+    else if (is_rational(imin_e, &n, &d)) min_val = (double)n / d;
+    else goto L_fail_range;
+    
+    if (imax_e->type == EXPR_INTEGER) max_val = (double)imax_e->data.integer;
+    else if (imax_e->type == EXPR_REAL) max_val = imax_e->data.real;
+    else if (is_rational(imax_e, &n, &d)) max_val = (double)n / d;
+    else goto L_fail_range;
+    
+    if (di_e->type == EXPR_INTEGER) di_val = (double)di_e->data.integer;
+    else if (di_e->type == EXPR_REAL) di_val = di_e->data.real;
+    else if (is_rational(di_e, &n, &d)) di_val = (double)n / d;
+    else goto L_fail_range;
+    
+    if (di_val == 0) goto L_fail_range;
+    if ((di_val > 0 && min_val > max_val) || (di_val < 0 && min_val < max_val)) {
+        expr_free(imin_e); expr_free(imax_e); expr_free(di_e);
+        return expr_new_function(expr_new_symbol("List"), NULL, 0);
+    }
+    
+    size_t results_cap = 16;
+    size_t results_count = 0;
+    Expr** results = malloc(sizeof(Expr*) * results_cap);
+    
+    double val = min_val;
+    int steps = 0;
+    Expr* curr_e = expr_copy(imin_e);
+    
+    while ((di_val > 0 && val <= max_val + 1e-14) || (di_val < 0 && val >= max_val - 1e-14)) {
+        Expr* i_val = is_real ? expr_new_real(val) : expr_copy(curr_e);
+        
+        if (results_count == results_cap) { results_cap *= 2; results = realloc(results, sizeof(Expr*) * results_cap); }
+        results[results_count++] = i_val;
+        
+        Expr* next_args[2] = { expr_copy(curr_e), expr_copy(di_e) };
+        Expr* next_expr = expr_new_function(expr_new_symbol("Plus"), next_args, 2);
+        Expr* next_e = evaluate(next_expr);
+        expr_free(next_expr);
+        expr_free(curr_e);
+        curr_e = next_e;
+        
+        val += di_val;
+        steps++;
+        if (steps > 1000000) break; 
+    }
+    
+    if (curr_e) expr_free(curr_e);
+    expr_free(imin_e);
+    expr_free(imax_e);
+    expr_free(di_e);
+    
+    Expr* result_list = expr_new_function(expr_new_symbol("List"), results, results_count);
+    free(results);
+    return result_list;
+
+L_fail_range:
+    if (imin_e) expr_free(imin_e);
+    if (imax_e) expr_free(imax_e);
+    if (di_e) expr_free(di_e);
+    return NULL;
+}

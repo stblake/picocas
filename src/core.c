@@ -1,0 +1,777 @@
+#include "core.h"
+#include "symtab.h"
+#include "eval.h"
+#include "parse.h"
+#include "arithmetic.h"
+#include "comparisons.h"
+#include "boolean.h"
+#include "list.h"
+#include "replace.h"
+#include "complex.h"
+#include "trig.h"
+#include "hyperbolic.h"
+#include "logexp.h"
+#include "piecewise.h"
+#include "attr.h"
+#include "purefunc.h"
+#include "modular.h"
+#include "sort.h"
+#include "stats.h"
+#include "info.h"
+#include "expand.h"
+#include "poly.h"
+#include "facint.h"
+#include "facpoly.h"
+#include "datetime.h"
+#include "linalg.h"
+#include "part.h"
+#include "plus.h"
+#include "times.h"
+#include "power.h"
+#include "funcprog.h"
+#include "match.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+void core_init(void) {
+    modular_init();
+    symtab_add_builtin("AtomQ", builtin_atomq);
+    symtab_add_builtin("Length", builtin_length);
+    symtab_add_builtin("Dimensions", builtin_dimensions);
+    symtab_add_builtin("Clear", builtin_clear);
+    symtab_add_builtin("Part", builtin_part);
+    symtab_add_builtin("Head", builtin_head);
+    symtab_add_builtin("First", builtin_first);
+    symtab_add_builtin("Last", builtin_last);
+    symtab_add_builtin("Most", builtin_most);
+    symtab_add_builtin("Rest", builtin_rest);
+    symtab_add_builtin("Insert", builtin_insert);
+    symtab_add_builtin("Delete", builtin_delete);
+    symtab_add_builtin("Append", builtin_append);
+    symtab_add_builtin("Prepend", builtin_prepend);
+    symtab_add_builtin("AppendTo", builtin_append_to);
+    symtab_add_builtin("PrependTo", builtin_prepend_to);
+    symtab_add_builtin("Attributes", builtin_attributes);
+    symtab_add_builtin("SetAttributes", builtin_set_attributes);
+    symtab_add_builtin("OwnValues", builtin_own_values);
+    symtab_add_builtin("DownValues", builtin_down_values);
+    symtab_add_builtin("Out", builtin_out);
+    symtab_add_builtin("Plus", builtin_plus);
+    symtab_add_builtin("Times", builtin_times);
+    symtab_add_builtin("Divide", builtin_divide);
+    symtab_add_builtin("Subtract", builtin_subtract);
+    symtab_add_builtin("Complex", builtin_complex);
+    symtab_add_builtin("Power", builtin_power);
+    symtab_add_builtin("Sqrt", builtin_sqrt);
+    symtab_add_builtin("Apply", builtin_apply);
+    symtab_add_builtin("Map", builtin_map);
+    symtab_add_builtin("MapAll", builtin_map_all);
+    symtab_add_builtin("Through", builtin_through);
+    symtab_add_builtin("Select", builtin_select);
+    symtab_add_builtin("FreeQ", builtin_freeq);
+    symtab_add_builtin("Sort", builtin_sort);
+    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
+    symtab_add_builtin("Variables", builtin_variables);
+    symtab_add_builtin("Level", builtin_level);
+    symtab_add_builtin("Depth", builtin_depth);
+    symtab_add_builtin("MatchQ", builtin_matchq);
+    symtab_add_builtin("CompoundExpression", builtin_compoundexpression);
+    symtab_add_builtin("NumberQ", builtin_numberq);
+    symtab_add_builtin("IntegerQ", builtin_integerq);
+    symtab_add_builtin("EvenQ", builtin_evenq);
+    symtab_add_builtin("OddQ", builtin_oddq);
+    symtab_add_builtin("Mod", builtin_mod);
+    symtab_add_builtin("Quotient", builtin_quotient);
+    symtab_add_builtin("QuotientRemainder", builtin_quotientremainder);
+    symtab_add_builtin("GCD", builtin_gcd);
+    symtab_add_builtin("LCM", builtin_lcm);
+    symtab_add_builtin("Information", builtin_information);
+
+    symtab_get_def("AtomQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("NumberQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("IntegerQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("EvenQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("OddQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Information")->attributes |= ATTR_PROTECTED;
+
+    symtab_get_def("Mod")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
+    symtab_get_def("Quotient")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
+    symtab_get_def("QuotientRemainder")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
+    symtab_get_def("GCD")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE | ATTR_FLAT | ATTR_ORDERLESS | ATTR_ONEIDENTITY);
+    symtab_get_def("LCM")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE | ATTR_FLAT | ATTR_ORDERLESS | ATTR_ONEIDENTITY);
+
+    facint_init();
+
+    Expr* zero = expr_new_integer(0);
+    Expr* one = expr_new_integer(1);
+    Expr* sym_I = expr_new_symbol("I");
+    Expr* val_I = make_complex(zero, one);
+    symtab_add_own_value("I", sym_I, val_I);
+    expr_free(sym_I);
+    expr_free(val_I);
+    expr_free(zero);
+    expr_free(one);
+    
+    comparisons_init();
+    boolean_init();
+    list_init();
+    replace_init();
+    complex_init();
+    trig_init();
+    hyperbolic_init();
+    logexp_init();
+    piecewise_init();
+    attr_init();
+    purefunc_init();
+    stats_init();
+    poly_init();
+    facpoly_init();
+    expand_init();
+    info_init();
+    datetime_init();
+    linalg_init();
+}
+
+Expr* builtin_compoundexpression(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    if (res->data.function.arg_count == 0) return expr_new_symbol("Null");
+    
+    Expr* last_val = NULL;
+    for (size_t i = 0; i < res->data.function.arg_count; i++) {
+        if (last_val) expr_free(last_val);
+        last_val = evaluate(res->data.function.args[i]);
+    }
+    return last_val;
+}
+
+Expr* builtin_clear(Expr* res) {
+    if (res->type == EXPR_FUNCTION) {
+        for (size_t i = 0; i < res->data.function.arg_count; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (arg->type == EXPR_SYMBOL) {
+                symtab_clear_symbol(arg->data.symbol);
+            }
+        }
+        return expr_new_symbol("Null");
+    }
+    return NULL;
+}
+
+Expr* builtin_length(Expr* res) {
+    if (res->type == EXPR_FUNCTION && res->data.function.arg_count == 1) {
+        Expr* arg = res->data.function.args[0];
+        int64_t len = 0;
+        if (arg->type == EXPR_FUNCTION) {
+            len = (int64_t)arg->data.function.arg_count;
+        }
+        return expr_new_integer(len);
+    }
+    return NULL;
+}
+
+static int get_dimensions(Expr* e, int64_t* dims, const char* head_name) {
+    if (e->type != EXPR_FUNCTION || e->data.function.head->type != EXPR_SYMBOL ||
+        strcmp(e->data.function.head->data.symbol, head_name) != 0) {
+        return 0;
+    }
+    
+    dims[0] = (int64_t)e->data.function.arg_count;
+    if (dims[0] == 0) return 1;
+    
+    int64_t sub_dims[64];
+    int sub_depth = get_dimensions(e->data.function.args[0], sub_dims, head_name);
+    
+    if (sub_depth == 0) return 1;
+    
+    for (size_t i = 1; i < e->data.function.arg_count; i++) {
+        int64_t cur_dims[64];
+        int cur_depth = get_dimensions(e->data.function.args[i], cur_dims, head_name);
+        
+        if (cur_depth != sub_depth) return 1;
+        for (int j = 0; j < sub_depth; j++) {
+            if (cur_dims[j] != sub_dims[j]) return 1;
+        }
+    }
+    
+    for (int i = 0; i < sub_depth; i++) {
+        dims[i + 1] = sub_dims[i];
+    }
+    return sub_depth + 1;
+}
+
+Expr* builtin_dimensions(Expr* res) {
+    if (res->type == EXPR_FUNCTION && res->data.function.arg_count == 1) {
+        Expr* arg = res->data.function.args[0];
+        if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL) {
+            int64_t dims[64];
+            int depth = get_dimensions(arg, dims, arg->data.function.head->data.symbol);
+            
+            Expr** dim_args = malloc(sizeof(Expr*) * depth);
+            for (int i = 0; i < depth; i++) {
+                dim_args[i] = expr_new_integer(dims[i]);
+            }
+            
+            Expr* ret = expr_new_function(expr_new_symbol("List"), dim_args, depth);
+            free(dim_args);
+            return ret;
+        } else {
+            return expr_new_function(expr_new_symbol("List"), NULL, 0);
+        }
+    }
+    return NULL;
+}
+
+Expr* builtin_append(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* elem = res->data.function.args[1];
+    if (expr->type != EXPR_FUNCTION) return NULL;
+    
+    size_t new_count = expr->data.function.arg_count + 1;
+    Expr** new_args = malloc(sizeof(Expr*) * new_count);
+    for (size_t i = 0; i < expr->data.function.arg_count; i++) {
+        new_args[i] = expr_copy(expr->data.function.args[i]);
+    }
+    new_args[new_count - 1] = expr_copy(elem);
+    Expr* final_res = expr_new_function(expr_copy(expr->data.function.head), new_args, new_count);
+    free(new_args);
+    return final_res;
+}
+
+Expr* builtin_prepend(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* elem = res->data.function.args[1];
+    if (expr->type != EXPR_FUNCTION) return NULL;
+    
+    size_t new_count = expr->data.function.arg_count + 1;
+    Expr** new_args = malloc(sizeof(Expr*) * new_count);
+    new_args[0] = expr_copy(elem);
+    for (size_t i = 0; i < expr->data.function.arg_count; i++) {
+        new_args[i + 1] = expr_copy(expr->data.function.args[i]);
+    }
+    Expr* final_res = expr_new_function(expr_copy(expr->data.function.head), new_args, new_count);
+    free(new_args);
+    return final_res;
+}
+
+Expr* builtin_append_to(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* sym = res->data.function.args[0];
+    Expr* elem = res->data.function.args[1];
+    if (sym->type != EXPR_SYMBOL) return NULL;
+    
+    Expr* current_val = evaluate(sym);
+    if (!current_val || current_val->type != EXPR_FUNCTION) {
+        if (current_val) expr_free(current_val);
+        return NULL;
+    }
+    
+    size_t new_count = current_val->data.function.arg_count + 1;
+    Expr** new_args = malloc(sizeof(Expr*) * new_count);
+    for (size_t i = 0; i < current_val->data.function.arg_count; i++) {
+        new_args[i] = expr_copy(current_val->data.function.args[i]);
+    }
+    new_args[new_count - 1] = expr_copy(elem);
+    Expr* new_val = expr_new_function(expr_copy(current_val->data.function.head), new_args, new_count);
+    free(new_args);
+    
+    symtab_add_own_value(sym->data.symbol, sym, new_val);
+    
+    expr_free(current_val);
+    return new_val;
+}
+
+Expr* builtin_prepend_to(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* sym = res->data.function.args[0];
+    Expr* elem = res->data.function.args[1];
+    if (sym->type != EXPR_SYMBOL) return NULL;
+    
+    Expr* current_val = evaluate(sym);
+    if (!current_val || current_val->type != EXPR_FUNCTION) {
+        if (current_val) expr_free(current_val);
+        return NULL;
+    }
+    
+    size_t new_count = current_val->data.function.arg_count + 1;
+    Expr** new_args = malloc(sizeof(Expr*) * new_count);
+    new_args[0] = expr_copy(elem);
+    for (size_t i = 0; i < current_val->data.function.arg_count; i++) {
+        new_args[i + 1] = expr_copy(current_val->data.function.args[i]);
+    }
+    Expr* new_val = expr_new_function(expr_copy(current_val->data.function.head), new_args, new_count);
+    free(new_args);
+    
+    symtab_add_own_value(sym->data.symbol, sym, new_val);
+    
+    expr_free(current_val);
+    return new_val;
+}
+
+static Expr* rules_to_list(Rule* r) {
+    size_t count = 0;
+    Rule* curr = r;
+    while (curr) {
+        count++;
+        curr = curr->next;
+    }
+    
+    Expr** rule_exprs = malloc(sizeof(Expr*) * count);
+    curr = r;
+    for (size_t i = 0; i < count; i++) {
+        Expr** rule_args = malloc(sizeof(Expr*) * 2);
+        rule_args[0] = expr_copy(curr->pattern);
+        rule_args[1] = expr_copy(curr->replacement);
+        rule_exprs[i] = expr_new_function(expr_new_symbol("Rule"), rule_args, 2);
+        free(rule_args);
+        curr = curr->next;
+    }
+    
+    Expr* list = expr_new_function(expr_new_symbol("List"), rule_exprs, count);
+    if (count > 0) free(rule_exprs); else { free(rule_exprs); } 
+    /* IMPORTANT: Rules in DownValues/OwnValues should be returned unevaluated */
+    return list;
+}
+
+Expr* builtin_own_values(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (arg->type != EXPR_SYMBOL) return NULL;
+    
+    Rule* r = symtab_get_own_values(arg->data.symbol);
+    return rules_to_list(r);
+}
+
+Expr* builtin_down_values(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (arg->type != EXPR_SYMBOL) return NULL;
+    
+    Rule* r = symtab_get_down_values(arg->data.symbol);
+    return rules_to_list(r);
+}
+
+Expr* builtin_out(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (arg->type != EXPR_INTEGER) return NULL;
+    
+    int64_t n = arg->data.integer;
+    if (n < 0) {
+        Expr* line_sym = expr_new_symbol("$Line");
+        Expr* line_expr = evaluate(line_sym);
+        expr_free(line_sym);
+        if (line_expr->type == EXPR_INTEGER) {
+            int64_t current_line = line_expr->data.integer;
+            n = current_line + n; 
+        }
+        expr_free(line_expr);
+    }
+    
+    if (n <= 0) return NULL;
+    
+    Expr* out_head = expr_new_symbol("Out");
+    Expr* out_arg = expr_new_integer(n);
+    Expr* out_call = expr_new_function(out_head, &out_arg, 1);
+    
+    Expr* val = apply_down_values(out_call);
+    expr_free(out_call);
+    
+    return val;
+}
+
+Expr* builtin_atomq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+
+    if (arg->type == EXPR_FUNCTION) {
+        if (arg->data.function.head->type == EXPR_SYMBOL) {
+            const char* head_name = arg->data.function.head->data.symbol;
+            if (strcmp(head_name, "Complex") == 0 || strcmp(head_name, "Rational") == 0) {
+                return expr_new_symbol("True");
+            }
+        }
+        return expr_new_symbol("False");
+    }
+
+    return expr_new_symbol("True");
+}
+
+Expr* builtin_numberq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+
+    if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL) {
+        return expr_new_symbol("True");
+    }
+
+    if (arg->type == EXPR_FUNCTION) {
+        if (arg->data.function.head->type == EXPR_SYMBOL) {
+            const char* head_name = arg->data.function.head->data.symbol;
+            if (strcmp(head_name, "Complex") == 0 || strcmp(head_name, "Rational") == 0) {
+                return expr_new_symbol("True");
+            }
+        }
+    }
+
+    return expr_new_symbol("False");
+}
+
+Expr* builtin_integerq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+
+    if (arg->type == EXPR_INTEGER) {
+        return expr_new_symbol("True");
+    }
+
+    return expr_new_symbol("False");
+}
+
+Expr* builtin_information(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    const char* sym_name = NULL;
+    if (arg->type == EXPR_SYMBOL) sym_name = arg->data.symbol;
+    else if (arg->type == EXPR_STRING) sym_name = arg->data.string;
+    
+    if (!sym_name) return NULL;
+    
+    const char* doc = symtab_get_docstring(sym_name);
+    if (!doc) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "No information available for symbol \"%s\".", sym_name);
+        return expr_new_string(buf);
+    }
+    return expr_new_string(doc);
+}
+
+Expr* builtin_evenq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+
+    if (arg->type == EXPR_INTEGER) {
+        if (arg->data.integer % 2 == 0) {
+            return expr_new_symbol("True");
+        }
+    }
+
+    return expr_new_symbol("False");
+}
+
+Expr* builtin_oddq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+
+    if (arg->type == EXPR_INTEGER) {
+        if (arg->data.integer % 2 != 0) {
+            return expr_new_symbol("True");
+        }
+    }
+
+    return expr_new_symbol("False");
+}
+
+Expr* builtin_mod(Expr* res) {
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 2 && res->data.function.arg_count != 3)) {
+        return NULL;
+    }
+
+    Expr* m_expr = res->data.function.args[0];
+    Expr* n_expr = res->data.function.args[1];
+
+    if (res->data.function.arg_count == 2) {
+        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL);
+        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL);
+        if (!m_is_num || !n_is_num) return NULL;
+
+        if (m_expr->type == EXPR_INTEGER && n_expr->type == EXPR_INTEGER) {
+            int64_t m = m_expr->data.integer;
+            int64_t n = n_expr->data.integer;
+            if (n == 0) return NULL;
+            int64_t r = m % n;
+            if (r != 0 && (r * n) < 0) {
+                r += n;
+            }
+            return expr_new_integer(r);
+        } else {
+            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (double)m_expr->data.integer;
+            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (double)n_expr->data.integer;
+            if (n_val == 0.0) return NULL;
+            double result = m_val - n_val * floor(m_val / n_val);
+            return expr_new_real(result);
+        }
+    } else { 
+        Expr* d_expr = res->data.function.args[2];
+        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL);
+        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL);
+        bool d_is_num = (d_expr->type == EXPR_INTEGER || d_expr->type == EXPR_REAL);
+        if (!m_is_num || !n_is_num || !d_is_num) return NULL;
+
+        if (m_expr->type == EXPR_INTEGER && n_expr->type == EXPR_INTEGER && d_expr->type == EXPR_INTEGER) {
+            int64_t m = m_expr->data.integer;
+            int64_t n = n_expr->data.integer;
+            int64_t d = d_expr->data.integer;
+            if (n == 0) return NULL;
+            int64_t m_minus_d = m - d;
+            int64_t r = m_minus_d % n;
+            if (r != 0 && (r * n) < 0) {
+                r += n;
+            }
+            return expr_new_integer(d + r);
+        } else {
+            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (double)m_expr->data.integer;
+            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (double)n_expr->data.integer;
+            double d_val = (d_expr->type == EXPR_REAL) ? d_expr->data.real : (double)d_expr->data.integer;
+            if (n_val == 0.0) return NULL;
+            double m_minus_d = m_val - d_val;
+            double mod_val = m_minus_d - n_val * floor(m_minus_d / n_val);
+            double result = d_val + mod_val;
+            return expr_new_real(result);
+        }
+    }
+}
+
+typedef struct { double re; double im; } Cplx;
+
+static bool get_numeric_as_complex(Expr* e, Cplx* out) {
+    if (e->type == EXPR_INTEGER) {
+        *out = (Cplx){ .re = (double)e->data.integer, .im = 0.0 };
+        return true;
+    }
+    if (e->type == EXPR_REAL) {
+        *out = (Cplx){ .re = e->data.real, .im = 0.0 };
+        return true;
+    }
+    int64_t n, d;
+    if (is_rational(e, &n, &d)) {
+        *out = (Cplx){ .re = (double)n / d, .im = 0.0 };
+        return true;
+    }
+    Expr *re_expr, *im_expr;
+    if (is_complex(e, &re_expr, &im_expr)) {
+        Cplx re_c, im_c;
+        if (!get_numeric_as_complex(re_expr, &re_c) || !get_numeric_as_complex(im_expr, &im_c)) {
+            return false; 
+        }
+        *out = (Cplx){ .re = re_c.re, .im = im_c.re };
+        return true;
+    }
+    return false; 
+}
+
+Expr* builtin_quotient(Expr* res) {
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 2 && res->data.function.arg_count != 3)) {
+        return NULL;
+    }
+
+    Expr* m_expr = res->data.function.args[0];
+    Expr* n_expr = res->data.function.args[1];
+    Expr* d_expr = (res->data.function.arg_count == 3) ? res->data.function.args[2] : NULL;
+
+    bool is_m_complex = is_complex(m_expr, NULL, NULL);
+    bool is_n_complex = is_complex(n_expr, NULL, NULL);
+    bool is_d_complex = d_expr ? is_complex(d_expr, NULL, NULL) : false;
+
+    if (is_m_complex || is_n_complex || is_d_complex) {
+        Cplx m, n, d = {0.0, 0.0};
+        if (!get_numeric_as_complex(m_expr, &m) || !get_numeric_as_complex(n_expr, &n)) return NULL;
+        if (d_expr && !get_numeric_as_complex(d_expr, &d)) return NULL;
+
+        Cplx m_minus_d = { m.re - d.re, m.im - d.im };
+        double n_norm_sq = n.re * n.re + n.im * n.im;
+        if (n_norm_sq == 0.0) return NULL;
+
+        Cplx z = {
+            .re = (m_minus_d.re * n.re + m_minus_d.im * n.im) / n_norm_sq,
+            .im = (m_minus_d.im * n.re - m_minus_d.re * n.im) / n_norm_sq
+        };
+
+        Cplx result_cplx = { round(z.re), round(z.im) };
+
+        if (result_cplx.im == 0.0) {
+            return expr_new_integer((int64_t)result_cplx.re);
+        } else {
+            Expr* re_part = expr_new_integer((int64_t)result_cplx.re);
+            Expr* im_part = expr_new_integer((int64_t)result_cplx.im);
+            Expr* result = make_complex(re_part, im_part);
+            expr_free(re_part);
+            expr_free(im_part);
+            return result;
+        }
+    } else { 
+        double m_val, n_val, d_val = 0.0;
+        Cplx temp;
+        if (!get_numeric_as_complex(m_expr, &temp)) return NULL;
+        m_val = temp.re;
+        if (!get_numeric_as_complex(n_expr, &temp)) return NULL;
+        n_val = temp.re;
+        if (d_expr) {
+            if (!get_numeric_as_complex(d_expr, &temp)) return NULL;
+            d_val = temp.re;
+        }
+
+        if (n_val == 0.0) return NULL;
+
+        int64_t result = (int64_t)floor((m_val - d_val) / n_val);
+        return expr_new_integer(result);
+    }
+}
+
+static int64_t get_expr_depth(Expr* e, bool heads) {
+    if (e->type != EXPR_FUNCTION) return 1;
+
+    // Rational and Complex are considered atomic in terms of Depth/Length in Mathematica
+    if (e->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = e->data.function.head->data.symbol;
+        if (strcmp(h, "Rational") == 0 || strcmp(h, "Complex") == 0) return 1;
+    }
+
+    int64_t max_d = 0;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        int64_t d = get_expr_depth(e->data.function.args[i], heads);
+        if (d > max_d) max_d = d;
+    }
+    if (heads) {
+        int64_t d_head = get_expr_depth(e->data.function.head, heads);
+        if (d_head > max_d) max_d = d_head;
+    }
+    return max_d + 1;
+}
+
+Expr* builtin_depth(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
+    Expr* e = res->data.function.args[0];
+    bool heads = false;
+    for (size_t i = 1; i < res->data.function.arg_count; i++) {
+        Expr* opt = res->data.function.args[i];
+        if (opt->type == EXPR_FUNCTION && strcmp(opt->data.function.head->data.symbol, "Rule") == 0) {
+            if (strcmp(opt->data.function.args[0]->data.symbol, "Heads") == 0) {
+                if (strcmp(opt->data.function.args[1]->data.symbol, "True") == 0) heads = true;
+            }
+        }
+    }
+    return expr_new_integer(get_expr_depth(e, heads));
+}
+
+static void level_rec(Expr* e, int64_t current_level, int64_t min_l, int64_t max_l, bool heads, Expr*** results, size_t* count, size_t* cap) {
+    if (max_l >= 0 && current_level > max_l) return;
+
+    int64_t d = get_expr_depth(e, heads);
+
+    if (e->type == EXPR_FUNCTION) {
+        if (heads) level_rec(e->data.function.head, current_level + 1, min_l, max_l, heads, results, count, cap);
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            level_rec(e->data.function.args[i], current_level + 1, min_l, max_l, heads, results, count, cap);
+        }
+    }
+
+    bool match = true;
+    if (min_l >= 0) {
+        if (current_level < min_l) match = false;
+    } else {
+        if (d > -min_l) match = false;
+    }
+
+    if (max_l >= 0) {
+        if (current_level > max_l) match = false;
+    } else {
+        if (d < -max_l) match = false;
+    }
+
+    if (match) {
+        if (*count == *cap) {
+            *cap *= 2;
+            *results = realloc(*results, sizeof(Expr*) * (*cap));
+        }
+        (*results)[(*count)++] = expr_copy(e);
+    }
+}
+
+Expr* builtin_level(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) return NULL;
+    Expr* e = res->data.function.args[0];
+    Expr* ls = res->data.function.args[1];
+
+    int64_t min_l = 1, max_l = 1;
+    if (ls->type == EXPR_INTEGER) {
+        max_l = ls->data.integer;
+    } else if (ls->type == EXPR_SYMBOL && strcmp(ls->data.symbol, "Infinity") == 0) {
+        max_l = 1000000;
+    } else if (ls->type == EXPR_FUNCTION && strcmp(ls->data.function.head->data.symbol, "List") == 0) {
+        if (ls->data.function.arg_count == 1 && ls->data.function.args[0]->type == EXPR_INTEGER) {
+            min_l = max_l = ls->data.function.args[0]->data.integer;
+        } else if (ls->data.function.arg_count == 2) {
+            if (ls->data.function.args[0]->type == EXPR_INTEGER) min_l = ls->data.function.args[0]->data.integer;
+            if (ls->data.function.args[1]->type == EXPR_INTEGER) max_l = ls->data.function.args[1]->data.integer;
+            else if (ls->data.function.args[1]->type == EXPR_SYMBOL && strcmp(ls->data.function.args[1]->data.symbol, "Infinity") == 0) max_l = 1000000;
+        }
+    }
+
+    bool heads = false;
+    for (size_t i = 2; i < res->data.function.arg_count; i++) {
+        Expr* opt = res->data.function.args[i];
+        if (opt->type == EXPR_FUNCTION && strcmp(opt->data.function.head->data.symbol, "Rule") == 0) {
+            if (strcmp(opt->data.function.args[0]->data.symbol, "Heads") == 0) {
+                if (strcmp(opt->data.function.args[1]->data.symbol, "True") == 0) heads = true;
+            }
+        }
+    }
+
+    size_t count = 0, cap = 16;
+    Expr** results = malloc(sizeof(Expr*) * cap);
+    level_rec(e, 0, min_l, max_l, heads, &results, &count, &cap);
+
+    Expr* list = expr_new_function(expr_new_symbol("List"), results, count);
+    free(results);
+    return list;
+}
+
+Expr* builtin_quotientremainder(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) {
+        return NULL;
+    }
+
+    Expr* quot_expr = expr_new_function(expr_new_symbol("Quotient"), res->data.function.args, 2);
+    Expr* mod_expr = expr_new_function(expr_new_symbol("Mod"), res->data.function.args, 2);
+
+    Expr* quotient = builtin_quotient(quot_expr);
+    Expr* remainder = builtin_mod(mod_expr);
+
+    quot_expr->data.function.arg_count = 0; 
+    mod_expr->data.function.arg_count = 0;
+    expr_free(quot_expr);
+    expr_free(mod_expr);
+
+    if (!quotient || !remainder) {
+        if (quotient) expr_free(quotient);
+        if (remainder) expr_free(remainder);
+        return NULL;
+    }
+
+    Expr** results = malloc(sizeof(Expr*) * 2);
+    results[0] = quotient;
+    results[1] = remainder;
+    
+    Expr* final_res = expr_new_function(expr_new_symbol("List"), results, 2);
+    free(results);
+    return final_res;
+}
