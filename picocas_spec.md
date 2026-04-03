@@ -682,6 +682,33 @@ In[4]:= PolynomialQ[f[a] + f[a]^2, f[a]]
 Out[4]= True
 ```
 
+#### HornerForm
+Puts a polynomial or rational function into Horner form.
+- `HornerForm[poly]`
+- `HornerForm[poly, vars]`
+- `HornerForm[poly1/poly2, vars1, vars2]`
+
+**Features**:
+- `Protected`.
+- Nests multiplications instead of using powers (e.g., $a + x(b + c x)$ instead of $a + bx + cx^2$).
+- Identifies variables using `Variables` if not explicitly specified.
+- Issues an error and returns unevaluated if the expression is not a polynomial or rational function in the target variables.
+
+```mathematica
+In[1]:= HornerForm[11 x^3 - 4 x^2 + 7 x + 2]
+Out[1]= 2 + x (7 + x (-4 + 11 x))
+
+In[2]:= HornerForm[a + b x + c x^2, x]
+Out[2]= a + x (b + c x)
+
+In[3]:= HornerForm[(11 x^3 - 4 x^2 + 7 x + 2)/(x^2 - 3 x + 1)]
+Out[3]= (2 + x (7 + x (-4 + 11 x))) / (1 + x (-3 + x))
+
+In[4]:= HornerForm[1 + x^a, x]
+HornerForm::poly: 1+x^a is not a polynomial.
+Out[4]= HornerForm[1 + x^a, x]
+```
+
 ### Expression Information
 
 #### Attributes
@@ -1051,6 +1078,40 @@ Out[2]= a^2 * b^2
 #### Sqrt
 Square root.
 - `Sqrt[z]`: Internally represented as `Power[z, 1/2]`.
+
+#### Numerator
+Gives the numerator of an expression.
+- `Numerator[expr]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Picks out terms which do not have superficially negative exponents.
+- Can be used on rational and complex numbers.
+
+```mathematica
+In[1]:= Numerator[(x-1)(x-2)/(x-3)^2]
+Out[1]= (-2 + x) (-1 + x)
+
+In[2]:= Numerator[3/7 + I/11]
+Out[2]= 33 + 7 I
+```
+
+#### Denominator
+Gives the denominator of an expression.
+- `Denominator[expr]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Picks out terms which have superficially negative exponents.
+- Can be used on rational and complex numbers.
+
+```mathematica
+In[1]:= Denominator[(x-1)(x-2)/(x-3)^2]
+Out[1]= (-3 + x)^2
+
+In[2]:= Denominator[3/7 + I/11]
+Out[2]= 77
+```
 
 #### Mod, Quotient, QuotientRemainder
 - `Mod[n, m]`: Remainder of `n/m`.

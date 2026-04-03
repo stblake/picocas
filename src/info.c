@@ -139,6 +139,9 @@ void info_init(void) {
     symtab_set_docstring("Variables", "Variables[poly] gives a list of all independent variables in the polynomial poly.");
     symtab_set_docstring("PolynomialQ", "PolynomialQ[expr, var] yields True if expr is a polynomial in var.");
     symtab_set_docstring("Decompose", "Decompose[poly, x] decomposes a polynomial, if possible, into a composition of simpler polynomials.");
+    symtab_set_docstring("HornerForm", "HornerForm[poly] puts the polynomial poly in Horner form.\nHornerForm[poly, vars] puts poly in Horner form with respect to vars.\nHornerForm[poly1/poly2, vars1, vars2] puts the rational function in Horner form.");
+    symtab_set_docstring("Numerator", "Numerator[expr] gives the numerator of expr.\nNumerator picks out terms which do not have superficially negative exponents.");
+    symtab_set_docstring("Denominator", "Denominator[expr] gives the denominator of expr.\nDenominator picks out terms which have superficially negative exponents.");
 
     // Time and Date
     symtab_set_docstring("Timing", "Timing[expr] evaluates expr, and returns a list of the time in seconds used, together with the result obtained.");

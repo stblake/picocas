@@ -34,6 +34,7 @@ set(COMMON_SRC
     ../src/info.c
     ../src/expand.c
     ../src/poly.c
+    ../src/rat.c
     ../src/facpoly.c
     ../src/datetime.c
     ../src/linalg.c
@@ -191,6 +192,12 @@ add_executable(facpoly_tests
     ${COMMON_SRC}
 )
 target_include_directories(facpoly_tests PRIVATE ../src)
+
+add_executable(rat_tests
+    test_rat.c
+    ${COMMON_SRC}
+)
+target_include_directories(rat_tests PRIVATE ../src)
 
 add_executable(linalg_tests
     test_linalg.c

@@ -20,6 +20,7 @@
 #include "info.h"
 #include "expand.h"
 #include "poly.h"
+#include "rat.h"
 #include "facint.h"
 #include "facpoly.h"
 #include "datetime.h"
@@ -128,6 +129,7 @@ void core_init(void) {
     stats_init();
     poly_init();
     facpoly_init();
+    rat_init();
     expand_init();
     info_init();
     datetime_init();
@@ -775,3 +777,4 @@ Expr* builtin_quotientremainder(Expr* res) {
     free(results);
     return final_res;
 }
+
