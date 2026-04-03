@@ -701,6 +701,30 @@ In[2]:= Resultant[x^3 - 5x^2 - 7x + 14, x^3 - 8x^2 + 9x + 58, x]
 Out[2]= 0
 ```
 
+#### Discriminant
+Computes the discriminant of the polynomial with respect to the variable.
+- `Discriminant[poly, var]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Computes the discriminant of polynomial `poly` with respect to `var`.
+- The discriminant is zero if and only if the polynomial has multiple roots.
+- Derived symbolically utilizing the formula $D = \frac{(-1)^{n(n-1)/2}}{a_n} Resultant(P, P', var)$.
+
+```mathematica
+In[1]:= Discriminant[a x^2 + b x + c, x]
+Out[1]= b^2 - 4 a c
+
+In[2]:= Discriminant[5 x^4 - 3 x + 9, x]
+Out[2]= 23273325
+
+In[3]:= Discriminant[(x-1)(x-2)(x-3), x]
+Out[3]= 4
+
+In[4]:= Discriminant[(x-1)(x-2)(x-1), x]
+Out[4]= 0
+```
+
 #### HornerForm
 Puts a polynomial or rational function into Horner form.
 - `HornerForm[poly]`

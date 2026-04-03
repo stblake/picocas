@@ -1814,6 +1814,86 @@ Expr* builtin_resultant(Expr* res) {
     return resultant_internal(p1, p2, var);
 }
 
+static Expr* poly_derivative(Expr* exp_p, Expr* var) {
+    int n = get_degree_poly(exp_p, var);
+    if (n <= 0) return expr_new_integer(0);
+    Expr** args = malloc(sizeof(Expr*) * n);
+    int count = 0;
+    for (int i = 1; i <= n; i++) {
+        Expr* c = get_coeff(exp_p, var, i);
+        if (!is_zero_poly(c)) {
+            Expr* t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(i), c}, 2));
+            if (i == 1) {
+                args[count++] = t1;
+            } else if (i == 2) {
+                Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){t1, expr_copy(var)}, 2));
+                args[count++] = t2;
+            } else {
+                Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(var), expr_new_integer(i-1)}, 2));
+                Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){t1, xp}, 2));
+                args[count++] = t2;
+            }
+        } else {
+            expr_free(c);
+        }
+    }
+    if (count == 0) {
+        free(args);
+        return expr_new_integer(0);
+    } else if (count == 1) {
+        Expr* res = args[0];
+        free(args);
+        return res;
+    } else {
+        Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), args, count));
+        free(args);
+        return res;
+    }
+}
+
+Expr* builtin_discriminant(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    
+    Expr* poly = res->data.function.args[0];
+    Expr* var = res->data.function.args[1];
+    
+    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(poly), expr_copy(var)}, 2));
+    bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
+    expr_free(pq);
+    
+    if (!is_poly) return NULL;
+    
+    Expr* exp_poly = expr_expand(poly);
+    int n = get_degree_poly(exp_poly, var);
+    
+    if (n < 0) {
+        expr_free(exp_poly);
+        return NULL;
+    }
+    if (n == 0 || n == 1) {
+        expr_free(exp_poly);
+        return expr_new_integer(1);
+    }
+    
+    Expr* a_n = get_coeff(exp_poly, var, n);
+    Expr* deriv = poly_derivative(exp_poly, var);
+    Expr* res_val = resultant_internal(exp_poly, deriv, var);
+    expr_free(deriv);
+    expr_free(exp_poly);
+    
+    int64_t sign_pow = (int64_t)n * (n - 1) / 2;
+    int64_t sign = (sign_pow % 2 != 0) ? -1 : 1;
+    
+    Expr* num = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(sign), res_val}, 2));
+    Expr* den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){a_n, expr_new_integer(-1)}, 2));
+    
+    Expr* final_res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num, den}, 2));
+    Expr* ret = expr_expand(final_res);
+    expr_free(final_res);
+    
+    return ret;
+}
+
 void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
     symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Variables", builtin_variables);
@@ -1838,4 +1918,6 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("HornerForm")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Resultant", builtin_resultant);
     symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("Discriminant", builtin_discriminant);
+    symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
 }

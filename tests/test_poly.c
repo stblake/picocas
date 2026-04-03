@@ -160,6 +160,13 @@ void test_resultant() {
     run_test("Resultant[a, b x + c, x]", "a");
 }
 
+void test_discriminant() {
+    run_test("Discriminant[a x^2 + b x + c, x]", "Plus[Times[-4, Times[a, c]], Power[b, 2]]");
+    run_test("Discriminant[5 x^4 - 3 x + 9, x]", "23273325");
+    run_test("Discriminant[(x-1)(x-2)(x-3), x]", "4");
+    run_test("Discriminant[(x-1)(x-2)(x-1), x]", "0");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -177,6 +184,7 @@ int main() {
     TEST(test_decompose);
     TEST(test_hornerform);
     TEST(test_resultant);
+    TEST(test_discriminant);
     
     printf("All polynomial tests passed!\n");
     return 0;
