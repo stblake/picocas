@@ -682,6 +682,25 @@ In[4]:= PolynomialQ[f[a] + f[a]^2, f[a]]
 Out[4]= True
 ```
 
+#### Resultant
+Computes the resultant of two polynomials.
+- `Resultant[poly1, poly2, var]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Computes the resultant of polynomials `poly1` and `poly2` with respect to the variable `var`.
+- The resultant is independent of common roots and vanishes exactly when the polynomials have roots in common.
+- Implemented fundamentally over symbolic systems using Sylvester matrix determinants, ensuring full generic expansion over arbitrary constants.
+- Automatically preserves multiplicativity (e.g., $Res(A \cdot B, Q) = Res(A, Q) Res(B, Q)$ and $Res(A^k, Q) = Res(A, Q)^k$).
+
+```mathematica
+In[1]:= Resultant[x^2 - 2x + 7, x^3 - x + 5, x]
+Out[1]= 265
+
+In[2]:= Resultant[x^3 - 5x^2 - 7x + 14, x^3 - 8x^2 + 9x + 58, x]
+Out[2]= 0
+```
+
 #### HornerForm
 Puts a polynomial or rational function into Horner form.
 - `HornerForm[poly]`

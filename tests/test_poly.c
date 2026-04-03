@@ -137,6 +137,29 @@ void test_decompose() {
     run_test("Decompose[(a x^3 + 1)^2 + b, x]", "List[Plus[1, Times[2, Times[a, x]], b, Times[Power[a, 2], Power[x, 2]]], Power[x, 3]]");
 }
 
+void test_hornerform() {
+    run_test("HornerForm[11 x^3 - 4 x^2 + 7 x + 2]", "Plus[2, Times[x, Plus[7, Times[x, Plus[-4, Times[11, x]]]]]]");
+    run_test("HornerForm[a + b x + c x^2, x]", "Plus[a, Times[x, Plus[b, Times[c, x]]]]");
+    run_test("HornerForm[(11 x^3 - 4 x^2 + 7 x + 2)/(x^2 - 3 x + 1)]", "Times[Power[Plus[1, Times[x, Plus[-3, x]]], -1], Plus[2, Times[x, Plus[7, Times[x, Plus[-4, Times[11, x]]]]]]]");
+    run_test("HornerForm[x y + 2 x^2 y + 2 x y^2 + 4 x^2 y^2, {x, y}]", "Times[x, Plus[Times[x, y, Plus[2, Times[4, y]]], Times[y, Plus[1, Times[2, y]]]]]");
+    run_test("HornerForm[x y + 2 x^2 y + 2 x y^2 + 4 x^2 y^2, {y, x}]", "Times[y, Plus[Times[x, y, Plus[2, Times[4, x]]], Times[x, Plus[1, Times[2, x]]]]]");
+}
+
+void test_resultant() {
+    // run_test("Resultant[(x-a)(x-b),(x-c)(x-d)(x-e),x]", ...); 
+    // The explicit Mathematica string given was: -(b-c) (-a+c) (b-d) (-a+d) (b-e) (-a+e).
+    // Due to Expand/Sort we just test Resultant correctness on expanded output.
+    
+    // Let's use simple numeric tests to verify Resultant correctness exactly.
+    run_test("Resultant[x^2 - 2 x + 7, x^3 - x + 5, x]", "265");
+    run_test("Resultant[x^3 - 5 x^2 - 7 x + 3, x^3 - 8 x^2 + 9 x - 11, x]", "-10321");
+    run_test("Resultant[x^3 - 5 x^2 - 7 x + 14, x^3 - 8 x^2 + 9 x + 58, x]", "0");
+    run_test("Resultant[a x + b, c x + d, x]", "Plus[Times[-1, Times[b, c]], Times[a, d]]");
+    run_test("Resultant[a, b, x]", "1");
+    run_test("Resultant[a x + b, c, x]", "c");
+    run_test("Resultant[a, b x + c, x]", "a");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -152,6 +175,8 @@ int main() {
     TEST(test_collect);
     TEST(test_coefficientlist);
     TEST(test_decompose);
+    TEST(test_hornerform);
+    TEST(test_resultant);
     
     printf("All polynomial tests passed!\n");
     return 0;

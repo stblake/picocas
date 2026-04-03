@@ -1487,6 +1487,333 @@ Expr* builtin_decompose(Expr* res) {
     return decompose_recursive(poly, x);
 }
 
+static Expr* horner_form_rec(Expr* expr, Expr** vars, size_t num_vars) {
+    if (num_vars == 0) return expr_copy(expr);
+    Expr* v = vars[0];
+    
+    Expr* expanded = expr_expand(expr);
+    
+    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(expanded), expr_copy(v)}, 2));
+    bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
+    expr_free(pq);
+    
+    if (!is_poly) {
+        expr_free(expanded);
+        return NULL;
+    }
+    
+    Expr* cl = eval_and_free(expr_new_function(expr_new_symbol("CoefficientList"), (Expr*[]){expr_copy(expanded), expr_copy(v)}, 2));
+    expr_free(expanded);
+    
+    if (!cl || cl->type != EXPR_FUNCTION || strcmp(cl->data.function.head->data.symbol, "List") != 0) {
+        if (cl) expr_free(cl);
+        return NULL;
+    }
+    
+    size_t count = cl->data.function.arg_count;
+    if (count == 0) {
+        expr_free(cl);
+        return expr_new_integer(0);
+    }
+    
+    Expr* H = horner_form_rec(cl->data.function.args[count - 1], vars + 1, num_vars - 1);
+    if (!H) {
+        expr_free(cl);
+        return NULL;
+    }
+    
+    for (int i = (int)count - 2; i >= 0; i--) {
+        Expr* c_i = horner_form_rec(cl->data.function.args[i], vars + 1, num_vars - 1);
+        if (!c_i) {
+            expr_free(cl);
+            expr_free(H);
+            return NULL;
+        }
+        
+        bool h_zero = is_zero_poly(H);
+        
+        if (h_zero) {
+            expr_free(H);
+            H = c_i;
+        } else {
+            Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(v), H}, 2));
+            bool c_zero = is_zero_poly(c_i);
+            if (c_zero) {
+                expr_free(c_i);
+                H = t;
+            } else {
+                H = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){c_i, t}, 2));
+            }
+        }
+    }
+    
+    expr_free(cl);
+    return H;
+}
+
+Expr* builtin_hornerform(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 3) return NULL;
+    
+    Expr* expr = res->data.function.args[0];
+    
+    Expr* num = NULL;
+    Expr* den = NULL;
+    
+    if (expr->type == EXPR_FUNCTION && expr->data.function.head->type == EXPR_SYMBOL && strcmp(expr->data.function.head->data.symbol, "Times") == 0) {
+        size_t n_cap = 16, n_count = 0;
+        size_t d_cap = 16, d_count = 0;
+        Expr** n_args = malloc(sizeof(Expr*) * n_cap);
+        Expr** d_args = malloc(sizeof(Expr*) * d_cap);
+        
+        for (size_t i = 0; i < expr->data.function.arg_count; i++) {
+            Expr* arg = expr->data.function.args[i];
+            if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "Power") == 0 && arg->data.function.arg_count == 2) {
+                Expr* exp = arg->data.function.args[1];
+                if ((exp->type == EXPR_INTEGER && exp->data.integer < 0) || 
+                    (exp->type == EXPR_FUNCTION && exp->data.function.head->type == EXPR_SYMBOL && strcmp(exp->data.function.head->data.symbol, "Rational") == 0 && exp->data.function.args[0]->data.integer < 0)) {
+                    if (d_count == d_cap) { d_cap *= 2; d_args = realloc(d_args, sizeof(Expr*) * d_cap); }
+                    if (exp->type == EXPR_INTEGER) {
+                        if (exp->data.integer == -1) {
+                            d_args[d_count++] = expr_copy(arg->data.function.args[0]);
+                        } else {
+                            d_args[d_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(arg->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2));
+                        }
+                    } else { 
+                        Expr* new_rat = eval_and_free(expr_new_function(expr_new_symbol("Rational"), (Expr*[]){expr_new_integer(-exp->data.function.args[0]->data.integer), expr_copy(exp->data.function.args[1])}, 2));
+                        d_args[d_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(arg->data.function.args[0]), new_rat}, 2));
+                    }
+                    continue;
+                }
+            }
+            if (n_count == n_cap) { n_cap *= 2; n_args = realloc(n_args, sizeof(Expr*) * n_cap); }
+            n_args[n_count++] = expr_copy(arg);
+        }
+        
+        if (n_count == 0) num = expr_new_integer(1);
+        else if (n_count == 1) num = n_args[0];
+        else num = eval_and_free(expr_new_function(expr_new_symbol("Times"), n_args, n_count));
+        
+        if (d_count == 0) den = expr_new_integer(1);
+        else if (d_count == 1) den = d_args[0];
+        else den = eval_and_free(expr_new_function(expr_new_symbol("Times"), d_args, d_count));
+        
+        free(n_args); free(d_args);
+    } else if (expr->type == EXPR_FUNCTION && expr->data.function.head->type == EXPR_SYMBOL && strcmp(expr->data.function.head->data.symbol, "Power") == 0 && expr->data.function.arg_count == 2) {
+        Expr* exp = expr->data.function.args[1];
+        if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+            num = expr_new_integer(1);
+            if (exp->data.integer == -1) {
+                den = expr_copy(expr->data.function.args[0]);
+            } else {
+                den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(expr->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2));
+            }
+        } else {
+            num = expr_copy(expr);
+            den = expr_new_integer(1);
+        }
+    } else {
+        num = expr_copy(expr);
+        den = expr_new_integer(1);
+    }
+
+    Expr* vars1_expr = NULL;
+    Expr* vars2_expr = NULL;
+    
+    if (res->data.function.arg_count == 1) {
+        vars1_expr = eval_and_free(expr_new_function(expr_new_symbol("Variables"), (Expr*[]){expr_copy(num)}, 1));
+        vars2_expr = eval_and_free(expr_new_function(expr_new_symbol("Variables"), (Expr*[]){expr_copy(den)}, 1));
+    } else if (res->data.function.arg_count == 2) {
+        vars1_expr = expr_copy(res->data.function.args[1]);
+        vars2_expr = expr_copy(res->data.function.args[1]);
+    } else if (res->data.function.arg_count == 3) {
+        vars1_expr = expr_copy(res->data.function.args[1]);
+        vars2_expr = expr_copy(res->data.function.args[2]);
+    }
+    
+    if (vars1_expr && (vars1_expr->type != EXPR_FUNCTION || vars1_expr->data.function.head->type != EXPR_SYMBOL || strcmp(vars1_expr->data.function.head->data.symbol, "List") != 0)) {
+        vars1_expr = eval_and_free(expr_new_function(expr_new_symbol("List"), (Expr*[]){vars1_expr}, 1));
+    }
+    if (vars2_expr && (vars2_expr->type != EXPR_FUNCTION || vars2_expr->data.function.head->type != EXPR_SYMBOL || strcmp(vars2_expr->data.function.head->data.symbol, "List") != 0)) {
+        vars2_expr = eval_and_free(expr_new_function(expr_new_symbol("List"), (Expr*[]){vars2_expr}, 1));
+    }
+    
+    Expr** vars1 = vars1_expr ? vars1_expr->data.function.args : NULL;
+    size_t num_vars1 = vars1_expr ? vars1_expr->data.function.arg_count : 0;
+    
+    Expr** vars2 = vars2_expr ? vars2_expr->data.function.args : NULL;
+    size_t num_vars2 = vars2_expr ? vars2_expr->data.function.arg_count : 0;
+    
+    Expr* h_num = horner_form_rec(num, vars1, num_vars1);
+    if (!h_num) {
+        printf("HornerForm::poly: "); 
+        char* s = expr_to_string(expr);
+        printf("%s is not a polynomial.\n", s);
+        free(s);
+        if (vars1_expr) expr_free(vars1_expr);
+        if (vars2_expr) expr_free(vars2_expr);
+        expr_free(num);
+        expr_free(den);
+        return expr_copy(res);
+    }
+    
+    Expr* h_den = NULL;
+    if (den->type == EXPR_INTEGER && den->data.integer == 1) {
+        h_den = expr_copy(den);
+    } else {
+        h_den = horner_form_rec(den, vars2, num_vars2);
+        if (!h_den) {
+            printf("HornerForm::poly: "); 
+            char* s = expr_to_string(expr);
+            printf("%s is not a polynomial.\n", s);
+            free(s);
+            if (vars1_expr) expr_free(vars1_expr);
+            if (vars2_expr) expr_free(vars2_expr);
+            expr_free(num);
+            expr_free(den);
+            expr_free(h_num);
+            return expr_copy(res);
+        }
+    }
+    
+    Expr* result = NULL;
+    if (h_den->type == EXPR_INTEGER && h_den->data.integer == 1) {
+        result = h_num;
+        expr_free(h_den);
+    } else {
+        Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){h_den, expr_new_integer(-1)}, 2));
+        result = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){h_num, inv_den}, 2));
+    }
+    
+    if (vars1_expr) expr_free(vars1_expr);
+    if (vars2_expr) expr_free(vars2_expr);
+    expr_free(num);
+    expr_free(den);
+    
+    return result;
+}
+
+static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
+    if (P->type == EXPR_FUNCTION && P->data.function.head->type == EXPR_SYMBOL) {
+        if (strcmp(P->data.function.head->data.symbol, "Times") == 0) {
+            size_t count = P->data.function.arg_count;
+            Expr** args = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                args[i] = resultant_internal(P->data.function.args[i], Q, var);
+            }
+            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, count));
+            free(args);
+            return res;
+        } else if (strcmp(P->data.function.head->data.symbol, "Power") == 0 && P->data.function.arg_count == 2) {
+            Expr* r = resultant_internal(P->data.function.args[0], Q, var);
+            return eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){r, expr_copy(P->data.function.args[1])}, 2));
+        }
+    }
+    
+    if (Q->type == EXPR_FUNCTION && Q->data.function.head->type == EXPR_SYMBOL) {
+        if (strcmp(Q->data.function.head->data.symbol, "Times") == 0) {
+            size_t count = Q->data.function.arg_count;
+            Expr** args = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                args[i] = resultant_internal(P, Q->data.function.args[i], var);
+            }
+            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, count));
+            free(args);
+            return res;
+        } else if (strcmp(Q->data.function.head->data.symbol, "Power") == 0 && Q->data.function.arg_count == 2) {
+            Expr* r = resultant_internal(P, Q->data.function.args[0], var);
+            return eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){r, expr_copy(Q->data.function.args[1])}, 2));
+        }
+    }
+    
+    Expr* exp_P = expr_expand(P);
+    Expr* exp_Q = expr_expand(Q);
+    int n = get_degree_poly(exp_P, var);
+    int m = get_degree_poly(exp_Q, var);
+    
+    if (n == 0 && m == 0) {
+        expr_free(exp_P); expr_free(exp_Q);
+        return expr_new_integer(1);
+    }
+    if (n == 0) {
+        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(exp_P), expr_new_integer(m)}, 2));
+        expr_free(exp_P); expr_free(exp_Q);
+        return r;
+    }
+    if (m == 0) {
+        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(exp_Q), expr_new_integer(n)}, 2));
+        expr_free(exp_P); expr_free(exp_Q);
+        return r;
+    }
+    
+    Expr** p_coeffs = malloc(sizeof(Expr*) * (n + 1));
+    for (int i = 0; i <= n; i++) p_coeffs[i] = get_coeff(exp_P, var, n - i);
+    
+    Expr** q_coeffs = malloc(sizeof(Expr*) * (m + 1));
+    for (int i = 0; i <= m; i++) q_coeffs[i] = get_coeff(exp_Q, var, m - i);
+    
+    int dim = n + m;
+    Expr** rows = malloc(sizeof(Expr*) * dim);
+    for (int i = 0; i < m; i++) {
+        Expr** row_elems = malloc(sizeof(Expr*) * dim);
+        for (int j = 0; j < dim; j++) {
+            if (j >= i && j - i <= n) row_elems[j] = expr_copy(p_coeffs[j - i]);
+            else row_elems[j] = expr_new_integer(0);
+        }
+        rows[i] = expr_new_function(expr_new_symbol("List"), row_elems, dim);
+        free(row_elems);
+    }
+    
+    for (int i = 0; i < n; i++) {
+        Expr** row_elems = malloc(sizeof(Expr*) * dim);
+        for (int j = 0; j < dim; j++) {
+            if (j >= i && j - i <= m) row_elems[j] = expr_copy(q_coeffs[j - i]);
+            else row_elems[j] = expr_new_integer(0);
+        }
+        rows[m + i] = expr_new_function(expr_new_symbol("List"), row_elems, dim);
+        free(row_elems);
+    }
+    
+    Expr* matrix = expr_new_function(expr_new_symbol("List"), rows, dim);
+    free(rows);
+    
+    Expr* det_call = expr_new_function(expr_new_symbol("Det"), (Expr*[]){matrix}, 1);
+    Expr* evaluated_det = evaluate(det_call);
+    expr_free(det_call);
+    
+    Expr* result = expr_expand(evaluated_det);
+    expr_free(evaluated_det);
+    
+    for (int i = 0; i <= n; i++) expr_free(p_coeffs[i]);
+    free(p_coeffs);
+    for (int i = 0; i <= m; i++) expr_free(q_coeffs[i]);
+    free(q_coeffs);
+    expr_free(exp_P); expr_free(exp_Q);
+    
+    return result;
+}
+
+Expr* builtin_resultant(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+    
+    Expr* p1 = res->data.function.args[0];
+    Expr* p2 = res->data.function.args[1];
+    Expr* var = res->data.function.args[2];
+    
+    Expr* pq1 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(p1), expr_copy(var)}, 2));
+    bool is_poly1 = (pq1->type == EXPR_SYMBOL && strcmp(pq1->data.symbol, "True") == 0);
+    expr_free(pq1);
+    
+    Expr* pq2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(p2), expr_copy(var)}, 2));
+    bool is_poly2 = (pq2->type == EXPR_SYMBOL && strcmp(pq2->data.symbol, "True") == 0);
+    expr_free(pq2);
+    
+    if (!is_poly1 || !is_poly2) {
+        return NULL;
+    }
+    
+    return resultant_internal(p1, p2, var);
+}
+
 void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
     symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Variables", builtin_variables);
@@ -1507,4 +1834,8 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("Collect")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Decompose", builtin_decompose);
     symtab_get_def("Decompose")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("HornerForm", builtin_hornerform);
+    symtab_get_def("HornerForm")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Resultant", builtin_resultant);
+    symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
 }

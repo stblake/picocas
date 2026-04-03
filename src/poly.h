@@ -13,6 +13,8 @@ Expr* builtin_polynomialquotient(Expr* res);
 Expr* builtin_polynomialremainder(Expr* res);
 Expr* builtin_collect(Expr* res);
 Expr* builtin_decompose(Expr* res);
+Expr* builtin_hornerform(Expr* res);
+Expr* builtin_resultant(Expr* res);
 
 // Internal polynomial APIs needed for factorization
 bool is_polynomial(Expr* e, Expr** vars, size_t var_count);
