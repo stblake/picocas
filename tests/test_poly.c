@@ -127,6 +127,16 @@ void test_coefficientlist() {
     run_test("CoefficientList[(x + y + z + 1) (2 x + 3 y^2 + 4 z^3 + 5), {x, y, z}]", "List[List[List[5, 5, 0, 4, 4], List[5, 0, 0, 4, 0], List[3, 3, 0, 0, 0], List[3, 0, 0, 0, 0]], List[List[7, 2, 0, 4, 0], List[2, 0, 0, 0, 0], List[3, 0, 0, 0, 0], List[0, 0, 0, 0, 0]], List[List[2, 0, 0, 0, 0], List[0, 0, 0, 0, 0], List[0, 0, 0, 0, 0], List[0, 0, 0, 0, 0]]]");
 }
 
+void test_decompose() {
+    run_test("Decompose[x^2 + 1, x]", "List[Plus[1, x], Power[x, 2]]");
+    run_test("Decompose[x^4 + x^2, x]", "List[Plus[x, Power[x, 2]], Power[x, 2]]");
+    run_test("Decompose[(x + x^2)^2, x]", "List[Power[x, 2], Plus[x, Power[x, 2]]]");
+    run_test("Decompose[(x^2 + x)^4 + 1, x]", "List[Plus[1, x], Power[x, 4], Plus[x, Power[x, 2]]]");
+    run_test("Decompose[(x^2 + 1)^4 + 3, x]", "List[Plus[4, Times[2, x], Power[x, 2]], Plus[Times[2, x], Power[x, 2]], Power[x, 2]]");
+    run_test("Decompose[2 x + 1, x]", "List[Plus[1, Times[2, x]]]");
+    run_test("Decompose[(a x^3 + 1)^2 + b, x]", "List[Plus[1, Times[2, Times[a, x]], b, Times[Power[a, 2], Power[x, 2]]], Power[x, 3]]");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -141,6 +151,7 @@ int main() {
     TEST(test_polynomial_div_rem);
     TEST(test_collect);
     TEST(test_coefficientlist);
+    TEST(test_decompose);
     
     printf("All polynomial tests passed!\n");
     return 0;

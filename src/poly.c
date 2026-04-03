@@ -1261,6 +1261,232 @@ Expr* builtin_coefficientlist(Expr* res) {
     return result;
 }
 
+static Expr* decompose_recursive(Expr* f, Expr* x) {
+    Expr* expanded = expr_expand(f);
+    int n = get_degree_poly(expanded, x);
+    if (n < 2) {
+        Expr* res = expr_new_function(expr_new_symbol("List"), (Expr*[]){expr_copy(expanded)}, 1);
+        expr_free(expanded);
+        return res;
+    }
+
+    int d = 0;
+    for (int i = 1; i <= n; i++) {
+        Expr* c = get_coeff(expanded, x, i);
+        if (!is_zero_poly(c)) {
+            if (d == 0) d = i;
+            else {
+                int64_t tmp_d = gcd(d, i);
+                d = (int)tmp_d;
+            }
+        }
+        expr_free(c);
+    }
+
+    if (d > 1) {
+        Expr* H = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(d)}, 2));
+        
+        Expr** g_args = malloc(sizeof(Expr*) * (n/d + 1));
+        int g_count = 0;
+        for (int i = 0; i <= n; i += d) {
+            Expr* c = get_coeff(expanded, x, i);
+            if (!is_zero_poly(c)) {
+                if (i == 0) {
+                    g_args[g_count++] = c;
+                } else if (i == d) {
+                    Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c, expr_copy(x)}, 2));
+                    g_args[g_count++] = t;
+                } else {
+                    Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(i/d)}, 2));
+                    Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c, xp}, 2));
+                    g_args[g_count++] = t;
+                }
+            } else {
+                expr_free(c);
+            }
+        }
+        Expr* g;
+        if (g_count == 0) g = expr_new_integer(0);
+        else if (g_count == 1) g = g_args[0];
+        else g = eval_and_free(expr_new_function(expr_new_symbol("Plus"), g_args, g_count));
+        free(g_args);
+
+        expr_free(expanded);
+
+        if (expr_eq(g, x)) {
+            expr_free(g);
+            return expr_new_function(expr_new_symbol("List"), (Expr*[]){H}, 1);
+        }
+
+        Expr* Lg = decompose_recursive(g, x);
+        expr_free(g);
+        
+        size_t Lg_count = Lg->data.function.arg_count;
+        Expr** L_args = malloc(sizeof(Expr*) * (Lg_count + 1));
+        for (size_t i = 0; i < Lg_count; i++) L_args[i] = expr_copy(Lg->data.function.args[i]);
+        L_args[Lg_count] = H;
+        
+        Expr* res = expr_new_function(expr_new_symbol("List"), L_args, Lg_count + 1);
+        free(L_args);
+        expr_free(Lg);
+        return res;
+    }
+
+    Expr* a_n = get_coeff(expanded, x, n);
+    for (int s = 2; s < n; s++) {
+        if (n % s != 0) continue;
+        int r = n / s;
+        
+        Expr* H = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(s)}, 2));
+        
+        bool valid = true;
+        for (int k = 1; k < s; k++) {
+            Expr* temp_E = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(H), expr_new_integer(r)}, 2));
+            Expr* E = expr_expand(temp_E);
+            expr_free(temp_E);
+            Expr* C = get_coeff(E, x, n - k);
+            expr_free(E);
+            
+            Expr* a_nk = get_coeff(expanded, x, n - k);
+            
+            Expr* temp_num = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){a_nk, eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(a_n), C}, 3))}, 2));
+            Expr* num = expr_expand(temp_num);
+            expr_free(temp_num);
+            
+            Expr* temp_den = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(r), expr_copy(a_n)}, 2));
+            Expr* den = expr_expand(temp_den);
+            expr_free(temp_den);
+            
+            size_t v_count = 0, v_cap = 16;
+            Expr** vars = malloc(sizeof(Expr*) * v_cap);
+            collect_variables(num, &vars, &v_count, &v_cap);
+            collect_variables(den, &vars, &v_count, &v_cap);
+            if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+            
+            size_t vx_count = 0;
+            Expr** vars_nox = malloc(sizeof(Expr*) * v_count);
+            for (size_t i = 0; i < v_count; i++) {
+                if (!expr_eq(vars[i], x)) vars_nox[vx_count++] = vars[i];
+            }
+            
+            Expr* c_sk = exact_poly_div(num, den, vars_nox, vx_count);
+            
+            for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+            free(vars);
+            free(vars_nox);
+            expr_free(num);
+            expr_free(den);
+            
+            if (!c_sk) {
+                valid = false;
+                break;
+            }
+            
+            Expr* term;
+            if (s - k == 1) {
+                term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c_sk, expr_copy(x)}, 2));
+            } else {
+                Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(s - k)}, 2));
+                term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c_sk, xp}, 2));
+            }
+            Expr* temp_H = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){H, term}, 2));
+            Expr* next_H = expr_expand(temp_H);
+            expr_free(temp_H);
+            H = next_H;
+        }
+        
+        if (valid) {
+            Expr* Q = expr_copy(expanded);
+            Expr** g_terms = malloc(sizeof(Expr*) * (r + 1));
+            int g_count = 0;
+            for (int i = 0; i <= r; i++) {
+                Expr *new_Q, *Rem;
+                poly_div_rem(Q, H, x, &new_Q, &Rem);
+                expr_free(Q);
+                Q = new_Q;
+                if (get_degree_poly(Rem, x) > 0) {
+                    expr_free(Rem);
+                    valid = false;
+                    break;
+                }
+                g_terms[g_count++] = Rem;
+            }
+            
+            if (valid && is_zero_poly(Q)) {
+                expr_free(Q);
+                
+                Expr** g_args = malloc(sizeof(Expr*) * g_count);
+                int actual_g_count = 0;
+                for (int i = 0; i < g_count; i++) {
+                    if (!is_zero_poly(g_terms[i])) {
+                        if (i == 0) {
+                            g_args[actual_g_count++] = expr_copy(g_terms[i]);
+                        } else if (i == 1) {
+                            g_args[actual_g_count++] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(g_terms[i]), expr_copy(x)}, 2));
+                        } else {
+                            Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(i)}, 2));
+                            g_args[actual_g_count++] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(g_terms[i]), xp}, 2));
+                        }
+                    }
+                    expr_free(g_terms[i]);
+                }
+                free(g_terms);
+                
+                Expr* g;
+                if (actual_g_count == 0) g = expr_new_integer(0);
+                else if (actual_g_count == 1) g = g_args[0];
+                else g = eval_and_free(expr_new_function(expr_new_symbol("Plus"), g_args, actual_g_count));
+                free(g_args);
+                
+                Expr* Lg = decompose_recursive(g, x);
+                Expr* Lh = decompose_recursive(H, x);
+                expr_free(g);
+                expr_free(H);
+                expr_free(expanded);
+                expr_free(a_n);
+                
+                size_t c1 = Lg->data.function.arg_count;
+                size_t c2 = Lh->data.function.arg_count;
+                Expr** final_args = malloc(sizeof(Expr*) * (c1 + c2));
+                for (size_t i = 0; i < c1; i++) final_args[i] = expr_copy(Lg->data.function.args[i]);
+                for (size_t i = 0; i < c2; i++) final_args[c1 + i] = expr_copy(Lh->data.function.args[i]);
+                
+                Expr* res = expr_new_function(expr_new_symbol("List"), final_args, c1 + c2);
+                free(final_args);
+                expr_free(Lg);
+                expr_free(Lh);
+                return res;
+            } else {
+                for (int i = 0; i < g_count; i++) expr_free(g_terms[i]);
+                free(g_terms);
+                expr_free(Q);
+            }
+        }
+        expr_free(H);
+    }
+    expr_free(a_n);
+    
+    Expr* res = expr_new_function(expr_new_symbol("List"), (Expr*[]){expr_copy(expanded)}, 1);
+    expr_free(expanded);
+    return res;
+}
+
+Expr* builtin_decompose(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* poly = res->data.function.args[0];
+    Expr* x = res->data.function.args[1];
+    
+    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(poly), expr_copy(x)}, 2));
+    bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
+    expr_free(pq);
+    
+    if (!is_poly) {
+        return NULL;
+    }
+    
+    return decompose_recursive(poly, x);
+}
+
 void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
     symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Variables", builtin_variables);
@@ -1279,4 +1505,6 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("PolynomialRemainder")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Collect", builtin_collect);
     symtab_get_def("Collect")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Decompose", builtin_decompose);
+    symtab_get_def("Decompose")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
 }
