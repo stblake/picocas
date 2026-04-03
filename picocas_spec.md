@@ -951,6 +951,36 @@ In[1]:= 1 + 2 + x + 2*x
 Out[1]= 3 + 3*x
 ```
 
+#### Total
+Gives the total of elements in a list.
+- `Total[list]`
+- `Total[list, n]`
+- `Total[list, {n}]`
+- `Total[list, {n1, n2}]`
+
+**Features**:
+- `Protected`.
+- `Total[list]` is equivalent to `Apply[Plus, list]`.
+- `Total[list, n]` totals all elements down to level `n`.
+- `Total[list, {n}]` totals elements at level `n` only.
+- Supports negative levels to count from the bottom (`-1` is the last dimension).
+- Handles ragged arrays correctly by summing from the inside out when multiple levels are specified.
+- `Total[list, Infinity]` totals all atoms in the expression.
+
+```mathematica
+In[1]:= Total[{a, b, c, d}]
+Out[1]= a + b + c + d
+
+In[2]:= Total[{{1, 2}, {3, 4}}]
+Out[2]= {4, 6}
+
+In[3]:= Total[{{1, 2}, {3, 4}}, 2]
+Out[3]= 10
+
+In[4]:= Total[{{1, 2}, {3}}, 2]
+Out[4]= 6
+```
+
 #### Times (*)
 Symbolic product.
 - `a * b * ...`
