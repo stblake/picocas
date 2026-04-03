@@ -15,6 +15,7 @@ Expr* builtin_table(Expr* res) {
         inner_args[0] = expr_copy(res->data.function.args[0]);
         inner_args[1] = expr_copy(res->data.function.args[res->data.function.arg_count - 1]);
         Expr* inner_table = expr_new_function(expr_new_symbol("Table"), inner_args, 2);
+        free(inner_args);
         
         Expr** outer_args = malloc(sizeof(Expr*) * (res->data.function.arg_count - 1));
         outer_args[0] = inner_table;
@@ -22,6 +23,8 @@ Expr* builtin_table(Expr* res) {
             outer_args[i] = expr_copy(res->data.function.args[i]);
         }
         Expr* outer_table = expr_new_function(expr_new_symbol("Table"), outer_args, res->data.function.arg_count - 1);
+        free(outer_args);
+        
         Expr* eval_outer = evaluate(outer_table);
         expr_free(outer_table);
         return eval_outer;
@@ -188,6 +191,7 @@ static Expr* array_helper(Expr* f, Expr** n_array, Expr** r_array, size_t dim_co
         Expr** fn_args = malloc(sizeof(Expr*) * dim_count);
         for (size_t i = 0; i < dim_count; i++) fn_args[i] = expr_copy(current_args[i]);
         Expr* fn_expr = expr_new_function(expr_copy(f), fn_args, dim_count);
+        free(fn_args);
         Expr* eval_fn = evaluate(fn_expr);
         expr_free(fn_expr);
         return eval_fn;
@@ -247,7 +251,9 @@ static Expr* array_helper(Expr* f, Expr** n_array, Expr** r_array, size_t dim_co
     
     if (r_base) expr_free(r_base);
     
-    return expr_new_function(expr_new_symbol("List"), results, (size_t)n_val);
+    Expr* list_result = expr_new_function(expr_new_symbol("List"), results, (size_t)n_val);
+    free(results);
+    return list_result;
 }
 
 Expr* builtin_array(Expr* res) {
@@ -461,7 +467,9 @@ static Expr* apply_take_drop(Expr* expr, Expr** specs, size_t nspecs, bool is_ta
     }
 
     free(spec_indices);
-    return expr_new_function(expr_copy(expr->data.function.head), new_args, new_count);
+    Expr* result = expr_new_function(expr_copy(expr->data.function.head), new_args, new_count);
+    if (new_args) free(new_args);
+    return result;
 }
 
 Expr* builtin_take(Expr* res) {
@@ -1157,6 +1165,7 @@ void list_init(void) {
     symtab_add_builtin("Union", builtin_union);
     symtab_add_builtin("DeleteDuplicates", builtin_deleteduplicates);
     symtab_add_builtin("Split", builtin_split);
+    symtab_add_builtin("Total", builtin_total);
     symtab_add_builtin("Min", builtin_min);
     symtab_add_builtin("Max", builtin_max);
     symtab_add_builtin("ListQ", builtin_listq);
@@ -1178,11 +1187,14 @@ void list_init(void) {
     symtab_get_def("Union")->attributes |= ATTR_FLAT | ATTR_ONEIDENTITY | ATTR_PROTECTED | ATTR_READPROTECTED;
     symtab_get_def("DeleteDuplicates")->attributes |= ATTR_PROTECTED;
     symtab_get_def("Split")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Total")->attributes |= ATTR_PROTECTED;
     symtab_get_def("Min")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
     symtab_get_def("Max")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
     symtab_get_def("ListQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("VectorQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("MatrixQ")->attributes |= ATTR_PROTECTED;
+
+    symtab_set_docstring("Total", "Total[list]\n\tgives the total of the elements in list.\nTotal[list, n]\n\ttotals all elements down to level n.\nTotal[list, {n}]\n\ttotals elements at level n.\nTotal[list, {n1, n2}]\n\ttotals elements at levels n1 through n2.");
 }
 
 static bool is_overflow(Expr* e) {
@@ -1193,6 +1205,135 @@ static bool is_overflow(Expr* e) {
 static bool is_listq(Expr* e) {
     return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
            strcmp(e->data.function.head->data.symbol, "List") == 0;
+}
+
+static bool is_infinity(Expr* e) {
+    return e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "Infinity") == 0;
+}
+
+static bool is_minus_infinity(Expr* e) {
+    if (e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Times") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* a1 = e->data.function.args[0];
+        Expr* a2 = e->data.function.args[1];
+        if (a1->type == EXPR_INTEGER && a1->data.integer == -1 && is_infinity(a2)) return true;
+        if (a2->type == EXPR_INTEGER && a2->data.integer == -1 && is_infinity(a1)) return true;
+    }
+    return false;
+}
+
+static Expr* make_minus_infinity(void) {
+    Expr* args[2] = { expr_new_integer(-1), expr_new_symbol("Infinity") };
+    return expr_new_function(expr_new_symbol("Times"), args, 2);
+}
+
+static bool is_real_numeric(Expr* e) {
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational(e, NULL, NULL)) return true;
+    Expr* re, *im;
+    if (is_complex(e, &re, &im)) {
+        if (im->type == EXPR_INTEGER && im->data.integer == 0) return true;
+        if (im->type == EXPR_REAL && im->data.real == 0.0) return true;
+    }
+    return false;
+}
+
+static int64_t get_depth_for_total(Expr* e) {
+    if (e->type != EXPR_FUNCTION) return 1;
+    if (e->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = e->data.function.head->data.symbol;
+        if (strcmp(h, "Rational") == 0 || strcmp(h, "Complex") == 0) return 1;
+    }
+    int64_t max_d = 0;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        int64_t d = get_depth_for_total(e->data.function.args[i]);
+        if (d > max_d) max_d = d;
+    }
+    return 1 + max_d;
+}
+
+static Expr* total_at_exactly_level_k(Expr* e, int64_t k) {
+    if (k <= 0) return expr_copy(e);
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+
+    if (k == 1) {
+        size_t count = e->data.function.arg_count;
+        if (count == 0) return expr_new_integer(0);
+        Expr** plus_args = malloc(sizeof(Expr*) * count);
+        for (size_t i = 0; i < count; i++) plus_args[i] = expr_copy(e->data.function.args[i]);
+        Expr* plus_expr = expr_new_function(expr_new_symbol("Plus"), plus_args, count);
+        free(plus_args);
+        Expr* res = evaluate(plus_expr);
+        expr_free(plus_expr);
+        return res;
+    } else {
+        size_t count = e->data.function.arg_count;
+        Expr** new_args = malloc(sizeof(Expr*) * count);
+        for (size_t i = 0; i < count; i++) {
+            new_args[i] = total_at_exactly_level_k(e->data.function.args[i], k - 1);
+        }
+        Expr* res = expr_new_function(expr_copy(e->data.function.head), new_args, count);
+        free(new_args);
+        return res;
+    }
+}
+
+Expr* builtin_total(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    Expr* level_spec = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+
+    int64_t n1 = 1, n2 = 1;
+    int64_t depth = get_depth_for_total(list);
+
+    if (level_spec) {
+        if (level_spec->type == EXPR_INTEGER) {
+            n1 = 1;
+            n2 = level_spec->data.integer;
+            if (n2 < 0) n2 = depth + n2;
+        } else if (is_infinity(level_spec)) {
+            n1 = 1;
+            n2 = depth - 1;
+        } else if (is_listq(level_spec)) {
+            if (level_spec->data.function.arg_count == 1) {
+                Expr* arg = level_spec->data.function.args[0];
+                if (arg->type == EXPR_INTEGER) {
+                    n1 = n2 = arg->data.integer;
+                    if (n1 < 0) n1 = n2 = depth + n1;
+                } else if (is_infinity(arg)) {
+                    n1 = n2 = depth - 1;
+                } else return NULL;
+            } else if (level_spec->data.function.arg_count == 2) {
+                Expr* arg1 = level_spec->data.function.args[0];
+                Expr* arg2 = level_spec->data.function.args[1];
+                if (arg1->type == EXPR_INTEGER) {
+                    n1 = arg1->data.integer;
+                    if (n1 < 0) n1 = depth + n1;
+                } else return NULL;
+                
+                if (arg2->type == EXPR_INTEGER) {
+                    n2 = arg2->data.integer;
+                    if (n2 < 0) n2 = depth + n2;
+                } else if (is_infinity(arg2)) {
+                    n2 = depth - 1;
+                } else return NULL;
+            } else return NULL;
+        } else return NULL;
+    }
+    
+    if (n1 > n2) return expr_copy(list);
+    if (n1 < 1) n1 = 1;
+    if (n2 >= depth) n2 = depth - 1;
+
+    Expr* current = expr_copy(list);
+    for (int64_t k = n2; k >= n1; k--) {
+        Expr* next = total_at_exactly_level_k(current, k);
+        expr_free(current);
+        current = next;
+    }
+    
+    return current;
 }
 
 Expr* builtin_listq(Expr* res) {
@@ -1270,37 +1411,6 @@ Expr* builtin_matrixq(Expr* res) {
     return expr_new_symbol("True");
 }
 
-static bool is_infinity(Expr* e) {
-    return e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "Infinity") == 0;
-}
-
-static bool is_minus_infinity(Expr* e) {
-    if (e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
-        strcmp(e->data.function.head->data.symbol, "Times") == 0 &&
-        e->data.function.arg_count == 2) {
-        Expr* a1 = e->data.function.args[0];
-        Expr* a2 = e->data.function.args[1];
-        if (a1->type == EXPR_INTEGER && a1->data.integer == -1 && is_infinity(a2)) return true;
-        if (a2->type == EXPR_INTEGER && a2->data.integer == -1 && is_infinity(a1)) return true;
-    }
-    return false;
-}
-
-static Expr* make_minus_infinity(void) {
-    Expr* args[2] = { expr_new_integer(-1), expr_new_symbol("Infinity") };
-    return expr_new_function(expr_new_symbol("Times"), args, 2);
-}
-
-static bool is_real_numeric(Expr* e) {
-    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational(e, NULL, NULL)) return true;
-    Expr* re, *im;
-    if (is_complex(e, &re, &im)) {
-        if (im->type == EXPR_INTEGER && im->data.integer == 0) return true;
-        if (im->type == EXPR_REAL && im->data.real == 0.0) return true;
-    }
-    return false;
-}
-
 Expr* builtin_min(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     size_t n = res->data.function.arg_count;
@@ -1342,7 +1452,9 @@ Expr* builtin_min(Expr* res) {
                 new_args[k++] = expr_copy(arg);
             }
         }
-        return expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+        Expr* ret = expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+        free(new_args);
+        return ret;
     }
     
     // Check for Overflow[] and -Infinity
@@ -1451,7 +1563,9 @@ Expr* builtin_max(Expr* res) {
                 new_args[k++] = expr_copy(arg);
             }
         }
-        return expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+        Expr* ret = expr_new_function(expr_copy(res->data.function.head), new_args, new_count);
+        free(new_args);
+        return ret;
     }
     
     // Check for Overflow[] and Infinity

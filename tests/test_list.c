@@ -430,6 +430,39 @@ void test_transpose() {
     expr_free(t2); expr_free(res2);
 }
 
+void test_total() {
+    struct {
+        const char* input;
+        const char* expected;
+    } tests[] = {
+        {"Total[{a, b, c, d}]", "a + b + c + d"},
+        {"Total[{1, 2, 3}]", "6"},
+        {"Total[{{1, 2}, {3, 4}}]", "{4, 6}"},
+        {"Total[{{1, 2}, {3, 4}}, 2]", "10"},
+        {"Total[{{1, 2}, {3, 4}}, {2}]", "{3, 7}"},
+        {"Total[{{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}}, 2]", "{16, 20}"},
+        {"Total[{{1, 2}, {3}}, 2]", "6"},
+        {"Total[{{1, 2}, {3}}, {1, 2}]", "6"},
+        {"Total[{1, 2, 3}, {1, 2}]", "6"},
+        {"Total[{{1, 2}, {3, 4}}, {-1}]", "{3, 7}"},
+        {"Total[{{1, 2}, {3, 4}}, Infinity]", "10"},
+        {"Total[1]", "1"}
+    };
+
+    for (int i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {
+        Expr* e = parse_expression(tests[i].input);
+        Expr* res = evaluate(e);
+        char* res_str = expr_to_string(res);
+        if (strcmp(res_str, tests[i].expected) != 0) {
+            printf("Total test failed: %s expected %s, got %s\n", tests[i].input, tests[i].expected, res_str);
+            ASSERT(0);
+        }
+        free(res_str);
+        expr_free(e);
+        expr_free(res);
+    }
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -462,7 +495,9 @@ int main() {
     TEST(test_rotate);
     TEST(test_reverse);
     TEST(test_transpose);
+    TEST(test_total);
     
     printf("All list tests passed!\n");
     return 0;
 }
+

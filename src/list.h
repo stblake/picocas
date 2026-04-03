@@ -18,6 +18,7 @@ Expr* builtin_tally(Expr* res);
 Expr* builtin_union(Expr* res);
 Expr* builtin_deleteduplicates(Expr* res);
 Expr* builtin_split(Expr* res);
+Expr* builtin_total(Expr* res);
 Expr* builtin_min(Expr* res);
 Expr* builtin_max(Expr* res);
 Expr* builtin_listq(Expr* res);
