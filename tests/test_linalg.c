@@ -66,6 +66,20 @@ void test_norm() {
     run_test("Norm[{{a11, a12}, {a21, a22}}, \"Frobenius\"]", "Power[Plus[Power[Abs[a11], 2], Power[Abs[a12], 2], Power[Abs[a21], 2], Power[Abs[a22], 2]], Rational[1, 2]]");
 }
 
+void test_tr() {
+    run_test("Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}]", "15");
+    run_test("Tr[{{a, b}, {c, d}}]", "Plus[a, d]");
+    run_test("Tr[{1, 2, 3}]", "6");
+    run_test("Tr[Array[a, {4, 3, 2}]]", "Plus[a[1, 1, 1], a[2, 2, 2]]");
+    run_test("Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, f]", "f[1, 5, 9]");
+    run_test("Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, List]", "List[1, 5, 9]");
+    run_test("Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, Plus, 1]", "List[12, 15, 18]");
+    run_test("Tr[Array[a, {4, 3, 2}], f, 2]", "f[List[a[1, 1, 1], a[1, 1, 2]], List[a[2, 2, 1], a[2, 2, 2]], List[a[3, 3, 1], a[3, 3, 2]]]");
+    run_test("Tr[x]", "x");
+    run_test("Tr[x, f]", "x");
+    run_test("Tr[{{1, 2}, {3}}]", "1");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -75,6 +89,7 @@ int main() {
     TEST(test_det);
     TEST(test_cross);
     TEST(test_norm);
+    TEST(test_tr);
     printf("All linalg tests passed!\n");
     symtab_clear();
     return 0;

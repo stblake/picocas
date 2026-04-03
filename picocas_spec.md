@@ -883,6 +883,34 @@ In[6]:= Norm[{{a11, a12}, {a21, a22}}, "Frobenius"]
 Out[6]= Sqrt[Abs[a11]^2 + Abs[a12]^2 + Abs[a21]^2 + Abs[a22]^2]
 ```
 
+#### Tr
+Finds the trace of a matrix or tensor.
+- `Tr[list]`
+- `Tr[list, f]`
+- `Tr[list, f, n]`
+
+**Features**:
+- `Protected`.
+- `Tr[list]` sums the diagonal elements `list[[i, i, ...]]`.
+- `Tr[list, f]` applies the function `f` instead of `Plus`.
+- `Tr[list, f, n]` considers elements down to level `n`.
+- Works for rectangular as well as square matrices and tensors, stopping at the minimum dimension.
+- If `n` is omitted, defaults to the depth of the tensor.
+
+```mathematica
+In[1]:= Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}]
+Out[1]= 15
+
+In[2]:= Tr[{{a, b}, {c, d}}]
+Out[2]= a + d
+
+In[3]:= Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, List]
+Out[3]= {1, 5, 9}
+
+In[4]:= Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, Plus, 1]
+Out[4]= {12, 15, 18}
+```
+
 ### Statistics
 
 #### Mean

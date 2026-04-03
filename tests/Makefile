@@ -57,10 +57,10 @@ RM = /opt/local/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/user/Documents/scratch/picocas/tests
+CMAKE_SOURCE_DIR = /Users/user/picocas_dev/picocas/tests
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/user/Documents/scratch/picocas/tests
+CMAKE_BINARY_DIR = /Users/user/picocas_dev/picocas/tests
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/user/Documents/scratch/picocas/tests/CMakeFiles /Users/user/Documents/scratch/picocas/tests//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/user/picocas_dev/picocas/tests/CMakeFiles /Users/user/picocas_dev/picocas/tests//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/user/Documents/scratch/picocas/tests/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/user/picocas_dev/picocas/tests/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -467,3473 +467,3473 @@ linalg_tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/build
 .PHONY : linalg_tests/fast
 
-Users/user/Documents/scratch/picocas/src/arithmetic.o: Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.o
+Users/user/picocas_dev/picocas/src/arithmetic.o: Users/user/picocas_dev/picocas/src/arithmetic.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/arithmetic.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.c.o
+Users/user/picocas_dev/picocas/src/arithmetic.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.c.o
 
-Users/user/Documents/scratch/picocas/src/arithmetic.i: Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.i
+Users/user/picocas_dev/picocas/src/arithmetic.i: Users/user/picocas_dev/picocas/src/arithmetic.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/arithmetic.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.c.i
+Users/user/picocas_dev/picocas/src/arithmetic.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.c.i
 
-Users/user/Documents/scratch/picocas/src/arithmetic.s: Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.s
+Users/user/picocas_dev/picocas/src/arithmetic.s: Users/user/picocas_dev/picocas/src/arithmetic.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/arithmetic.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/arithmetic.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/arithmetic.c.s
+Users/user/picocas_dev/picocas/src/arithmetic.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/arithmetic.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/arithmetic.c.s
 
-Users/user/Documents/scratch/picocas/src/attr.o: Users/user/Documents/scratch/picocas/src/attr.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.o
+Users/user/picocas_dev/picocas/src/attr.o: Users/user/picocas_dev/picocas/src/attr.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/attr.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/attr.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.c.o
+Users/user/picocas_dev/picocas/src/attr.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/attr.c.o
 
-Users/user/Documents/scratch/picocas/src/attr.i: Users/user/Documents/scratch/picocas/src/attr.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.i
+Users/user/picocas_dev/picocas/src/attr.i: Users/user/picocas_dev/picocas/src/attr.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/attr.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/attr.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.c.i
+Users/user/picocas_dev/picocas/src/attr.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/attr.c.i
 
-Users/user/Documents/scratch/picocas/src/attr.s: Users/user/Documents/scratch/picocas/src/attr.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.s
+Users/user/picocas_dev/picocas/src/attr.s: Users/user/picocas_dev/picocas/src/attr.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/attr.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/attr.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/attr.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/attr.c.s
+Users/user/picocas_dev/picocas/src/attr.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/attr.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/attr.c.s
 
-Users/user/Documents/scratch/picocas/src/boolean.o: Users/user/Documents/scratch/picocas/src/boolean.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.o
+Users/user/picocas_dev/picocas/src/boolean.o: Users/user/picocas_dev/picocas/src/boolean.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/boolean.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.c.o
+Users/user/picocas_dev/picocas/src/boolean.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.c.o
 
-Users/user/Documents/scratch/picocas/src/boolean.i: Users/user/Documents/scratch/picocas/src/boolean.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.i
+Users/user/picocas_dev/picocas/src/boolean.i: Users/user/picocas_dev/picocas/src/boolean.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/boolean.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.c.i
+Users/user/picocas_dev/picocas/src/boolean.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.c.i
 
-Users/user/Documents/scratch/picocas/src/boolean.s: Users/user/Documents/scratch/picocas/src/boolean.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.s
+Users/user/picocas_dev/picocas/src/boolean.s: Users/user/picocas_dev/picocas/src/boolean.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/boolean.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/boolean.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/boolean.c.s
+Users/user/picocas_dev/picocas/src/boolean.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/boolean.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/boolean.c.s
 
-Users/user/Documents/scratch/picocas/src/comparisons.o: Users/user/Documents/scratch/picocas/src/comparisons.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.o
+Users/user/picocas_dev/picocas/src/comparisons.o: Users/user/picocas_dev/picocas/src/comparisons.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/comparisons.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.c.o
+Users/user/picocas_dev/picocas/src/comparisons.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.c.o
 
-Users/user/Documents/scratch/picocas/src/comparisons.i: Users/user/Documents/scratch/picocas/src/comparisons.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.i
+Users/user/picocas_dev/picocas/src/comparisons.i: Users/user/picocas_dev/picocas/src/comparisons.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/comparisons.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.c.i
+Users/user/picocas_dev/picocas/src/comparisons.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.c.i
 
-Users/user/Documents/scratch/picocas/src/comparisons.s: Users/user/Documents/scratch/picocas/src/comparisons.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.s
+Users/user/picocas_dev/picocas/src/comparisons.s: Users/user/picocas_dev/picocas/src/comparisons.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/comparisons.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/comparisons.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/comparisons.c.s
+Users/user/picocas_dev/picocas/src/comparisons.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/comparisons.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/comparisons.c.s
 
-Users/user/Documents/scratch/picocas/src/complex.o: Users/user/Documents/scratch/picocas/src/complex.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.o
+Users/user/picocas_dev/picocas/src/complex.o: Users/user/picocas_dev/picocas/src/complex.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/complex.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/complex.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.c.o
+Users/user/picocas_dev/picocas/src/complex.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/complex.c.o
 
-Users/user/Documents/scratch/picocas/src/complex.i: Users/user/Documents/scratch/picocas/src/complex.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.i
+Users/user/picocas_dev/picocas/src/complex.i: Users/user/picocas_dev/picocas/src/complex.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/complex.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/complex.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.c.i
+Users/user/picocas_dev/picocas/src/complex.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/complex.c.i
 
-Users/user/Documents/scratch/picocas/src/complex.s: Users/user/Documents/scratch/picocas/src/complex.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.s
+Users/user/picocas_dev/picocas/src/complex.s: Users/user/picocas_dev/picocas/src/complex.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/complex.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/complex.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/complex.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/complex.c.s
+Users/user/picocas_dev/picocas/src/complex.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/complex.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/complex.c.s
 
-Users/user/Documents/scratch/picocas/src/core.o: Users/user/Documents/scratch/picocas/src/core.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/core.o
+Users/user/picocas_dev/picocas/src/core.o: Users/user/picocas_dev/picocas/src/core.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/core.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/core.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/core.c.o
+Users/user/picocas_dev/picocas/src/core.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/core.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/core.c.o
 
-Users/user/Documents/scratch/picocas/src/core.i: Users/user/Documents/scratch/picocas/src/core.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/core.i
+Users/user/picocas_dev/picocas/src/core.i: Users/user/picocas_dev/picocas/src/core.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/core.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/core.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/core.c.i
+Users/user/picocas_dev/picocas/src/core.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/core.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/core.c.i
 
-Users/user/Documents/scratch/picocas/src/core.s: Users/user/Documents/scratch/picocas/src/core.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/core.s
+Users/user/picocas_dev/picocas/src/core.s: Users/user/picocas_dev/picocas/src/core.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/core.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/core.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/core.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/core.c.s
+Users/user/picocas_dev/picocas/src/core.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/core.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/core.c.s
 
-Users/user/Documents/scratch/picocas/src/datetime.o: Users/user/Documents/scratch/picocas/src/datetime.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.o
+Users/user/picocas_dev/picocas/src/datetime.o: Users/user/picocas_dev/picocas/src/datetime.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/datetime.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.c.o
+Users/user/picocas_dev/picocas/src/datetime.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.c.o
 
-Users/user/Documents/scratch/picocas/src/datetime.i: Users/user/Documents/scratch/picocas/src/datetime.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.i
+Users/user/picocas_dev/picocas/src/datetime.i: Users/user/picocas_dev/picocas/src/datetime.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/datetime.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.c.i
+Users/user/picocas_dev/picocas/src/datetime.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.c.i
 
-Users/user/Documents/scratch/picocas/src/datetime.s: Users/user/Documents/scratch/picocas/src/datetime.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.s
+Users/user/picocas_dev/picocas/src/datetime.s: Users/user/picocas_dev/picocas/src/datetime.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/datetime.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/datetime.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/datetime.c.s
+Users/user/picocas_dev/picocas/src/datetime.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/datetime.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/datetime.c.s
 
-Users/user/Documents/scratch/picocas/src/eval.o: Users/user/Documents/scratch/picocas/src/eval.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.o
+Users/user/picocas_dev/picocas/src/eval.o: Users/user/picocas_dev/picocas/src/eval.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/eval.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/eval.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.c.o
+Users/user/picocas_dev/picocas/src/eval.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/eval.c.o
 
-Users/user/Documents/scratch/picocas/src/eval.i: Users/user/Documents/scratch/picocas/src/eval.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.i
+Users/user/picocas_dev/picocas/src/eval.i: Users/user/picocas_dev/picocas/src/eval.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/eval.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/eval.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.c.i
+Users/user/picocas_dev/picocas/src/eval.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/eval.c.i
 
-Users/user/Documents/scratch/picocas/src/eval.s: Users/user/Documents/scratch/picocas/src/eval.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.s
+Users/user/picocas_dev/picocas/src/eval.s: Users/user/picocas_dev/picocas/src/eval.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/eval.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/eval.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/eval.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/eval.c.s
+Users/user/picocas_dev/picocas/src/eval.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/eval.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/eval.c.s
 
-Users/user/Documents/scratch/picocas/src/expand.o: Users/user/Documents/scratch/picocas/src/expand.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.o
+Users/user/picocas_dev/picocas/src/expand.o: Users/user/picocas_dev/picocas/src/expand.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/expand.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/expand.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.c.o
+Users/user/picocas_dev/picocas/src/expand.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/expand.c.o
 
-Users/user/Documents/scratch/picocas/src/expand.i: Users/user/Documents/scratch/picocas/src/expand.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.i
+Users/user/picocas_dev/picocas/src/expand.i: Users/user/picocas_dev/picocas/src/expand.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/expand.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/expand.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.c.i
+Users/user/picocas_dev/picocas/src/expand.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/expand.c.i
 
-Users/user/Documents/scratch/picocas/src/expand.s: Users/user/Documents/scratch/picocas/src/expand.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.s
+Users/user/picocas_dev/picocas/src/expand.s: Users/user/picocas_dev/picocas/src/expand.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/expand.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/expand.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expand.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/expand.c.s
+Users/user/picocas_dev/picocas/src/expand.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expand.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/expand.c.s
 
-Users/user/Documents/scratch/picocas/src/expr.o: Users/user/Documents/scratch/picocas/src/expr.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.o
+Users/user/picocas_dev/picocas/src/expr.o: Users/user/picocas_dev/picocas/src/expr.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/expr.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/expr.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.c.o
+Users/user/picocas_dev/picocas/src/expr.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/expr.c.o
 
-Users/user/Documents/scratch/picocas/src/expr.i: Users/user/Documents/scratch/picocas/src/expr.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.i
+Users/user/picocas_dev/picocas/src/expr.i: Users/user/picocas_dev/picocas/src/expr.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/expr.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/expr.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.c.i
+Users/user/picocas_dev/picocas/src/expr.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/expr.c.i
 
-Users/user/Documents/scratch/picocas/src/expr.s: Users/user/Documents/scratch/picocas/src/expr.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.s
+Users/user/picocas_dev/picocas/src/expr.s: Users/user/picocas_dev/picocas/src/expr.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/expr.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/expr.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/expr.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/expr.c.s
+Users/user/picocas_dev/picocas/src/expr.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/expr.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/expr.c.s
 
-Users/user/Documents/scratch/picocas/src/facint.o: Users/user/Documents/scratch/picocas/src/facint.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.o
+Users/user/picocas_dev/picocas/src/facint.o: Users/user/picocas_dev/picocas/src/facint.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/facint.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/facint.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.c.o
+Users/user/picocas_dev/picocas/src/facint.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/facint.c.o
 
-Users/user/Documents/scratch/picocas/src/facint.i: Users/user/Documents/scratch/picocas/src/facint.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.i
+Users/user/picocas_dev/picocas/src/facint.i: Users/user/picocas_dev/picocas/src/facint.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/facint.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/facint.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.c.i
+Users/user/picocas_dev/picocas/src/facint.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/facint.c.i
 
-Users/user/Documents/scratch/picocas/src/facint.s: Users/user/Documents/scratch/picocas/src/facint.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.s
+Users/user/picocas_dev/picocas/src/facint.s: Users/user/picocas_dev/picocas/src/facint.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/facint.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/facint.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facint.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/facint.c.s
+Users/user/picocas_dev/picocas/src/facint.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facint.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/facint.c.s
 
-Users/user/Documents/scratch/picocas/src/facpoly.o: Users/user/Documents/scratch/picocas/src/facpoly.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.o
+Users/user/picocas_dev/picocas/src/facpoly.o: Users/user/picocas_dev/picocas/src/facpoly.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/facpoly.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.c.o
+Users/user/picocas_dev/picocas/src/facpoly.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.c.o
 
-Users/user/Documents/scratch/picocas/src/facpoly.i: Users/user/Documents/scratch/picocas/src/facpoly.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.i
+Users/user/picocas_dev/picocas/src/facpoly.i: Users/user/picocas_dev/picocas/src/facpoly.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/facpoly.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.c.i
+Users/user/picocas_dev/picocas/src/facpoly.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.c.i
 
-Users/user/Documents/scratch/picocas/src/facpoly.s: Users/user/Documents/scratch/picocas/src/facpoly.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.s
+Users/user/picocas_dev/picocas/src/facpoly.s: Users/user/picocas_dev/picocas/src/facpoly.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/facpoly.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/facpoly.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/facpoly.c.s
+Users/user/picocas_dev/picocas/src/facpoly.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/facpoly.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/facpoly.c.s
 
-Users/user/Documents/scratch/picocas/src/funcprog.o: Users/user/Documents/scratch/picocas/src/funcprog.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.o
+Users/user/picocas_dev/picocas/src/funcprog.o: Users/user/picocas_dev/picocas/src/funcprog.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/funcprog.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.c.o
+Users/user/picocas_dev/picocas/src/funcprog.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.c.o
 
-Users/user/Documents/scratch/picocas/src/funcprog.i: Users/user/Documents/scratch/picocas/src/funcprog.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.i
+Users/user/picocas_dev/picocas/src/funcprog.i: Users/user/picocas_dev/picocas/src/funcprog.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/funcprog.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.c.i
+Users/user/picocas_dev/picocas/src/funcprog.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.c.i
 
-Users/user/Documents/scratch/picocas/src/funcprog.s: Users/user/Documents/scratch/picocas/src/funcprog.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.s
+Users/user/picocas_dev/picocas/src/funcprog.s: Users/user/picocas_dev/picocas/src/funcprog.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/funcprog.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/funcprog.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/funcprog.c.s
+Users/user/picocas_dev/picocas/src/funcprog.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/funcprog.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/funcprog.c.s
 
-Users/user/Documents/scratch/picocas/src/hyperbolic.o: Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.o
+Users/user/picocas_dev/picocas/src/hyperbolic.o: Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/hyperbolic.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.c.o
+Users/user/picocas_dev/picocas/src/hyperbolic.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.c.o
 
-Users/user/Documents/scratch/picocas/src/hyperbolic.i: Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.i
+Users/user/picocas_dev/picocas/src/hyperbolic.i: Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/hyperbolic.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.c.i
+Users/user/picocas_dev/picocas/src/hyperbolic.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.c.i
 
-Users/user/Documents/scratch/picocas/src/hyperbolic.s: Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.s
+Users/user/picocas_dev/picocas/src/hyperbolic.s: Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/hyperbolic.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/hyperbolic.c.s
+Users/user/picocas_dev/picocas/src/hyperbolic.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/hyperbolic.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/hyperbolic.c.s
 
-Users/user/Documents/scratch/picocas/src/info.o: Users/user/Documents/scratch/picocas/src/info.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/info.o
+Users/user/picocas_dev/picocas/src/info.o: Users/user/picocas_dev/picocas/src/info.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/info.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/info.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/info.c.o
+Users/user/picocas_dev/picocas/src/info.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/info.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/info.c.o
 
-Users/user/Documents/scratch/picocas/src/info.i: Users/user/Documents/scratch/picocas/src/info.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/info.i
+Users/user/picocas_dev/picocas/src/info.i: Users/user/picocas_dev/picocas/src/info.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/info.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/info.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/info.c.i
+Users/user/picocas_dev/picocas/src/info.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/info.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/info.c.i
 
-Users/user/Documents/scratch/picocas/src/info.s: Users/user/Documents/scratch/picocas/src/info.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/info.s
+Users/user/picocas_dev/picocas/src/info.s: Users/user/picocas_dev/picocas/src/info.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/info.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/info.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/info.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/info.c.s
+Users/user/picocas_dev/picocas/src/info.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/info.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/info.c.s
 
-Users/user/Documents/scratch/picocas/src/linalg.o: Users/user/Documents/scratch/picocas/src/linalg.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.o
+Users/user/picocas_dev/picocas/src/linalg.o: Users/user/picocas_dev/picocas/src/linalg.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/linalg.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.c.o
+Users/user/picocas_dev/picocas/src/linalg.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.c.o
 
-Users/user/Documents/scratch/picocas/src/linalg.i: Users/user/Documents/scratch/picocas/src/linalg.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.i
+Users/user/picocas_dev/picocas/src/linalg.i: Users/user/picocas_dev/picocas/src/linalg.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/linalg.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.c.i
+Users/user/picocas_dev/picocas/src/linalg.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.c.i
 
-Users/user/Documents/scratch/picocas/src/linalg.s: Users/user/Documents/scratch/picocas/src/linalg.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.s
+Users/user/picocas_dev/picocas/src/linalg.s: Users/user/picocas_dev/picocas/src/linalg.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/linalg.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/linalg.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/linalg.c.s
+Users/user/picocas_dev/picocas/src/linalg.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/linalg.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/linalg.c.s
 
-Users/user/Documents/scratch/picocas/src/list.o: Users/user/Documents/scratch/picocas/src/list.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/list.o
+Users/user/picocas_dev/picocas/src/list.o: Users/user/picocas_dev/picocas/src/list.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/list.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/list.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/list.c.o
+Users/user/picocas_dev/picocas/src/list.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/list.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/list.c.o
 
-Users/user/Documents/scratch/picocas/src/list.i: Users/user/Documents/scratch/picocas/src/list.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/list.i
+Users/user/picocas_dev/picocas/src/list.i: Users/user/picocas_dev/picocas/src/list.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/list.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/list.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/list.c.i
+Users/user/picocas_dev/picocas/src/list.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/list.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/list.c.i
 
-Users/user/Documents/scratch/picocas/src/list.s: Users/user/Documents/scratch/picocas/src/list.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/list.s
+Users/user/picocas_dev/picocas/src/list.s: Users/user/picocas_dev/picocas/src/list.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/list.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/list.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/list.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/list.c.s
+Users/user/picocas_dev/picocas/src/list.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/list.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/list.c.s
 
-Users/user/Documents/scratch/picocas/src/logexp.o: Users/user/Documents/scratch/picocas/src/logexp.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.o
+Users/user/picocas_dev/picocas/src/logexp.o: Users/user/picocas_dev/picocas/src/logexp.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/logexp.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.c.o
+Users/user/picocas_dev/picocas/src/logexp.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.c.o
 
-Users/user/Documents/scratch/picocas/src/logexp.i: Users/user/Documents/scratch/picocas/src/logexp.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.i
+Users/user/picocas_dev/picocas/src/logexp.i: Users/user/picocas_dev/picocas/src/logexp.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/logexp.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.c.i
+Users/user/picocas_dev/picocas/src/logexp.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.c.i
 
-Users/user/Documents/scratch/picocas/src/logexp.s: Users/user/Documents/scratch/picocas/src/logexp.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.s
+Users/user/picocas_dev/picocas/src/logexp.s: Users/user/picocas_dev/picocas/src/logexp.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/logexp.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/logexp.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/logexp.c.s
+Users/user/picocas_dev/picocas/src/logexp.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/logexp.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/logexp.c.s
 
-Users/user/Documents/scratch/picocas/src/match.o: Users/user/Documents/scratch/picocas/src/match.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/match.o
+Users/user/picocas_dev/picocas/src/match.o: Users/user/picocas_dev/picocas/src/match.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/match.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/match.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/match.c.o
+Users/user/picocas_dev/picocas/src/match.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/match.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/match.c.o
 
-Users/user/Documents/scratch/picocas/src/match.i: Users/user/Documents/scratch/picocas/src/match.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/match.i
+Users/user/picocas_dev/picocas/src/match.i: Users/user/picocas_dev/picocas/src/match.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/match.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/match.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/match.c.i
+Users/user/picocas_dev/picocas/src/match.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/match.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/match.c.i
 
-Users/user/Documents/scratch/picocas/src/match.s: Users/user/Documents/scratch/picocas/src/match.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/match.s
+Users/user/picocas_dev/picocas/src/match.s: Users/user/picocas_dev/picocas/src/match.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/match.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/match.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/match.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/match.c.s
+Users/user/picocas_dev/picocas/src/match.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/match.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/match.c.s
 
-Users/user/Documents/scratch/picocas/src/modular.o: Users/user/Documents/scratch/picocas/src/modular.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.o
+Users/user/picocas_dev/picocas/src/modular.o: Users/user/picocas_dev/picocas/src/modular.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/modular.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/modular.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.c.o
+Users/user/picocas_dev/picocas/src/modular.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/modular.c.o
 
-Users/user/Documents/scratch/picocas/src/modular.i: Users/user/Documents/scratch/picocas/src/modular.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.i
+Users/user/picocas_dev/picocas/src/modular.i: Users/user/picocas_dev/picocas/src/modular.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/modular.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/modular.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.c.i
+Users/user/picocas_dev/picocas/src/modular.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/modular.c.i
 
-Users/user/Documents/scratch/picocas/src/modular.s: Users/user/Documents/scratch/picocas/src/modular.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.s
+Users/user/picocas_dev/picocas/src/modular.s: Users/user/picocas_dev/picocas/src/modular.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/modular.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/modular.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/modular.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/modular.c.s
+Users/user/picocas_dev/picocas/src/modular.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/modular.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/modular.c.s
 
-Users/user/Documents/scratch/picocas/src/parse.o: Users/user/Documents/scratch/picocas/src/parse.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.o
+Users/user/picocas_dev/picocas/src/parse.o: Users/user/picocas_dev/picocas/src/parse.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/parse.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/parse.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.c.o
+Users/user/picocas_dev/picocas/src/parse.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/parse.c.o
 
-Users/user/Documents/scratch/picocas/src/parse.i: Users/user/Documents/scratch/picocas/src/parse.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.i
+Users/user/picocas_dev/picocas/src/parse.i: Users/user/picocas_dev/picocas/src/parse.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/parse.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/parse.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.c.i
+Users/user/picocas_dev/picocas/src/parse.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/parse.c.i
 
-Users/user/Documents/scratch/picocas/src/parse.s: Users/user/Documents/scratch/picocas/src/parse.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.s
+Users/user/picocas_dev/picocas/src/parse.s: Users/user/picocas_dev/picocas/src/parse.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/parse.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/parse.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/parse.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/parse.c.s
+Users/user/picocas_dev/picocas/src/parse.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/parse.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/parse.c.s
 
-Users/user/Documents/scratch/picocas/src/part.o: Users/user/Documents/scratch/picocas/src/part.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/part.o
+Users/user/picocas_dev/picocas/src/part.o: Users/user/picocas_dev/picocas/src/part.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/part.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/part.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/part.c.o
+Users/user/picocas_dev/picocas/src/part.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/part.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/part.c.o
 
-Users/user/Documents/scratch/picocas/src/part.i: Users/user/Documents/scratch/picocas/src/part.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/part.i
+Users/user/picocas_dev/picocas/src/part.i: Users/user/picocas_dev/picocas/src/part.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/part.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/part.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/part.c.i
+Users/user/picocas_dev/picocas/src/part.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/part.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/part.c.i
 
-Users/user/Documents/scratch/picocas/src/part.s: Users/user/Documents/scratch/picocas/src/part.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/part.s
+Users/user/picocas_dev/picocas/src/part.s: Users/user/picocas_dev/picocas/src/part.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/part.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/part.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/part.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/part.c.s
+Users/user/picocas_dev/picocas/src/part.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/part.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/part.c.s
 
-Users/user/Documents/scratch/picocas/src/piecewise.o: Users/user/Documents/scratch/picocas/src/piecewise.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.o
+Users/user/picocas_dev/picocas/src/piecewise.o: Users/user/picocas_dev/picocas/src/piecewise.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/piecewise.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.c.o
+Users/user/picocas_dev/picocas/src/piecewise.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.c.o
 
-Users/user/Documents/scratch/picocas/src/piecewise.i: Users/user/Documents/scratch/picocas/src/piecewise.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.i
+Users/user/picocas_dev/picocas/src/piecewise.i: Users/user/picocas_dev/picocas/src/piecewise.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/piecewise.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.c.i
+Users/user/picocas_dev/picocas/src/piecewise.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.c.i
 
-Users/user/Documents/scratch/picocas/src/piecewise.s: Users/user/Documents/scratch/picocas/src/piecewise.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.s
+Users/user/picocas_dev/picocas/src/piecewise.s: Users/user/picocas_dev/picocas/src/piecewise.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/piecewise.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/piecewise.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/piecewise.c.s
+Users/user/picocas_dev/picocas/src/piecewise.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/piecewise.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/piecewise.c.s
 
-Users/user/Documents/scratch/picocas/src/plus.o: Users/user/Documents/scratch/picocas/src/plus.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.o
+Users/user/picocas_dev/picocas/src/plus.o: Users/user/picocas_dev/picocas/src/plus.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/plus.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/plus.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.c.o
+Users/user/picocas_dev/picocas/src/plus.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/plus.c.o
 
-Users/user/Documents/scratch/picocas/src/plus.i: Users/user/Documents/scratch/picocas/src/plus.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.i
+Users/user/picocas_dev/picocas/src/plus.i: Users/user/picocas_dev/picocas/src/plus.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/plus.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/plus.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.c.i
+Users/user/picocas_dev/picocas/src/plus.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/plus.c.i
 
-Users/user/Documents/scratch/picocas/src/plus.s: Users/user/Documents/scratch/picocas/src/plus.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.s
+Users/user/picocas_dev/picocas/src/plus.s: Users/user/picocas_dev/picocas/src/plus.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/plus.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/plus.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/plus.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/plus.c.s
+Users/user/picocas_dev/picocas/src/plus.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/plus.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/plus.c.s
 
-Users/user/Documents/scratch/picocas/src/poly.o: Users/user/Documents/scratch/picocas/src/poly.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.o
+Users/user/picocas_dev/picocas/src/poly.o: Users/user/picocas_dev/picocas/src/poly.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/poly.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/poly.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.c.o
+Users/user/picocas_dev/picocas/src/poly.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/poly.c.o
 
-Users/user/Documents/scratch/picocas/src/poly.i: Users/user/Documents/scratch/picocas/src/poly.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.i
+Users/user/picocas_dev/picocas/src/poly.i: Users/user/picocas_dev/picocas/src/poly.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/poly.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/poly.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.c.i
+Users/user/picocas_dev/picocas/src/poly.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/poly.c.i
 
-Users/user/Documents/scratch/picocas/src/poly.s: Users/user/Documents/scratch/picocas/src/poly.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.s
+Users/user/picocas_dev/picocas/src/poly.s: Users/user/picocas_dev/picocas/src/poly.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/poly.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/poly.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/poly.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/poly.c.s
+Users/user/picocas_dev/picocas/src/poly.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/poly.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/poly.c.s
 
-Users/user/Documents/scratch/picocas/src/power.o: Users/user/Documents/scratch/picocas/src/power.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/power.o
+Users/user/picocas_dev/picocas/src/power.o: Users/user/picocas_dev/picocas/src/power.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/power.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/power.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/power.c.o
+Users/user/picocas_dev/picocas/src/power.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/power.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/power.c.o
 
-Users/user/Documents/scratch/picocas/src/power.i: Users/user/Documents/scratch/picocas/src/power.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/power.i
+Users/user/picocas_dev/picocas/src/power.i: Users/user/picocas_dev/picocas/src/power.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/power.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/power.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/power.c.i
+Users/user/picocas_dev/picocas/src/power.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/power.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/power.c.i
 
-Users/user/Documents/scratch/picocas/src/power.s: Users/user/Documents/scratch/picocas/src/power.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/power.s
+Users/user/picocas_dev/picocas/src/power.s: Users/user/picocas_dev/picocas/src/power.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/power.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/power.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/power.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/power.c.s
+Users/user/picocas_dev/picocas/src/power.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/power.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/power.c.s
 
-Users/user/Documents/scratch/picocas/src/print.o: Users/user/Documents/scratch/picocas/src/print.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/print.o
+Users/user/picocas_dev/picocas/src/print.o: Users/user/picocas_dev/picocas/src/print.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/print.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/print.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/print.c.o
+Users/user/picocas_dev/picocas/src/print.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/print.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/print.c.o
 
-Users/user/Documents/scratch/picocas/src/print.i: Users/user/Documents/scratch/picocas/src/print.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/print.i
+Users/user/picocas_dev/picocas/src/print.i: Users/user/picocas_dev/picocas/src/print.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/print.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/print.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/print.c.i
+Users/user/picocas_dev/picocas/src/print.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/print.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/print.c.i
 
-Users/user/Documents/scratch/picocas/src/print.s: Users/user/Documents/scratch/picocas/src/print.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/print.s
+Users/user/picocas_dev/picocas/src/print.s: Users/user/picocas_dev/picocas/src/print.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/print.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/print.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/print.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/print.c.s
+Users/user/picocas_dev/picocas/src/print.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/print.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/print.c.s
 
-Users/user/Documents/scratch/picocas/src/purefunc.o: Users/user/Documents/scratch/picocas/src/purefunc.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.o
+Users/user/picocas_dev/picocas/src/purefunc.o: Users/user/picocas_dev/picocas/src/purefunc.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/purefunc.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.c.o
+Users/user/picocas_dev/picocas/src/purefunc.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.c.o
 
-Users/user/Documents/scratch/picocas/src/purefunc.i: Users/user/Documents/scratch/picocas/src/purefunc.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.i
+Users/user/picocas_dev/picocas/src/purefunc.i: Users/user/picocas_dev/picocas/src/purefunc.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/purefunc.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.c.i
+Users/user/picocas_dev/picocas/src/purefunc.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.c.i
 
-Users/user/Documents/scratch/picocas/src/purefunc.s: Users/user/Documents/scratch/picocas/src/purefunc.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.s
+Users/user/picocas_dev/picocas/src/purefunc.s: Users/user/picocas_dev/picocas/src/purefunc.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/purefunc.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/purefunc.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/purefunc.c.s
+Users/user/picocas_dev/picocas/src/purefunc.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/purefunc.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/purefunc.c.s
 
-Users/user/Documents/scratch/picocas/src/replace.o: Users/user/Documents/scratch/picocas/src/replace.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.o
+Users/user/picocas_dev/picocas/src/replace.o: Users/user/picocas_dev/picocas/src/replace.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/replace.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/replace.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.c.o
+Users/user/picocas_dev/picocas/src/replace.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/replace.c.o
 
-Users/user/Documents/scratch/picocas/src/replace.i: Users/user/Documents/scratch/picocas/src/replace.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.i
+Users/user/picocas_dev/picocas/src/replace.i: Users/user/picocas_dev/picocas/src/replace.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/replace.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/replace.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.c.i
+Users/user/picocas_dev/picocas/src/replace.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/replace.c.i
 
-Users/user/Documents/scratch/picocas/src/replace.s: Users/user/Documents/scratch/picocas/src/replace.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.s
+Users/user/picocas_dev/picocas/src/replace.s: Users/user/picocas_dev/picocas/src/replace.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/replace.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/replace.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/replace.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/replace.c.s
+Users/user/picocas_dev/picocas/src/replace.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/replace.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/replace.c.s
 
-Users/user/Documents/scratch/picocas/src/sort.o: Users/user/Documents/scratch/picocas/src/sort.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.o
+Users/user/picocas_dev/picocas/src/sort.o: Users/user/picocas_dev/picocas/src/sort.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/sort.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/sort.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.c.o
+Users/user/picocas_dev/picocas/src/sort.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/sort.c.o
 
-Users/user/Documents/scratch/picocas/src/sort.i: Users/user/Documents/scratch/picocas/src/sort.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.i
+Users/user/picocas_dev/picocas/src/sort.i: Users/user/picocas_dev/picocas/src/sort.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/sort.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/sort.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.c.i
+Users/user/picocas_dev/picocas/src/sort.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/sort.c.i
 
-Users/user/Documents/scratch/picocas/src/sort.s: Users/user/Documents/scratch/picocas/src/sort.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.s
+Users/user/picocas_dev/picocas/src/sort.s: Users/user/picocas_dev/picocas/src/sort.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/sort.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/sort.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/sort.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/sort.c.s
+Users/user/picocas_dev/picocas/src/sort.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/sort.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/sort.c.s
 
-Users/user/Documents/scratch/picocas/src/stats.o: Users/user/Documents/scratch/picocas/src/stats.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.o
+Users/user/picocas_dev/picocas/src/stats.o: Users/user/picocas_dev/picocas/src/stats.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/stats.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/stats.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.c.o
+Users/user/picocas_dev/picocas/src/stats.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/stats.c.o
 
-Users/user/Documents/scratch/picocas/src/stats.i: Users/user/Documents/scratch/picocas/src/stats.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.i
+Users/user/picocas_dev/picocas/src/stats.i: Users/user/picocas_dev/picocas/src/stats.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/stats.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/stats.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.c.i
+Users/user/picocas_dev/picocas/src/stats.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/stats.c.i
 
-Users/user/Documents/scratch/picocas/src/stats.s: Users/user/Documents/scratch/picocas/src/stats.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.s
+Users/user/picocas_dev/picocas/src/stats.s: Users/user/picocas_dev/picocas/src/stats.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/stats.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/stats.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/stats.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/stats.c.s
+Users/user/picocas_dev/picocas/src/stats.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/stats.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/stats.c.s
 
-Users/user/Documents/scratch/picocas/src/symtab.o: Users/user/Documents/scratch/picocas/src/symtab.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.o
+Users/user/picocas_dev/picocas/src/symtab.o: Users/user/picocas_dev/picocas/src/symtab.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/symtab.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.c.o
+Users/user/picocas_dev/picocas/src/symtab.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.c.o
 
-Users/user/Documents/scratch/picocas/src/symtab.i: Users/user/Documents/scratch/picocas/src/symtab.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.i
+Users/user/picocas_dev/picocas/src/symtab.i: Users/user/picocas_dev/picocas/src/symtab.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/symtab.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.c.i
+Users/user/picocas_dev/picocas/src/symtab.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.c.i
 
-Users/user/Documents/scratch/picocas/src/symtab.s: Users/user/Documents/scratch/picocas/src/symtab.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.s
+Users/user/picocas_dev/picocas/src/symtab.s: Users/user/picocas_dev/picocas/src/symtab.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/symtab.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/symtab.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/symtab.c.s
+Users/user/picocas_dev/picocas/src/symtab.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/symtab.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/symtab.c.s
 
-Users/user/Documents/scratch/picocas/src/times.o: Users/user/Documents/scratch/picocas/src/times.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/times.o
+Users/user/picocas_dev/picocas/src/times.o: Users/user/picocas_dev/picocas/src/times.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/times.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/times.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/times.c.o
+Users/user/picocas_dev/picocas/src/times.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/times.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/times.c.o
 
-Users/user/Documents/scratch/picocas/src/times.i: Users/user/Documents/scratch/picocas/src/times.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/times.i
+Users/user/picocas_dev/picocas/src/times.i: Users/user/picocas_dev/picocas/src/times.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/times.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/times.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/times.c.i
+Users/user/picocas_dev/picocas/src/times.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/times.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/times.c.i
 
-Users/user/Documents/scratch/picocas/src/times.s: Users/user/Documents/scratch/picocas/src/times.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/times.s
+Users/user/picocas_dev/picocas/src/times.s: Users/user/picocas_dev/picocas/src/times.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/times.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/times.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/times.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/times.c.s
+Users/user/picocas_dev/picocas/src/times.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/times.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/times.c.s
 
-Users/user/Documents/scratch/picocas/src/trig.o: Users/user/Documents/scratch/picocas/src/trig.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.o
+Users/user/picocas_dev/picocas/src/trig.o: Users/user/picocas_dev/picocas/src/trig.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/trig.o
 
 # target to build an object file
-Users/user/Documents/scratch/picocas/src/trig.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.o
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.c.o
+Users/user/picocas_dev/picocas/src/trig.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.o
+.PHONY : Users/user/picocas_dev/picocas/src/trig.c.o
 
-Users/user/Documents/scratch/picocas/src/trig.i: Users/user/Documents/scratch/picocas/src/trig.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.i
+Users/user/picocas_dev/picocas/src/trig.i: Users/user/picocas_dev/picocas/src/trig.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/trig.i
 
 # target to preprocess a source file
-Users/user/Documents/scratch/picocas/src/trig.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.i
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.c.i
+Users/user/picocas_dev/picocas/src/trig.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.i
+.PHONY : Users/user/picocas_dev/picocas/src/trig.c.i
 
-Users/user/Documents/scratch/picocas/src/trig.s: Users/user/Documents/scratch/picocas/src/trig.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.s
+Users/user/picocas_dev/picocas/src/trig.s: Users/user/picocas_dev/picocas/src/trig.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/trig.s
 
 # target to generate assembly for a file
-Users/user/Documents/scratch/picocas/src/trig.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/Documents/scratch/picocas/src/trig.c.s
-.PHONY : Users/user/Documents/scratch/picocas/src/trig.c.s
+Users/user/picocas_dev/picocas/src/trig.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expr_tests.dir/build.make CMakeFiles/expr_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/parse_tests.dir/build.make CMakeFiles/parse_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/eval_tests.dir/build.make CMakeFiles/eval_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_tests.dir/build.make CMakeFiles/match_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/match_extensive_tests.dir/build.make CMakeFiles/match_extensive_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/symtab_tests.dir/build.make CMakeFiles/symtab_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/regression_tests.dir/build.make CMakeFiles/regression_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/comparisons_tests.dir/build.make CMakeFiles/comparisons_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/list_tests.dir/build.make CMakeFiles/list_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/replace_tests.dir/build.make CMakeFiles/replace_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/core_tests.dir/build.make CMakeFiles/core_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/trig_tests.dir/build.make CMakeFiles/trig_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hyperbolic_tests.dir/build.make CMakeFiles/hyperbolic_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/logexp_tests.dir/build.make CMakeFiles/logexp_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/piecewise_tests.dir/build.make CMakeFiles/piecewise_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/purefunc_tests.dir/build.make CMakeFiles/purefunc_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/modular_tests.dir/build.make CMakeFiles/modular_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/funcprog_through_tests.dir/build.make CMakeFiles/funcprog_through_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/split_tests.dir/build.make CMakeFiles/split_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sort_tests.dir/build.make CMakeFiles/sort_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/backtrack_tests.dir/build.make CMakeFiles/backtrack_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/poly_tests.dir/build.make CMakeFiles/poly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/expand_tests.dir/build.make CMakeFiles/expand_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/stats_tests.dir/build.make CMakeFiles/stats_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/datetime_tests.dir/build.make CMakeFiles/datetime_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/facpoly_tests.dir/build.make CMakeFiles/facpoly_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/linalg_tests.dir/build.make CMakeFiles/linalg_tests.dir/Users/user/picocas_dev/picocas/src/trig.c.s
+.PHONY : Users/user/picocas_dev/picocas/src/trig.c.s
 
 test_backtrack.o: test_backtrack.c.o
 .PHONY : test_backtrack.o
@@ -4642,108 +4642,108 @@ help:
 	@echo "... stats_tests"
 	@echo "... symtab_tests"
 	@echo "... trig_tests"
-	@echo "... Users/user/Documents/scratch/picocas/src/arithmetic.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/arithmetic.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/arithmetic.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/attr.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/attr.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/attr.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/boolean.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/boolean.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/boolean.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/comparisons.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/comparisons.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/comparisons.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/complex.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/complex.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/complex.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/core.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/core.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/core.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/datetime.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/datetime.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/datetime.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/eval.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/eval.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/eval.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/expand.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/expand.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/expand.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/expr.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/expr.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/expr.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/facint.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/facint.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/facint.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/facpoly.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/facpoly.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/facpoly.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/funcprog.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/funcprog.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/funcprog.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/hyperbolic.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/hyperbolic.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/hyperbolic.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/info.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/info.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/info.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/linalg.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/linalg.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/linalg.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/list.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/list.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/list.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/logexp.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/logexp.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/logexp.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/match.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/match.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/match.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/modular.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/modular.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/modular.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/parse.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/parse.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/parse.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/part.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/part.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/part.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/piecewise.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/piecewise.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/piecewise.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/plus.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/plus.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/plus.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/poly.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/poly.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/poly.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/power.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/power.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/power.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/print.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/print.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/print.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/purefunc.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/purefunc.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/purefunc.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/replace.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/replace.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/replace.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/sort.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/sort.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/sort.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/stats.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/stats.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/stats.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/symtab.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/symtab.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/symtab.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/times.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/times.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/times.s"
-	@echo "... Users/user/Documents/scratch/picocas/src/trig.o"
-	@echo "... Users/user/Documents/scratch/picocas/src/trig.i"
-	@echo "... Users/user/Documents/scratch/picocas/src/trig.s"
+	@echo "... Users/user/picocas_dev/picocas/src/arithmetic.o"
+	@echo "... Users/user/picocas_dev/picocas/src/arithmetic.i"
+	@echo "... Users/user/picocas_dev/picocas/src/arithmetic.s"
+	@echo "... Users/user/picocas_dev/picocas/src/attr.o"
+	@echo "... Users/user/picocas_dev/picocas/src/attr.i"
+	@echo "... Users/user/picocas_dev/picocas/src/attr.s"
+	@echo "... Users/user/picocas_dev/picocas/src/boolean.o"
+	@echo "... Users/user/picocas_dev/picocas/src/boolean.i"
+	@echo "... Users/user/picocas_dev/picocas/src/boolean.s"
+	@echo "... Users/user/picocas_dev/picocas/src/comparisons.o"
+	@echo "... Users/user/picocas_dev/picocas/src/comparisons.i"
+	@echo "... Users/user/picocas_dev/picocas/src/comparisons.s"
+	@echo "... Users/user/picocas_dev/picocas/src/complex.o"
+	@echo "... Users/user/picocas_dev/picocas/src/complex.i"
+	@echo "... Users/user/picocas_dev/picocas/src/complex.s"
+	@echo "... Users/user/picocas_dev/picocas/src/core.o"
+	@echo "... Users/user/picocas_dev/picocas/src/core.i"
+	@echo "... Users/user/picocas_dev/picocas/src/core.s"
+	@echo "... Users/user/picocas_dev/picocas/src/datetime.o"
+	@echo "... Users/user/picocas_dev/picocas/src/datetime.i"
+	@echo "... Users/user/picocas_dev/picocas/src/datetime.s"
+	@echo "... Users/user/picocas_dev/picocas/src/eval.o"
+	@echo "... Users/user/picocas_dev/picocas/src/eval.i"
+	@echo "... Users/user/picocas_dev/picocas/src/eval.s"
+	@echo "... Users/user/picocas_dev/picocas/src/expand.o"
+	@echo "... Users/user/picocas_dev/picocas/src/expand.i"
+	@echo "... Users/user/picocas_dev/picocas/src/expand.s"
+	@echo "... Users/user/picocas_dev/picocas/src/expr.o"
+	@echo "... Users/user/picocas_dev/picocas/src/expr.i"
+	@echo "... Users/user/picocas_dev/picocas/src/expr.s"
+	@echo "... Users/user/picocas_dev/picocas/src/facint.o"
+	@echo "... Users/user/picocas_dev/picocas/src/facint.i"
+	@echo "... Users/user/picocas_dev/picocas/src/facint.s"
+	@echo "... Users/user/picocas_dev/picocas/src/facpoly.o"
+	@echo "... Users/user/picocas_dev/picocas/src/facpoly.i"
+	@echo "... Users/user/picocas_dev/picocas/src/facpoly.s"
+	@echo "... Users/user/picocas_dev/picocas/src/funcprog.o"
+	@echo "... Users/user/picocas_dev/picocas/src/funcprog.i"
+	@echo "... Users/user/picocas_dev/picocas/src/funcprog.s"
+	@echo "... Users/user/picocas_dev/picocas/src/hyperbolic.o"
+	@echo "... Users/user/picocas_dev/picocas/src/hyperbolic.i"
+	@echo "... Users/user/picocas_dev/picocas/src/hyperbolic.s"
+	@echo "... Users/user/picocas_dev/picocas/src/info.o"
+	@echo "... Users/user/picocas_dev/picocas/src/info.i"
+	@echo "... Users/user/picocas_dev/picocas/src/info.s"
+	@echo "... Users/user/picocas_dev/picocas/src/linalg.o"
+	@echo "... Users/user/picocas_dev/picocas/src/linalg.i"
+	@echo "... Users/user/picocas_dev/picocas/src/linalg.s"
+	@echo "... Users/user/picocas_dev/picocas/src/list.o"
+	@echo "... Users/user/picocas_dev/picocas/src/list.i"
+	@echo "... Users/user/picocas_dev/picocas/src/list.s"
+	@echo "... Users/user/picocas_dev/picocas/src/logexp.o"
+	@echo "... Users/user/picocas_dev/picocas/src/logexp.i"
+	@echo "... Users/user/picocas_dev/picocas/src/logexp.s"
+	@echo "... Users/user/picocas_dev/picocas/src/match.o"
+	@echo "... Users/user/picocas_dev/picocas/src/match.i"
+	@echo "... Users/user/picocas_dev/picocas/src/match.s"
+	@echo "... Users/user/picocas_dev/picocas/src/modular.o"
+	@echo "... Users/user/picocas_dev/picocas/src/modular.i"
+	@echo "... Users/user/picocas_dev/picocas/src/modular.s"
+	@echo "... Users/user/picocas_dev/picocas/src/parse.o"
+	@echo "... Users/user/picocas_dev/picocas/src/parse.i"
+	@echo "... Users/user/picocas_dev/picocas/src/parse.s"
+	@echo "... Users/user/picocas_dev/picocas/src/part.o"
+	@echo "... Users/user/picocas_dev/picocas/src/part.i"
+	@echo "... Users/user/picocas_dev/picocas/src/part.s"
+	@echo "... Users/user/picocas_dev/picocas/src/piecewise.o"
+	@echo "... Users/user/picocas_dev/picocas/src/piecewise.i"
+	@echo "... Users/user/picocas_dev/picocas/src/piecewise.s"
+	@echo "... Users/user/picocas_dev/picocas/src/plus.o"
+	@echo "... Users/user/picocas_dev/picocas/src/plus.i"
+	@echo "... Users/user/picocas_dev/picocas/src/plus.s"
+	@echo "... Users/user/picocas_dev/picocas/src/poly.o"
+	@echo "... Users/user/picocas_dev/picocas/src/poly.i"
+	@echo "... Users/user/picocas_dev/picocas/src/poly.s"
+	@echo "... Users/user/picocas_dev/picocas/src/power.o"
+	@echo "... Users/user/picocas_dev/picocas/src/power.i"
+	@echo "... Users/user/picocas_dev/picocas/src/power.s"
+	@echo "... Users/user/picocas_dev/picocas/src/print.o"
+	@echo "... Users/user/picocas_dev/picocas/src/print.i"
+	@echo "... Users/user/picocas_dev/picocas/src/print.s"
+	@echo "... Users/user/picocas_dev/picocas/src/purefunc.o"
+	@echo "... Users/user/picocas_dev/picocas/src/purefunc.i"
+	@echo "... Users/user/picocas_dev/picocas/src/purefunc.s"
+	@echo "... Users/user/picocas_dev/picocas/src/replace.o"
+	@echo "... Users/user/picocas_dev/picocas/src/replace.i"
+	@echo "... Users/user/picocas_dev/picocas/src/replace.s"
+	@echo "... Users/user/picocas_dev/picocas/src/sort.o"
+	@echo "... Users/user/picocas_dev/picocas/src/sort.i"
+	@echo "... Users/user/picocas_dev/picocas/src/sort.s"
+	@echo "... Users/user/picocas_dev/picocas/src/stats.o"
+	@echo "... Users/user/picocas_dev/picocas/src/stats.i"
+	@echo "... Users/user/picocas_dev/picocas/src/stats.s"
+	@echo "... Users/user/picocas_dev/picocas/src/symtab.o"
+	@echo "... Users/user/picocas_dev/picocas/src/symtab.i"
+	@echo "... Users/user/picocas_dev/picocas/src/symtab.s"
+	@echo "... Users/user/picocas_dev/picocas/src/times.o"
+	@echo "... Users/user/picocas_dev/picocas/src/times.i"
+	@echo "... Users/user/picocas_dev/picocas/src/times.s"
+	@echo "... Users/user/picocas_dev/picocas/src/trig.o"
+	@echo "... Users/user/picocas_dev/picocas/src/trig.i"
+	@echo "... Users/user/picocas_dev/picocas/src/trig.s"
 	@echo "... test_backtrack.o"
 	@echo "... test_backtrack.i"
 	@echo "... test_backtrack.s"

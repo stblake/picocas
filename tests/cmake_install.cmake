@@ -1,4 +1,4 @@
-# Install script for directory: /Users/user/Documents/scratch/picocas/tests
+# Install script for directory: /Users/user/picocas_dev/picocas/tests
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/user/Documents/scratch/picocas/tests/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/user/picocas_dev/picocas/tests/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
