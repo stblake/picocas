@@ -155,6 +155,7 @@ void info_init(void) {
 
     // Primes
     symtab_set_docstring("FactorInteger", "FactorInteger[n] gives a list of the prime factors of the integer n, together with their exponents.");
+    symtab_set_docstring("EulerPhi", "EulerPhi[n] gives the Euler totient function phi(n).");
     symtab_set_docstring("PrimePi", "PrimePi[x] gives the number of primes less than or equal to x.");
     symtab_set_docstring("NextPrime", "NextPrime[x] gives the next prime after x.");
 }

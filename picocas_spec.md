@@ -1303,6 +1303,20 @@ In[4]:= FactorInteger[100, 1]
 Out[4]= {{2, 2}, 25}
 ```
 
+#### EulerPhi
+Gives the Euler totient function $\phi(n)$.
+- `EulerPhi[n]`
+
+**Features**:
+- `Listable`, `Protected`.
+- Counts the number of positive integers less than or equal to $n$ that are relatively prime to $n$.
+- Returns 0 for $n = 0$, and handles negative integers via $\phi(-n) = \phi(n)$.
+
+```mathematica
+In[1]:= EulerPhi[10]
+Out[1]= 4
+```
+
 #### Re, Im, ReIm, Abs, Conjugate, Arg
 Complex number functions.
 - `Re[z]`: Real part.

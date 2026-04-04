@@ -7,6 +7,7 @@ Expr* builtin_primeq(Expr* res);
 Expr* builtin_primepi(Expr* res);
 Expr* builtin_nextprime(Expr* res);
 Expr* builtin_factorinteger(Expr* res);
+Expr* builtin_eulerphi(Expr* res);
 
 void facint_init(void);
 

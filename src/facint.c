@@ -478,15 +478,56 @@ done_factors:
 #include "symtab.h"
 #include "attr.h"
 
+Expr* builtin_eulerphi(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    if (arg->type != EXPR_INTEGER) return NULL;
+
+    int64_t val = arg->data.integer;
+    if (val == 0) return expr_new_integer(0);
+    if (val < 0) val = -val;
+    if (val == 1) return expr_new_integer(1);
+
+    uint64_t n = (uint64_t)val;
+    uint64_t result = n;
+
+    uint64_t d_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+    for (int i = 0; i < 12; i++) {
+        uint64_t p = d_primes[i];
+        if (n % p == 0) {
+            while (n % p == 0) n /= p;
+            result -= result / p;
+        }
+    }
+
+    while (n > 1) {
+        uint64_t d;
+        if (is_prime_internal(n)) {
+            d = n;
+        } else {
+            d = pollard_rho_brent(n);
+            while (!is_prime_internal(d)) {
+                d = pollard_rho_brent(d);
+            }
+        }
+        while (n % d == 0) n /= d;
+        result -= result / d;
+    }
+
+    return expr_new_integer((int64_t)result);
+}
+
 void facint_init(void) {
     symtab_add_builtin("PrimeQ", builtin_primeq);
     symtab_add_builtin("PrimePi", builtin_primepi);
     symtab_add_builtin("FactorInteger", builtin_factorinteger);
     symtab_add_builtin("NextPrime", builtin_nextprime);
+    symtab_add_builtin("EulerPhi", builtin_eulerphi);
 
     symtab_get_def("PrimeQ")->attributes |= (ATTR_PROTECTED | ATTR_LISTABLE);
     symtab_get_def("PrimePi")->attributes |= (ATTR_PROTECTED | ATTR_LISTABLE);
     symtab_get_def("FactorInteger")->attributes |= (ATTR_PROTECTED | ATTR_LISTABLE);
+    symtab_get_def("EulerPhi")->attributes |= (ATTR_PROTECTED | ATTR_LISTABLE);
     symtab_get_def("NextPrime")->attributes |= (ATTR_PROTECTED | ATTR_READPROTECTED | ATTR_LISTABLE);
 }
 

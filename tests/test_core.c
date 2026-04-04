@@ -455,6 +455,31 @@ void test_factorinteger(void) {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[13835058055282163713, Automatic]"))), "List[List[-1, 1], List[3, 1], 1537228672809129301]") == 0);
 }
 
+void test_eulerphi(void) {
+    Expr* e; Expr* res; char* s;
+
+    e = parse_expression("EulerPhi[10]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "4") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[1]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "1") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[0]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "0") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[-10]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "4") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[{10, 20, 30}]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "List[4, 8, 8]") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[9]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "6") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("EulerPhi[100]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "40") == 0); free(s); expr_free(res); expr_free(e);
+}
+
 void test_nextprime(void) {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2]"))), "3") == 0);
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[3]"))), "5") == 0);
@@ -541,6 +566,7 @@ int main(void) {
     TEST(test_primeq);
     TEST(test_primepi);
     TEST(test_factorinteger);
+    TEST(test_eulerphi);
     TEST(test_nextprime);
     TEST(test_depth);
     TEST(test_information);
