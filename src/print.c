@@ -20,7 +20,16 @@ static int get_expr_prec(Expr* e) {
     if (strcmp(head, "Plus") == 0) return 310;
     if (strcmp(head, "Times") == 0) return 400;
     if (strcmp(head, "Divide") == 0) return 470;
-    if (strcmp(head, "Power") == 0) return 590;
+    if (strcmp(head, "Power") == 0) {
+        if (e->data.function.arg_count == 2) {
+            Expr* exp = e->data.function.args[1];
+            if (exp->type == EXPR_INTEGER && exp->data.integer < 0) return 470;
+            int64_t n, d;
+            if (is_rational(exp, &n, &d) && n < 0) return 470;
+            if (exp->type == EXPR_REAL && exp->data.real < 0.0) return 470;
+        }
+        return 590;
+    }
     if (strcmp(head, "Rational") == 0) return 470;
     if (strcmp(head, "Complex") == 0) return 310;
     return 1000;
@@ -92,7 +101,31 @@ static void print_standard(Expr* e, int parent_prec) {
         else if (strcmp(head, "Power") == 0 && e->data.function.arg_count == 2) {
             Expr* exp = e->data.function.args[1];
             int64_t n, d;
-            if (is_rational(exp, &n, &d) && n == 1 && d == 2) {
+            bool is_negative = false;
+            Expr* pos_exp = NULL;
+            if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+                is_negative = true;
+                pos_exp = expr_new_integer(-exp->data.integer);
+            } else if (is_rational(exp, &n, &d) && n < 0) {
+                is_negative = true;
+                pos_exp = make_rational(-n, d);
+            } else if (exp->type == EXPR_REAL && exp->data.real < 0.0) {
+                is_negative = true;
+                pos_exp = expr_new_real(-exp->data.real);
+            }
+
+            if (is_negative) {
+                printf("1/");
+                if (pos_exp->type == EXPR_INTEGER && pos_exp->data.integer == 1) {
+                    print_standard(e->data.function.args[0], 470);
+                } else {
+                    Expr* args[2] = { expr_copy(e->data.function.args[0]), expr_copy(pos_exp) };
+                    Expr* tmp = expr_new_function(expr_new_symbol("Power"), args, 2);
+                    print_standard(tmp, 470);
+                    expr_free(tmp);
+                }
+                if (pos_exp) expr_free(pos_exp);
+            } else if (is_rational(exp, &n, &d) && n == 1 && d == 2) {
                 printf("Sqrt[");
                 print_standard(e->data.function.args[0], 0);
                 printf("]");
