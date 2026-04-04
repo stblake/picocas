@@ -1249,6 +1249,28 @@ In[4]:= PowerMod[2, {10, 11, 12, 13, 14}, 5]
 Out[4]= {4, 3, 1, 2, 4}
 ```
 
+#### Factorial (!)
+Gives the factorial of an integer or half-integer.
+- `n!` or `Factorial[n]`
+
+**Features**:
+- `Protected`, `Listable`, `NumericFunction`.
+- Evaluates exactly for positive integers up to $20!$.
+- Yields `ComplexInfinity` for negative integers.
+- Supports half-integers utilizing factors of $\sqrt{\pi}$ recursively.
+- Supports trailing `!` parsed natively as a postfix operator.
+
+```mathematica
+In[1]:= 5!
+Out[1]= 120
+
+In[2]:= (1/2)!
+Out[2]= Sqrt[Pi]/2
+
+In[3]:= Factorial[0]
+Out[3]= 1
+```
+
 #### PrimeQ
 - `PrimeQ[n]`: Returns `True` if `n` is a prime number, `False` otherwise.
 

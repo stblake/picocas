@@ -480,6 +480,32 @@ void test_eulerphi(void) {
     assert(strcmp(s, "40") == 0); free(s); expr_free(res); expr_free(e);
 }
 
+void test_factorial(void) {
+    Expr* e; Expr* res; char* s;
+
+    e = parse_expression("Factorial[0]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "1") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("5!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "120") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("(-1)!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "ComplexInfinity") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("(1/2)!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "Times[Rational[1, 2], Power[Pi, Rational[1, 2]]]") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("(-1/2)!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "Power[Pi, Rational[1, 2]]") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("(-3/2)!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "Times[-2, Power[Pi, Rational[1, 2]]]") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("21!"); res = evaluate(e); s = expr_to_string_fullform(res);
+    printf("s for 21! is: %s\n", s);
+    assert(strcmp(s, "Factorial[21]") == 0); free(s); expr_free(res); expr_free(e);
+}
+
 void test_nextprime(void) {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2]"))), "3") == 0);
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[3]"))), "5") == 0);
@@ -567,6 +593,7 @@ int main(void) {
     TEST(test_primepi);
     TEST(test_factorinteger);
     TEST(test_eulerphi);
+    TEST(test_factorial);
     TEST(test_nextprime);
     TEST(test_depth);
     TEST(test_information);

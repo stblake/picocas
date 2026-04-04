@@ -1,5 +1,6 @@
 
 #include "arithmetic.h"
+#include "eval.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -281,5 +282,54 @@ Expr* builtin_powermod(Expr* res) {
         }
     }
     
+    return NULL;
+}
+
+Expr* builtin_factorial(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    int64_t n, d;
+    if (is_rational(arg, &n, &d)) {
+        if (d == 1) {
+            if (n < 0) return expr_new_symbol("ComplexInfinity");
+            if (n <= 20) {
+                int64_t f = 1;
+                for (int64_t i = 2; i <= n; i++) f *= i;
+                return expr_new_integer(f);
+            } else {
+                return expr_copy(res);
+            }
+        } else if (d == 2 || d == -2) {
+            if (d == -2) { n = -n; }
+            int64_t num = 1;
+            int64_t den = 1;
+            
+            if (n > 0) {
+                for (int64_t i = n; i >= 1; i -= 2) num *= i;
+                den = 1LL << ((n + 1) / 2);
+            } else {
+                for (int64_t i = n + 2; i <= -1; i += 2) {
+                    num *= 2;
+                    den *= i;
+                }
+            }
+            
+            Expr* coeff = make_rational(num, den);
+            if (!coeff) coeff = expr_new_integer(0);
+            
+            Expr* pi_sym = expr_new_symbol("Pi");
+            Expr* half = make_rational(1, 2);
+            Expr* sqrt_pi = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){pi_sym, half}, 2));
+            
+            if (coeff->type == EXPR_INTEGER && coeff->data.integer == 1) {
+                expr_free(coeff);
+                return sqrt_pi;
+            } else {
+                return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){coeff, sqrt_pi}, 2));
+            }
+        }
+    }
+
     return NULL;
 }

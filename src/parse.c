@@ -225,7 +225,8 @@ typedef enum {
     OP_POSTFIX,
     OP_PREFIX,
     OP_PATTERNTEST,
-    OP_INFORMATION
+    OP_INFORMATION,
+    OP_FACTORIAL
 } OperatorType;
 
 typedef struct {
@@ -309,6 +310,8 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_PREFIX; def.prec = 620; def.right_assoc = 1; def.head_name = "Prefix"; def.len = 1;
     } else if (*pos == '[') {
         def.type = OP_CALL; def.prec = 1000; def.len = 1;
+    } else if (*pos == '!' && pos[1] != '=') {
+        def.type = OP_FACTORIAL; def.prec = 710; def.head_name = "Factorial"; def.len = 1;
     }
     
     return def;
@@ -519,6 +522,10 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
         } else if (op_def.type == OP_FUNCTION) {
             Expr* args[1] = { left };
             left = expr_new_function(expr_new_symbol("Function"), args, 1);
+            continue;
+        } else if (op_def.type == OP_FACTORIAL) {
+            Expr* args[1] = { left };
+            left = expr_new_function(expr_new_symbol("Factorial"), args, 1);
             continue;
         } else if (op_def.type == OP_SPAN) {
             Expr* span_args[3];
