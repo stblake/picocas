@@ -36,6 +36,7 @@ set(COMMON_SRC
     ../src/poly.c
     ../src/rat.c
     ../src/facpoly.c
+    ../src/parfrac.c
     ../src/datetime.c
     ../src/linalg.c
 )
@@ -206,3 +207,8 @@ add_executable(linalg_tests
 target_include_directories(linalg_tests PRIVATE ../src)
 
 
+add_executable(parfrac_tests
+    test_parfrac.c
+    ${COMMON_SRC}
+)
+target_include_directories(parfrac_tests PRIVATE ../src)

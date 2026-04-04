@@ -152,7 +152,7 @@ void info_init(void) {
     symtab_set_docstring("Numerator", "Numerator[expr] gives the numerator of expr.\nNumerator picks out terms which do not have superficially negative exponents.");
     symtab_set_docstring("Denominator", "Denominator[expr] gives the denominator of expr.\nDenominator picks out terms which have superficially negative exponents.");
     symtab_set_docstring("Cancel", "Cancel[expr] cancels out common factors in the numerator and denominator of expr.");
-    symtab_set_docstring("Together", "Together[expr] puts terms in a sum over a common denominator, and cancels factors in the result.");
+    symtab_set_docstring("Apart", "Apart[expr] rewrites a rational expression as a sum of terms with minimal denominators.\nApart[expr,var] treats all variables other than var as constants.");
     symtab_set_docstring("LeafCount", "LeafCount[expr] gives the total number of indivisible subexpressions in expr.");
     symtab_set_docstring("ByteCount", "ByteCount[expr] gives the number of bytes used internally by PicoCAS to store expr.");
 

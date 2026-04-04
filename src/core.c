@@ -34,9 +34,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+#include "rat.h"
+#include "parfrac.h"
 
 void core_init(void) {
+    parfrac_init();
     modular_init();
     symtab_add_builtin("AtomQ", builtin_atomq);
     symtab_add_builtin("Length", builtin_length);
