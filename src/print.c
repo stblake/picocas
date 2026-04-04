@@ -136,10 +136,89 @@ static void print_standard(Expr* e, int parent_prec) {
             }
         }
         else if (strcmp(head, "Times") == 0) {
-            for (size_t i = 0; i < e->data.function.arg_count; i++) {
-                if (i > 0) printf(" ");
-                print_standard(e->data.function.args[i], 400);
+            size_t count = e->data.function.arg_count;
+            Expr** num_args = malloc(sizeof(Expr*) * count);
+            Expr** den_args = malloc(sizeof(Expr*) * count);
+            size_t num_count = 0, den_count = 0;
+            
+            for (size_t i = 0; i < count; i++) {
+                Expr* arg = e->data.function.args[i];
+                if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "Power") == 0 && arg->data.function.arg_count == 2) {
+                    Expr* exp = arg->data.function.args[1];
+                    bool is_neg = false;
+                    int64_t n, d;
+                    Expr* pos_exp = NULL;
+                    if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+                        is_neg = true;
+                        pos_exp = expr_new_integer(-exp->data.integer);
+                    } else if (is_rational(exp, &n, &d) && n < 0) {
+                        is_neg = true;
+                        pos_exp = make_rational(-n, d);
+                    } else if (exp->type == EXPR_REAL && exp->data.real < 0.0) {
+                        is_neg = true;
+                        pos_exp = expr_new_real(-exp->data.real);
+                    }
+                    if (is_neg) {
+                        if (pos_exp->type == EXPR_INTEGER && pos_exp->data.integer == 1) {
+                            den_args[den_count++] = expr_copy(arg->data.function.args[0]);
+                        } else {
+                            Expr* p_args[2] = { expr_copy(arg->data.function.args[0]), pos_exp };
+                            den_args[den_count++] = expr_new_function(expr_new_symbol("Power"), p_args, 2);
+                            pos_exp = NULL; 
+                        }
+                        if (pos_exp) expr_free(pos_exp);
+                    } else {
+                        num_args[num_count++] = expr_copy(arg);
+                    }
+                } else if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "Rational") == 0 && arg->data.function.arg_count == 2) {
+                    Expr* n = arg->data.function.args[0];
+                    Expr* d = arg->data.function.args[1];
+                    if (!(n->type == EXPR_INTEGER && n->data.integer == 1)) {
+                        num_args[num_count++] = expr_copy(n);
+                    }
+                    den_args[den_count++] = expr_copy(d);
+                } else {
+                    num_args[num_count++] = expr_copy(arg);
+                }
             }
+            
+            if (den_count == 0) {
+                for (size_t i = 0; i < num_count; i++) {
+                    if (i > 0) printf(" ");
+                    print_standard(num_args[i], 400);
+                }
+            } else {
+                Expr* num = NULL;
+                if (num_count == 0) num = expr_new_integer(1);
+                else if (num_count == 1) num = expr_copy(num_args[0]);
+                else {
+                    Expr** nc = malloc(sizeof(Expr*) * num_count);
+                    for(size_t i=0; i<num_count; i++) nc[i] = expr_copy(num_args[i]);
+                    num = expr_new_function(expr_new_symbol("Times"), nc, num_count);
+                    free(nc);
+                }
+                
+                Expr* den = NULL;
+                if (den_count == 1) den = expr_copy(den_args[0]);
+                else {
+                    Expr** dc = malloc(sizeof(Expr*) * den_count);
+                    for(size_t i=0; i<den_count; i++) dc[i] = expr_copy(den_args[i]);
+                    den = expr_new_function(expr_new_symbol("Times"), dc, den_count);
+                    free(dc);
+                }
+                
+                print_standard(num, 470);
+                printf("/");
+                print_standard(den, 470);
+                
+                expr_free(num);
+                expr_free(den);
+            }
+            
+            for (size_t i = 0; i < num_count; i++) expr_free(num_args[i]);
+            free(num_args);
+            for (size_t i = 0; i < den_count; i++) expr_free(den_args[i]);
+            free(den_args);
         }
         else if (strcmp(head, "Plus") == 0) {
             for (size_t i = 0; i < e->data.function.arg_count; i++) {
