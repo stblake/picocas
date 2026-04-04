@@ -821,6 +821,27 @@ In[4]:= {f[3 x, x], f[a x, x], f[(1 + x) x, x]}
 Out[4]= {3 f[x, x], a f[x, x], f[x (1 + x), x]}
 ```
 
+#### LeafCount
+Gives the total number of indivisible subexpressions in an expression.
+- `LeafCount[expr]`
+
+**Features**:
+- `Protected`.
+- Counts the number of subexpressions in `expr` that correspond to "leaves" on the expression tree.
+- By default `Heads -> True` includes the head of expressions and their parts. With `Heads -> False`, it excludes them.
+- Evaluates atoms like `Rational` and `Complex` based on their structural representation as functions.
+
+```mathematica
+In[1]:= LeafCount[1 + a + b^2]
+Out[1]= 6
+
+In[2]:= LeafCount[f[a, b][x, y]]
+Out[2]= 5
+
+In[3]:= LeafCount[{1/2, 1 + I}]
+Out[3]= 7
+```
+
 ### Time and Date
 
 #### Timing
