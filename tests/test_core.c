@@ -506,6 +506,32 @@ void test_factorial(void) {
     assert(strcmp(s, "Factorial[21]") == 0); free(s); expr_free(res); expr_free(e);
 }
 
+void test_binomial(void) {
+    Expr* e; Expr* res; char* s;
+
+    e = parse_expression("Binomial[10, 3]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "120") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("Binomial[8, 4]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "70") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("Binomial[9/2, 7/2]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "Rational[9, 2]") == 0); free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("Binomial[n, 4]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "Times[Rational[1, 24], n, Plus[-3, n], Plus[-2, n], Plus[-1, n]]") == 0);
+    free(s); expr_free(res); expr_free(e);
+
+    e = parse_expression("Binomial[0, 1]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "0") == 0); free(s); expr_free(res); expr_free(e);
+    
+    e = parse_expression("Binomial[-1, 1]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "-1") == 0); free(s); expr_free(res); expr_free(e);
+    
+    e = parse_expression("Binomial[-1, 0]"); res = evaluate(e); s = expr_to_string_fullform(res);
+    assert(strcmp(s, "1") == 0); free(s); expr_free(res); expr_free(e);
+}
+
 void test_nextprime(void) {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2]"))), "3") == 0);
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[3]"))), "5") == 0);
@@ -594,6 +620,7 @@ int main(void) {
     TEST(test_factorinteger);
     TEST(test_eulerphi);
     TEST(test_factorial);
+    TEST(test_binomial);
     TEST(test_nextprime);
     TEST(test_depth);
     TEST(test_information);

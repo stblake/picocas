@@ -28,5 +28,6 @@ Expr* builtin_gcd(Expr* res);
 Expr* builtin_lcm(Expr* res);
 Expr* builtin_powermod(Expr* res);
 Expr* builtin_factorial(Expr* res);
+Expr* builtin_binomial(Expr* res);
 
 #endif

@@ -90,6 +90,7 @@ void core_init(void) {
     symtab_add_builtin("LCM", builtin_lcm);
     symtab_add_builtin("PowerMod", builtin_powermod);
     symtab_add_builtin("Factorial", builtin_factorial);
+    symtab_add_builtin("Binomial", builtin_binomial);
     symtab_add_builtin("Information", builtin_information);
 
     symtab_get_def("AtomQ")->attributes |= ATTR_PROTECTED;
@@ -106,6 +107,7 @@ void core_init(void) {
     symtab_get_def("LCM")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE | ATTR_FLAT | ATTR_ORDERLESS | ATTR_ONEIDENTITY);
     symtab_get_def("PowerMod")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
     symtab_get_def("Factorial")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
+    symtab_get_def("Binomial")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
 
     facint_init();
 

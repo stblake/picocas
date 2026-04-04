@@ -333,3 +333,87 @@ Expr* builtin_factorial(Expr* res) {
 
     return NULL;
 }
+
+Expr* builtin_binomial(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* arg_n = res->data.function.args[0];
+    Expr* arg_m = res->data.function.args[1];
+
+    if (arg_n->type == EXPR_REAL || arg_m->type == EXPR_REAL) {
+        double n_val = (arg_n->type == EXPR_REAL) ? arg_n->data.real : (double)arg_n->data.integer;
+        double m_val = (arg_m->type == EXPR_REAL) ? arg_m->data.real : (double)arg_m->data.integer;
+        double val = tgamma(n_val + 1.0) / (tgamma(m_val + 1.0) * tgamma(n_val - m_val + 1.0));
+        return expr_new_real(val);
+    }
+
+    int64_t n_num = 0, n_den = 1, m_num = 0, m_den = 1;
+    bool n_is_rat = false;
+    if (arg_n->type == EXPR_INTEGER) { n_num = arg_n->data.integer; n_den = 1; n_is_rat = true; }
+    else if (is_rational(arg_n, &n_num, &n_den)) { n_is_rat = true; }
+
+    bool m_is_rat = false;
+    if (arg_m->type == EXPR_INTEGER) { m_num = arg_m->data.integer; m_den = 1; m_is_rat = true; }
+    else if (is_rational(arg_m, &m_num, &m_den)) { m_is_rat = true; }
+    
+    if (n_is_rat && m_is_rat) {
+        if (m_den == 1 && n_den == 1) {
+            int64_t m = m_num;
+            if (m < 0) return expr_new_integer(0);
+            
+            int64_t n = n_num;
+            if (n >= 0 && m > n) return expr_new_integer(0);
+            
+            int64_t sign = 1;
+            if (n < 0) {
+                if (m % 2 != 0) sign = -1;
+                n = -n + m - 1;
+            }
+            
+            if (m > n / 2) m = n - m;
+            
+            int64_t result = 1;
+            for (int64_t i = 1; i <= m; i++) {
+                int64_t next_num = n - i + 1;
+                if (result > INT64_MAX / next_num) {
+                    return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+                }
+                result = result * next_num / i;
+            }
+            return expr_new_integer(result * sign);
+        }
+        
+        int64_t diff_num = n_num * m_den - m_num * n_den;
+        int64_t diff_den = n_den * m_den;
+        if (diff_num % diff_den == 0) {
+            int64_t k = diff_num / diff_den;
+            if (k < 0) return expr_new_integer(0);
+            Expr* new_m = expr_new_integer(k);
+            Expr* new_call = eval_and_free(expr_new_function(expr_new_symbol("Binomial"), (Expr*[]){expr_copy(arg_n), new_m}, 2));
+            return new_call;
+        }
+    }
+    
+    if (m_is_rat && m_den == 1) {
+        int64_t m = m_num;
+        if (m < 0) return expr_new_integer(0);
+        if (m == 0) return expr_new_integer(1);
+        if (m == 1) return expr_copy(arg_n);
+        
+        Expr** args = malloc(sizeof(Expr*) * m);
+        for (int64_t i = 0; i < m; i++) {
+            if (i == 0) {
+                args[i] = expr_copy(arg_n);
+            } else {
+                args[i] = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(arg_n), expr_new_integer(-i)}, 2));
+            }
+        }
+        Expr* num = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, m));
+        free(args);
+        
+        Expr* den = eval_and_free(expr_new_function(expr_new_symbol("Factorial"), (Expr*[]){expr_new_integer(m)}, 1));
+        Expr* den_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){den, expr_new_integer(-1)}, 2));
+        return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num, den_inv}, 2));
+    }
+    
+    return NULL;
+}

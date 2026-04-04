@@ -1271,6 +1271,32 @@ In[3]:= Factorial[0]
 Out[3]= 1
 ```
 
+#### Binomial
+Gives the binomial coefficient $\binom{n}{m}$.
+- `Binomial[n, m]`
+
+**Features**:
+- `Protected`, `Listable`, `NumericFunction`.
+- Evaluates exactly for integers, half-integers, and dynamically factors symbolic terms correctly (e.g. `Binomial[n, 4]`).
+- Reduces numerical boundaries logically utilizing continuous `Gamma` interpolations.
+
+```mathematica
+In[1]:= Binomial[10, 3]
+Out[1]= 120
+
+In[2]:= Binomial[8.5, -4.2]
+Out[2]= 0.0000604992
+
+In[3]:= Binomial[9/2, 7/2]
+Out[3]= 9/2
+
+In[4]:= Binomial[n, 4]
+Out[4]= 1/24 (-3 + n) (-2 + n) (-1 + n) n
+
+In[5]:= Binomial[0, 1]
+Out[5]= 0
+```
+
 #### PrimeQ
 - `PrimeQ[n]`: Returns `True` if `n` is a prime number, `False` otherwise.
 
