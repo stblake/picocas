@@ -653,6 +653,47 @@ Expr* builtin_rowreduce(Expr* res) {
     return result;
 }
 
+Expr* builtin_identitymatrix(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    int64_t m = -1, n = -1;
+
+    if (arg->type == EXPR_INTEGER) {
+        m = arg->data.integer;
+        n = m;
+    } else if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "List") == 0) {
+        if (arg->data.function.arg_count == 2) {
+            Expr* arg_m = arg->data.function.args[0];
+            Expr* arg_n = arg->data.function.args[1];
+            if (arg_m->type == EXPR_INTEGER && arg_n->type == EXPR_INTEGER) {
+                m = arg_m->data.integer;
+                n = arg_n->data.integer;
+            }
+        }
+    }
+
+    if (m < 0 || n < 0) return expr_copy(res);
+
+    Expr** rows = malloc(sizeof(Expr*) * m);
+    for (int i = 0; i < m; i++) {
+        Expr** row_elems = malloc(sizeof(Expr*) * n);
+        for (int j = 0; j < n; j++) {
+            if (i == j) {
+                row_elems[j] = expr_new_integer(1);
+            } else {
+                row_elems[j] = expr_new_integer(0);
+            }
+        }
+        rows[i] = expr_new_function(expr_new_symbol("List"), row_elems, n);
+        free(row_elems);
+    }
+
+    Expr* result = expr_new_function(expr_new_symbol("List"), rows, m);
+    free(rows);
+    return result;
+}
+
 void linalg_init(void) {
     symtab_add_builtin("Dot", builtin_dot);
     symtab_get_def("Dot")->attributes |= ATTR_FLAT | ATTR_ONEIDENTITY | ATTR_PROTECTED;
@@ -666,4 +707,6 @@ void linalg_init(void) {
     symtab_get_def("Tr")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("RowReduce", builtin_rowreduce);
     symtab_get_def("RowReduce")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("IdentityMatrix", builtin_identitymatrix);
+    symtab_get_def("IdentityMatrix")->attributes |= ATTR_PROTECTED;
 }

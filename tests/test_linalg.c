@@ -107,6 +107,15 @@ void test_rowreduce() {
     expr_free(t);
 }
 
+void test_identitymatrix() {
+    run_test("IdentityMatrix[3]", "List[List[1, 0, 0], List[0, 1, 0], List[0, 0, 1]]");
+    run_test("IdentityMatrix[{2, 3}]", "List[List[1, 0, 0], List[0, 1, 0]]");
+    run_test("IdentityMatrix[{3, 2}]", "List[List[1, 0], List[0, 1], List[0, 0]]");
+    run_test("IdentityMatrix[0]", "List[]");
+    run_test("IdentityMatrix[-1]", "IdentityMatrix[-1]");
+    run_test("IdentityMatrix[a]", "IdentityMatrix[a]");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -118,6 +127,7 @@ int main() {
     TEST(test_norm);
     TEST(test_tr);
     TEST(test_rowreduce);
+    TEST(test_identitymatrix);
     printf("All linalg tests passed!\n");
     symtab_clear();
     return 0;

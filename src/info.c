@@ -25,6 +25,7 @@ void info_init(void) {
     symtab_set_docstring("Norm", "Norm[expr] gives the norm of a number, vector, or matrix.\nNorm[expr, p] gives the p-norm.");
     symtab_set_docstring("Tr", "Tr[list] finds the trace of the matrix or tensor list.\nTr[list, f] finds a generalized trace, combining terms with f instead of Plus.\nTr[list, f, n] goes down to level n in list.");
     symtab_set_docstring("RowReduce", "RowReduce[m] gives the row-reduced form of the matrix m.");
+    symtab_set_docstring("IdentityMatrix", "IdentityMatrix[n] gives the n x n identity matrix.\nIdentityMatrix[{m, n}] gives the m x n identity matrix.");
     symtab_set_docstring("Head", "Head[expr] gives the head of expr.");
     symtab_set_docstring("Length", "Length[expr] gives the number of elements in expr.");
     symtab_set_docstring("Dimensions", "Dimensions[expr] gives a list of the dimensions of expr.");

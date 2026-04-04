@@ -981,6 +981,40 @@ In[4]:= Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, Plus, 1]
 Out[4]= {12, 15, 18}
 ```
 
+#### RowReduce
+Gives the row-reduced form of the matrix `m`.
+- `RowReduce[m]`
+
+**Features**:
+- `Protected`.
+- Uses fraction-free division logic to perform exact algorithmic reduction across numerical, rational, and symbolics expressions natively avoiding division errors.
+
+```mathematica
+In[1]:= RowReduce[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}]
+Out[1]= {{1, 0, -1}, {0, 1, 2}, {0, 0, 0}}
+
+In[2]:= RowReduce[{{a, b, c}, {d, e, f}, {a+d, b+e, c+f}}]
+Out[2]= {{1, 0, (-b f + c e)/(a e - b d)}, {0, 1, (-a f + c d)/(-a e + b d)}, {0, 0, 0}}
+```
+
+#### IdentityMatrix
+Generates an identity matrix.
+- `IdentityMatrix[n]`: Gives the `n x n` identity matrix.
+- `IdentityMatrix[{m, n}]`: Gives the `m x n` identity matrix.
+
+**Features**:
+- `Protected`.
+- Generates exact integer outputs (`1` on main diagonal, `0` elsewhere).
+- Will remain unevaluated if arguments are symbolic or negative.
+
+```mathematica
+In[1]:= IdentityMatrix[3]
+Out[1]= {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}
+
+In[2]:= IdentityMatrix[{2, 3}]
+Out[2]= {{1, 0, 0}, {0, 1, 0}}
+```
+
 ### Statistics
 
 #### Mean

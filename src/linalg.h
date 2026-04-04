@@ -9,6 +9,7 @@ Expr* builtin_cross(Expr* res);
 Expr* builtin_norm(Expr* res);
 Expr* builtin_tr(Expr* res);
 Expr* builtin_rowreduce(Expr* res);
+Expr* builtin_identitymatrix(Expr* res);
 void linalg_init(void);
 
 #endif // LINALG_H
