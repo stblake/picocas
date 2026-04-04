@@ -246,6 +246,98 @@ Expr* builtin_cancel(Expr* res) {
     return cancel_recursive(res->data.function.args[0]);
 }
 
+static Expr* together_recursive(Expr* e) {
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+    
+    if (e->data.function.head->type == EXPR_SYMBOL) {
+        const char* head = e->data.function.head->data.symbol;
+        
+        if (strcmp(head, "Plus") == 0) {
+            size_t count = e->data.function.arg_count;
+            Expr** args = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                args[i] = together_recursive(e->data.function.args[i]);
+            }
+            
+            Expr** nums = malloc(sizeof(Expr*) * count);
+            Expr** dens = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                extract_num_den(args[i], &nums[i], &dens[i]);
+            }
+            
+            Expr* lcm_den = expr_copy(dens[0]);
+            for (size_t i = 1; i < count; i++) {
+                Expr* call_lcm = expr_new_function(expr_new_symbol("PolynomialLCM"), (Expr*[]){expr_copy(lcm_den), expr_copy(dens[i])}, 2);
+                Expr* new_lcm = evaluate(call_lcm);
+                expr_free(call_lcm);
+                expr_free(lcm_den);
+                lcm_den = new_lcm;
+            }
+            
+            Expr** new_nums = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                Expr* q = cancel_exact_div_wrapper(lcm_den, dens[i]);
+                new_nums[i] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){nums[i], q}, 2));
+            }
+            
+            Expr* combined_num = eval_and_free(expr_new_function(expr_new_symbol("Plus"), new_nums, count));
+            Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lcm_den), expr_new_integer(-1)}, 2));
+            Expr* combined_expr = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){combined_num, inv_den}, 2));
+            
+            Expr* res = cancel_recursive(combined_expr);
+            expr_free(combined_expr);
+            
+            for (size_t i = 0; i < count; i++) {
+                expr_free(args[i]);
+                expr_free(dens[i]); 
+            }
+            free(args);
+            free(nums);
+            free(dens);
+            free(new_nums);
+            
+            expr_free(lcm_den);
+            
+            return res;
+        }
+        
+        if (strcmp(head, "List") == 0 ||
+            strcmp(head, "Equal") == 0 || strcmp(head, "Less") == 0 ||
+            strcmp(head, "LessEqual") == 0 || strcmp(head, "Greater") == 0 ||
+            strcmp(head, "GreaterEqual") == 0 || strcmp(head, "And") == 0 ||
+            strcmp(head, "Or") == 0 || strcmp(head, "Not") == 0) {
+            
+            size_t count = e->data.function.arg_count;
+            Expr** args = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                args[i] = together_recursive(e->data.function.args[i]);
+            }
+            Expr* ret = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, count));
+            free(args);
+            return ret;
+        }
+        
+        size_t count = e->data.function.arg_count;
+        Expr** args = malloc(sizeof(Expr*) * count);
+        for (size_t i = 0; i < count; i++) {
+            args[i] = together_recursive(e->data.function.args[i]);
+        }
+        Expr* ret = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, count));
+        free(args);
+        
+        Expr* cancelled = cancel_recursive(ret);
+        expr_free(ret);
+        return cancelled;
+    }
+    
+    return cancel_recursive(e);
+}
+
+Expr* builtin_together(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return together_recursive(res->data.function.args[0]);
+}
+
 void rat_init(void) {
     symtab_add_builtin("Numerator", builtin_numerator);
     symtab_get_def("Numerator")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
@@ -253,4 +345,6 @@ void rat_init(void) {
     symtab_get_def("Denominator")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
     symtab_add_builtin("Cancel", builtin_cancel);
     symtab_get_def("Cancel")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
+    symtab_add_builtin("Together", builtin_together);
+    symtab_get_def("Together")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
 }

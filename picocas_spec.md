@@ -1231,6 +1231,29 @@ In[2]:= Cancel[(x - y)/(x^2 - y^2) + (x^3 - 27)/(x^2 - 9)]
 Out[2]= (9 + 3 x + x^2)/(3 + x) + 1/(x + y)
 ```
 
+#### Together
+Puts terms in a sum over a common denominator, and cancels factors in the result.
+- `Together[expr]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Makes a sum of terms into a single rational function.
+- Computes lowest common multiples (LCM) of denominators securely without unconditionally destroying pre-factored bases unnecessarily.
+
+```mathematica
+In[1]:= Together[a/b + c/d]
+Out[1]= (b c + a d) / (b d)
+
+In[2]:= Together[x^2/(x^2 - 1) + x/(x^2 - 1)]
+Out[2]= x / (-1 + x)
+
+In[3]:= Together[1/x + 1/(x + 1) + 1/(x + 2) + 1/(x + 3)]
+Out[3]= (2 (3 + 11 x + 9 x^2 + 2 x^3)) / (x (1 + x) (2 + x) (3 + x))
+
+In[4]:= Together[x^2/(x - y) - x y/(x - y)]
+Out[4]= x
+```
+
 #### Mod, Quotient, QuotientRemainder
 - `Mod[n, m]`: Remainder of `n/m`.
 - `Quotient[n, m]`: Integer part of `n/m`.

@@ -57,6 +57,15 @@ void test_cancel() {
     run_test("Cancel[(x - 1)/(x^2 - 1) + (x - 2)/(x^2 - 4)]", "Plus[Power[Plus[1, x], -1], Power[Plus[2, x], -1]]");
 }
 
+void test_together() {
+    run_test("Together[a/b + c/d]", "Times[Power[b, -1], Power[d, -1], Plus[Times[a, d], Times[b, c]]]");
+    run_test("Together[x^2/(x^2 - 1) + x/(x^2 - 1)]", "Times[x, Power[Plus[-1, x], -1]]");
+    run_test("Together[1/x + 1/(x + 1) + 1/(x + 2) + 1/(x + 3)]", "Times[Plus[6, Times[22, x], Times[18, Power[x, 2]], Times[4, Power[x, 3]]], Power[Plus[Times[6, x], Times[11, Power[x, 2]], Times[6, Power[x, 3]], Power[x, 4]], -1]]");
+    run_test("Together[x^2/(x - y) - x y/(x - y)]", "x");
+    run_test("Together[{1/x + 1/(x + 1), 1/(x + 2) + 1/(x + 3)}]", "List[Times[Plus[1, Times[2, x]], Power[Plus[x, Power[x, 2]], -1]], Times[Plus[5, Times[2, x]], Power[Plus[6, Times[5, x], Power[x, 2]], -1]]]");
+    run_test("Together[(x - 1)/(x^2 - 1) + (x - 2)/(x^2 - 4)]", "Times[Plus[3, Times[2, x]], Power[Plus[2, Times[3, x], Power[x, 2]], -1]]");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -65,6 +74,7 @@ int main() {
     TEST(test_numerator);
     TEST(test_denominator);
     TEST(test_cancel);
+    TEST(test_together);
     printf("All rat tests passed!\n");
 
     return 0;
