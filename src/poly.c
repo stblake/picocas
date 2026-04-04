@@ -438,7 +438,6 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     int degB = get_degree_poly(expandedB, x);
     
     if (degA < degB || is_zero_poly(expandedB)) {
-        printf("Early NULL! degA: %d, degB: %d\n", degA, degB);
         expr_free(expandedA); expr_free(expandedB); return NULL;
     }
     
@@ -455,7 +454,6 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
         
         Expr* q_coeff = exact_poly_div(lcR, lcB, vars, var_count - 1);
         if (!q_coeff) { 
-            printf("q_coeff is NULL! lcR: "); expr_print_fullform(lcR); printf(", lcB: "); expr_print_fullform(lcB); printf("\n");
             expr_free(lcR); break; 
         }
         
@@ -480,7 +478,6 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     expr_free(expandedB);
     
     if (!is_zero_poly(R)) {
-        printf("R is not zero! R: "); expr_print_fullform(R); printf("\n");
         expr_free(R); expr_free(Q); return NULL;
     }
     expr_free(R);

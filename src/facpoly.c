@@ -701,18 +701,6 @@ static void upoly_trim(UPoly* p) {
     while (p->deg > 0 && p->c[p->deg] == 0) p->deg--;
 }
 
-static int64_t mod_pow_int(int64_t base, int64_t exp, int64_t mod) {
-    int64_t res = 1;
-    base %= mod;
-    if (base < 0) base += mod;
-    while (exp > 0) {
-        if (exp % 2 == 1) res = (int64_t)(((int128_t)res * base) % mod);
-        base = (int64_t)(((int128_t)base * base) % mod);
-        exp /= 2;
-    }
-    return res;
-}
-
 static int64_t mod_inverse_int(int64_t a, int64_t m) {
     int64_t m0 = m, t, q;
     int64_t x0 = 0, x1 = 1;
