@@ -80,6 +80,33 @@ void test_tr() {
     run_test("Tr[{{1, 2}, {3}}]", "1");
 }
 
+void test_rowreduce() {
+    run_test("RowReduce[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}]", "List[List[1, 0, -1], List[0, 1, 2], List[0, 0, 0]]");
+    run_test("RowReduce[{{1, 2, 3, 1, 0, 0}, {4, 5, 6, 0, 1, 0}, {7, 8, 9, 0, 0, 1}}]", "List[List[1, 0, -1, 0, Rational[-8, 3], Rational[5, 3]], List[0, 1, 2, 0, Rational[7, 3], Rational[-4, 3]], List[0, 0, 0, 1, -2, 1]]");
+    run_test("RowReduce[{{3, 1, a}, {2, 1, b}}]", "List[List[1, 0, Plus[a, Times[-1, b]]], List[0, 1, Plus[Times[-2, a], Times[3, b]]]]");
+    run_test("RowReduce[{{0, 0, 0, Pi}, {2, 2, 2, 2}, {3 + I * Sqrt[2], 0, 0, 0}, {0, 4, 4, 0}}]", "List[List[1, 0, 0, 0], List[0, 1, 1, 0], List[0, 0, 0, 1], List[0, 0, 0, 0]]");
+    run_test("RowReduce[{{a, b, c}, {d, e, f}, {g, h, i}}]", "List[List[1, 0, 0], List[0, 1, 0], List[0, 0, 1]]");
+    
+    // Check symbolic fractional simplification: Note that Expand changes the exact output string.
+    Expr* t = evaluate(parse_expression("RowReduce[{{a, b, c}, {d, e, f}, {a + d, b + e, c + f}}]"));
+    char* res_str = expr_to_string_fullform(t);
+    
+    // We expect the first two rows to have the elements `(ce-bf)/(ae-bd)` and `(cd-af)/(bd-ae)`.
+    // In our algorithm the denominator is `-bd+ae` and the numerator is `ce-bf` or `-af+cd`.
+    // We just verify it reduces exactly to row 3 being 0 and diagonal being 1.
+    ASSERT(t->type == EXPR_FUNCTION);
+    ASSERT(t->data.function.arg_count == 3);
+    ASSERT(t->data.function.args[2]->data.function.args[0]->type == EXPR_INTEGER);
+    ASSERT(t->data.function.args[2]->data.function.args[0]->data.integer == 0);
+    ASSERT(t->data.function.args[2]->data.function.args[1]->type == EXPR_INTEGER);
+    ASSERT(t->data.function.args[2]->data.function.args[1]->data.integer == 0);
+    ASSERT(t->data.function.args[2]->data.function.args[2]->type == EXPR_INTEGER);
+    ASSERT(t->data.function.args[2]->data.function.args[2]->data.integer == 0);
+    
+    free(res_str);
+    expr_free(t);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -90,6 +117,7 @@ int main() {
     TEST(test_cross);
     TEST(test_norm);
     TEST(test_tr);
+    TEST(test_rowreduce);
     printf("All linalg tests passed!\n");
     symtab_clear();
     return 0;

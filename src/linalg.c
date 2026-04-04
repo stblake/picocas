@@ -3,6 +3,8 @@
 #include "symtab.h"
 #include "attr.h"
 #include "print.h"
+#include "poly.h"
+#include "expand.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -481,6 +483,176 @@ Expr* builtin_tr(Expr* res) {
     return result;
 }
 
+static Expr* exact_div_wrapper(Expr* num, Expr* den) {
+    if (is_zero_poly(num)) return expr_new_integer(0);
+    if (den->type == EXPR_INTEGER && den->data.integer == 1) return expr_expand(num);
+
+    Expr* exp_num = expr_expand(num);
+    Expr* exp_den = expr_expand(den);
+
+    size_t v_count = 0, v_cap = 16;
+    Expr** vars = malloc(sizeof(Expr*) * v_cap);
+    collect_variables(exp_num, &vars, &v_count, &v_cap);
+    collect_variables(exp_den, &vars, &v_count, &v_cap);
+    if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+
+    Expr* res = exact_poly_div(exp_num, exp_den, vars, v_count);
+
+    for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+    free(vars);
+
+    if (res) {
+        expr_free(exp_num);
+        expr_free(exp_den);
+        return res;
+    } else {
+        Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){exp_den, expr_new_integer(-1)}, 2));
+        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){exp_num, t}, 2));
+        return r;
+    }
+}
+
+Expr* builtin_rowreduce(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    int64_t dims[64];
+    int rank = get_tensor_dims(arg, dims);
+    
+    if (rank != 2 || dims[0] == 0 || dims[1] == 0) {
+        return expr_copy(arg);
+    }
+    
+    int m = (int)dims[0];
+    int n = (int)dims[1];
+    
+    Expr** matrix = malloc(sizeof(Expr*) * m * n);
+    size_t idx = 0;
+    flatten_tensor(arg, matrix, &idx);
+    
+    Expr* P = expr_new_integer(1);
+    int r = 0;
+    
+    for (int c = 0; c < n && r < m; c++) {
+        int pivot_row = -1;
+        for (int i = r; i < m; i++) {
+            if (!is_zero_poly(matrix[i * n + c])) {
+                pivot_row = i;
+                break;
+            }
+        }
+        if (pivot_row == -1) continue;
+        
+        if (pivot_row != r) {
+            for (int j = 0; j < n; j++) {
+                Expr* tmp = matrix[r * n + j];
+                matrix[r * n + j] = matrix[pivot_row * n + j];
+                matrix[pivot_row * n + j] = tmp;
+            }
+        }
+        
+        Expr* pivot = matrix[r * n + c];
+        
+        for (int i = 0; i < m; i++) {
+            if (i == r) continue;
+            Expr* M_ic = matrix[i * n + c];
+            if (is_zero_poly(M_ic)) {
+                for (int j = 0; j < n; j++) {
+                    if (j == c) continue;
+                    Expr* num_eval = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(pivot), expr_copy(matrix[i * n + j])}, 2));
+                    Expr* new_val = exact_div_wrapper(num_eval, P);
+                    expr_free(num_eval);
+                    expr_free(matrix[i * n + j]);
+                    matrix[i * n + j] = new_val;
+                }
+            } else {
+                for (int j = 0; j < n; j++) {
+                    if (j == c) continue;
+                    Expr* t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(pivot), expr_copy(matrix[i * n + j])}, 2));
+                    Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(M_ic), expr_copy(matrix[r * n + j])}, 2));
+                    Expr* t2_neg = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), t2}, 2));
+                    Expr* num_eval = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){t1, t2_neg}, 2));
+                    Expr* new_val = exact_div_wrapper(num_eval, P);
+                    expr_free(num_eval);
+                    expr_free(matrix[i * n + j]);
+                    matrix[i * n + j] = new_val;
+                }
+            }
+            expr_free(matrix[i * n + c]);
+            matrix[i * n + c] = expr_new_integer(0);
+        }
+        
+        expr_free(P);
+        P = expr_copy(pivot);
+        r++;
+    }
+    expr_free(P);
+    
+    for (int i = 0; i < m; i++) {
+        Expr* leading = NULL;
+        int lead_j = -1;
+        for (int j = 0; j < n; j++) {
+            if (!is_zero_poly(matrix[i * n + j])) {
+                leading = expr_copy(matrix[i * n + j]);
+                lead_j = j;
+                break;
+            }
+        }
+        if (leading) {
+            for (int j = lead_j; j < n; j++) {
+                if (j == lead_j) {
+                    expr_free(matrix[i * n + j]);
+                    matrix[i * n + j] = expr_new_integer(1);
+                } else if (!is_zero_poly(matrix[i * n + j])) {
+                    Expr* num_val = matrix[i * n + j];
+                    Expr* den_val = expr_copy(leading);
+                    
+                    Expr* g = eval_and_free(expr_new_function(expr_new_symbol("PolynomialGCD"), (Expr*[]){expr_copy(num_val), expr_copy(den_val)}, 2));
+                    Expr* new_num = exact_div_wrapper(num_val, g);
+                    Expr* new_den = exact_div_wrapper(den_val, g);
+                    expr_free(g);
+                    
+                    if (new_den->type == EXPR_INTEGER && new_den->data.integer < 0) {
+                        Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){new_num, expr_new_integer(-1)}, 2));
+                        new_num = expr_expand(t);
+                        expr_free(t);
+                        new_den->data.integer = -new_den->data.integer;
+                    }
+                    
+                    if (new_den->type == EXPR_INTEGER && new_den->data.integer == 1) {
+                        expr_free(new_den);
+                        matrix[i * n + j] = new_num;
+                    } else {
+                        Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){new_den, expr_new_integer(-1)}, 2));
+                        Expr* final_val = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){new_num, inv_den}, 2));
+                        matrix[i * n + j] = expr_expand(final_val);
+                        expr_free(final_val);
+                    }
+                    expr_free(num_val);
+                    expr_free(den_val);
+                }
+            }
+            expr_free(leading);
+        }
+    }
+    
+    Expr** rows = malloc(sizeof(Expr*) * m);
+    for (int i = 0; i < m; i++) {
+        Expr** row_elems = malloc(sizeof(Expr*) * n);
+        for (int j = 0; j < n; j++) {
+            row_elems[j] = matrix[i * n + j];
+        }
+        rows[i] = expr_new_function(expr_new_symbol("List"), row_elems, n);
+        free(row_elems);
+    }
+    
+    Expr* result = expr_new_function(expr_new_symbol("List"), rows, m);
+    free(rows);
+    free(matrix);
+    
+    return result;
+}
+
 void linalg_init(void) {
     symtab_add_builtin("Dot", builtin_dot);
     symtab_get_def("Dot")->attributes |= ATTR_FLAT | ATTR_ONEIDENTITY | ATTR_PROTECTED;
@@ -492,4 +664,6 @@ void linalg_init(void) {
     symtab_get_def("Norm")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Tr", builtin_tr);
     symtab_get_def("Tr")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("RowReduce", builtin_rowreduce);
+    symtab_get_def("RowReduce")->attributes |= ATTR_PROTECTED;
 }
