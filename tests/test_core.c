@@ -585,6 +585,28 @@ void test_leafcount() {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[x,y], Heads->False]"))), "2") == 0);
 }
 
+void test_bytecount() {
+    Expr* e; Expr* res;
+    
+    e = parse_expression("ByteCount[1]");
+    res = evaluate(e);
+    assert(res->type == EXPR_INTEGER);
+    assert(res->data.integer > 0);
+    expr_free(res); expr_free(e);
+
+    e = parse_expression("ByteCount[x]");
+    res = evaluate(e);
+    assert(res->type == EXPR_INTEGER);
+    assert(res->data.integer > sizeof(Expr)); // Should include string length
+    expr_free(res); expr_free(e);
+
+    e = parse_expression("ByteCount[f[x,y]]");
+    res = evaluate(e);
+    assert(res->type == EXPR_INTEGER);
+    assert(res->data.integer > sizeof(Expr) * 3); // head + 2 args
+    expr_free(res); expr_free(e);
+}
+
 void test_information(void) {
     Expr* e1 = parse_expression("Information[Range]");
     Expr* res1 = evaluate(e1);
@@ -633,6 +655,7 @@ int main(void) {
     TEST(test_nextprime);
     TEST(test_depth);
     TEST(test_leafcount);
+    TEST(test_bytecount);
     TEST(test_information);
 
     printf("All core tests passed!\n");

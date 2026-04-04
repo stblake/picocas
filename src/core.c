@@ -79,6 +79,8 @@ void core_init(void) {
     symtab_add_builtin("Depth", builtin_depth);
     symtab_add_builtin("LeafCount", builtin_leafcount);
     symtab_get_def("LeafCount")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("ByteCount", builtin_bytecount);
+    symtab_get_def("ByteCount")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("MatchQ", builtin_matchq);
     symtab_add_builtin("CompoundExpression", builtin_compoundexpression);
     symtab_add_builtin("NumberQ", builtin_numberq);
@@ -717,6 +719,36 @@ Expr* builtin_leafcount(Expr* res) {
     
     int64_t count = leaf_count_internal(expr, heads);
     return expr_new_integer(count);
+}
+
+static int64_t byte_count_internal(Expr* e) {
+    if (!e) return 0;
+    int64_t total = sizeof(Expr);
+    switch (e->type) {
+        case EXPR_SYMBOL:
+            if (e->data.symbol) total += strlen(e->data.symbol) + 1;
+            break;
+        case EXPR_STRING:
+            if (e->data.string) total += strlen(e->data.string) + 1;
+            break;
+        case EXPR_FUNCTION:
+            if (e->data.function.head) total += byte_count_internal(e->data.function.head);
+            if (e->data.function.arg_count > 0 && e->data.function.args) {
+                total += sizeof(Expr*) * e->data.function.arg_count;
+                for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                    total += byte_count_internal(e->data.function.args[i]);
+                }
+            }
+            break;
+        default:
+            break;
+    }
+    return total;
+}
+
+Expr* builtin_bytecount(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return expr_new_integer(byte_count_internal(res->data.function.args[0]));
 }
 
 static void level_rec(Expr* e, int64_t current_level, int64_t min_l, int64_t max_l, bool heads, Expr*** results, size_t* count, size_t* cap) {

@@ -842,6 +842,14 @@ In[3]:= LeafCount[{1/2, 1 + I}]
 Out[3]= 7
 ```
 
+#### ByteCount
+Gives the number of bytes used internally by PicoCAS to store the expression.
+- `ByteCount[expr]`
+
+**Features**:
+- `Protected`.
+- Uses `sizeof()` in C and measures the internal AST memory allocation boundaries, dynamically capturing sizes of individual strings, symbols, allocated blocks, arrays, and expression structs.
+
 ### Time and Date
 
 #### Timing

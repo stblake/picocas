@@ -153,6 +153,7 @@ void info_init(void) {
     symtab_set_docstring("Cancel", "Cancel[expr] cancels out common factors in the numerator and denominator of expr.");
     symtab_set_docstring("Together", "Together[expr] puts terms in a sum over a common denominator, and cancels factors in the result.");
     symtab_set_docstring("LeafCount", "LeafCount[expr] gives the total number of indivisible subexpressions in expr.");
+    symtab_set_docstring("ByteCount", "ByteCount[expr] gives the number of bytes used internally by PicoCAS to store expr.");
 
     // Time and Date
     symtab_set_docstring("Timing", "Timing[expr] evaluates expr, and returns a list of the time in seconds used, together with the result obtained.");
