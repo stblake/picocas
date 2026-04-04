@@ -1214,6 +1214,23 @@ In[2]:= Denominator[3/7 + I/11]
 Out[2]= 77
 ```
 
+#### Cancel
+Cancels out common factors in the numerator and denominator of an expression.
+- `Cancel[expr]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Threads over equations, inequalities, logic functions, and sums dynamically.
+- Evaluates greatest common divisors via polynomial GCD derivations avoiding extraneous expansions.
+
+```mathematica
+In[1]:= Cancel[(x^2 - 1) / (x - 1)]
+Out[1]= 1 + x
+
+In[2]:= Cancel[(x - y)/(x^2 - y^2) + (x^3 - 27)/(x^2 - 9)]
+Out[2]= (9 + 3 x + x^2)/(3 + x) + 1/(x + y)
+```
+
 #### Mod, Quotient, QuotientRemainder
 - `Mod[n, m]`: Remainder of `n/m`.
 - `Quotient[n, m]`: Integer part of `n/m`.

@@ -3,6 +3,8 @@
 #include "symtab.h"
 #include "attr.h"
 #include "arithmetic.h"
+#include "poly.h"
+#include "expand.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -146,9 +148,109 @@ Expr* builtin_denominator(Expr* res) {
     return d;
 }
 
+static Expr* cancel_exact_div_wrapper(Expr* num, Expr* den) {
+    if (is_zero_poly(num)) return expr_new_integer(0);
+    if (den->type == EXPR_INTEGER && den->data.integer == 1) return expr_expand(num);
+
+    Expr* exp_num = expr_expand(num);
+    Expr* exp_den = expr_expand(den);
+
+    size_t v_count = 0, v_cap = 16;
+    Expr** vars = malloc(sizeof(Expr*) * v_cap);
+    collect_variables(exp_num, &vars, &v_count, &v_cap);
+    collect_variables(exp_den, &vars, &v_count, &v_cap);
+    if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+
+    Expr* res = exact_poly_div(exp_num, exp_den, vars, v_count);
+
+    for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+    free(vars);
+
+    if (res) {
+        expr_free(exp_num);
+        expr_free(exp_den);
+        return res;
+    } else {
+        Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){exp_den, expr_new_integer(-1)}, 2));
+        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){exp_num, t}, 2));
+        return r;
+    }
+}
+
+static Expr* cancel_recursive(Expr* e) {
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+    
+    if (e->data.function.head->type == EXPR_SYMBOL) {
+        const char* head = e->data.function.head->data.symbol;
+        if (strcmp(head, "List") == 0 || strcmp(head, "Plus") == 0 ||
+            strcmp(head, "Equal") == 0 || strcmp(head, "Less") == 0 ||
+            strcmp(head, "LessEqual") == 0 || strcmp(head, "Greater") == 0 ||
+            strcmp(head, "GreaterEqual") == 0 || strcmp(head, "And") == 0 ||
+            strcmp(head, "Or") == 0 || strcmp(head, "Not") == 0) {
+            
+            size_t count = e->data.function.arg_count;
+            Expr** args = malloc(sizeof(Expr*) * count);
+            for (size_t i = 0; i < count; i++) {
+                args[i] = cancel_recursive(e->data.function.args[i]);
+            }
+            Expr* ret = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, count));
+            free(args);
+            return ret;
+        }
+    }
+    
+    Expr* num; Expr* den;
+    extract_num_den(e, &num, &den);
+    
+    if (den->type == EXPR_INTEGER && den->data.integer == 1) {
+        expr_free(den);
+        return num;
+    }
+    
+    Expr* g = eval_and_free(expr_new_function(expr_new_symbol("PolynomialGCD"), (Expr*[]){expr_copy(num), expr_copy(den)}, 2));
+    
+    Expr* new_num = cancel_exact_div_wrapper(num, g);
+    Expr* new_den = cancel_exact_div_wrapper(den, g);
+    
+    if (new_den && new_den->type == EXPR_INTEGER && new_den->data.integer < 0) {
+        Expr* t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), new_num}, 2));
+        Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), new_den}, 2));
+        new_num = expr_expand(t1);
+        new_den = expr_expand(t2);
+        expr_free(t1);
+        expr_free(t2);
+    }
+    
+    Expr* res;
+    if (new_den && new_den->type == EXPR_INTEGER && new_den->data.integer == 1) {
+        res = new_num;
+        expr_free(new_den);
+    } else if (new_num && new_den) {
+        Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){new_den, expr_new_integer(-1)}, 2));
+        res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){new_num, inv_den}, 2));
+    } else {
+        if (new_num) expr_free(new_num);
+        if (new_den) expr_free(new_den);
+        res = expr_copy(e);
+    }
+    
+    expr_free(g);
+    expr_free(num);
+    expr_free(den);
+    
+    return res;
+}
+
+Expr* builtin_cancel(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return cancel_recursive(res->data.function.args[0]);
+}
+
 void rat_init(void) {
     symtab_add_builtin("Numerator", builtin_numerator);
     symtab_get_def("Numerator")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
     symtab_add_builtin("Denominator", builtin_denominator);
     symtab_get_def("Denominator")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
+    symtab_add_builtin("Cancel", builtin_cancel);
+    symtab_get_def("Cancel")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
 }

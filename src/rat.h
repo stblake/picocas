@@ -5,6 +5,7 @@
 
 Expr* builtin_numerator(Expr* res);
 Expr* builtin_denominator(Expr* res);
+Expr* builtin_cancel(Expr* res);
 void rat_init(void);
 
 #endif // RAT_H
