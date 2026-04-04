@@ -576,6 +576,15 @@ void test_depth(void) {
     assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[h[{{{a}}}][x, y], Heads -> True]"))), "6") == 0);
 }
 
+void test_leafcount() {
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[1+a+b^2]"))), "6") == 0);
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[x,y]]"))), "3") == 0);
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[a,b][x,y]]"))), "5") == 0);
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[I]"))), "3") == 0);
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[{1/2, 1+I}]"))), "7") == 0);
+    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[x,y], Heads->False]"))), "2") == 0);
+}
+
 void test_information(void) {
     Expr* e1 = parse_expression("Information[Range]");
     Expr* res1 = evaluate(e1);
@@ -623,6 +632,7 @@ int main(void) {
     TEST(test_binomial);
     TEST(test_nextprime);
     TEST(test_depth);
+    TEST(test_leafcount);
     TEST(test_information);
 
     printf("All core tests passed!\n");

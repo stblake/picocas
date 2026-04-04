@@ -66,15 +66,6 @@ void test_together() {
     run_test("Together[(x - 1)/(x^2 - 1) + (x - 2)/(x^2 - 4)]", "Times[Plus[3, Times[2, x]], Power[Plus[2, Times[3, x], Power[x, 2]], -1]]");
 }
 
-void test_leafcount() {
-    run_test("LeafCount[1+a+b^2]", "6");
-    run_test("LeafCount[f[x,y]]", "3");
-    run_test("LeafCount[f[a,b][x,y]]", "5");
-    run_test("LeafCount[I]", "3");
-    run_test("LeafCount[{1/2, 1+I}]", "7");
-    run_test("LeafCount[f[x,y], Heads->False]", "2");
-}
-
 int main() {
     symtab_init();
     core_init();
@@ -84,7 +75,6 @@ int main() {
     TEST(test_denominator);
     TEST(test_cancel);
     TEST(test_together);
-    TEST(test_leafcount);
     printf("All rat tests passed!\n");
 
     return 0;

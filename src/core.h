@@ -25,6 +25,7 @@ Expr* builtin_quotient(Expr* res);
 Expr* builtin_quotientremainder(Expr* res);
 Expr* builtin_level(Expr* res);
 Expr* builtin_depth(Expr* res);
+Expr* builtin_leafcount(Expr* res);
 Expr* builtin_information(Expr* res);
 
 // Initialize core builtins

@@ -77,6 +77,8 @@ void core_init(void) {
     symtab_add_builtin("Variables", builtin_variables);
     symtab_add_builtin("Level", builtin_level);
     symtab_add_builtin("Depth", builtin_depth);
+    symtab_add_builtin("LeafCount", builtin_leafcount);
+    symtab_get_def("LeafCount")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("MatchQ", builtin_matchq);
     symtab_add_builtin("CompoundExpression", builtin_compoundexpression);
     symtab_add_builtin("NumberQ", builtin_numberq);
@@ -678,6 +680,43 @@ Expr* builtin_depth(Expr* res) {
         }
     }
     return expr_new_integer(get_expr_depth(e, heads));
+}
+
+static int64_t leaf_count_internal(Expr* e, bool heads) {
+    if (!e) return 0;
+    if (e->type != EXPR_FUNCTION) return 1;
+    
+    int64_t count = 0;
+    if (heads) {
+        count += leaf_count_internal(e->data.function.head, heads);
+    }
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        count += leaf_count_internal(e->data.function.args[i], heads);
+    }
+    
+    if (!heads && count == 0 && e->data.function.arg_count == 0) return 0;
+    return count;
+}
+
+Expr* builtin_leafcount(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* expr = res->data.function.args[0];
+    bool heads = true;
+    
+    if (res->data.function.arg_count == 2) {
+        Expr* opt = res->data.function.args[1];
+        if (opt->type == EXPR_FUNCTION && opt->data.function.head->type == EXPR_SYMBOL && strcmp(opt->data.function.head->data.symbol, "Rule") == 0 && opt->data.function.arg_count == 2) {
+            if (opt->data.function.args[0]->type == EXPR_SYMBOL && strcmp(opt->data.function.args[0]->data.symbol, "Heads") == 0) {
+                if (opt->data.function.args[1]->type == EXPR_SYMBOL && strcmp(opt->data.function.args[1]->data.symbol, "False") == 0) {
+                    heads = false;
+                }
+            }
+        }
+    }
+    
+    int64_t count = leaf_count_internal(expr, heads);
+    return expr_new_integer(count);
 }
 
 static void level_rec(Expr* e, int64_t current_level, int64_t min_l, int64_t max_l, bool heads, Expr*** results, size_t* count, size_t* cap) {
