@@ -142,6 +142,7 @@ void info_init(void) {
     symtab_set_docstring("PolynomialRemainder", "PolynomialRemainder[p, q, x] gives the remainder from dividing p by q, treated as polynomials in x.");
     symtab_set_docstring("Collect", "Collect[expr, x] collects together terms involving the same powers of objects matching x.");
     symtab_set_docstring("FactorSquareFree", "FactorSquareFree[poly] pulls out any multiple factors in a polynomial.");
+    symtab_set_docstring("Factor", "Factor[poly] factors a polynomial over the integers.");
     symtab_set_docstring("Variables", "Variables[poly] gives a list of all independent variables in the polynomial poly.");
     symtab_set_docstring("PolynomialQ", "PolynomialQ[expr, var] yields True if expr is a polynomial in var.");
     symtab_set_docstring("Decompose", "Decompose[poly, x] decomposes a polynomial, if possible, into a composition of simpler polynomials.");

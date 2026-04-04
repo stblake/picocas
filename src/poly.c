@@ -418,7 +418,7 @@ int get_degree_poly(Expr* e, Expr* var) {
     return 0;
 }
 
-static Expr* get_coeff(Expr* e, Expr* var, int d) {
+Expr* get_coeff(Expr* e, Expr* var, int d) {
     Expr* call = expr_new_function(expr_new_symbol("Coefficient"), (Expr*[]){expr_copy(e), expr_copy(var), expr_new_integer(d)}, 3);
     Expr* res = evaluate(call);
     expr_free(call);
@@ -771,9 +771,11 @@ Expr* builtin_polynomialgcd(Expr* res) {
     }
     if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
     
-    Expr* cur_gcd = rems[0];
+    Expr* cur_gcd = expr_copy(rems[0]);
     for (size_t i = 1; i < count; i++) {
-        cur_gcd = poly_gcd_internal(cur_gcd, rems[i], vars, v_count);
+        Expr* next_gcd = poly_gcd_internal(cur_gcd, rems[i], vars, v_count);
+        expr_free(cur_gcd);
+        cur_gcd = next_gcd;
     }
     
     size_t final_count = 0;
@@ -782,8 +784,11 @@ Expr* builtin_polynomialgcd(Expr* res) {
     if (!(cur_gcd->type == EXPR_INTEGER && cur_gcd->data.integer == 1)) final_count++;
     
     if (final_count == 0) {
-        free(common_args); free(vars); expr_free(numG);
-        for(size_t i=1; i<count; i++) expr_free(rems[i]); free(rems);
+        free(common_args); 
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]);
+        free(vars); 
+        expr_free(numG);
+        for(size_t i=0; i<count; i++) expr_free(rems[i]); free(rems);
         return expr_new_integer(1);
     }
     
@@ -802,7 +807,7 @@ Expr* builtin_polynomialgcd(Expr* res) {
     free(common_args); 
     for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
     free(vars);
-    for(size_t i=1; i<count; i++) expr_free(rems[i]); free(rems);
+    for(size_t i=0; i<count; i++) expr_free(rems[i]); free(rems);
     free(final_args);
     return result;
 }
@@ -960,7 +965,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
     }
     if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
     
-    Expr* cur_lcm = rems[0];
+    Expr* cur_lcm = expr_copy(rems[0]);
     for (size_t i = 1; i < count; i++) {
         Expr* cur_gcd = poly_gcd_internal(cur_lcm, rems[i], vars, v_count);
         Expr* next_lcm;
@@ -984,7 +989,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
             }
         }
         expr_free(cur_gcd);
-        if (i > 1) expr_free(cur_lcm); 
+        expr_free(cur_lcm); 
         cur_lcm = next_lcm;
     }
     
@@ -994,8 +999,11 @@ Expr* builtin_polynomiallcm(Expr* res) {
     if (!(cur_lcm->type == EXPR_INTEGER && cur_lcm->data.integer == 1)) final_count++;
     
     if (final_count == 0) {
-        free(common_args); free(vars); expr_free(numL);
-        for(size_t i=1; i<count; i++) expr_free(rems[i]); free(rems);
+        free(common_args); 
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]);
+        free(vars); 
+        expr_free(numL);
+        for(size_t i=0; i<count; i++) expr_free(rems[i]); free(rems);
         return expr_new_integer(1);
     }
     
@@ -1014,7 +1022,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
     free(common_args); 
     for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
     free(vars);
-    for(size_t i=1; i<count; i++) expr_free(rems[i]); free(rems);
+    for(size_t i=0; i<count; i++) expr_free(rems[i]); free(rems);
     free(final_args);
     return result;
 }

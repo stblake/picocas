@@ -38,13 +38,24 @@ void test_factorsquarefree() {
              "Plus[Times[-1, Power[x, -1]], Exp[Times[2, x]], Times[-1, Log[x]]]");
 }
 
+void test_factor() {
+    run_test("Factor[1 + 2 x + x^2]", "Power[Plus[1, x], 2]");
+    run_test("Factor[x^10 - 1]", "Times[Plus[-1, x], Plus[1, x], Plus[1, x, Power[x, 2], Power[x, 3], Power[x, 4]], Plus[1, Times[-1, x], Times[-1, Power[x, 3]], Power[x, 2], Power[x, 4]]]");
+    run_test("Factor[x^10 - y^10]", "Times[Plus[x, y], Plus[x, Times[-1, y]], Plus[Power[x, 4], Power[y, 4], Times[x, Power[y, 3]], Times[Power[x, 2], Power[y, 2]], Times[Power[x, 3], y]], Plus[Times[-1, Times[x, Power[y, 3]]], Power[x, 4], Times[-1, Times[Power[x, 3], y]], Power[y, 4], Times[Power[x, 2], Power[y, 2]]]]");
+    run_test("Factor[x^3 - 6x^2 + 11x - 6]", "Times[Plus[-3, x], Plus[-2, x], Plus[-1, x]]");
+    run_test("Factor[2x^3 y - 2a^2 x y - 3a^2 x^2 + 3a^4]", "Times[Plus[a, x], Plus[Times[-1, a], x], Plus[Times[-3, Power[a, 2]], Times[2, Times[x, y]]]]");
+    run_test("Factor[(x^3+2x^2)/(x^2-4y^2)-(x+2)/(x^2-4y^2)]", "Times[Plus[-1, x], Plus[1, x], Plus[2, x], Power[Plus[x, Times[-2, y]], -1], Power[Plus[x, Times[2, y]], -1]]");
+    run_test("Factor[{x^2-1, x^4-1, x^8-1}]", "List[Times[Plus[-1, x], Plus[1, x]], Times[Plus[-1, x], Plus[1, x], Plus[1, Power[x, 2]]], Times[Plus[-1, x], Plus[1, x], Plus[1, Power[x, 2]], Plus[1, Power[x, 4]]]]");
+    run_test("Factor[1 < 1 + 2 x + x^2 + 1/(1+x) < 2]", "Less[Less[1, Times[Power[Plus[1, x], -1], Plus[2, x], Plus[1, x, Power[x, 2]]]], 2]");
+}
+
 int main() {
     symtab_init();
     core_init();
-    
+
     printf("Running facpoly tests...\n");
     TEST(test_factorsquarefree);
+    TEST(test_factor);
     printf("All facpoly tests passed!\n");
-    symtab_clear();
     return 0;
 }

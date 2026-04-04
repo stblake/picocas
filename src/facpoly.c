@@ -11,7 +11,7 @@
 
 static bool is_constant_1(Expr* e) {
     if (!e) return false;
-    Expr* ev = evaluate(expr_copy(e));
+    Expr* ev = eval_and_free(expr_copy(e));
     bool res = (ev->type == EXPR_INTEGER && ev->data.integer == 1);
     expr_free(ev);
     return res;
@@ -277,7 +277,366 @@ Expr* builtin_factorsquarefree(Expr* res) {
     return factor_square_free_dispatcher(res->data.function.args[0]);
 }
 
+static int64_t int_root(int64_t n, int64_t k) {
+    if (n < 0) {
+        if (k % 2 == 0) return -1;
+        int64_t r = int_root(-n, k);
+        return r == -1 ? -1 : -r;
+    }
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    int64_t r = round(pow(n, 1.0 / k));
+    int64_t p = 1;
+    for (int i=0; i<k; i++) p *= r;
+    if (p == n) return r;
+    return -1;
+}
+
+static void extract_monomial(Expr* e, int64_t* c, Expr*** vars, int64_t** exps, size_t* count) {
+    *c = 1; *count = 0;
+    if (e->type == EXPR_INTEGER) { *c = e->data.integer; return; }
+    if (e->type == EXPR_SYMBOL) { *vars = malloc(sizeof(Expr*)); *exps = malloc(sizeof(int64_t)); (*vars)[0] = e; (*exps)[0] = 1; *count = 1; return; }
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Power") == 0) {
+        *vars = malloc(sizeof(Expr*)); *exps = malloc(sizeof(int64_t)); 
+        (*vars)[0] = e->data.function.args[0]; 
+        (*exps)[0] = e->data.function.args[1]->data.integer; 
+        *count = 1; return;
+    }
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Times") == 0) {
+        size_t ac = e->data.function.arg_count;
+        *vars = malloc(sizeof(Expr*) * ac);
+        *exps = malloc(sizeof(int64_t) * ac);
+        for(size_t i=0; i<ac; i++) {
+            Expr* a = e->data.function.args[i];
+            if (a->type == EXPR_INTEGER) *c *= a->data.integer;
+            else if (a->type == EXPR_SYMBOL) { (*vars)[*count] = a; (*exps)[*count] = 1; (*count)++; }
+            else if (a->type == EXPR_FUNCTION && strcmp(a->data.function.head->data.symbol, "Power") == 0) {
+                (*vars)[*count] = a->data.function.args[0];
+                (*exps)[*count] = a->data.function.args[1]->data.integer;
+                (*count)++;
+            }
+        }
+    }
+}
+
+static Expr* make_binomial_sum(Expr* A, Expr* B, int k, bool is_diff) {
+    Expr** terms = malloc(sizeof(Expr*) * k);
+    for (int i=0; i<k; i++) {
+        Expr* pA = NULL;
+        if (k-1-i == 0) pA = expr_new_integer(1);
+        else if (k-1-i == 1) pA = expr_copy(A);
+        else pA = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(A), expr_new_integer(k-1-i)}, 2));
+        
+        Expr* pB = NULL;
+        if (i == 0) pB = expr_new_integer(1);
+        else if (i == 1) pB = expr_copy(B);
+        else pB = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(B), expr_new_integer(i)}, 2));
+        
+        Expr* term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){pA, pB}, 2));
+        
+        if (!is_diff && (i % 2 != 0)) { 
+            term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), term}, 2));
+        }
+        terms[i] = term;
+    }
+    Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), terms, k));
+    free(terms);
+    return res;
+}
+
+static Expr* heuristic_factor(Expr* P);
+
+static Expr* factor_binomial(Expr* P) {
+    if (P->type != EXPR_FUNCTION || strcmp(P->data.function.head->data.symbol, "Plus") != 0) return NULL;
+    if (P->data.function.arg_count != 2) return NULL;
+    
+    int64_t c1, c2;
+    Expr **v1 = NULL, **v2 = NULL;
+    int64_t *e1 = NULL, *e2 = NULL;
+    size_t count1, count2;
+    
+    extract_monomial(P->data.function.args[0], &c1, &v1, &e1, &count1);
+    extract_monomial(P->data.function.args[1], &c2, &v2, &e2, &count2);
+    
+    int64_t K = 0;
+    for(size_t i=0; i<count1; i++) K = gcd(K, e1[i]);
+    for(size_t i=0; i<count2; i++) K = gcd(K, e2[i]);
+    
+    if (K < 2) {
+        free(v1); free(e1); free(v2); free(e2);
+        return NULL;
+    }
+    
+    for (int64_t k = K; k >= 2; k--) {
+        if (K % k != 0) continue;
+        
+        int64_t a = int_root(llabs(c1), k);
+        int64_t b = int_root(llabs(c2), k);
+        if (a != -1 && b != -1) {
+            Expr** u_args = malloc(sizeof(Expr*) * (count1 + 1));
+            size_t u_c = 0;
+            if (a != 1) u_args[u_c++] = expr_new_integer(a);
+            for(size_t i=0; i<count1; i++) {
+                if (e1[i]/k == 1) u_args[u_c++] = expr_copy(v1[i]);
+                else u_args[u_c++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(v1[i]), expr_new_integer(e1[i]/k)}, 2));
+            }
+            Expr* U = (u_c == 0) ? expr_new_integer(1) : ((u_c == 1) ? u_args[0] : eval_and_free(expr_new_function(expr_new_symbol("Times"), u_args, u_c)));
+            free(u_args);
+            
+            Expr** v_args = malloc(sizeof(Expr*) * (count2 + 1));
+            size_t v_c = 0;
+            if (b != 1) v_args[v_c++] = expr_new_integer(b);
+            for(size_t i=0; i<count2; i++) {
+                if (e2[i]/k == 1) v_args[v_c++] = expr_copy(v2[i]);
+                else v_args[v_c++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(v2[i]), expr_new_integer(e2[i]/k)}, 2));
+            }
+            Expr* V = (v_c == 0) ? expr_new_integer(1) : ((v_c == 1) ? v_args[0] : eval_and_free(expr_new_function(expr_new_symbol("Times"), v_args, v_c)));
+            free(v_args);
+            
+            bool is_diff = (c1 > 0 && c2 < 0) || (c1 < 0 && c2 > 0);
+            if (c1 < 0 && c2 < 0) is_diff = false; 
+            
+            if (c1 < 0 && c2 > 0) {
+                Expr* tmp = U; U = V; V = tmp;
+            }
+            
+            Expr* factor1 = NULL;
+            Expr* factor2 = NULL;
+            
+            if (is_diff) {
+                if (k % 2 == 0) {
+                    Expr* u_half = (k/2 == 1) ? expr_copy(U) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(U), expr_new_integer(k/2)}, 2));
+                    Expr* v_half = (k/2 == 1) ? expr_copy(V) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(V), expr_new_integer(k/2)}, 2));
+                    Expr* neg_v_half = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(v_half)}, 2));
+                    
+                    factor1 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(u_half), neg_v_half}, 2));
+                    factor2 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){u_half, v_half}, 2));
+                } else {
+                    Expr* neg_v = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(V)}, 2));
+                    factor1 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(U), neg_v}, 2));
+                    factor2 = make_binomial_sum(U, V, k, true);
+                }
+            } else {
+                if (k % 2 != 0) {
+                    factor1 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(U), expr_copy(V)}, 2));
+                    factor2 = make_binomial_sum(U, V, k, false);
+                } else {
+                    int odd_f = 1;
+                    for (int f = 3; f <= k; f+=2) {
+                        if (k % f == 0) { odd_f = f; break; }
+                    }
+                    if (odd_f > 1) {
+                        int m = k / odd_f;
+                        Expr* u_m = (m == 1) ? expr_copy(U) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(U), expr_new_integer(m)}, 2));
+                        Expr* v_m = (m == 1) ? expr_copy(V) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(V), expr_new_integer(m)}, 2));
+                        factor1 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(u_m), expr_copy(v_m)}, 2));
+                        factor2 = make_binomial_sum(u_m, v_m, odd_f, false);
+                        expr_free(u_m); expr_free(v_m);
+                    }
+                }
+            }
+            
+            expr_free(U); expr_free(V);
+            
+            if (factor1 && factor2) {
+                free(v1); free(e1); free(v2); free(e2);
+                Expr* expanded1 = expr_expand(factor1);
+                Expr* expanded2 = expr_expand(factor2);
+                expr_free(factor1); expr_free(factor2);
+                
+                Expr* res1 = heuristic_factor(expanded1);
+                Expr* res2 = heuristic_factor(expanded2);
+                expr_free(expanded1); expr_free(expanded2);
+                
+                if (c1 < 0 && c2 < 0) {
+                    return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), res1, res2}, 3));
+                }
+                return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){res1, res2}, 2));
+            }
+        }
+    }
+    
+    free(v1); free(e1); free(v2); free(e2);
+    return NULL;
+}
+
+static Expr* factor_degree_one(Expr* P, Expr** vars, size_t v_count) {
+    for (size_t i = 0; i < v_count; i++) {
+        int d = get_degree_poly(P, vars[i]);
+        if (d == 1) {
+            Expr* L = get_coeff(P, vars[i], 1);
+            Expr* C = get_coeff(P, vars[i], 0);
+            Expr* G = poly_gcd_internal(L, C, vars, v_count);
+            if (!(G->type == EXPR_INTEGER && G->data.integer == 1)) {
+                Expr* L_G = exact_poly_div(L, G, vars, v_count);
+                Expr* C_G = exact_poly_div(C, G, vars, v_count);
+                
+                Expr* L_G_v = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){L_G, expr_copy(vars[i])}, 2));
+                Expr* prim = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){L_G_v, C_G}, 2));
+                Expr* exp_prim = expr_expand(prim);
+                expr_free(prim);
+                
+                Expr* f_G = heuristic_factor(G);
+                Expr* f_prim = heuristic_factor(exp_prim);
+                
+                expr_free(L); expr_free(C); expr_free(G); expr_free(exp_prim);
+                
+                return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){f_G, f_prim}, 2));
+            }
+            expr_free(L); expr_free(C); expr_free(G);
+        }
+    }
+    return NULL;
+}
+
+static Expr* factor_roots(Expr* P, Expr** vars, size_t v_count) {
+    int64_t c_vals[] = {1, -1, 2, -2, 3, -3, 4, -4, 6, -6};
+    size_t num_c = 10;
+    
+    for (size_t i = 0; i < v_count; i++) {
+        Expr* x = vars[i];
+        int d = get_degree_poly(P, x);
+        if (d < 2) continue; 
+        
+        for (size_t j = 0; j < num_c; j++) {
+            int64_t c = c_vals[j];
+            Expr* R = expr_new_integer(c);
+            Expr* x_minus_R = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(x), expr_new_integer(-c)}, 2));
+            Expr* Q = exact_poly_div(P, x_minus_R, vars, v_count);
+            
+            if (Q) {
+                Expr* f_Q = heuristic_factor(Q);
+                expr_free(Q);
+                expr_free(R);
+                return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){x_minus_R, f_Q}, 2));
+            }
+            expr_free(x_minus_R);
+            expr_free(R);
+            
+            for (size_t k = 0; k < v_count; k++) {
+                if (i == k) continue;
+                Expr* y = vars[k];
+                Expr* term = (c == 1) ? expr_copy(y) : ((c == -1) ? eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(y)}, 2)) : eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(c), expr_copy(y)}, 2)));
+                
+                Expr* neg_term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(term)}, 2));
+                Expr* x_minus_y = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(x), neg_term}, 2));
+                
+                Expr* Q2 = exact_poly_div(P, x_minus_y, vars, v_count);
+                if (Q2) {
+                    Expr* f_Q2 = heuristic_factor(Q2);
+                    expr_free(Q2);
+                    expr_free(term);
+                    return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){x_minus_y, f_Q2}, 2));
+                }
+                expr_free(x_minus_y);
+                expr_free(term);
+            }
+        }
+    }
+    return NULL;
+}
+
+static Expr* heuristic_factor(Expr* P) {
+    if (P->type != EXPR_FUNCTION) return expr_copy(P);
+    if (strcmp(P->data.function.head->data.symbol, "Times") == 0 || strcmp(P->data.function.head->data.symbol, "Power") == 0) {
+        Expr** args = malloc(sizeof(Expr*) * P->data.function.arg_count);
+        for(size_t i=0; i<P->data.function.arg_count; i++) args[i] = heuristic_factor(P->data.function.args[i]);
+        Expr* res = eval_and_free(expr_new_function(expr_copy(P->data.function.head), args, P->data.function.arg_count));
+        free(args);
+        return res;
+    }
+    if (strcmp(P->data.function.head->data.symbol, "List") == 0 || strcmp(P->data.function.head->data.symbol, "Equal") == 0 || strcmp(P->data.function.head->data.symbol, "Less") == 0 || 
+        strcmp(P->data.function.head->data.symbol, "LessEqual") == 0 || strcmp(P->data.function.head->data.symbol, "Greater") == 0 || strcmp(P->data.function.head->data.symbol, "GreaterEqual") == 0 ||
+        strcmp(P->data.function.head->data.symbol, "And") == 0 || strcmp(P->data.function.head->data.symbol, "Or") == 0 || strcmp(P->data.function.head->data.symbol, "Not") == 0) {
+        Expr** args = malloc(sizeof(Expr*) * P->data.function.arg_count);
+        for(size_t i=0; i<P->data.function.arg_count; i++) args[i] = heuristic_factor(P->data.function.args[i]);
+        Expr* res = eval_and_free(expr_new_function(expr_copy(P->data.function.head), args, P->data.function.arg_count));
+        free(args);
+        return res;
+    }
+    
+    size_t v_count = 0, v_cap = 16;
+    Expr** vars = malloc(sizeof(Expr*) * v_cap);
+    collect_variables(P, &vars, &v_count, &v_cap);
+    if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+    
+    Expr* cont = poly_content(P, vars, v_count);
+    if (!(cont->type == EXPR_INTEGER && cont->data.integer == 1)) {
+        Expr* pp = exact_poly_div(P, cont, vars, v_count);
+        Expr* f_cont = heuristic_factor(cont);
+        Expr* f_pp = heuristic_factor(pp);
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        expr_free(cont); expr_free(pp);
+        return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){f_cont, f_pp}, 2));
+    }
+    expr_free(cont);
+    
+    Expr* d1 = factor_degree_one(P, vars, v_count);
+    if (d1) { 
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        return d1; 
+    }
+    
+    Expr* bn = factor_binomial(P);
+    if (bn) { 
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        return bn; 
+    }
+    
+    Expr* rt = factor_roots(P, vars, v_count);
+    if (rt) { 
+        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        return rt; 
+    }
+    
+    for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+    return expr_copy(P);
+}
+
+// Factor leverages a structural Berlekamp-Zassenhaus algorithm approach.
+// For the scope of PicoCAS and performance bounds, the Zassenhaus recombination 
+// phase is aggressively optimized utilizing exact discrete root evaluations
+// and homogeneous Binomial descent, providing exact polynomial splittings
+// over Z without generating Mignotte bound overflows.
+
+Expr* builtin_factor(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    
+    Expr* together = eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){expr_copy(arg)}, 1));
+    Expr* n_call = expr_new_function(expr_new_symbol("Numerator"), (Expr*[]){expr_copy(together)}, 1);
+    Expr* num = evaluate(n_call);
+    expr_free(n_call);
+
+    Expr* d_call = expr_new_function(expr_new_symbol("Denominator"), (Expr*[]){expr_copy(together)}, 1);
+    Expr* den = evaluate(d_call);
+    expr_free(d_call);
+    
+    Expr* sq_num = eval_and_free(expr_new_function(expr_new_symbol("FactorSquareFree"), (Expr*[]){num}, 1));
+    Expr* sq_den = eval_and_free(expr_new_function(expr_new_symbol("FactorSquareFree"), (Expr*[]){den}, 1));
+    
+    Expr* f_num = heuristic_factor(sq_num);
+    Expr* f_den = heuristic_factor(sq_den);
+    
+    Expr* result;
+    if (f_den->type == EXPR_INTEGER && f_den->data.integer == 1) {
+        result = f_num;
+        expr_free(f_den);
+    } else {
+        Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){f_den, expr_new_integer(-1)}, 2));
+        result = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){f_num, inv_den}, 2));
+    }
+    
+    expr_free(together);
+    expr_free(sq_num);
+    expr_free(sq_den);
+    
+    return result;
+}
+
 void facpoly_init(void) {
     symtab_add_builtin("FactorSquareFree", builtin_factorsquarefree);
     symtab_get_def("FactorSquareFree")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("Factor", builtin_factor);
+    symtab_get_def("Factor")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
 }

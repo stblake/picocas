@@ -4,6 +4,7 @@
 #include "expr.h"
 
 Expr* builtin_factorsquarefree(Expr* res);
+Expr* builtin_factor(Expr* res);
 void facpoly_init(void);
 
 #endif // FACPOLY_H

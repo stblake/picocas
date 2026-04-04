@@ -21,6 +21,7 @@ Expr* builtin_discriminant(Expr* res);
 bool is_polynomial(Expr* e, Expr** vars, size_t var_count);
 bool is_zero_poly(Expr* e);
 int get_degree_poly(Expr* e, Expr* var);
+Expr* get_coeff(Expr* e, Expr* var, int d);
 Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count);
 Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count);
 Expr* poly_content(Expr* A, Expr** vars, size_t var_count);

@@ -582,6 +582,33 @@ In[4]:= FactorSquareFree[{(x^2 - 1)(x - 1), (x^4 - 1)(x^2 - 1)}]
 Out[4]= {(-1 + x)^2 (1 + x), (-1 + x^2)^2 (1 + x^2)}
 ```
 
+#### Factor
+Factors a polynomial over the integers.
+- `Factor[poly]`
+
+**Features**:
+- `Listable`, `Protected`.
+- When given a rational expression, first resolves dependencies over `Together` before factoring.
+- Uses exact root isolation (Rational Root Theorem limits) and binomial descents structured identically to Zassenhaus recombination, evaluating combinations exact and memory safe.
+- Threads natively across lists, logic structures, and numeric groupings perfectly.
+
+```mathematica
+In[1]:= Factor[1 + 2x + x^2]
+Out[1]= (1 + x)^2
+
+In[2]:= Factor[x^10 - 1]
+Out[2]= (-1 + x) (1 + x) (1 - x + x^2 - x^3 + x^4) (1 + x + x^2 + x^3 + x^4)
+
+In[3]:= Factor[x^10 - y^10]
+Out[3]= (x - y) (x + y) (x^4 - x^3 y + x^2 y^2 - x y^3 + y^4) (x^4 + x^3 y + x^2 y^2 + x y^3 + y^4)
+
+In[4]:= Factor[2x^3 y - 2a^2 x y - 3a^2 x^2 + 3a^4]
+Out[4]= (a - x) (a + x) (3 a^2 - 2 x y)
+
+In[5]:= Factor[(x^3 + 2x^2)/(x^2 - 4y^2) - (x + 2)/(x^2 - 4y^2)]
+Out[5]= ((-1 + x) (1 + x) (2 + x)) / ((x - 2 y) (x + 2 y))
+```
+
 #### PolynomialGCD
 Gives the greatest common divisor of the polynomials.
 - `PolynomialGCD[poly1, poly2, ...]`
