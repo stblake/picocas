@@ -177,13 +177,17 @@ Expr* builtin_divide(Expr* res) {
     if (num->type == EXPR_REAL || den->type == EXPR_REAL) {
         double vnum = (num->type == EXPR_REAL) ? num->data.real : (double)num->data.integer;
         double vden = (den->type == EXPR_REAL) ? den->data.real : (double)den->data.integer;
-        if (vden == 0.0) return NULL; 
+        if (vden == 0.0) {
+            printf("Power::infy: Infinite expression 1/0 encountered.\n");
+            return expr_new_symbol("ComplexInfinity");
+        }
         return expr_new_real(vnum / vden);
     }
 
     int64_t n1, d1, n2, d2;
     if (is_rational(num, &n1, &d1) && is_rational(den, &n2, &d2)) {
-        return make_rational(n1 * d2, d1 * n2);
+        Expr* r = make_rational(n1 * d2, d1 * n2);
+        if (r) return r;
     }
 
     Expr* minus_one = expr_new_integer(-1);

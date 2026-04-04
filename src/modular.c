@@ -6,12 +6,102 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "arithmetic.h"
+
+static int64_t ext_gcd(int64_t a, int64_t b, int64_t *x, int64_t *y) {
+    if (a == 0) {
+        *x = 0; *y = 1;
+        return b;
+    }
+    int64_t x1, y1;
+    int64_t d = ext_gcd(b % a, a, &x1, &y1);
+    *x = y1 - (b / a) * x1;
+    *y = x1;
+    return d;
+}
+
+static int64_t mod_inverse(int64_t a, int64_t m) {
+    if (m == 0) return -1;
+    if (m < 0) m = -m;
+    if (m == 1) return 0;
+    a %= m;
+    if (a < 0) a += m;
+    int64_t x, y;
+    int64_t g = ext_gcd(a, m, &x, &y);
+    if (g != 1) return -1;
+    return (x % m + m) % m;
+}
+
+static int64_t mod_pow(int64_t a, int64_t b, int64_t m) {
+    if (m == 0) return 0;
+    if (m < 0) m = -m;
+    if (m == 1) return 0;
+    a %= m;
+    if (a < 0) a += m;
+    int64_t res = 1;
+    while (b > 0) {
+        if (b & 1) res = (int64_t)((__int128_t)res * a % m);
+        a = (int64_t)((__int128_t)a * a % m);
+        b >>= 1;
+    }
+    return res;
+}
+
+Expr* builtin_powermod(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+    
+    Expr* a_expr = res->data.function.args[0];
+    Expr* b_expr = res->data.function.args[1];
+    Expr* m_expr = res->data.function.args[2];
+    
+    if (a_expr->type != EXPR_INTEGER || m_expr->type != EXPR_INTEGER) return NULL;
+    int64_t a = a_expr->data.integer;
+    int64_t m = m_expr->data.integer;
+    if (m == 0) return NULL;
+    
+    if (b_expr->type == EXPR_INTEGER) {
+        int64_t b = b_expr->data.integer;
+        if (b < 0) {
+            int64_t inv = mod_inverse(a, m);
+            if (inv == -1) return expr_copy(res); // Unevaluated if no inverse
+            return expr_new_integer(mod_pow(inv, -b, m));
+        } else {
+            return expr_new_integer(mod_pow(a, b, m));
+        }
+    } else if (b_expr->type == EXPR_FUNCTION && b_expr->data.function.head->type == EXPR_SYMBOL && strcmp(b_expr->data.function.head->data.symbol, "Rational") == 0 && b_expr->data.function.arg_count == 2) {
+        Expr* num = b_expr->data.function.args[0];
+        Expr* den = b_expr->data.function.args[1];
+        if (num->type == EXPR_INTEGER && num->data.integer == 1 && den->type == EXPR_INTEGER) {
+            int64_t r = den->data.integer;
+            if (r > 0) {
+                int64_t target_a = a % m;
+                if (target_a < 0) target_a += m;
+                int64_t abs_m = m < 0 ? -m : m;
+                
+                // Brute force root finding (only up to a reasonable cap to avoid hanging)
+                if (abs_m <= 1000000LL) {
+                    for (int64_t x = 0; x < abs_m; x++) {
+                        if (mod_pow(x, r, abs_m) == target_a) {
+                            return expr_new_integer(x);
+                        }
+                    }
+                    return expr_copy(res); // Unevaluated if no root
+                }
+            }
+        }
+    }
+    
+    return NULL;
+}
+
 static int64_t module_number = 1;
 
 void modular_init(void) {
     symtab_add_builtin("Module", builtin_module);
     symtab_add_builtin("Block", builtin_block);
     symtab_add_builtin("With", builtin_with);
+    symtab_add_builtin("PowerMod", builtin_powermod);
+    symtab_get_def("PowerMod")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
 
     // Initial value for $ModuleNumber
     Expr* mn = expr_new_integer(module_number);

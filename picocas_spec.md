@@ -1223,6 +1223,32 @@ Out[2]= 77
 - `GCD[n1, n2, ...]`: Greatest common divisor.
 - `LCM[n1, n2, ...]`: Least common multiple.
 
+#### PowerMod
+Gives modular exponentiations, inverses, and roots.
+- `PowerMod[a, b, m]`: Gives $a^b \pmod m$.
+- `PowerMod[a, -1, m]`: Finds the modular inverse of `a` modulo `m`.
+- `PowerMod[a, 1/r, m]`: Finds a modular `r`-th root of `a`.
+
+**Features**:
+- `Protected`, `Listable`.
+- Evaluates much more efficiently than `Mod[a^b, m]`.
+- Returns unevaluated if the corresponding inverse or root does not exist.
+- Allows threading over lists natively.
+
+```mathematica
+In[1]:= PowerMod[2, 10, 3]
+Out[1]= 1
+
+In[2]:= PowerMod[3, -2, 7]
+Out[2]= 4
+
+In[3]:= PowerMod[3, 1/2, 2]
+Out[3]= 1
+
+In[4]:= PowerMod[2, {10, 11, 12, 13, 14}, 5]
+Out[4]= {4, 3, 1, 2, 4}
+```
+
 #### PrimeQ
 - `PrimeQ[n]`: Returns `True` if `n` is a prime number, `False` otherwise.
 

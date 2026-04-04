@@ -128,6 +128,9 @@ static Expr* apply_listable(Expr* e) {
             if (arg->type == EXPR_FUNCTION && strcmp(arg->data.function.head->data.symbol, "List") == 0) {
                 /* All list arguments must have identical lengths */
                 if (arg->data.function.arg_count != list_len) {
+                    char* s = expr_to_string(e);
+                    printf("Thread::tdlen: Objects of unequal length in %s cannot be combined.\n", s);
+                    free(s);
                     for (size_t k = 0; k < i; k++) expr_free(new_func_args[k]);
                     free(new_func_args);
                     for (size_t k = 0; k < j; k++) expr_free(new_list_args[k]);

@@ -13,6 +13,7 @@ void info_init(void) {
     symtab_set_docstring("Rational", "Rational[n, d] represents a rational number with numerator n and denominator d.");
     symtab_set_docstring("GCD", "GCD[n1, n2, ...] gives the greatest common divisor of the integers ni.");
     symtab_set_docstring("LCM", "LCM[n1, n2, ...] gives the least common multiple of the integers ni.");
+    symtab_set_docstring("PowerMod", "PowerMod[a, b, m] gives a^b mod m.\nPowerMod[a, -1, m] finds the modular inverse of a modulo m.\nPowerMod[a, 1/r, m] finds a modular r-th root of a.");
 
     // Structural Manipulation
     symtab_set_docstring("Part", "expr[[i]] or Part[expr, i] gives the i-th part of expr.");

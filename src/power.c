@@ -86,6 +86,21 @@ Expr* builtin_power(Expr* res) {
     if (exp->type == EXPR_INTEGER && exp->data.integer == 1) return expr_copy(base);
     if (base->type == EXPR_INTEGER && base->data.integer == 1) return expr_new_integer(1);
 
+    bool base_is_zero = false;
+    if (base->type == EXPR_INTEGER && base->data.integer == 0) base_is_zero = true;
+    if (base->type == EXPR_REAL && base->data.real == 0.0) base_is_zero = true;
+
+    bool exp_is_negative = false;
+    if (exp->type == EXPR_INTEGER && exp->data.integer < 0) exp_is_negative = true;
+    if (exp->type == EXPR_REAL && exp->data.real < 0.0) exp_is_negative = true;
+    int64_t rn, rd;
+    if (is_rational(exp, &rn, &rd) && rn < 0) exp_is_negative = true;
+
+    if (base_is_zero && exp_is_negative) {
+        printf("Power::infy: Infinite expression 1/0 encountered.\n");
+        return expr_new_symbol("ComplexInfinity");
+    }
+
     Expr *re_b = NULL, *im_b = NULL, *re_e = NULL, *im_e = NULL;
     bool base_comp = is_complex(base, &re_b, &im_b);
     bool exp_comp = is_complex(exp, &re_e, &im_e);
