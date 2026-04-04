@@ -116,6 +116,16 @@ void test_identitymatrix() {
     run_test("IdentityMatrix[a]", "IdentityMatrix[a]");
 }
 
+void test_diagonalmatrix() {
+    run_test("DiagonalMatrix[{a, b, c}]", "List[List[a, 0, 0], List[0, b, 0], List[0, 0, c]]");
+    run_test("DiagonalMatrix[{a, b}, 1]", "List[List[0, a, 0], List[0, 0, b], List[0, 0, 0]]");
+    run_test("DiagonalMatrix[{a, b}, -1]", "List[List[0, 0, 0], List[a, 0, 0], List[0, b, 0]]");
+    run_test("DiagonalMatrix[{1, 2, 3}, 0, 5]", "List[List[1, 0, 0, 0, 0], List[0, 2, 0, 0, 0], List[0, 0, 3, 0, 0], List[0, 0, 0, 0, 0], List[0, 0, 0, 0, 0]]");
+    run_test("DiagonalMatrix[{1, 2, 3, 4, 5}, 0, 3]", "List[List[1, 0, 0], List[0, 2, 0], List[0, 0, 3]]");
+    run_test("DiagonalMatrix[{1, 2, 3}, 0, {3, 5}]", "List[List[1, 0, 0, 0, 0], List[0, 2, 0, 0, 0], List[0, 0, 3, 0, 0]]");
+    run_test("DiagonalMatrix[{1, 2, 3}, 0, {5, 3}]", "List[List[1, 0, 0], List[0, 2, 0], List[0, 0, 3], List[0, 0, 0], List[0, 0, 0]]");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -128,6 +138,7 @@ int main() {
     TEST(test_tr);
     TEST(test_rowreduce);
     TEST(test_identitymatrix);
+    TEST(test_diagonalmatrix);
     printf("All linalg tests passed!\n");
     symtab_clear();
     return 0;

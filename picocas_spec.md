@@ -1015,6 +1015,30 @@ In[2]:= IdentityMatrix[{2, 3}]
 Out[2]= {{1, 0, 0}, {0, 1, 0}}
 ```
 
+#### DiagonalMatrix
+Generates a matrix with specified elements on a diagonal.
+- `DiagonalMatrix[list]`: Elements on leading diagonal.
+- `DiagonalMatrix[list, k]`: Elements on `k`-th diagonal.
+- `DiagonalMatrix[list, k, n]`: Pads with zeros to create an `n x n` matrix.
+- `DiagonalMatrix[list, k, {m, n}]`: Creates an `m x n` matrix.
+
+**Features**:
+- `Protected`.
+- For `k > 0`, places elements `k` positions above the leading diagonal.
+- For `k < 0`, places elements `k` positions below the leading diagonal.
+- By default, size is optimally bounded to fit the full array cleanly. Extraneous elements are dropped if manual constraints fall short of required lengths.
+
+```mathematica
+In[1]:= DiagonalMatrix[{a, b, c}]
+Out[1]= {{a, 0, 0}, {0, b, 0}, {0, 0, c}}
+
+In[2]:= DiagonalMatrix[{a, b}, 1]
+Out[2]= {{0, a, 0}, {0, 0, b}, {0, 0, 0}}
+
+In[3]:= DiagonalMatrix[{1, 2, 3}, 0, {3, 5}]
+Out[3]= {{1, 0, 0, 0, 0}, {0, 2, 0, 0, 0}, {0, 0, 3, 0, 0}}
+```
+
 ### Statistics
 
 #### Mean
