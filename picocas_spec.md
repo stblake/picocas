@@ -709,6 +709,31 @@ In[4]:= PolynomialQ[f[a] + f[a]^2, f[a]]
 Out[4]= True
 ```
 
+#### PolynomialMod
+Gives the polynomial reduced modulo `m`.
+- `PolynomialMod[poly, m]`
+- `PolynomialMod[poly, {m1, m2, ...}]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Reduces a polynomial modulo an integer, another polynomial, or a list of integers/polynomials.
+- Always gives a result with minimal degree and leading coefficients.
+- Handles rational division mapping perfectly scaling over exact modulo structures dynamically.
+
+```mathematica
+In[1]:= PolynomialMod[3x^2+2x+1,2]
+Out[1]= 1 + x^2
+
+In[2]:= PolynomialMod[3x^2+2x+1,x^2+1]
+Out[2]= -2 + 2 x
+
+In[3]:= PolynomialMod[35x^3+21x^2 y^2-17x y^3+55z-123,19]
+Out[3]= 10 + 2 x y^3 + 16 x^3 + 2 x^2 y^2 + 17 z
+
+In[4]:= PolynomialMod[3x^3+21x^2 y^2-7x y^3+55,{2x^2-7,x y-3, 9}]
+Out[4]= 1 + 7 x + x^3 + 4 y^2
+```
+
 #### Resultant
 Computes the resultant of two polynomials.
 - `Resultant[poly1, poly2, var]`
@@ -1308,6 +1333,28 @@ Out[3]= (2 (3 + 11 x + 9 x^2 + 2 x^3)) / (x (1 + x) (2 + x) (3 + x))
 
 In[4]:= Together[x^2/(x - y) - x y/(x - y)]
 Out[4]= x
+```
+
+#### Apart
+Gives the partial fraction decomposition of a rational expression.
+- `Apart[expr]`
+- `Apart[expr, var]`
+
+**Features**:
+- `Protected`, `Listable`.
+- Writes `expr` as a polynomial in `var` together with a sum of ratios of polynomials with minimal denominators.
+- If `var` is not specified, intelligently selects the main polynomial variable natively.
+- Implements exact undetermined coefficients algebraically leveraging row-reduced identity expansions over algebraic inputs avoiding recursive fractional losses natively.
+
+```mathematica
+In[1]:= Apart[1/((1+x)(5+x))]
+Out[1]= 1/(4 (1 + x)) - 1/(4 (5 + x))
+
+In[2]:= Apart[(x^5-2)/((1+x+x^2)(2+x)(1-x))]
+Out[2]= 2 - x + (-1 - x/3)/(-1 - x - x^2) + (4 - (11 x)/3)/(2 - x - x^2)
+
+In[3]:= Apart[(x+y)/((x+1)(y+1)(x-y)), x]
+Out[3]= 2 y/((-1 - y)^2 (x - y)) - (-1 + y)/((-1 - y)^2 (1 + x))
 ```
 
 #### Mod, Quotient, QuotientRemainder
