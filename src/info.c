@@ -141,6 +141,7 @@ void info_init(void) {
     symtab_set_docstring("PolynomialQuotient", "PolynomialQuotient[p, q, x] gives the quotient of p and q, treated as polynomials in x, with any remainder dropped.");
     symtab_set_docstring("PolynomialRemainder", "PolynomialRemainder[p, q, x] gives the remainder from dividing p by q, treated as polynomials in x.");
     symtab_set_docstring("Collect", "Collect[expr, x] collects together terms involving the same powers of objects matching x.");
+    symtab_set_docstring("PolynomialMod", "PolynomialMod[poly,m] gives the polynomial poly reduced modulo m.\nPolynomialMod[poly,{Subscript[m, 1],Subscript[m, 2],...}] reduces modulo all of the Subscript[m, i].");
     symtab_set_docstring("FactorSquareFree", "FactorSquareFree[poly] pulls out any multiple factors in a polynomial.");
     symtab_set_docstring("Factor", "Factor[poly] factors a polynomial over the integers.");
     symtab_set_docstring("Variables", "Variables[poly] gives a list of all independent variables in the polynomial poly.");

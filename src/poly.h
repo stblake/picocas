@@ -32,3 +32,5 @@ bool contains_any_symbol_from(Expr* expr, Expr* var);
 void poly_init(void);
 
 #endif // POLY_H
+Expr* builtin_polynomialmod(Expr* res);
+Expr* builtin_polynomialmod(Expr* res);

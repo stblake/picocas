@@ -212,3 +212,5 @@ add_executable(parfrac_tests
     ${COMMON_SRC}
 )
 target_include_directories(parfrac_tests PRIVATE ../src)
+add_executable(polymod_tests test_polymod.c ${COMMON_SRC})
+target_include_directories(polymod_tests PRIVATE ../src)

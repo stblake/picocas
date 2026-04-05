@@ -1913,8 +1913,8 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("PolynomialLCM")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
     symtab_add_builtin("PolynomialQuotient", builtin_polynomialquotient);
     symtab_get_def("PolynomialQuotient")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("PolynomialRemainder", builtin_polynomialremainder);
-    symtab_get_def("PolynomialRemainder")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("PolynomialMod", builtin_polynomialmod);
+    symtab_get_def("PolynomialMod")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Collect", builtin_collect);
     symtab_get_def("Collect")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Decompose", builtin_decompose);
@@ -1925,4 +1925,273 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
     symtab_add_builtin("Discriminant", builtin_discriminant);
     symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+}
+
+
+static int64_t mod_inverse_int(int64_t a, int64_t m) {
+    int64_t m0 = m, t, q;
+    int64_t x0 = 0, x1 = 1;
+    if (m == 1) return 0;
+    a %= m; if (a < 0) a += m;
+    while (a > 1) {
+        q = a / m;
+        t = m; m = a % m; a = t;
+        t = x0; x0 = x1 - q * x0; x1 = t;
+    }
+    if (x1 < 0) x1 += m0;
+    return x1;
+}
+
+
+static Expr* apply_floor_to_coeffs(Expr* e) {
+    if (!e) return NULL;
+    if (e->type == EXPR_INTEGER) return expr_copy(e);
+    if (e->type == EXPR_REAL) return expr_new_integer((int64_t)floor(e->data.real));
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Rational") == 0) {
+        int64_t n = e->data.function.args[0]->data.integer;
+        int64_t d = e->data.function.args[1]->data.integer;
+        int64_t q = n / d;
+        int64_t r = n % d;
+        if (r != 0 && ((n < 0) ^ (d < 0))) q -= 1;
+        return expr_new_integer(q);
+    }
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Plus") == 0) {
+        Expr** args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+        for(size_t i=0; i<e->data.function.arg_count; i++) args[i] = apply_floor_to_coeffs(e->data.function.args[i]);
+        Expr* res = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, e->data.function.arg_count));
+        free(args); return res;
+    }
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Times") == 0) {
+        Expr** args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+        for(size_t i=0; i<e->data.function.arg_count; i++) {
+            if (i == 0) args[i] = apply_floor_to_coeffs(e->data.function.args[i]); 
+            else args[i] = expr_copy(e->data.function.args[i]);
+        }
+        Expr* res = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, e->data.function.arg_count));
+        free(args); return res;
+    }
+    if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Complex") == 0) {
+        Expr* re = apply_floor_to_coeffs(e->data.function.args[0]);
+        Expr* im = apply_floor_to_coeffs(e->data.function.args[1]);
+        Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Complex"), (Expr*[]){re, im}, 2));
+        return res;
+    }
+    return expr_copy(e);
+}
+
+static Expr* integer_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
+    Expr* q = exact_poly_div(A, B, vars, var_count);
+    if (q) {
+        Expr* f = apply_floor_to_coeffs(q);
+        expr_free(q);
+        if (is_zero_poly(f)) {
+            expr_free(f); return NULL;
+        }
+        return f;
+    }
+    return NULL;
+}
+
+static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
+    if (m->type == EXPR_INTEGER) {
+        int64_t m_val = m->data.integer;
+        if (m_val == 0) return expr_copy(poly);
+        if (m_val < 0) m_val = -m_val;
+        
+        Expr* expanded = expr_expand(poly);
+        if (expanded->type == EXPR_FUNCTION && strcmp(expanded->data.function.head->data.symbol, "Plus") == 0) {
+            Expr** args = malloc(sizeof(Expr*) * expanded->data.function.arg_count);
+            for(size_t i=0; i<expanded->data.function.arg_count; i++) {
+                Expr* term = expanded->data.function.args[i];
+                if (term->type == EXPR_INTEGER) {
+                    int64_t c = term->data.integer % m_val;
+                    if (c < 0) c += m_val;
+                    args[i] = expr_new_integer(c);
+                } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Times") == 0 && term->data.function.args[0]->type == EXPR_INTEGER) {
+                    int64_t c = term->data.function.args[0]->data.integer % m_val;
+                    if (c < 0) c += m_val;
+                    Expr** t_args = malloc(sizeof(Expr*) * term->data.function.arg_count);
+                    t_args[0] = expr_new_integer(c);
+                    for(size_t j=1; j<term->data.function.arg_count; j++) t_args[j] = expr_copy(term->data.function.args[j]);
+                    args[i] = eval_and_free(expr_new_function(expr_new_symbol("Times"), t_args, term->data.function.arg_count));
+                    free(t_args);
+                } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Complex") == 0) {
+                    int64_t r = term->data.function.args[0]->data.integer % m_val;
+                    if (r < 0) r += m_val;
+                    int64_t i_val = term->data.function.args[1]->data.integer % m_val;
+                    if (i_val < 0) i_val += m_val;
+                    args[i] = eval_and_free(expr_new_function(expr_new_symbol("Complex"), (Expr*[]){expr_new_integer(r), expr_new_integer(i_val)}, 2));
+                } else {
+                    int64_t c = 1 % m_val;
+                    if (c < 0) c += m_val;
+                    if (c == 1) args[i] = expr_copy(term);
+                    else args[i] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(c), expr_copy(term)}, 2));
+                }
+            }
+            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), args, expanded->data.function.arg_count));
+            free(args);
+            expr_free(expanded);
+            return res;
+        } else {
+            Expr* term = expanded;
+            Expr* res = NULL;
+            if (term->type == EXPR_INTEGER) {
+                int64_t c = term->data.integer % m_val;
+                if (c < 0) c += m_val;
+                res = expr_new_integer(c);
+            } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Times") == 0 && term->data.function.args[0]->type == EXPR_INTEGER) {
+                int64_t c = term->data.function.args[0]->data.integer % m_val;
+                if (c < 0) c += m_val;
+                Expr** t_args = malloc(sizeof(Expr*) * term->data.function.arg_count);
+                t_args[0] = expr_new_integer(c);
+                for(size_t j=1; j<term->data.function.arg_count; j++) t_args[j] = expr_copy(term->data.function.args[j]);
+                res = eval_and_free(expr_new_function(expr_new_symbol("Times"), t_args, term->data.function.arg_count));
+                free(t_args);
+            } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Complex") == 0) {
+                int64_t r = term->data.function.args[0]->data.integer % m_val;
+                if (r < 0) r += m_val;
+                int64_t i_val = term->data.function.args[1]->data.integer % m_val;
+                if (i_val < 0) i_val += m_val;
+                res = eval_and_free(expr_new_function(expr_new_symbol("Complex"), (Expr*[]){expr_new_integer(r), expr_new_integer(i_val)}, 2));
+            } else {
+                int64_t c = 1 % m_val;
+                if (c < 0) c += m_val;
+                if (c == 1) res = expr_copy(term);
+                else res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(c), expr_copy(term)}, 2));
+            }
+            expr_free(expanded);
+            return res;
+        }
+    }
+    
+    size_t v_count = 0, v_cap = 16;
+    Expr** vars = malloc(sizeof(Expr*) * v_cap);
+    
+    Expr* t_list = eval_and_free(expr_new_function(expr_new_symbol("List"), (Expr*[]){expr_copy(poly), expr_copy(m)}, 2));
+    collect_variables(t_list, &vars, &v_count, &v_cap);
+    expr_free(t_list);
+    
+    if (v_count == 0) {
+        free(vars);
+        return expr_copy(poly);
+    }
+    qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+    
+    size_t m_v_count = 0, m_v_cap = 16;
+    Expr** m_vars = malloc(sizeof(Expr*) * m_v_cap);
+    collect_variables(m, &m_vars, &m_v_count, &m_v_cap);
+    qsort(m_vars, m_v_count, sizeof(Expr*), compare_expr_ptrs);
+    
+    if (m_v_count == 0) {
+        free(vars); free(m_vars); return expr_copy(poly);
+    }
+    Expr* main_var = m_vars[0];
+    
+    Expr** temp_vars = malloc(sizeof(Expr*) * v_count);
+    size_t idx = 0;
+    for (size_t i = 0; i < v_count; i++) {
+        if (expr_compare(vars[i], main_var) != 0) {
+            temp_vars[idx++] = vars[i];
+        }
+    }
+    temp_vars[idx++] = main_var;
+    
+    Expr* exp_m = expr_expand(m);
+    int d = get_degree_poly(exp_m, main_var);
+    if (d == 0) {
+        free(vars); free(m_vars); free(temp_vars); expr_free(exp_m); return expr_copy(poly);
+    }
+    Expr* lc = get_coeff(exp_m, main_var, d);
+    
+    Expr* curr_poly = expr_expand(poly);
+    
+    bool changed = true;
+    while (changed) {
+        changed = false;
+        
+        size_t t_count = 0;
+        Expr** terms = NULL;
+        if (curr_poly->type == EXPR_FUNCTION && strcmp(curr_poly->data.function.head->data.symbol, "Plus") == 0) {
+            t_count = curr_poly->data.function.arg_count;
+            terms = curr_poly->data.function.args;
+        } else {
+            t_count = 1;
+            terms = &curr_poly;
+        }
+        
+        for (size_t i = 0; i < t_count; i++) {
+            Expr* term = terms[i];
+            int term_deg = get_degree_poly(term, main_var);
+            if (term_deg >= d) {
+                Expr* term_coeff = get_coeff(term, main_var, term_deg);
+                Expr* q = use_integer_div ? integer_poly_div(term_coeff, lc, temp_vars, v_count - 1) : exact_poly_div(term_coeff, lc, temp_vars, v_count - 1);
+                if (q) {
+                    Expr* x_pow = (term_deg - d == 0) ? expr_new_integer(1) : ((term_deg - d == 1) ? expr_copy(main_var) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(main_var), expr_new_integer(term_deg - d)}, 2)));
+                    Expr* mult = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){q, x_pow}, 2));
+                    Expr* sub = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){mult, expr_copy(exp_m)}, 2));
+                    Expr* neg_sub = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), sub}, 2));
+                    
+                    Expr* t_eval = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(curr_poly), neg_sub}, 2));
+                    Expr* next_poly = expr_expand(t_eval);
+                    expr_free(t_eval);
+                    expr_free(curr_poly);
+                    curr_poly = next_poly;
+                    changed = true;
+                    expr_free(term_coeff);
+                    break;
+                }
+                expr_free(term_coeff);
+            }
+        }
+    }
+    
+    expr_free(lc);
+    expr_free(exp_m);
+    for(size_t i=0; i<v_count; i++) expr_free(vars[i]);
+    for(size_t i=0; i<m_v_count; i++) expr_free(m_vars[i]);
+    free(vars); free(m_vars); free(temp_vars);
+    return curr_poly;
+}
+
+Expr* builtin_polynomialmod(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    
+    Expr* expr = res->data.function.args[0];
+    Expr* m = res->data.function.args[1];
+    
+    if (expr->type == EXPR_FUNCTION) {
+        const char* head = expr->data.function.head->type == EXPR_SYMBOL ? expr->data.function.head->data.symbol : "";
+        if (strcmp(head, "List") == 0 || strcmp(head, "Equal") == 0 || strcmp(head, "Unequal") == 0 ||
+            strcmp(head, "Less") == 0 || strcmp(head, "LessEqual") == 0 || strcmp(head, "Greater") == 0 || 
+            strcmp(head, "GreaterEqual") == 0 || strcmp(head, "And") == 0 || strcmp(head, "Or") == 0 || 
+            strcmp(head, "Not") == 0) {
+            Expr** args = malloc(sizeof(Expr*) * expr->data.function.arg_count);
+            for (size_t i = 0; i < expr->data.function.arg_count; i++) {
+                Expr* ap_args[] = {expr_copy(expr->data.function.args[i]), expr_copy(m)};
+                args[i] = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), ap_args, 2));
+            }
+            Expr* ret = eval_and_free(expr_new_function(expr_copy(expr->data.function.head), args, expr->data.function.arg_count));
+            free(args);
+            return ret;
+        }
+    }
+    
+    if (m->type == EXPR_FUNCTION && strcmp(m->data.function.head->data.symbol, "List") == 0) {
+        Expr* curr = expr_copy(expr);
+        bool has_integer = false;
+        for (size_t i = 0; i < m->data.function.arg_count; i++) {
+            if (m->data.function.args[i]->type == EXPR_INTEGER) {
+                has_integer = true;
+                break;
+            }
+        }
+        for (size_t i = 0; i < m->data.function.arg_count; i++) {
+            Expr* next = polynomial_mod_single(curr, m->data.function.args[i], has_integer);
+            expr_free(curr);
+            curr = next;
+        }
+        return curr;
+    }
+    
+    return polynomial_mod_single(expr, m, false);
 }
