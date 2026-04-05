@@ -1899,50 +1899,6 @@ Expr* builtin_discriminant(Expr* res) {
     return ret;
 }
 
-void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
-    symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("Variables", builtin_variables);
-    symtab_get_def("Variables")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("Coefficient", builtin_coefficient);
-    symtab_get_def("Coefficient")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("CoefficientList", builtin_coefficientlist);
-    symtab_get_def("CoefficientList")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("PolynomialGCD", builtin_polynomialgcd);
-    symtab_get_def("PolynomialGCD")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("PolynomialLCM", builtin_polynomiallcm);
-    symtab_get_def("PolynomialLCM")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("PolynomialQuotient", builtin_polynomialquotient);
-    symtab_get_def("PolynomialQuotient")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("PolynomialMod", builtin_polynomialmod);
-    symtab_get_def("PolynomialMod")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("Collect", builtin_collect);
-    symtab_get_def("Collect")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("Decompose", builtin_decompose);
-    symtab_get_def("Decompose")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("HornerForm", builtin_hornerform);
-    symtab_get_def("HornerForm")->attributes |= ATTR_PROTECTED;
-    symtab_add_builtin("Resultant", builtin_resultant);
-    symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("Discriminant", builtin_discriminant);
-    symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-}
-
-
-static int64_t mod_inverse_int(int64_t a, int64_t m) {
-    int64_t m0 = m, t, q;
-    int64_t x0 = 0, x1 = 1;
-    if (m == 1) return 0;
-    a %= m; if (a < 0) a += m;
-    while (a > 1) {
-        q = a / m;
-        t = m; m = a % m; a = t;
-        t = x0; x0 = x1 - q * x0; x1 = t;
-    }
-    if (x1 < 0) x1 += m0;
-    return x1;
-}
-
-
 static Expr* apply_floor_to_coeffs(Expr* e) {
     if (!e) return NULL;
     if (e->type == EXPR_INTEGER) return expr_copy(e);
@@ -2194,4 +2150,33 @@ Expr* builtin_polynomialmod(Expr* res) {
     }
     
     return polynomial_mod_single(expr, m, false);
+}
+void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
+    symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Variables", builtin_variables);
+    symtab_get_def("Variables")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Coefficient", builtin_coefficient);
+    symtab_get_def("Coefficient")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("CoefficientList", builtin_coefficientlist);
+    symtab_get_def("CoefficientList")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("PolynomialGCD", builtin_polynomialgcd);
+    symtab_get_def("PolynomialGCD")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("PolynomialLCM", builtin_polynomiallcm);
+    symtab_get_def("PolynomialLCM")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("PolynomialQuotient", builtin_polynomialquotient);
+    symtab_get_def("PolynomialQuotient")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("PolynomialRemainder", builtin_polynomialremainder);
+    symtab_get_def("PolynomialRemainder")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("PolynomialMod", builtin_polynomialmod);
+    symtab_get_def("PolynomialMod")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Collect", builtin_collect);
+    symtab_get_def("Collect")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Decompose", builtin_decompose);
+    symtab_get_def("Decompose")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("HornerForm", builtin_hornerform);
+    symtab_get_def("HornerForm")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Resultant", builtin_resultant);
+    symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("Discriminant", builtin_discriminant);
+    symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
 }
