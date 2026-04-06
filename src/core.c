@@ -25,6 +25,7 @@
 #include "facpoly.h"
 #include "datetime.h"
 #include "linalg.h"
+#include "load.h"
 #include "part.h"
 #include "plus.h"
 #include "times.h"
@@ -147,6 +148,7 @@ void core_init(void) {
     info_init();
     datetime_init();
     linalg_init();
+    load_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {

@@ -17,4 +17,11 @@
  */
 Expr* parse_expression(const char* input);
 
+/*
+ * Parses the next expression from the input string pointer,
+ * advancing the pointer to the character after the parsed expression.
+ * Returns NULL if no more expressions can be parsed.
+ */
+Expr* parse_next_expression(const char** input_ptr);
+
 #endif // PARSE_H

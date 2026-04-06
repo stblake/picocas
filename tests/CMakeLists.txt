@@ -40,6 +40,7 @@ set(COMMON_SRC
     ../src/parfrac.c
     ../src/datetime.c
     ../src/linalg.c
+    ../src/load.c
 )
 
 add_executable(expr_tests

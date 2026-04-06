@@ -638,3 +638,18 @@ Expr* parse_expression(const char* input) {
     
     return result;
 }
+
+Expr* parse_next_expression(const char** input_ptr) {
+    if (!input_ptr || !*input_ptr) return NULL;
+    ParserState state = {*input_ptr, *input_ptr};
+    skip_whitespace(&state);
+    if (*state.pos == '\0') return NULL;
+    
+    Expr* result = parse_expression_state(&state);
+    
+    skip_whitespace(&state);
+    *input_ptr = state.pos;
+    
+    return result;
+}
+

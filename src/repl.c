@@ -150,6 +150,19 @@ void repl_loop() {
 int main() {
     symtab_init();
     core_init();
+    
+    // Load internal init.m silently if it exists
+    FILE* check_fp = fopen("./src/internal/init.m", "r");
+    if (check_fp) {
+        fclose(check_fp);
+        Expr* init_call = parse_expression("Get[\"./src/internal/init.m\"]");
+        if (init_call) {
+            Expr* res = evaluate(init_call);
+            expr_free(init_call);
+            if (res) expr_free(res);
+        }
+    }
+    
     repl_loop();
     return 0;
 }
