@@ -225,6 +225,7 @@ typedef enum {
     OP_POSTFIX,
     OP_PREFIX,
     OP_PATTERNTEST,
+    OP_COLON,
     OP_INFORMATION,
     OP_FACTORIAL
 } OperatorType;
@@ -290,6 +291,8 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_SETDELAYED; def.prec = 40; def.right_assoc = 1; def.head_name = "SetDelayed"; def.len = 2;
     } else if (strncmp(pos, "[[", 2) == 0) {
         def.type = OP_PART; def.prec = 1100; def.head_name = "Part"; def.len = 2;
+    } else if (*pos == ':') {
+        def.type = OP_COLON; def.prec = 140; def.right_assoc = 1; def.head_name = "Optional"; def.len = 1;
     } else if (*pos == '=') {
         def.type = OP_SET; def.prec = 40; def.right_assoc = 1; def.head_name = "Set"; def.len = 1;
     } else if (*pos == '+') {
@@ -617,6 +620,14 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
         } else if (op_def.type == OP_PREFIX) {
             Expr* args[1] = { right };
             left = expr_new_function(left, args, 1);
+        } else if (op_def.type == OP_COLON) {
+            if (left->type == EXPR_SYMBOL) {
+                Expr* args[2] = { left, right };
+                left = expr_new_function(expr_new_symbol("Pattern"), args, 2);
+            } else {
+                Expr* args[2] = { left, right };
+                left = expr_new_function(expr_new_symbol("Optional"), args, 2);
+            }
         } else {
             Expr* args[2] = { left, right };
             left = expr_new_function(expr_new_symbol(op_def.head_name), args, 2);

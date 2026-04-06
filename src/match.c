@@ -309,12 +309,77 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     
     // Handle Optional
     bool is_optional = false;
+    bool is_shortest = false;
     Expr* opt_pat = p;
-    if (p->type == EXPR_FUNCTION && p->data.function.head->type == EXPR_SYMBOL &&
-        strcmp(p->data.function.head->data.symbol, "Optional") == 0) {
-        is_optional = true;
-        if (p->data.function.arg_count >= 1) {
-            opt_pat = p->data.function.args[0];
+    Expr* opt_container = p;
+
+    if (p->type == EXPR_FUNCTION && p->data.function.head->type == EXPR_SYMBOL) {
+        const char* head = p->data.function.head->data.symbol;
+        if (strcmp(head, "Shortest") == 0) {
+            if (p->data.function.arg_count == 1) {
+                Expr* inner = p->data.function.args[0];
+                if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
+                    is_optional = true;
+                    is_shortest = true;
+                    opt_container = inner;
+                    if (inner->data.function.arg_count >= 1) {
+                        opt_pat = inner->data.function.args[0];
+                    }
+                } else {
+                    opt_pat = inner;
+                }
+            }
+        } else if (strcmp(head, "Longest") == 0) {
+            if (p->data.function.arg_count == 1) {
+                Expr* inner = p->data.function.args[0];
+                if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
+                    is_optional = true;
+                    opt_container = inner;
+                    if (inner->data.function.arg_count >= 1) {
+                        opt_pat = inner->data.function.args[0];
+                    }
+                } else {
+                    opt_pat = inner;
+                }
+            }
+        } else if (strcmp(head, "Optional") == 0) {
+            is_optional = true;
+            if (p->data.function.arg_count >= 1) {
+                opt_pat = p->data.function.args[0];
+            }
+        }
+    }
+
+    // Helper logic to test "without consuming" (i.e. default value)
+    // We will inline it below in two places depending on is_shortest.
+
+    if (is_optional && is_shortest) {
+        size_t saved_env_count = env->count;
+        Expr* def_val = NULL;
+        if (opt_container->data.function.arg_count == 2) {
+            def_val = expr_copy(opt_container->data.function.args[1]);
+        } else if (pat_head && pat_head->type == EXPR_SYMBOL) {
+            const char* hn = pat_head->data.symbol;
+            if (strcmp(hn, "Plus") == 0) def_val = expr_new_integer(0);
+            else if (strcmp(hn, "Times") == 0 || strcmp(hn, "Power") == 0) def_val = expr_new_integer(1);
+        }
+
+        if (def_val) {
+            Expr* inner_p = opt_pat;
+            Expr* p_sym = NULL;
+            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
+                if (p_sym && p_sym->type == EXPR_SYMBOL) {
+                    env_set(env, p_sym->data.symbol, def_val);
+                }
+            }
+            expr_free(def_val);
+
+            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) {
+                return true;
+            }
+            env_rollback(env, saved_env_count);
         }
     }
 
@@ -359,7 +424,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             if (p_sym) {
                 Expr* seq_val = expr_new_function(expr_new_symbol("Sequence"), NULL, k);
                 for (size_t i = 0; i < k; i++) seq_val->data.function.args[i] = expr_copy(exprs[i]);
-                
+
                 Expr* existing = env_get(env, p_sym->data.symbol);
                 if (existing) {
                     if (!expr_eq(seq_val, existing)) {
@@ -369,7 +434,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                     expr_free(seq_val);
                 } else {
                     env_set(env, p_sym->data.symbol, seq_val);
-                    expr_free(seq_val); 
+                    expr_free(seq_val);
                 }
             }
 
@@ -384,19 +449,17 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         }
     }
 
-    // Attempt to match without consuming if Optional
-    if (is_optional) {
-
+    if (is_optional && !is_shortest) {
         size_t saved_env_count = env->count;
         Expr* def_val = NULL;
-        if (p->data.function.arg_count == 2) {
-            def_val = expr_copy(p->data.function.args[1]);
+        if (opt_container->data.function.arg_count == 2) {
+            def_val = expr_copy(opt_container->data.function.args[1]);
         } else if (pat_head && pat_head->type == EXPR_SYMBOL) {
             const char* hn = pat_head->data.symbol;
             if (strcmp(hn, "Plus") == 0) def_val = expr_new_integer(0);
             else if (strcmp(hn, "Times") == 0 || strcmp(hn, "Power") == 0) def_val = expr_new_integer(1);
         }
-        
+
         if (def_val) {
             Expr* inner_p = opt_pat;
             Expr* p_sym = NULL;
@@ -406,15 +469,16 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                 }
             }
             expr_free(def_val);
-            
-            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
+
+            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) {
+                return true;
+            }
             env_rollback(env, saved_env_count);
         }
     }
-    
-    return false;
-}
 
+    return false;
+    }
 Expr* replace_bindings(Expr* expr, MatchEnv* env) {
     if (!expr) return NULL;
     
