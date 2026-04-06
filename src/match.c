@@ -2,6 +2,8 @@
 #include "part.h"
 #include "eval.h"
 #include "print.h"
+#include "symtab.h"
+#include "attr.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -118,7 +120,7 @@ static bool is_sequence_blank(Expr* e, Expr** head_out, int* min_len) {
     return false;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition);
+static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head);
 
 #include "part.h" // for expr_head
 
@@ -148,7 +150,7 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
                 return false;
             }
             bool res = match_args(expr->data.function.args, expr->data.function.arg_count,
-                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond);
+                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond, inner_pat->data.function.head);
             if (!res) env_rollback(env, saved_env_count);
             return res;
         }
@@ -275,15 +277,22 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
             return strcmp(expr->data.string, pattern->data.string) == 0;
         case EXPR_FUNCTION:
             if (!match(expr->data.function.head, pattern->data.function.head, env)) {
+                if (pattern->data.function.head->type == EXPR_SYMBOL) {
+                    SymbolDef* def = symtab_get_def(pattern->data.function.head->data.symbol);
+                    if (def && (def->attributes & ATTR_ONEIDENTITY)) {
+                        Expr* args[1] = { expr };
+                        return match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head);
+                    }
+                }
                 return false;
             }
             return match_args(expr->data.function.args, expr->data.function.arg_count,
-                              pattern->data.function.args, pattern->data.function.arg_count, env, NULL);
+                              pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head);
     }
     return false;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition) {
+static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head) {
     if (n_pats == 0) {
         if (n_exprs != 0) return false;
         if (!condition) return true;
@@ -297,20 +306,33 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     }
 
     Expr* p = pats[0];
-    Expr* inner_p = p;
+    
+    // Handle Optional
+    bool is_optional = false;
+    Expr* opt_pat = p;
+    if (p->type == EXPR_FUNCTION && p->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(p->data.function.head->data.symbol, "Optional") == 0) {
+        is_optional = true;
+        if (p->data.function.arg_count >= 1) {
+            opt_pat = p->data.function.args[0];
+        }
+    }
+
+    // Attempt to match by consuming exprs
+    size_t saved_env_count = env->count;
+    Expr* inner_p = opt_pat;
     Expr* p_sym = NULL;
     int min_len = 0;
     Expr* b_head = NULL;
 
     bool is_seq = false;
-    if (is_pattern(p, &p_sym, &inner_p)) {
+    if (is_pattern(opt_pat, &p_sym, &inner_p)) {
         is_seq = is_sequence_blank(inner_p, &b_head, &min_len);
     } else {
-        is_seq = is_sequence_blank(p, &b_head, &min_len);
+        is_seq = is_sequence_blank(opt_pat, &b_head, &min_len);
     }
 
     if (is_seq) {
-        size_t saved_env_count = env->count;
         for (size_t k = min_len; k <= n_exprs; k++) {
             bool type_ok = true;
             if (b_head) {
@@ -351,22 +373,46 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                 }
             }
 
-            if (match_args(exprs + k, n_exprs - k, pats + 1, n_pats - 1, env, condition)) return true;
+            if (match_args(exprs + k, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
 
             env_rollback(env, saved_env_count);
         }
-        return false;
-    } else {
-        if (n_exprs == 0) return false;
-        size_t saved_env_count = env->count;
-        if (!match(exprs[0], pats[0], env)) {
+    } else if (n_exprs > 0) {
+        if (match(exprs[0], opt_pat, env)) {
+            if (match_args(exprs + 1, n_exprs - 1, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
             env_rollback(env, saved_env_count);
-            return false;
         }
-        if (match_args(exprs + 1, n_exprs - 1, pats + 1, n_pats - 1, env, condition)) return true;
-        env_rollback(env, saved_env_count);
-        return false;
     }
+
+    // Attempt to match without consuming if Optional
+    if (is_optional) {
+
+        size_t saved_env_count = env->count;
+        Expr* def_val = NULL;
+        if (p->data.function.arg_count == 2) {
+            def_val = expr_copy(p->data.function.args[1]);
+        } else if (pat_head && pat_head->type == EXPR_SYMBOL) {
+            const char* hn = pat_head->data.symbol;
+            if (strcmp(hn, "Plus") == 0) def_val = expr_new_integer(0);
+            else if (strcmp(hn, "Times") == 0 || strcmp(hn, "Power") == 0) def_val = expr_new_integer(1);
+        }
+        
+        if (def_val) {
+            Expr* inner_p = opt_pat;
+            Expr* p_sym = NULL;
+            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
+                if (p_sym && p_sym->type == EXPR_SYMBOL) {
+                    env_set(env, p_sym->data.symbol, def_val);
+                }
+            }
+            expr_free(def_val);
+            
+            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
+            env_rollback(env, saved_env_count);
+        }
+    }
+    
+    return false;
 }
 
 Expr* replace_bindings(Expr* expr, MatchEnv* env) {

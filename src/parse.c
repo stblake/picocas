@@ -417,9 +417,16 @@ static Expr* parse_primary(ParserState* s) {
                     } else {
                         head = blank;
                     }
+                    
+                    if (*s->pos == '.') {
+                        s->pos++;
+                        Expr* opt_args[1] = { head };
+                        head = expr_new_function(expr_new_symbol("Optional"), opt_args, 1);
+                    }
                 }
                 
                 return head;
+
             }
             if (isdigit(*s->pos) || (*s->pos == '-' && isdigit(s->pos[1]))) {
                 return parse_number(s);
