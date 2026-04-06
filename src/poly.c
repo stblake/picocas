@@ -362,11 +362,37 @@ bool is_zero_poly(Expr* e) {
     if (e->type == EXPR_INTEGER && e->data.integer == 0) return true;
     if (e->type == EXPR_REAL && e->data.real == 0.0) return true;
     
-    // For more complex expressions, try to simplify to zero without recursion
     Expr* expanded = expr_expand(e);
     bool res = false;
     if (expanded->type == EXPR_INTEGER && expanded->data.integer == 0) res = true;
     else if (expanded->type == EXPR_REAL && expanded->data.real == 0.0) res = true;
+    
+    if (!res) {
+        size_t v_count = 0, v_cap = 16;
+        Expr** vars = malloc(sizeof(Expr*) * v_cap);
+        collect_variables(expanded, &vars, &v_count, &v_cap);
+        if (v_count > 0) {
+            if (is_polynomial(expanded, vars, v_count)) {
+                Expr* var = vars[0];
+                Expr* clist = internal_coefficientlist((Expr*[]){expr_copy(expanded), expr_copy(var)}, 2);
+                if (clist && clist->type == EXPR_FUNCTION && 
+                    clist->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(clist->data.function.head->data.symbol, "List") == 0) {
+                    bool all_zero = true;
+                    for (size_t i = 0; i < clist->data.function.arg_count; i++) {
+                        if (!is_zero_poly(clist->data.function.args[i])) {
+                            all_zero = false;
+                            break;
+                        }
+                    }
+                    if (all_zero) res = true;
+                }
+                if (clist) expr_free(clist);
+            }
+        }
+        for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+        free(vars);
+    }
     expr_free(expanded);
     return res;
 }
@@ -468,9 +494,7 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     Expr* R = expandedA;
     Expr* lcB = get_coeff(expandedB, x, degB);
     
-    int loop_iters = 0;
     while (true) {
-        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
         
         if (degR < degB || is_zero_poly(R)) break;
@@ -493,7 +517,7 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
         Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
         Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
         Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
-        evaluated_plus = internal_cancel((Expr*[]){evaluated_plus}, 1);
+        Expr* together = internal_together((Expr*[]){evaluated_plus}, 1); evaluated_plus = internal_cancel((Expr*[]){together}, 1);
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
         
@@ -517,9 +541,7 @@ static Expr* pseudo_rem(Expr* A, Expr* B, Expr* x) {
     int degB = get_degree_poly(expandedB, x);
     Expr* lcB = get_coeff(expandedB, x, degB);
     
-    int loop_iters = 0;
     while (true) {
-        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
         
         if (degR < degB || is_zero_poly(R)) break;
@@ -554,13 +576,20 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
         return;
     }
 
+    if (degB == 0) {
+        Expr* invB = internal_power((Expr*[]){expr_copy(expandedB), expr_new_integer(-1)}, 2);
+        *out_Q = internal_expand((Expr*[]){internal_times((Expr*[]){expr_copy(expandedA), invB}, 2)}, 1);
+        *out_R = expr_new_integer(0);
+        expr_free(expandedA);
+        expr_free(expandedB);
+        return;
+    }
+
     Expr* Q = expr_new_integer(0);
     Expr* R = expandedA;
     Expr* lcB = get_coeff(expandedB, x, degB);
 
-    int loop_iters = 0;
     while (true) {
-        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
         if (degR < degB || is_zero_poly(R)) break;
         
@@ -580,7 +609,7 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
         Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
         Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
         Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
-        evaluated_plus = internal_cancel((Expr*[]){evaluated_plus}, 1);
+        Expr* together = internal_together((Expr*[]){evaluated_plus}, 1); evaluated_plus = internal_cancel((Expr*[]){together}, 1);
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
 
@@ -681,9 +710,7 @@ Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
         Expr* tmp = U; U = V; V = tmp;
     }
     
-    int gcd_iters = 0;
     while (!is_zero_poly(V)) {
-        if (gcd_iters++ > 100) break;
         Expr* R = pseudo_rem(U, V, x);
         expr_free(U);
         U = V;
@@ -802,6 +829,26 @@ Expr* builtin_polynomialgcd(Expr* res) {
         collect_variables(rems[i], &vars, &v_count, &v_cap);
     }
     if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
+    
+    
+    // Check if arguments are polynomials
+    bool all_poly = true;
+    for (size_t i = 0; i < count; i++) {
+        if (!is_polynomial(rems[i], vars, v_count)) {
+            all_poly = false;
+            break;
+        }
+    }
+    if (!all_poly) {
+        for (size_t i = 0; i < count; i++) expr_free(rems[i]);
+        free(rems);
+        for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+        free(vars);
+        expr_free(numG);
+        for (size_t i = 0; i < common_count; i++) expr_free(common_args[i]);
+        free(common_args);
+        return NULL;
+    }
     
     Expr* cur_gcd = expr_copy(rems[0]);
     for (size_t i = 1; i < count; i++) {
@@ -1904,7 +1951,7 @@ Expr* builtin_discriminant(Expr* res) {
     if (!is_poly) return NULL;
     
     Expr* exp_poly = expr_expand(poly);
-    if (!exp_poly) { printf("Discriminant: expr_expand failed\n"); return NULL; }
+    if (!exp_poly) { return NULL; }
     int n = get_degree_poly(exp_poly, var);
     
     if (n < 0) {
@@ -1918,9 +1965,9 @@ Expr* builtin_discriminant(Expr* res) {
     
     Expr* a_n = get_coeff(exp_poly, var, n);
     Expr* deriv = poly_derivative(exp_poly, var);
-    if (!deriv) { printf("Discriminant: poly_derivative failed\n"); expr_free(exp_poly); expr_free(a_n); return NULL; }
+    if (!deriv) { expr_free(exp_poly); expr_free(a_n); return NULL; }
     Expr* res_val = resultant_internal(exp_poly, deriv, var);
-    if (!res_val) { printf("Discriminant: resultant_internal failed\n"); expr_free(exp_poly); expr_free(a_n); expr_free(deriv); return NULL; }
+    if (!res_val) { expr_free(exp_poly); expr_free(a_n); expr_free(deriv); return NULL; }
     expr_free(deriv);
     expr_free(exp_poly);
     
@@ -2244,9 +2291,13 @@ Expr* builtin_polynomialextendedgcd(Expr* res) {
     Expr* s1 = expr_new_integer(0);
     Expr* t1 = expr_new_integer(1);
 
-    int iterations = 0;
     while (!is_zero_poly(r1)) {
-        if (iterations++ > 100) break;
+        if (get_degree_poly(r1, x) == 0) {
+            expr_free(r0); r0 = r1; r1 = expr_new_integer(0);
+            expr_free(s0); s0 = s1; s1 = expr_new_integer(0);
+            expr_free(t0); t0 = t1; t1 = expr_new_integer(0);
+            break;
+        }
         Expr *q = NULL, *r2 = NULL;
         poly_div_rem(r0, r1, x, &q, &r2);
         if (!q || !r2) {

@@ -639,6 +639,8 @@ Gives the extended GCD of polynomials.
 - `Protected`.
 - Returns `{d, {a, b}}` such that $a \cdot poly1 + b \cdot poly2 = d$.
 - $d$ is the GCD, normalized to be monic.
+- Efficiently handles termination when a constant remainder is reached.
+- Optimized for cases where the divisor is a constant.
 
 ```mathematica
 In[1]:= PolynomialExtendedGCD[2x^5-2x, (x^2-1)^2, x]
