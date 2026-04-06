@@ -121,6 +121,45 @@ static bool is_sequence_blank(Expr* e, Expr** head_out, int* min_len) {
     return false;
 }
 
+static bool is_repeated(Expr* e, Expr** rep_pat, int* min_len, int* max_len) {
+    if (e->type != EXPR_FUNCTION || e->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* head = e->data.function.head->data.symbol;
+    bool is_rep = (strcmp(head, "Repeated") == 0);
+    bool is_rep_null = (strcmp(head, "RepeatedNull") == 0);
+    if (!is_rep && !is_rep_null) return false;
+
+    *min_len = is_rep ? 1 : 0;
+    *max_len = -1; // -1 means infinity
+    
+    if (e->data.function.arg_count >= 1) {
+        *rep_pat = e->data.function.args[0];
+    } else {
+        return false;
+    }
+    
+    if (e->data.function.arg_count >= 2) {
+        Expr* spec = e->data.function.args[1];
+        if (spec->type == EXPR_INTEGER) {
+            *max_len = (int)spec->data.integer;
+        } else if (spec->type == EXPR_FUNCTION && spec->data.function.head->type == EXPR_SYMBOL && strcmp(spec->data.function.head->data.symbol, "List") == 0) {
+            if (spec->data.function.arg_count == 1 && spec->data.function.args[0]->type == EXPR_INTEGER) {
+                *min_len = (int)spec->data.function.args[0]->data.integer;
+                *max_len = *min_len;
+            } else if (spec->data.function.arg_count == 2) {
+                if (spec->data.function.args[0]->type == EXPR_INTEGER) {
+                    *min_len = (int)spec->data.function.args[0]->data.integer;
+                }
+                if (spec->data.function.args[1]->type == EXPR_INTEGER) {
+                    *max_len = (int)spec->data.function.args[1]->data.integer;
+                } else if (spec->data.function.args[1]->type == EXPR_SYMBOL && strcmp(spec->data.function.args[1]->data.symbol, "Infinity") == 0) {
+                    *max_len = -1;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats);
 
 #include "part.h" // for expr_head
@@ -429,13 +468,18 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     Expr* inner_p = opt_pat;
     Expr* p_sym = NULL;
     int min_len = 0;
+    int max_len = -1;
     Expr* b_head = NULL;
+    Expr* rep_pat = NULL;
 
     bool is_seq = false;
+    bool is_rep = false;
     if (is_pattern(opt_pat, &p_sym, &inner_p)) {
         is_seq = is_sequence_blank(inner_p, &b_head, &min_len);
+        if (!is_seq) is_rep = is_repeated(inner_p, &rep_pat, &min_len, &max_len);
     } else {
         is_seq = is_sequence_blank(opt_pat, &b_head, &min_len);
+        if (!is_seq) is_rep = is_repeated(opt_pat, &rep_pat, &min_len, &max_len);
     }
 
     bool is_orderless = false;
@@ -452,6 +496,9 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     if (is_seq) {
         min_k = min_len;
         max_k = n_exprs;
+    } else if (is_rep) {
+        min_k = min_len;
+        max_k = (max_len == -1 || max_len > (int)n_exprs) ? n_exprs : (size_t)max_len;
     } else if (is_flat) {
         min_k = 1;
         max_k = n_exprs;
@@ -480,22 +527,31 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             bool matched_this_combo = false;
             size_t saved_env = env->count;
 
-            if (is_seq) {
+            if (is_seq || is_rep) {
                 bool type_ok = true;
-                if (b_head) {
-                    for (size_t i = 0; i < k; i++) {
-                        Expr* h = get_expr_head_borrowed(subset[i]);
-                        bool ok = false;
-                        if (h) {
-                            ok = expr_eq(h, b_head);
-                        } else if (b_head->type == EXPR_SYMBOL) {
-                            const char* hn = b_head->data.symbol;
-                            if (subset[i]->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) ok = true;
-                            else if (subset[i]->type == EXPR_REAL && strcmp(hn, "Real") == 0) ok = true;
-                            else if (subset[i]->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) ok = true;
-                            else if (subset[i]->type == EXPR_STRING && strcmp(hn, "String") == 0) ok = true;
+                if (is_seq) {
+                    if (b_head) {
+                        for (size_t i = 0; i < k; i++) {
+                            Expr* h = get_expr_head_borrowed(subset[i]);
+                            bool ok = false;
+                            if (h) {
+                                ok = expr_eq(h, b_head);
+                            } else if (b_head->type == EXPR_SYMBOL) {
+                                const char* hn = b_head->data.symbol;
+                                if (subset[i]->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) ok = true;
+                                else if (subset[i]->type == EXPR_REAL && strcmp(hn, "Real") == 0) ok = true;
+                                else if (subset[i]->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) ok = true;
+                                else if (subset[i]->type == EXPR_STRING && strcmp(hn, "String") == 0) ok = true;
+                            }
+                            if (!ok) {
+                                type_ok = false;
+                                break;
+                            }
                         }
-                        if (!ok) {
+                    }
+                } else if (is_rep) {
+                    for (size_t i = 0; i < k; i++) {
+                        if (!match(subset[i], rep_pat, env)) {
                             type_ok = false;
                             break;
                         }

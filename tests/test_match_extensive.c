@@ -139,6 +139,23 @@ void test_match_extensive_named_sequences() {
     printf("  Done.\n");
 }
 
+void test_match_extensive_repeated() {
+    ASSERT(test_match_q("{f[a,b], f[a,c], f[a,d]}", "{f[x_, _]..}") == true);
+    ASSERT(test_match_q("{f[a,b], f[a,c], f[a,d]}", "{f[_, x_]..}") == false);
+    ASSERT(test_match_q("{4,5,6}", "{Repeated[x_Integer]}") == false);
+    ASSERT(test_match_q("{4,4,4}", "{Repeated[x_Integer]}") == true);
+    ASSERT(test_match_q("{4,5,6}", "{Repeated[_Integer]}") == true);
+}
+
+void test_match_extensive_repeatednull() {
+    ASSERT(test_match_q("{f[a,b], f[a,c], f[a,d]}", "{f[x_, _]...}") == true);
+    ASSERT(test_match_q("{f[a,b], f[a,c], f[a,d]}", "{f[_, x_]...}") == false);
+    
+    ASSERT(test_match_q("{4,5,6}", "{RepeatedNull[x_Integer]}") == false);
+    ASSERT(test_match_q("{4,4,4}", "{RepeatedNull[x_Integer]}") == true);
+    ASSERT(test_match_q("{4,5,6}", "{RepeatedNull[_Integer]}") == true);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -151,6 +168,8 @@ int main() {
     TEST(test_match_extensive_named_sequences);
     TEST(test_match_extensive_alternatives);
     TEST(test_match_extensive_conditions);
+    TEST(test_match_extensive_repeated);
+    TEST(test_match_extensive_repeatednull);
     printf("All extensive match tests passed!\n");
     return 0;
 }

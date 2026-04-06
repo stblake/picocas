@@ -96,6 +96,25 @@ int main() {
     run_test("{a, b, c} //. {a -> b, b -> d}", "{d, d, c}");
     run_test("{1, 3, 4, 2, 3, 4, 5, 4, 2, 4, 6, 2, 1} //. {a___, x_, b___, x_, c___} -> {a, x, b, c}", "{1, 3, 4, 2, 5, 6}"); // Delete duplicates test case
 
+    // Repeated
+    run_test("{{}, {a,a}, {a,b}, {a,a,a}, {a}} /. {a..} -> x", "{{}, x, {a, b}, x, x}");
+    run_test("{{}, {f[a],f[b]}, {f[a]}, {f[a,b]}, {f[a],g[b]}} /. {f[_]..} -> x", "{{}, x, x, {f[a, b]}, {f[a], g[b]}}");
+    run_test("{f[], f[a,a], f[a,b], f[a,a,a]} /. f[a..] -> x", "{f[], x, f[a, b], x}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,a,a,a}} /. {Repeated[a, 3]} -> x", "{{}, x, x, x, {a, a, a, a}}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,a,a,a}} /. {Repeated[a, {2, 3}]} -> x", "{{}, {a}, x, x, {a, a, a, a}}");
+    run_test("{{}, {a}, {a,b}, {a,b,c}, {a,b,c,d}} /. {Repeated[_, {3}]} -> x", "{{}, {a}, {a, b}, x, {a, b, c, d}}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {Repeated[_, {0, 2}]} -> x", "{x, x, x, {a, a, a}, x, x}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {Repeated[z_, {0, 3}]} -> x", "{x, x, x, x, {a, b}, x}");
+    
+    // RepeatedNull
+    run_test("{{}, {a,a}, {a,b}, {a,a,a}, {a}} /. {a...} -> x", "{x, x, {a, b}, x, x}");
+    run_test("{{}, {f[a],f[b]}, {f[a]}, {f[a,b]}, {f[a],g[b]}} /. {f[_]...} -> x", "{x, x, x, {f[a, b]}, {f[a], g[b]}}");
+    run_test("{f[], f[a,a], f[a,b], f[a,a,a]} /. f[a...] -> x", "{x, x, f[a, b], x}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,a,a,a}} /. {RepeatedNull[a, 3]} -> x", "{x, x, x, x, {a, a, a, a}}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,a,a,a}} /. {RepeatedNull[a, {2, 3}]} -> x", "{{}, {a}, x, x, {a, a, a, a}}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {RepeatedNull[_, 2]} -> x", "{x, x, x, {a, a, a}, x, x}");
+    run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {RepeatedNull[z_, 3]} -> x", "{x, x, x, x, {a, b}, x}");
+
     printf("All Replace tests passed!\n");
     symtab_clear();
     return 0;

@@ -116,10 +116,15 @@ void info_init(void) {
     symtab_set_docstring("SetDelayed", "lhs := rhs assigns rhs to lhs, evaluating it only when needed.");
     symtab_set_docstring("Default", "Default[f] gives the default value for arguments of the function f obtained with a _. pattern object.");
     symtab_set_docstring("Optional", "patt:def or Optional[patt,def] is a pattern object that represents an expression of the form patt, which, if omitted, should be replaced by the default value def.");
+    symtab_set_docstring("Repeated", "p.. or Repeated[p] is a pattern object that represents a sequence of one or more expressions, each matching p.\nRepeated[p, max] represents from 1 to max expressions matching p.\nRepeated[p, {min, max}] represents between min and max expressions matching p.\nRepeated[p, {n}] represents exactly n expressions matching p.");
+    symtab_set_docstring("RepeatedNull", "p... or RepeatedNull[p] is a pattern object that represents a sequence of zero or more expressions, each matching p.\nRepeatedNull[p, max] represents from 0 to max expressions matching p.\nRepeatedNull[p, {min, max}] represents between min and max expressions matching p.\nRepeatedNull[p, {n}] represents exactly n expressions matching p.");
     symtab_set_docstring("Blank", "_ or Blank[] represents any single expression.\n_h or Blank[h] represents any single expression with head h.");
     symtab_set_docstring("BlankSequence", "__ or BlankSequence[] represents a sequence of one or more expressions.");
     symtab_set_docstring("BlankNullSequence", "___ or BlankNullSequence[] represents a sequence of zero or more expressions.");
     symtab_set_docstring("Clear", "Clear[x, y, ...] clears the values of symbols.");
+    symtab_set_docstring("Flat", "Flat is an attribute that can be assigned to a symbol f to indicate that all expressions involving nested functions f should be flattened out. This property is accounted for in pattern matching.");
+    symtab_set_docstring("Orderless", "Orderless is an attribute that can be assigned to a symbol f to indicate that the elements e_i in expressions of the form f[e_1, e_2, ...] should automatically be sorted into canonical order. This property is accounted for in pattern matching.");
+    symtab_set_docstring("OneIdentity", "OneIdentity is an attribute that can be assigned to a symbol f to indicate that f[x], f[f[x]], etc. are all equivalent to x for the purpose of pattern matching.");
     symtab_set_docstring("Information", "Information[symbol] or ?symbol returns information on symbol.");
     symtab_set_docstring("OwnValues", "OwnValues[s] gives a list of own-value rules for s.");
     symtab_set_docstring("DownValues", "DownValues[s] gives a list of down-value rules for s.");

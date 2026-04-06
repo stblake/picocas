@@ -1818,6 +1818,9 @@ Out[1]= 25
 - `lhs /; condition`: Conditional matching.
 - `p:def`: `Optional[p, def]`, matches `p`, but if omitted defaults to `def`.
 - `x_.`: `Optional[Pattern[x, _]]`, matches `x_`, but if omitted defaults to globally specified `Default` values.
+- `p..`: `Repeated[p]`, matches a sequence of one or more expressions, each matching `p`.
+- `p...`: `RepeatedNull[p]`, matches a sequence of zero or more expressions, each matching `p`.
+- `Repeated[p, max]`, `Repeated[p, {min, max}]`, `Repeated[p, {n}]`: match sequences of length bounded by `max` or `{min, max}`. Equivalent properties exist for `RepeatedNull`.
 
 #### Default Values
 - `Default[f] = val`: Sets the default value for arguments of `f`.

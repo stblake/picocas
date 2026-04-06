@@ -227,7 +227,9 @@ typedef enum {
     OP_PATTERNTEST,
     OP_COLON,
     OP_INFORMATION,
-    OP_FACTORIAL
+    OP_FACTORIAL,
+    OP_REPEATED,
+    OP_REPEATEDNULL
 } OperatorType;
 
 typedef struct {
@@ -303,6 +305,10 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_TIMES; def.prec = 400; def.head_name = "Times"; def.len = 1;
     } else if (*pos == '/') {
         def.type = OP_DIVIDE; def.prec = 470; def.head_name = "Divide"; def.len = 1;
+    } else if (strncmp(pos, "...", 3) == 0) {
+        def.type = OP_REPEATEDNULL; def.prec = 170; def.head_name = "RepeatedNull"; def.len = 3;
+    } else if (strncmp(pos, "..", 2) == 0) {
+        def.type = OP_REPEATED; def.prec = 170; def.head_name = "Repeated"; def.len = 2;
     } else if (*pos == '.') {
         def.type = OP_DOT; def.prec = 490; def.head_name = "Dot"; def.len = 1;
     } else if (*pos == '^') {
@@ -536,6 +542,14 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
         } else if (op_def.type == OP_FACTORIAL) {
             Expr* args[1] = { left };
             left = expr_new_function(expr_new_symbol("Factorial"), args, 1);
+            continue;
+        } else if (op_def.type == OP_REPEATED) {
+            Expr* args[1] = { left };
+            left = expr_new_function(expr_new_symbol("Repeated"), args, 1);
+            continue;
+        } else if (op_def.type == OP_REPEATEDNULL) {
+            Expr* args[1] = { left };
+            left = expr_new_function(expr_new_symbol("RepeatedNull"), args, 1);
             continue;
         } else if (op_def.type == OP_SPAN) {
             Expr* span_args[3];
