@@ -101,6 +101,34 @@ Expr* make_rational(int64_t n, int64_t d) {
     return expr_new_function(expr_new_symbol("Rational"), args, 2);
 }
 
+Expr* builtin_rational(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    Expr* n_expr = res->data.function.args[0];
+    Expr* d_expr = res->data.function.args[1];
+    
+    if (n_expr->type == EXPR_INTEGER && d_expr->type == EXPR_INTEGER) {
+        int64_t n = n_expr->data.integer;
+        int64_t d = d_expr->data.integer;
+        if (d == 0) {
+            if (n == 0) return expr_new_symbol("Indeterminate");
+            else return expr_new_symbol("ComplexInfinity");
+        }
+        
+        Expr* r = make_rational(n, d);
+        if (r && r->type == EXPR_FUNCTION && r->data.function.head->type == EXPR_SYMBOL && strcmp(r->data.function.head->data.symbol, "Rational") == 0) {
+            Expr* rn = r->data.function.args[0];
+            Expr* rd = r->data.function.args[1];
+            if (rn->type == EXPR_INTEGER && rd->type == EXPR_INTEGER && rn->data.integer == n && rd->data.integer == d) {
+                // No simplification happened
+                expr_free(r);
+                return NULL;
+            }
+        }
+        return r;
+    }
+    return NULL;
+}
+
 bool is_rational(Expr* e, int64_t* n, int64_t* d) {
     if (e->type == EXPR_INTEGER) {
         if (n) *n = e->data.integer;

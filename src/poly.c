@@ -290,37 +290,55 @@ Expr* builtin_variables(Expr* res) {
     free(vars); return list;
 }
 
-static bool free_of_any(Expr* expr, Expr** vars, size_t var_count) {
-    if (!expr) return true;
-    for (size_t i = 0; i < var_count; i++) if (expr_eq(expr, vars[i])) return false;
-    if (expr->type == EXPR_FUNCTION) {
-        if (!free_of_any(expr->data.function.head, vars, var_count)) return false;
-        for (size_t i = 0; i < expr->data.function.arg_count; i++)
-            if (!free_of_any(expr->data.function.args[i], vars, var_count)) return false;
-    }
-    return true;
-}
-
 bool is_polynomial(Expr* e, Expr** vars, size_t var_count) {
     if (!e) return false;
-    for (size_t i = 0; i < var_count; i++) if (expr_eq(e, vars[i])) return true;
+    
+    // Check if e is one of the variables
+    for (size_t i = 0; i < var_count; i++) {
+        if (expr_eq(e, vars[i])) return true;
+    }
+    
+    // Check if e contains any of the variables.
+    // If it DOES NOT contain any variable, it is a constant (polynomial of degree 0).
+    bool contains_var = false;
+    for (size_t i = 0; i < var_count; i++) {
+        if (contains_any_symbol_from(e, vars[i])) {
+            contains_var = true;
+            break;
+        }
+    }
+    if (!contains_var) return true;
+
+    // If it contains a variable but didn't match expr_eq, we check its structure.
     if (e->type == EXPR_FUNCTION) {
         const char* head = (e->data.function.head->type == EXPR_SYMBOL) ? e->data.function.head->data.symbol : "";
+        
         if (strcmp(head, "Plus") == 0 || strcmp(head, "Times") == 0) {
-            for (size_t i = 0; i < e->data.function.arg_count; i++)
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
                 if (!is_polynomial(e->data.function.args[i], vars, var_count)) return false;
+            }
             return true;
         }
+        
         if (strcmp(head, "Power") == 0 && e->data.function.arg_count == 2) {
+            Expr* base = e->data.function.args[0];
             Expr* exp = e->data.function.args[1];
-            if (exp->type == EXPR_INTEGER && exp->data.integer >= 0) return is_polynomial(e->data.function.args[0], vars, var_count);
+            
+            // Power[base, exp] is a polynomial if:
+            // 1. exp is a non-negative integer AND base is a polynomial.
+            if (exp->type == EXPR_INTEGER && exp->data.integer >= 0) {
+                return is_polynomial(base, vars, var_count);
+            }
+            // Note: if base and exp are both constants (free of vars), 
+            // it would have been caught by the !contains_var check above.
+            return false;
         }
-        if (!free_of_any(e, vars, var_count)) return false;
-        for (size_t i = 0; i < var_count; i++) if (contains_any_symbol_from(e, vars[i])) return false;
-        return true;
     }
-    if (e->type == EXPR_SYMBOL) for (size_t i = 0; i < var_count; i++) if (contains_any_symbol_from(e, vars[i])) return false;
-    return true;
+    
+    // If we reach here, it contains a variable but isn't a simple Plus/Times/Power 
+    // and didn't match expr_eq. Thus it's not a polynomial in those variables.
+    // e.g. Sin[x] is not a polynomial in x.
+    return false;
 }
 
 Expr* builtin_polynomialq(Expr* res) {
@@ -340,11 +358,15 @@ Expr* builtin_polynomialq(Expr* res) {
 
 bool is_zero_poly(Expr* e) {
     if (!e) return true;
-    Expr* evaled = evaluate(e);
+    if (e->type == EXPR_INTEGER && e->data.integer == 0) return true;
+    if (e->type == EXPR_REAL && e->data.real == 0.0) return true;
+    
+    // For more complex expressions, try to simplify to zero without recursion
+    Expr* expanded = expr_expand(e);
     bool res = false;
-    if (evaled->type == EXPR_INTEGER && evaled->data.integer == 0) res = true;
-    if (evaled->type == EXPR_REAL && evaled->data.real == 0.0) res = true;
-    expr_free(evaled);
+    if (expanded->type == EXPR_INTEGER && expanded->data.integer == 0) res = true;
+    else if (expanded->type == EXPR_REAL && expanded->data.real == 0.0) res = true;
+    expr_free(expanded);
     return res;
 }
 
@@ -445,8 +467,11 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     Expr* R = expandedA;
     Expr* lcB = get_coeff(expandedB, x, degB);
     
+    int loop_iters = 0;
     while (true) {
+        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
+        
         if (degR < degB || is_zero_poly(R)) break;
         
         Expr* lcR = get_coeff(R, x, degR);
@@ -467,6 +492,7 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
         Expr* term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){term, expr_copy(expandedB)}, 2));
         Expr* neg_term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), term_B}, 2));
         Expr* evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(R), neg_term_B}, 2));
+        evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){evaluated_plus}, 1));
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
         
@@ -490,8 +516,11 @@ static Expr* pseudo_rem(Expr* A, Expr* B, Expr* x) {
     int degB = get_degree_poly(expandedB, x);
     Expr* lcB = get_coeff(expandedB, x, degB);
     
+    int loop_iters = 0;
     while (true) {
+        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
+        
         if (degR < degB || is_zero_poly(R)) break;
         
         Expr* lcR = get_coeff(R, x, degR);
@@ -528,10 +557,12 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
     Expr* R = expandedA;
     Expr* lcB = get_coeff(expandedB, x, degB);
 
+    int loop_iters = 0;
     while (true) {
+        if (loop_iters++ > 500) break;
         int degR = get_degree_poly(R, x);
         if (degR < degB || is_zero_poly(R)) break;
-
+        
         Expr* lcR = get_coeff(R, x, degR);
         int d = degR - degB;
 
@@ -548,6 +579,7 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
         Expr* term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){term, expr_copy(expandedB)}, 2));
         Expr* neg_term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), term_B}, 2));
         Expr* evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(R), neg_term_B}, 2));
+        evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){evaluated_plus}, 1));
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
 
@@ -648,7 +680,9 @@ Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
         Expr* tmp = U; U = V; V = tmp;
     }
     
+    int gcd_iters = 0;
     while (!is_zero_poly(V)) {
+        if (gcd_iters++ > 100) break;
         Expr* R = pseudo_rem(U, V, x);
         expr_free(U);
         U = V;
@@ -1869,6 +1903,7 @@ Expr* builtin_discriminant(Expr* res) {
     if (!is_poly) return NULL;
     
     Expr* exp_poly = expr_expand(poly);
+    if (!exp_poly) { printf("Discriminant: expr_expand failed\n"); return NULL; }
     int n = get_degree_poly(exp_poly, var);
     
     if (n < 0) {
@@ -1877,12 +1912,14 @@ Expr* builtin_discriminant(Expr* res) {
     }
     if (n == 0 || n == 1) {
         expr_free(exp_poly);
-        return expr_new_integer(1);
+        return expr_new_integer(0); // Discriminant of constant or linear is 0 in some conventions, or 1? Mathematica says 1 for linear.
     }
     
     Expr* a_n = get_coeff(exp_poly, var, n);
     Expr* deriv = poly_derivative(exp_poly, var);
+    if (!deriv) { printf("Discriminant: poly_derivative failed\n"); expr_free(exp_poly); expr_free(a_n); return NULL; }
     Expr* res_val = resultant_internal(exp_poly, deriv, var);
+    if (!res_val) { printf("Discriminant: resultant_internal failed\n"); expr_free(exp_poly); expr_free(a_n); expr_free(deriv); return NULL; }
     expr_free(deriv);
     expr_free(exp_poly);
     
@@ -2151,7 +2188,151 @@ Expr* builtin_polynomialmod(Expr* res) {
     
     return polynomial_mod_single(expr, m, false);
 }
-void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
+static bool is_constant_1(Expr* e) {
+    if (!e) return false;
+    Expr* ev = eval_and_free(expr_copy(e));
+    bool res = (ev->type == EXPR_INTEGER && ev->data.integer == 1);
+    expr_free(ev);
+    return res;
+}
+
+static int64_t mod_inverse_int_poly(int64_t a, int64_t m) {
+    int64_t m0 = m, t, q;
+    int64_t x0 = 0, x1 = 1;
+    if (m == 1) return 0;
+    while (a > 1) {
+        if (m == 0) return 0;
+        q = a / m;
+        t = m;
+        m = a % m, a = t;
+        t = x0;
+        x0 = x1 - q * x0;
+        x1 = t;
+    }
+    if (x1 < 0) x1 += m0;
+    return x1;
+}
+
+Expr* builtin_polynomialextendedgcd(Expr* res) {
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 3 && res->data.function.arg_count != 4)) return NULL;
+    Expr* A = res->data.function.args[0];
+    Expr* B = res->data.function.args[1];
+    Expr* x = res->data.function.args[2];
+    Expr* mod_p = NULL;
+    if (res->data.function.arg_count == 4) {
+        Expr* rule = res->data.function.args[3];
+        if (rule->type == EXPR_FUNCTION && strcmp(rule->data.function.head->data.symbol, "Rule") == 0 &&
+            rule->data.function.args[0]->type == EXPR_SYMBOL && strcmp(rule->data.function.args[0]->data.symbol, "Modulus") == 0) {
+            mod_p = rule->data.function.args[1];
+        } else {
+            return NULL;
+        }
+    }
+
+    Expr* r0 = expr_expand(A);
+    Expr* r1 = expr_expand(B);
+    if (mod_p) {
+        Expr* next0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r0, expr_copy(mod_p)}, 2));
+        r0 = next0;
+        Expr* next1 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r1, expr_copy(mod_p)}, 2));
+        r1 = next1;
+    }
+
+    Expr* s0 = expr_new_integer(1);
+    Expr* t0 = expr_new_integer(0);
+    Expr* s1 = expr_new_integer(0);
+    Expr* t1 = expr_new_integer(1);
+
+    int iterations = 0;
+    while (!is_zero_poly(r1)) {
+        if (iterations++ > 100) break;
+        Expr *q = NULL, *r2 = NULL;
+        poly_div_rem(r0, r1, x, &q, &r2);
+        if (!q || !r2) {
+            if (q) expr_free(q);
+            if (r2) expr_free(r2);
+            break;
+        }
+
+        // s2 = s0 - q * s1
+        Expr* q_s1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(q), expr_copy(s1)}, 2));
+        Expr* neg_q_s1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), q_s1}, 2));
+        Expr* s2 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(s0), neg_q_s1}, 2));
+
+        // t2 = t0 - q * t1
+        Expr* q_t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(q), expr_copy(t1)}, 2));
+        Expr* neg_q_t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), q_t1}, 2));
+        Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(t0), neg_q_t1}, 2));
+
+        s2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){s2}, 1));
+        t2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){t2}, 1));
+        r2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){r2}, 1));
+
+        if (!mod_p) {
+            s2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){s2}, 1))}, 1));
+            t2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){t2}, 1))}, 1));
+            r2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){r2}, 1))}, 1));
+        } else {
+            s2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){s2, expr_copy(mod_p)}, 2));
+            t2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){t2, expr_copy(mod_p)}, 2));
+            r2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r2, expr_copy(mod_p)}, 2));
+        }
+
+        expr_free(r0); r0 = r1; r1 = r2;
+        expr_free(s0); s0 = s1; s1 = s2;
+        expr_free(t0); t0 = t1; t1 = t2;
+        expr_free(q);
+    }
+    expr_free(r1);
+    expr_free(s1);
+    expr_free(t1);
+
+    // Normalize so that GCD is monic
+    int deg = get_degree_poly(r0, x);
+    if (deg >= 0 && !is_zero_poly(r0)) {
+        Expr* lc = get_coeff(r0, x, deg);
+        if (!is_constant_1(lc)) {
+            Expr* lc_inv;
+            if (mod_p) {
+                if (lc->type == EXPR_INTEGER && mod_p->type == EXPR_INTEGER) {
+                    lc_inv = expr_new_integer(mod_inverse_int_poly(lc->data.integer, mod_p->data.integer));
+                } else {
+                    lc_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2));
+                    lc_inv = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){lc_inv, expr_copy(mod_p)}, 2));
+                }
+            } else {
+                lc_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2));
+            }
+
+            Expr* nr0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(r0), expr_copy(lc_inv)}, 2))}, 1));
+            Expr* ns0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(s0), expr_copy(lc_inv)}, 2))}, 1));
+            Expr* nt0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(t0), expr_copy(lc_inv)}, 2))}, 1));
+            
+            if (!mod_p) {
+                nr0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){nr0}, 1))}, 1));
+                ns0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){ns0}, 1))}, 1));
+                nt0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){nt0}, 1))}, 1));
+            } else {
+                nr0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){nr0, expr_copy(mod_p)}, 2));
+                ns0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){ns0, expr_copy(mod_p)}, 2));
+                nt0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){nt0, expr_copy(mod_p)}, 2));
+            }
+
+            expr_free(r0); r0 = nr0;
+            expr_free(s0); s0 = ns0;
+            expr_free(t0); t0 = nt0;
+            expr_free(lc_inv);
+        }
+        expr_free(lc);
+    }
+
+    Expr* coef_list = expr_new_function(expr_new_symbol("List"), (Expr*[]){s0, t0}, 2);
+    Expr* ret = expr_new_function(expr_new_symbol("List"), (Expr*[]){r0, coef_list}, 2);
+    return ret;
+}
+
+void poly_init(void) {
+    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
     symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Variables", builtin_variables);
     symtab_get_def("Variables")->attributes |= ATTR_PROTECTED;
@@ -2177,6 +2358,10 @@ void poly_init(void) {    symtab_add_builtin("PolynomialQ", builtin_polynomialq)
     symtab_get_def("HornerForm")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Resultant", builtin_resultant);
     symtab_get_def("Resultant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("PolynomialExtendedGCD", builtin_polynomialextendedgcd);
+    symtab_get_def("PolynomialExtendedGCD")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Discriminant", builtin_discriminant);
     symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
+    symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
 }

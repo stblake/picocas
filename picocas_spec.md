@@ -630,6 +630,24 @@ In[3]:= PolynomialGCD[x^2-1, x^3-1, x^4-1, x^5-1, x^6-1, x^7-1]
 Out[3]= -1 + x
 ```
 
+#### PolynomialExtendedGCD
+Gives the extended GCD of polynomials.
+- `PolynomialExtendedGCD[poly1, poly2, x]`
+- `PolynomialExtendedGCD[poly1, poly2, x, Modulus -> p]`
+
+**Features**:
+- `Protected`.
+- Returns `{d, {a, b}}` such that $a \cdot poly1 + b \cdot poly2 = d$.
+- $d$ is the GCD, normalized to be monic.
+
+```mathematica
+In[1]:= PolynomialExtendedGCD[2x^5-2x, (x^2-1)^2, x]
+Out[1]= {-1 + x^2, {x/4, (-4 - 2 x^2)/4}}
+
+In[2]:= PolynomialExtendedGCD[a (x+b)^2, (x+a)(x+b), x]
+Out[2]= {b + x, {-(1/(a (a - b))), 1/(a - b)}}
+```
+
 #### PolynomialLCM
 Gives the least common multiple of the polynomials.
 - `PolynomialLCM[poly1, poly2, ...]`
@@ -1351,10 +1369,10 @@ In[1]:= Apart[1/((1+x)(5+x))]
 Out[1]= 1/(4 (1 + x)) - 1/(4 (5 + x))
 
 In[2]:= Apart[(x^5-2)/((1+x+x^2)(2+x)(1-x))]
-Out[2]= 2 - x + (-1 - x/3)/(-1 - x - x^2) + (4 - (11 x)/3)/(2 - x - x^2)
+Out[2]= 2 - x + (-1 - x/3)/(1 + x + x^2) + 1/(9 (-1 + x)) - 34/(9 (2 + x))
 
 In[3]:= Apart[(x+y)/((x+1)(y+1)(x-y)), x]
-Out[3]= 2 y/((-1 - y)^2 (x - y)) - (-1 + y)/((-1 - y)^2 (1 + x))
+Out[3]= 2 y/((1 + y)^2 (x - y)) - (-1 + y)/((1 + x) (1 + y)^2)
 ```
 
 #### Mod, Quotient, QuotientRemainder
@@ -1506,6 +1524,20 @@ Gives the Euler totient function $\phi(n)$.
 ```mathematica
 In[1]:= EulerPhi[10]
 Out[1]= 4
+```
+
+#### Rational
+Represents a rational number.
+- `Rational[n, d]`
+
+**Features**:
+- Automatically simplifies to lowest terms (e.g. `Rational[15, 5]` evaluates to `3`, `Rational[2, 4]` evaluates to `Rational[1, 2]`).
+- Returns `Indeterminate` when `n` and `d` are both `0` (e.g. `Rational[0, 0]`).
+- Returns `ComplexInfinity` when `n` is non-zero and `d` is `0` (e.g. `Rational[1, 0]`).
+
+```mathematica
+In[1]:= Rational[15, 5]
+Out[1]= 3
 ```
 
 #### Re, Im, ReIm, Abs, Conjugate, Arg

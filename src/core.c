@@ -66,6 +66,7 @@ void core_init(void) {
     symtab_add_builtin("Divide", builtin_divide);
     symtab_add_builtin("Subtract", builtin_subtract);
     symtab_add_builtin("Complex", builtin_complex);
+    symtab_add_builtin("Rational", builtin_rational);
     symtab_add_builtin("Power", builtin_power);
     symtab_add_builtin("Sqrt", builtin_sqrt);
     symtab_add_builtin("Apply", builtin_apply);

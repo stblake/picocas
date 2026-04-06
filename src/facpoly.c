@@ -1084,16 +1084,21 @@ static UPolyList factor_zassenhaus(UPoly* P) {
         return result;
     }
     
-    int64_t lc = P->c[P->deg];
     int64_t content = llabs(P->c[0]);
     for(int i=1; i<=P->deg; i++) content = z_gcd(content, P->c[i]);
-    
+
     UPoly* P_prim = upoly_copy(P);
     if (content > 1) {
         for(int i=0; i<=P_prim->deg; i++) P_prim->c[i] /= content;
     }
-    lc = P_prim->c[P_prim->deg];
-    
+
+    // Ensure P_prim has a positive leading coefficient
+    if (P_prim->c[P_prim->deg] < 0) {
+        for(int i=0; i<=P_prim->deg; i++) P_prim->c[i] = -P_prim->c[i];
+        content = -content;
+    }
+
+    int64_t lc = P_prim->c[P_prim->deg];    
     int64_t p = 13; // Just pick 13 for simplicity in this implementation
     int attempts = 0;
     while (attempts < 20) {
@@ -1205,14 +1210,10 @@ static UPolyList factor_zassenhaus(UPoly* P) {
         upoly_free(current_P);
     }
     
-    if (content > 1 || (result.count > 0 && result.factors[0]->c[result.factors[0]->deg] < 0 && P->c[P->deg] > 0)) {
+    if (content != 1) {
         UPoly* c_poly = upoly_new(0);
         c_poly->c[0] = content;
-        int sign = 1;
-        for(int i=0; i<result.count; i++) if (result.factors[i]->c[result.factors[i]->deg] < 0) sign = -sign;
-        if (P->c[P->deg] * sign < 0) c_poly->c[0] = -c_poly->c[0];
-        if (c_poly->c[0] != 1) upoly_list_add(&result, c_poly);
-        else upoly_free(c_poly);
+        upoly_list_add(&result, c_poly);
     }
     
     free(used);

@@ -34,3 +34,4 @@ void poly_init(void);
 #endif // POLY_H
 Expr* builtin_polynomialmod(Expr* res);
 Expr* builtin_polynomialmod(Expr* res);
+Expr* builtin_polynomialextendedgcd(Expr* res);

@@ -22,6 +22,17 @@ void run_test(const char* input, const char* expected) {
     expr_free(res);
 }
 
+void test_rational_simplification() {
+    run_test("Rational[1, 1]", "1");
+    run_test("Rational[15, 5]", "3");
+    run_test("Rational[15, -5]", "-3");
+    run_test("Rational[-15, -5]", "3");
+    run_test("Rational[2, 4]", "Rational[1, 2]");
+    run_test("Rational[0, 4]", "0");
+    run_test("Rational[1, 0]", "ComplexInfinity");
+    run_test("Rational[0, 0]", "Indeterminate");
+}
+
 void test_numerator() {
     run_test("Numerator[2/3]", "2");
     run_test("Numerator[(x-1)(x-2)/(x-3)^2]", "Times[Plus[-2, x], Plus[-1, x]]");
@@ -71,6 +82,7 @@ int main() {
     core_init();
 
     printf("Running rat tests...\n");
+    TEST(test_rational_simplification);
     TEST(test_numerator);
     TEST(test_denominator);
     TEST(test_cancel);

@@ -167,16 +167,34 @@ void test_discriminant() {
     run_test("Discriminant[(x-1)(x-2)(x-1), x]", "0");
 }
 
+void test_polynomialextendedgcd() {
+    run_test("PolynomialExtendedGCD[2x^5-2x, (x^2-1)^2, x]", "List[Plus[-1, Power[x, 2]], List[Times[Rational[1, 4], x], Times[Rational[1, 2], Plus[-2, Times[-1, Power[x, 2]]]]]]");
+    run_test("PolynomialExtendedGCD[a (x+b)^2, (x+a)(x+b), x]", "List[Plus[b, x], List[Power[Plus[Times[-1, Power[a, 2]], Times[a, b]], -1], Times[-1, Power[Plus[Times[-1, a], b], -1]]]]");
+    run_test("PolynomialExtendedGCD[(x-1)(x-2)^2, (x-1)(x^2-3), x]", "List[Plus[-1, x], List[Plus[7, Times[4, x]], Plus[9, Times[-4, x]]]]");
+    run_test("PolynomialExtendedGCD[x^2+x+1, x+1, x, Modulus -> 2]", "List[1, List[1, x]]");
+}
+
+void test_power_simplification() {
+    run_test("Power[Rational[1, 4], -1]", "4");
+    run_test("Power[Rational[1, 4], -2]", "16");
+    run_test("Power[Rational[2, 3], 2]", "Rational[4, 9]");
+    run_test("Power[Rational[2, 3], -2]", "Rational[9, 4]");
+}
+
 int main() {
+    setbuf(stdout, NULL);
+    printf("Starting poly_tests\n");
     symtab_init();
     core_init();
-    
+
+    TEST(test_power_simplification);
     TEST(test_polynomialq_basic);
     TEST(test_polynomialq_advanced);
     TEST(test_variables);
     TEST(test_level);
     TEST(test_expand_coeff);
     TEST(test_polynomialgcd);
+    TEST(test_polynomialextendedgcd);
     TEST(test_polynomiallcm);
     TEST(test_polynomial_div_rem);
     TEST(test_collect);
@@ -185,6 +203,7 @@ int main() {
     TEST(test_hornerform);
     TEST(test_resultant);
     TEST(test_discriminant);
+    TEST(test_polynomialextendedgcd);
     
     printf("All polynomial tests passed!\n");
     return 0;

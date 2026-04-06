@@ -197,6 +197,23 @@ Expr* builtin_power(Expr* res) {
         }
     }
 
+    int64_t bn, bd, e;
+    if (is_rational(base, &bn, &bd) && exp->type == EXPR_INTEGER) {
+        e = exp->data.integer;
+        if (e == 0) return expr_new_integer(1);
+        if (e > 0) {
+            bool overflow = false;
+            int64_t res_n = ipow(bn, e, &overflow);
+            int64_t res_d = ipow(bd, e, &overflow);
+            if (!overflow) return make_rational(res_n, res_d);
+        } else {
+            bool overflow = false;
+            int64_t res_n = ipow(bn, -e, &overflow);
+            int64_t res_d = ipow(bd, -e, &overflow);
+            if (!overflow) return make_rational(res_d, res_n);
+        }
+    }
+
     if (exp->type == EXPR_INTEGER && base->type == EXPR_FUNCTION && strcmp(base->data.function.head->data.symbol, "Times") == 0) {
         size_t bc = base->data.function.arg_count;
         Expr** new_args = malloc(sizeof(Expr*) * bc);

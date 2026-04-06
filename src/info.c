@@ -10,7 +10,7 @@ void info_init(void) {
     symtab_set_docstring("Divide", "x / y or Divide[x, y] represents x / y.");
     symtab_set_docstring("Sqrt", "Sqrt[z] represents the square root of z.");
     symtab_set_docstring("Complex", "Complex[re, im] represents a complex number with real part re and imaginary part im.");
-    symtab_set_docstring("Rational", "Rational[n, d] represents a rational number with numerator n and denominator d.");
+    symtab_set_docstring("Rational", "Rational[n, d] represents a rational number with numerator n and denominator d. Automatically simplifies if arguments are integers.");
     symtab_set_docstring("GCD", "GCD[n1, n2, ...] gives the greatest common divisor of the integers ni.");
     symtab_set_docstring("LCM", "LCM[n1, n2, ...] gives the least common multiple of the integers ni.");
     symtab_set_docstring("PowerMod", "PowerMod[a, b, m] gives a^b mod m.\nPowerMod[a, -1, m] finds the modular inverse of a modulo m.\nPowerMod[a, 1/r, m] finds a modular r-th root of a.");
@@ -137,7 +137,7 @@ void info_init(void) {
     symtab_set_docstring("Coefficient", "Coefficient[expr, form] gives the coefficient of form in expr.\nCoefficient[expr, form, n] gives the coefficient of form^n in expr.");
     symtab_set_docstring("CoefficientList", "CoefficientList[poly, var] gives a list of coefficients of powers of var in poly, starting with power 0.\nCoefficientList[poly, {var1, var2, ...}] gives an array of coefficients of the variables.");
     symtab_set_docstring("PolynomialGCD", "PolynomialGCD[poly1, poly2, ...] gives the greatest common divisor of the polynomials.");
-    symtab_set_docstring("PolynomialLCM", "PolynomialLCM[poly1, poly2, ...] gives the least common multiple of the polynomials.");
+    symtab_set_docstring("PolynomialExtendedGCD", "PolynomialExtendedGCD[poly1, poly2, x] gives the extended GCD of poly1 and poly2 treated as univariate polynomials in x.");
     symtab_set_docstring("PolynomialQuotient", "PolynomialQuotient[p, q, x] gives the quotient of p and q, treated as polynomials in x, with any remainder dropped.");
     symtab_set_docstring("PolynomialRemainder", "PolynomialRemainder[p, q, x] gives the remainder from dividing p by q, treated as polynomials in x.");
     symtab_set_docstring("Collect", "Collect[expr, x] collects together terms involving the same powers of objects matching x.");
