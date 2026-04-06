@@ -24,11 +24,11 @@
 #define MAX_ITERATIONS 4096
 
 /*
- * compare_expr_ptrs:
+ * eval_compare_expr_ptrs:
  * Helper for sorting expression arguments when a head has the Orderless attribute.
  * Uses the canonical expr_compare to ensure a stable, deterministic order.
  */
-static int compare_expr_ptrs(const void* a, const void* b) {
+int eval_compare_expr_ptrs(const void* a, const void* b) {
     Expr* ea = *(Expr**)a;
     Expr* eb = *(Expr**)b;
     return expr_compare(ea, eb);
@@ -42,7 +42,7 @@ static int compare_expr_ptrs(const void* a, const void* b) {
  * of the parent function.
  * Example: f[a, f[b, c], d] -> f[a, b, c, d]
  */
-static void flatten_args(Expr* e, const char* head_name) {
+void eval_flatten_args(Expr* e, const char* head_name) {
     size_t new_count = 0;
     bool needs_flattening = false;
     
@@ -325,12 +325,12 @@ Expr* evaluate_step(Expr* e) {
                 
                 /* Flat: associative flattening */
                 if (attrs & ATTR_FLAT) {
-                    flatten_args(res, head_name);
+                    eval_flatten_args(res, head_name);
                 }
                 
                 /* Orderless: commutative sorting */
                 if (attrs & ATTR_ORDERLESS) {
-                    qsort(res->data.function.args, res->data.function.arg_count, sizeof(Expr*), compare_expr_ptrs);
+                    qsort(res->data.function.args, res->data.function.arg_count, sizeof(Expr*), eval_compare_expr_ptrs);
                 }
 
                 /* 4. Call C-level Built-in Functions */

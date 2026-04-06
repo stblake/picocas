@@ -22,4 +22,7 @@ static inline Expr* eval_and_free(Expr* e) {
 // Attributes built-in
 Expr* builtin_attributes(Expr* res);
 
+void eval_flatten_args(Expr* e, const char* head_name);
+int eval_compare_expr_ptrs(const void* a, const void* b);
+static inline void eval_sort_args(Expr* e) { if (e->type == EXPR_FUNCTION && e->data.function.arg_count > 0) qsort(e->data.function.args, e->data.function.arg_count, sizeof(Expr*), eval_compare_expr_ptrs); }
 #endif // EVAL_H

@@ -1,3 +1,4 @@
+#include "internal.h"
 #include "poly.h"
 #include "expand.h"
 #include "eval.h"
@@ -35,7 +36,7 @@ static void bp_init(BPList* l) {
 static void bp_add(BPList* l, Expr* base, Expr* exp) {
     for (size_t i = 0; i < l->count; i++) {
         if (expr_eq(l->data[i].base, base)) {
-            Expr* new_exp = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(l->data[i].exp), expr_copy(exp)}, 2));
+            Expr* new_exp = internal_plus((Expr*[]){expr_copy(l->data[i].exp), expr_copy(exp)}, 2);
             expr_free(l->data[i].exp);
             l->data[i].exp = new_exp;
             return;
@@ -77,7 +78,7 @@ static void decompose_to_bp(Expr* e, BPList* l) {
                 strcmp(exp->data.function.head->data.symbol, "Plus") == 0) {
                 for (size_t i = 0; i < exp->data.function.arg_count; i++) {
                     Expr* sub_exp = exp->data.function.args[i];
-                    Expr* sub_p = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_copy(sub_exp)}, 2));
+                    Expr* sub_p = internal_power((Expr*[]){expr_copy(base), expr_copy(sub_exp)}, 2);
                     decompose_to_bp(sub_p, l);
                     expr_free(sub_p);
                 }
@@ -99,14 +100,14 @@ static Expr* rebuild_from_bp(BPList* l) {
             int64_t exp = l->data[i].exp->data.integer;
             if (exp == 0) continue;
             if (exp == 1) args[count++] = expr_copy(l->data[i].base);
-            else args[count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(l->data[i].base), expr_copy(l->data[i].exp)}, 2));
+            else args[count++] = internal_power((Expr*[]){expr_copy(l->data[i].base), expr_copy(l->data[i].exp)}, 2);
         } else {
-            args[count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(l->data[i].base), expr_copy(l->data[i].exp)}, 2));
+            args[count++] = internal_power((Expr*[]){expr_copy(l->data[i].base), expr_copy(l->data[i].exp)}, 2);
         }
     }
     if (count == 0) { free(args); return expr_new_integer(1); }
     if (count == 1) { Expr* res = args[0]; free(args); return res; }
-    Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, count));
+    Expr* res = internal_times(args, count);
     free(args);
     return res;
 }
@@ -194,13 +195,13 @@ Expr* builtin_coefficient(Expr* res) {
                         if (exp->type == EXPR_INTEGER && exp->data.integer == 1) {
                             rem_args[rem_count++] = expr_copy(base);
                         } else {
-                            rem_args[rem_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_copy(exp)}, 2));
+                            rem_args[rem_count++] = internal_power((Expr*[]){expr_copy(base), expr_copy(exp)}, 2);
                         }
                     }
                 }
                 if (rem_count == 0) coeffs[c_count++] = expr_new_integer(1);
                 else if (rem_count == 1) coeffs[c_count++] = rem_args[0];
-                else coeffs[c_count++] = eval_and_free(expr_new_function(expr_new_symbol("Times"), rem_args, rem_count));
+                else coeffs[c_count++] = internal_times(rem_args, rem_count);
                 free(rem_args);
             }
         }
@@ -213,7 +214,7 @@ Expr* builtin_coefficient(Expr* res) {
     Expr* final_res;
     if (c_count == 0) final_res = expr_new_integer(0);
     else if (c_count == 1) final_res = coeffs[0];
-    else final_res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), coeffs, c_count));
+    else final_res = internal_plus(coeffs, c_count);
 
     free(coeffs);
     return final_res;
@@ -450,7 +451,7 @@ Expr* get_coeff(Expr* e, Expr* var, int d) {
 Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     if (var_count == 0) {
         if (is_zero_poly(B)) return NULL;
-        return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(A), eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(B), expr_new_integer(-1)}, 2))}, 2));
+        return internal_times((Expr*[]){expr_copy(A), internal_power((Expr*[]){expr_copy(B), expr_new_integer(-1)}, 2)}, 2);
     }
     
     Expr* x = vars[var_count - 1];
@@ -482,17 +483,17 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
             expr_free(lcR); break; 
         }
         
-        Expr* x_pow = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(d)}, 2));
-        Expr* term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){q_coeff, x_pow}, 2));
+        Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
+        Expr* term = internal_times((Expr*[]){q_coeff, x_pow}, 2);
         
-        Expr* new_Q = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(Q), expr_copy(term)}, 2));
+        Expr* new_Q = internal_plus((Expr*[]){expr_copy(Q), expr_copy(term)}, 2);
         expr_free(Q);
         Q = new_Q;
         
-        Expr* term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){term, expr_copy(expandedB)}, 2));
-        Expr* neg_term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), term_B}, 2));
-        Expr* evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(R), neg_term_B}, 2));
-        evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){evaluated_plus}, 1));
+        Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
+        Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
+        Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
+        evaluated_plus = internal_cancel((Expr*[]){evaluated_plus}, 1);
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
         
@@ -526,11 +527,11 @@ static Expr* pseudo_rem(Expr* A, Expr* B, Expr* x) {
         Expr* lcR = get_coeff(R, x, degR);
         int d = degR - degB;
         
-        Expr* t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(lcB), R}, 2));
-        Expr* x_pow = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(d)}, 2));
-        Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){lcR, x_pow, expr_copy(expandedB)}, 3));
-        Expr* neg_t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), t2}, 2));
-        Expr* diff = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){t1, neg_t2}, 2));
+        Expr* t1 = internal_times((Expr*[]){expr_copy(lcB), R}, 2);
+        Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
+        Expr* t2 = internal_times((Expr*[]){lcR, x_pow, expr_copy(expandedB)}, 3);
+        Expr* neg_t2 = internal_times((Expr*[]){expr_new_integer(-1), t2}, 2);
+        Expr* diff = internal_plus((Expr*[]){t1, neg_t2}, 2);
         
         R = expr_expand(diff);
         expr_free(diff);
@@ -566,20 +567,20 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
         Expr* lcR = get_coeff(R, x, degR);
         int d = degR - degB;
 
-        Expr* lcB_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2));
-        Expr* q_coeff = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){lcR, lcB_inv}, 2));
+        Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
+        Expr* q_coeff = internal_times((Expr*[]){lcR, lcB_inv}, 2);
         
-        Expr* x_pow = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(d)}, 2));
-        Expr* term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){q_coeff, x_pow}, 2));
+        Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
+        Expr* term = internal_times((Expr*[]){q_coeff, x_pow}, 2);
 
-        Expr* new_Q = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(Q), expr_copy(term)}, 2));
+        Expr* new_Q = internal_plus((Expr*[]){expr_copy(Q), expr_copy(term)}, 2);
         expr_free(Q);
         Q = new_Q;
 
-        Expr* term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){term, expr_copy(expandedB)}, 2));
-        Expr* neg_term_B = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), term_B}, 2));
-        Expr* evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(R), neg_term_B}, 2));
-        evaluated_plus = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){evaluated_plus}, 1));
+        Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
+        Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
+        Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
+        evaluated_plus = internal_cancel((Expr*[]){evaluated_plus}, 1);
         Expr* new_R = expr_expand(evaluated_plus);
         expr_free(evaluated_plus);
 
@@ -701,14 +702,14 @@ Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     // Normalize U to have positive leading coefficient
     Expr* lc = get_coeff(U, x, get_degree_poly(U, x));
     if (is_negative(lc)) {
-        Expr* negU = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(U)}, 2));
+        Expr* negU = internal_times((Expr*[]){expr_new_integer(-1), expr_copy(U)}, 2);
         expr_free(U);
         U = expr_expand(negU);
         expr_free(negU);
     }
     expr_free(lc);
     
-    Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(contGCD), expr_copy(U)}, 2));
+    Expr* res = internal_times((Expr*[]){expr_copy(contGCD), expr_copy(U)}, 2);
     expr_free(contGCD); expr_free(U);
     Expr* expanded_res = expr_expand(res);
     expr_free(res);
@@ -731,7 +732,7 @@ Expr* builtin_polynomialgcd(Expr* res) {
         for (size_t j = 0; j < bps[i].count; j++) {
             if (bps[i].data[j].exp->type == EXPR_INTEGER && bps[i].data[j].exp->data.integer == 1) {
                 if (is_number(bps[i].data[j].base)) {
-                    Expr* next = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num_i, expr_copy(bps[i].data[j].base)}, 2));
+                    Expr* next = internal_times((Expr*[]){num_i, expr_copy(bps[i].data[j].base)}, 2);
                     num_i = next;
                     bps[i].data[j].exp->data.integer = 0;
                 }
@@ -775,7 +776,7 @@ Expr* builtin_polynomialgcd(Expr* res) {
             if (min_exp == 1) {
                 common_args[common_count++] = expr_copy(base);
             } else {
-                common_args[common_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_new_integer(min_exp)}, 2));
+                common_args[common_count++] = internal_power((Expr*[]){expr_copy(base), expr_new_integer(min_exp)}, 2);
             }
             for (size_t k = 0; k < count; k++) {
                 for (size_t j = 0; j < bps[k].count; j++) {
@@ -833,7 +834,7 @@ Expr* builtin_polynomialgcd(Expr* res) {
     
     Expr* result;
     if (idx == 1) result = final_args[0];
-    else result = eval_and_free(expr_new_function(expr_new_symbol("Times"), final_args, idx));
+    else result = internal_times(final_args, idx);
     
     free(common_args); 
     for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
@@ -867,7 +868,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
         for (size_t j = 0; j < bps[i].count; j++) {
             if (bps[i].data[j].exp->type == EXPR_INTEGER && bps[i].data[j].exp->data.integer == 1) {
                 if (is_number(bps[i].data[j].base)) {
-                    Expr* next = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num_i, expr_copy(bps[i].data[j].base)}, 2));
+                    Expr* next = internal_times((Expr*[]){num_i, expr_copy(bps[i].data[j].base)}, 2);
                     num_i = next;
                     bps[i].data[j].exp->data.integer = 0;
                 }
@@ -913,7 +914,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
             if (min_exp == 1) {
                 common_args[common_count++] = expr_copy(base);
             } else {
-                common_args[common_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_new_integer(min_exp)}, 2));
+                common_args[common_count++] = internal_power((Expr*[]){expr_copy(base), expr_new_integer(min_exp)}, 2);
             }
             for (size_t k = 0; k < count; k++) {
                 for (size_t j = 0; j < bps[k].count; j++) {
@@ -963,9 +964,9 @@ Expr* builtin_polynomiallcm(Expr* res) {
         if (max_exp < 0) {
             if (common_count == common_cap) { common_cap *= 2; common_args = realloc(common_args, sizeof(Expr*) * common_cap); }
             if (max_exp == -1) {
-                common_args[common_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_new_integer(-1)}, 2));
+                common_args[common_count++] = internal_power((Expr*[]){expr_copy(base), expr_new_integer(-1)}, 2);
             } else {
-                common_args[common_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_new_integer(max_exp)}, 2));
+                common_args[common_count++] = internal_power((Expr*[]){expr_copy(base), expr_new_integer(max_exp)}, 2);
             }
         }
         
@@ -1001,7 +1002,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
         Expr* cur_gcd = poly_gcd_internal(cur_lcm, rems[i], vars, v_count);
         Expr* next_lcm;
         if (cur_gcd->type == EXPR_INTEGER && cur_gcd->data.integer == 1) {
-            next_lcm = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(cur_lcm), expr_copy(rems[i])}, 2));
+            next_lcm = internal_times((Expr*[]){expr_copy(cur_lcm), expr_copy(rems[i])}, 2);
         } else {
             Expr* Q1 = exact_poly_div(cur_lcm, cur_gcd, vars, v_count);
             Expr* Q2 = exact_poly_div(rems[i], cur_gcd, vars, v_count);
@@ -1012,10 +1013,10 @@ Expr* builtin_polynomiallcm(Expr* res) {
             int c2 = (Q2->type == EXPR_FUNCTION && Q2->data.function.head->type == EXPR_SYMBOL && strcmp(Q2->data.function.head->data.symbol, "Plus") == 0) ? Q2->data.function.arg_count : 1;
             
             if (c1 <= c2) {
-                next_lcm = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){Q1, expr_copy(rems[i])}, 2));
+                next_lcm = internal_times((Expr*[]){Q1, expr_copy(rems[i])}, 2);
                 expr_free(Q2);
             } else {
-                next_lcm = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(cur_lcm), Q2}, 2));
+                next_lcm = internal_times((Expr*[]){expr_copy(cur_lcm), Q2}, 2);
                 expr_free(Q1);
             }
         }
@@ -1048,7 +1049,7 @@ Expr* builtin_polynomiallcm(Expr* res) {
     
     Expr* result;
     if (idx == 1) result = final_args[0];
-    else result = eval_and_free(expr_new_function(expr_new_symbol("Times"), final_args, idx));
+    else result = internal_times(final_args, idx);
     
     free(common_args); 
     for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
@@ -1190,7 +1191,7 @@ static Expr* collect_internal(Expr* expr, Expr** vars, size_t num_vars, size_t v
         } else {
             Expr** c_args = malloc(sizeof(Expr*) * groups[i].coeff_count);
             for (size_t j = 0; j < groups[i].coeff_count; j++) c_args[j] = expr_copy(groups[i].coeffs[j]);
-            coeff_sum = eval_and_free(expr_new_function(expr_new_symbol("Plus"), c_args, groups[i].coeff_count));
+            coeff_sum = internal_plus(c_args, groups[i].coeff_count);
             free(c_args);
         }
 
@@ -1201,8 +1202,8 @@ static Expr* collect_internal(Expr* expr, Expr** vars, size_t num_vars, size_t v
         if (!groups[i].base || (groups[i].exp->type == EXPR_INTEGER && groups[i].exp->data.integer == 0)) {
             term = collected_coeff;
         } else {
-            Expr* power = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(groups[i].base), expr_copy(groups[i].exp)}, 2));
-            term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){collected_coeff, power}, 2));
+            Expr* power = internal_power((Expr*[]){expr_copy(groups[i].base), expr_copy(groups[i].exp)}, 2);
+            term = internal_times((Expr*[]){collected_coeff, power}, 2);
         }
 
         final_terms[final_count++] = term;
@@ -1222,7 +1223,7 @@ static Expr* collect_internal(Expr* expr, Expr** vars, size_t num_vars, size_t v
     } else if (final_count == 1) {
         result = final_terms[0];
     } else {
-        result = eval_and_free(expr_new_function(expr_new_symbol("Plus"), final_terms, final_count));
+        result = internal_plus(final_terms, final_count);
     }
 
     free(final_terms);
@@ -1323,7 +1324,7 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
     }
 
     if (d > 1) {
-        Expr* H = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(d)}, 2));
+        Expr* H = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
         
         Expr** g_args = malloc(sizeof(Expr*) * (n/d + 1));
         int g_count = 0;
@@ -1333,11 +1334,11 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
                 if (i == 0) {
                     g_args[g_count++] = c;
                 } else if (i == d) {
-                    Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c, expr_copy(x)}, 2));
+                    Expr* t = internal_times((Expr*[]){c, expr_copy(x)}, 2);
                     g_args[g_count++] = t;
                 } else {
-                    Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(i/d)}, 2));
-                    Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c, xp}, 2));
+                    Expr* xp = internal_power((Expr*[]){expr_copy(x), expr_new_integer(i/d)}, 2);
+                    Expr* t = internal_times((Expr*[]){c, xp}, 2);
                     g_args[g_count++] = t;
                 }
             } else {
@@ -1347,7 +1348,7 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
         Expr* g;
         if (g_count == 0) g = expr_new_integer(0);
         else if (g_count == 1) g = g_args[0];
-        else g = eval_and_free(expr_new_function(expr_new_symbol("Plus"), g_args, g_count));
+        else g = internal_plus(g_args, g_count);
         free(g_args);
 
         expr_free(expanded);
@@ -1376,11 +1377,11 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
         if (n % s != 0) continue;
         int r = n / s;
         
-        Expr* H = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(s)}, 2));
+        Expr* H = internal_power((Expr*[]){expr_copy(x), expr_new_integer(s)}, 2);
         
         bool valid = true;
         for (int k = 1; k < s; k++) {
-            Expr* temp_E = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(H), expr_new_integer(r)}, 2));
+            Expr* temp_E = internal_power((Expr*[]){expr_copy(H), expr_new_integer(r)}, 2);
             Expr* E = expr_expand(temp_E);
             expr_free(temp_E);
             Expr* C = get_coeff(E, x, n - k);
@@ -1388,11 +1389,11 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
             
             Expr* a_nk = get_coeff(expanded, x, n - k);
             
-            Expr* temp_num = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){a_nk, eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(a_n), C}, 3))}, 2));
+            Expr* temp_num = internal_plus((Expr*[]){a_nk, internal_times((Expr*[]){expr_new_integer(-1), expr_copy(a_n), C}, 3)}, 2);
             Expr* num = expr_expand(temp_num);
             expr_free(temp_num);
             
-            Expr* temp_den = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(r), expr_copy(a_n)}, 2));
+            Expr* temp_den = internal_times((Expr*[]){expr_new_integer(r), expr_copy(a_n)}, 2);
             Expr* den = expr_expand(temp_den);
             expr_free(temp_den);
             
@@ -1423,12 +1424,12 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
             
             Expr* term;
             if (s - k == 1) {
-                term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c_sk, expr_copy(x)}, 2));
+                term = internal_times((Expr*[]){c_sk, expr_copy(x)}, 2);
             } else {
-                Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(s - k)}, 2));
-                term = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){c_sk, xp}, 2));
+                Expr* xp = internal_power((Expr*[]){expr_copy(x), expr_new_integer(s - k)}, 2);
+                term = internal_times((Expr*[]){c_sk, xp}, 2);
             }
-            Expr* temp_H = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){H, term}, 2));
+            Expr* temp_H = internal_plus((Expr*[]){H, term}, 2);
             Expr* next_H = expr_expand(temp_H);
             expr_free(temp_H);
             H = next_H;
@@ -1461,10 +1462,10 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
                         if (i == 0) {
                             g_args[actual_g_count++] = expr_copy(g_terms[i]);
                         } else if (i == 1) {
-                            g_args[actual_g_count++] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(g_terms[i]), expr_copy(x)}, 2));
+                            g_args[actual_g_count++] = internal_times((Expr*[]){expr_copy(g_terms[i]), expr_copy(x)}, 2);
                         } else {
-                            Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(x), expr_new_integer(i)}, 2));
-                            g_args[actual_g_count++] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(g_terms[i]), xp}, 2));
+                            Expr* xp = internal_power((Expr*[]){expr_copy(x), expr_new_integer(i)}, 2);
+                            g_args[actual_g_count++] = internal_times((Expr*[]){expr_copy(g_terms[i]), xp}, 2);
                         }
                     }
                     expr_free(g_terms[i]);
@@ -1474,7 +1475,7 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
                 Expr* g;
                 if (actual_g_count == 0) g = expr_new_integer(0);
                 else if (actual_g_count == 1) g = g_args[0];
-                else g = eval_and_free(expr_new_function(expr_new_symbol("Plus"), g_args, actual_g_count));
+                else g = internal_plus(g_args, actual_g_count);
                 free(g_args);
                 
                 Expr* Lg = decompose_recursive(g, x);
@@ -1515,7 +1516,7 @@ Expr* builtin_decompose(Expr* res) {
     Expr* poly = res->data.function.args[0];
     Expr* x = res->data.function.args[1];
     
-    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(poly), expr_copy(x)}, 2));
+    Expr* pq = internal_polynomialq((Expr*[]){expr_copy(poly), expr_copy(x)}, 2);
     bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
     expr_free(pq);
     
@@ -1532,7 +1533,7 @@ static Expr* horner_form_rec(Expr* expr, Expr** vars, size_t num_vars) {
     
     Expr* expanded = expr_expand(expr);
     
-    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(expanded), expr_copy(v)}, 2));
+    Expr* pq = internal_polynomialq((Expr*[]){expr_copy(expanded), expr_copy(v)}, 2);
     bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
     expr_free(pq);
     
@@ -1575,13 +1576,13 @@ static Expr* horner_form_rec(Expr* expr, Expr** vars, size_t num_vars) {
             expr_free(H);
             H = c_i;
         } else {
-            Expr* t = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(v), H}, 2));
+            Expr* t = internal_times((Expr*[]){expr_copy(v), H}, 2);
             bool c_zero = is_zero_poly(c_i);
             if (c_zero) {
                 expr_free(c_i);
                 H = t;
             } else {
-                H = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){c_i, t}, 2));
+                H = internal_plus((Expr*[]){c_i, t}, 2);
             }
         }
     }
@@ -1615,11 +1616,11 @@ Expr* builtin_hornerform(Expr* res) {
                         if (exp->data.integer == -1) {
                             d_args[d_count++] = expr_copy(arg->data.function.args[0]);
                         } else {
-                            d_args[d_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(arg->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2));
+                            d_args[d_count++] = internal_power((Expr*[]){expr_copy(arg->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2);
                         }
                     } else { 
                         Expr* new_rat = eval_and_free(expr_new_function(expr_new_symbol("Rational"), (Expr*[]){expr_new_integer(-exp->data.function.args[0]->data.integer), expr_copy(exp->data.function.args[1])}, 2));
-                        d_args[d_count++] = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(arg->data.function.args[0]), new_rat}, 2));
+                        d_args[d_count++] = internal_power((Expr*[]){expr_copy(arg->data.function.args[0]), new_rat}, 2);
                     }
                     continue;
                 }
@@ -1630,11 +1631,11 @@ Expr* builtin_hornerform(Expr* res) {
         
         if (n_count == 0) num = expr_new_integer(1);
         else if (n_count == 1) num = n_args[0];
-        else num = eval_and_free(expr_new_function(expr_new_symbol("Times"), n_args, n_count));
+        else num = internal_times(n_args, n_count);
         
         if (d_count == 0) den = expr_new_integer(1);
         else if (d_count == 1) den = d_args[0];
-        else den = eval_and_free(expr_new_function(expr_new_symbol("Times"), d_args, d_count));
+        else den = internal_times(d_args, d_count);
         
         free(n_args); free(d_args);
     } else if (expr->type == EXPR_FUNCTION && expr->data.function.head->type == EXPR_SYMBOL && strcmp(expr->data.function.head->data.symbol, "Power") == 0 && expr->data.function.arg_count == 2) {
@@ -1644,7 +1645,7 @@ Expr* builtin_hornerform(Expr* res) {
             if (exp->data.integer == -1) {
                 den = expr_copy(expr->data.function.args[0]);
             } else {
-                den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(expr->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2));
+                den = internal_power((Expr*[]){expr_copy(expr->data.function.args[0]), expr_new_integer(-exp->data.integer)}, 2);
             }
         } else {
             num = expr_copy(expr);
@@ -1719,8 +1720,8 @@ Expr* builtin_hornerform(Expr* res) {
         result = h_num;
         expr_free(h_den);
     } else {
-        Expr* inv_den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){h_den, expr_new_integer(-1)}, 2));
-        result = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){h_num, inv_den}, 2));
+        Expr* inv_den = internal_power((Expr*[]){h_den, expr_new_integer(-1)}, 2);
+        result = internal_times((Expr*[]){h_num, inv_den}, 2);
     }
     
     if (vars1_expr) expr_free(vars1_expr);
@@ -1739,12 +1740,12 @@ static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
             for (size_t i = 0; i < count; i++) {
                 args[i] = resultant_internal(P->data.function.args[i], Q, var);
             }
-            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, count));
+            Expr* res = internal_times(args, count);
             free(args);
             return res;
         } else if (strcmp(P->data.function.head->data.symbol, "Power") == 0 && P->data.function.arg_count == 2) {
             Expr* r = resultant_internal(P->data.function.args[0], Q, var);
-            return eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){r, expr_copy(P->data.function.args[1])}, 2));
+            return internal_power((Expr*[]){r, expr_copy(P->data.function.args[1])}, 2);
         }
     }
     
@@ -1755,12 +1756,12 @@ static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
             for (size_t i = 0; i < count; i++) {
                 args[i] = resultant_internal(P, Q->data.function.args[i], var);
             }
-            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, count));
+            Expr* res = internal_times(args, count);
             free(args);
             return res;
         } else if (strcmp(Q->data.function.head->data.symbol, "Power") == 0 && Q->data.function.arg_count == 2) {
             Expr* r = resultant_internal(P, Q->data.function.args[0], var);
-            return eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){r, expr_copy(Q->data.function.args[1])}, 2));
+            return internal_power((Expr*[]){r, expr_copy(Q->data.function.args[1])}, 2);
         }
     }
     
@@ -1774,12 +1775,12 @@ static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
         return expr_new_integer(1);
     }
     if (n == 0) {
-        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(exp_P), expr_new_integer(m)}, 2));
+        Expr* r = internal_power((Expr*[]){expr_copy(exp_P), expr_new_integer(m)}, 2);
         expr_free(exp_P); expr_free(exp_Q);
         return r;
     }
     if (m == 0) {
-        Expr* r = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(exp_Q), expr_new_integer(n)}, 2));
+        Expr* r = internal_power((Expr*[]){expr_copy(exp_Q), expr_new_integer(n)}, 2);
         expr_free(exp_P); expr_free(exp_Q);
         return r;
     }
@@ -1838,11 +1839,11 @@ Expr* builtin_resultant(Expr* res) {
     Expr* p2 = res->data.function.args[1];
     Expr* var = res->data.function.args[2];
     
-    Expr* pq1 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(p1), expr_copy(var)}, 2));
+    Expr* pq1 = internal_polynomialq((Expr*[]){expr_copy(p1), expr_copy(var)}, 2);
     bool is_poly1 = (pq1->type == EXPR_SYMBOL && strcmp(pq1->data.symbol, "True") == 0);
     expr_free(pq1);
     
-    Expr* pq2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(p2), expr_copy(var)}, 2));
+    Expr* pq2 = internal_polynomialq((Expr*[]){expr_copy(p2), expr_copy(var)}, 2);
     bool is_poly2 = (pq2->type == EXPR_SYMBOL && strcmp(pq2->data.symbol, "True") == 0);
     expr_free(pq2);
     
@@ -1861,15 +1862,15 @@ static Expr* poly_derivative(Expr* exp_p, Expr* var) {
     for (int i = 1; i <= n; i++) {
         Expr* c = get_coeff(exp_p, var, i);
         if (!is_zero_poly(c)) {
-            Expr* t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(i), c}, 2));
+            Expr* t1 = internal_times((Expr*[]){expr_new_integer(i), c}, 2);
             if (i == 1) {
                 args[count++] = t1;
             } else if (i == 2) {
-                Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){t1, expr_copy(var)}, 2));
+                Expr* t2 = internal_times((Expr*[]){t1, expr_copy(var)}, 2);
                 args[count++] = t2;
             } else {
-                Expr* xp = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(var), expr_new_integer(i-1)}, 2));
-                Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){t1, xp}, 2));
+                Expr* xp = internal_power((Expr*[]){expr_copy(var), expr_new_integer(i-1)}, 2);
+                Expr* t2 = internal_times((Expr*[]){t1, xp}, 2);
                 args[count++] = t2;
             }
         } else {
@@ -1884,7 +1885,7 @@ static Expr* poly_derivative(Expr* exp_p, Expr* var) {
         free(args);
         return res;
     } else {
-        Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), args, count));
+        Expr* res = internal_plus(args, count);
         free(args);
         return res;
     }
@@ -1896,7 +1897,7 @@ Expr* builtin_discriminant(Expr* res) {
     Expr* poly = res->data.function.args[0];
     Expr* var = res->data.function.args[1];
     
-    Expr* pq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), (Expr*[]){expr_copy(poly), expr_copy(var)}, 2));
+    Expr* pq = internal_polynomialq((Expr*[]){expr_copy(poly), expr_copy(var)}, 2);
     bool is_poly = (pq->type == EXPR_SYMBOL && strcmp(pq->data.symbol, "True") == 0);
     expr_free(pq);
     
@@ -1926,10 +1927,10 @@ Expr* builtin_discriminant(Expr* res) {
     int64_t sign_pow = (int64_t)n * (n - 1) / 2;
     int64_t sign = (sign_pow % 2 != 0) ? -1 : 1;
     
-    Expr* num = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(sign), res_val}, 2));
-    Expr* den = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){a_n, expr_new_integer(-1)}, 2));
+    Expr* num = internal_times((Expr*[]){expr_new_integer(sign), res_val}, 2);
+    Expr* den = internal_power((Expr*[]){a_n, expr_new_integer(-1)}, 2);
     
-    Expr* final_res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num, den}, 2));
+    Expr* final_res = internal_times((Expr*[]){num, den}, 2);
     Expr* ret = expr_expand(final_res);
     expr_free(final_res);
     
@@ -2006,7 +2007,7 @@ static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
                     Expr** t_args = malloc(sizeof(Expr*) * term->data.function.arg_count);
                     t_args[0] = expr_new_integer(c);
                     for(size_t j=1; j<term->data.function.arg_count; j++) t_args[j] = expr_copy(term->data.function.args[j]);
-                    args[i] = eval_and_free(expr_new_function(expr_new_symbol("Times"), t_args, term->data.function.arg_count));
+                    args[i] = internal_times(t_args, term->data.function.arg_count);
                     free(t_args);
                 } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Complex") == 0) {
                     int64_t r = term->data.function.args[0]->data.integer % m_val;
@@ -2018,10 +2019,10 @@ static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
                     int64_t c = 1 % m_val;
                     if (c < 0) c += m_val;
                     if (c == 1) args[i] = expr_copy(term);
-                    else args[i] = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(c), expr_copy(term)}, 2));
+                    else args[i] = internal_times((Expr*[]){expr_new_integer(c), expr_copy(term)}, 2);
                 }
             }
-            Expr* res = eval_and_free(expr_new_function(expr_new_symbol("Plus"), args, expanded->data.function.arg_count));
+            Expr* res = internal_plus(args, expanded->data.function.arg_count);
             free(args);
             expr_free(expanded);
             return res;
@@ -2038,7 +2039,7 @@ static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
                 Expr** t_args = malloc(sizeof(Expr*) * term->data.function.arg_count);
                 t_args[0] = expr_new_integer(c);
                 for(size_t j=1; j<term->data.function.arg_count; j++) t_args[j] = expr_copy(term->data.function.args[j]);
-                res = eval_and_free(expr_new_function(expr_new_symbol("Times"), t_args, term->data.function.arg_count));
+                res = internal_times(t_args, term->data.function.arg_count);
                 free(t_args);
             } else if (term->type == EXPR_FUNCTION && strcmp(term->data.function.head->data.symbol, "Complex") == 0) {
                 int64_t r = term->data.function.args[0]->data.integer % m_val;
@@ -2050,7 +2051,7 @@ static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
                 int64_t c = 1 % m_val;
                 if (c < 0) c += m_val;
                 if (c == 1) res = expr_copy(term);
-                else res = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(c), expr_copy(term)}, 2));
+                else res = internal_times((Expr*[]){expr_new_integer(c), expr_copy(term)}, 2);
             }
             expr_free(expanded);
             return res;
@@ -2119,12 +2120,12 @@ static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
                 Expr* term_coeff = get_coeff(term, main_var, term_deg);
                 Expr* q = use_integer_div ? integer_poly_div(term_coeff, lc, temp_vars, v_count - 1) : exact_poly_div(term_coeff, lc, temp_vars, v_count - 1);
                 if (q) {
-                    Expr* x_pow = (term_deg - d == 0) ? expr_new_integer(1) : ((term_deg - d == 1) ? expr_copy(main_var) : eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(main_var), expr_new_integer(term_deg - d)}, 2)));
-                    Expr* mult = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){q, x_pow}, 2));
-                    Expr* sub = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){mult, expr_copy(exp_m)}, 2));
-                    Expr* neg_sub = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), sub}, 2));
+                    Expr* x_pow = (term_deg - d == 0) ? expr_new_integer(1) : ((term_deg - d == 1) ? expr_copy(main_var) : internal_power((Expr*[]){expr_copy(main_var), expr_new_integer(term_deg - d)}, 2));
+                    Expr* mult = internal_times((Expr*[]){q, x_pow}, 2);
+                    Expr* sub = internal_times((Expr*[]){mult, expr_copy(exp_m)}, 2);
+                    Expr* neg_sub = internal_times((Expr*[]){expr_new_integer(-1), sub}, 2);
                     
-                    Expr* t_eval = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(curr_poly), neg_sub}, 2));
+                    Expr* t_eval = internal_plus((Expr*[]){expr_copy(curr_poly), neg_sub}, 2);
                     Expr* next_poly = expr_expand(t_eval);
                     expr_free(t_eval);
                     expr_free(curr_poly);
@@ -2161,7 +2162,7 @@ Expr* builtin_polynomialmod(Expr* res) {
             Expr** args = malloc(sizeof(Expr*) * expr->data.function.arg_count);
             for (size_t i = 0; i < expr->data.function.arg_count; i++) {
                 Expr* ap_args[] = {expr_copy(expr->data.function.args[i]), expr_copy(m)};
-                args[i] = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), ap_args, 2));
+                args[i] = internal_polynomialmod(ap_args, 2);
             }
             Expr* ret = eval_and_free(expr_new_function(expr_copy(expr->data.function.head), args, expr->data.function.arg_count));
             free(args);
@@ -2232,9 +2233,9 @@ Expr* builtin_polynomialextendedgcd(Expr* res) {
     Expr* r0 = expr_expand(A);
     Expr* r1 = expr_expand(B);
     if (mod_p) {
-        Expr* next0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r0, expr_copy(mod_p)}, 2));
+        Expr* next0 = internal_polynomialmod((Expr*[]){r0, expr_copy(mod_p)}, 2);
         r0 = next0;
-        Expr* next1 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r1, expr_copy(mod_p)}, 2));
+        Expr* next1 = internal_polynomialmod((Expr*[]){r1, expr_copy(mod_p)}, 2);
         r1 = next1;
     }
 
@@ -2255,27 +2256,27 @@ Expr* builtin_polynomialextendedgcd(Expr* res) {
         }
 
         // s2 = s0 - q * s1
-        Expr* q_s1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(q), expr_copy(s1)}, 2));
-        Expr* neg_q_s1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), q_s1}, 2));
-        Expr* s2 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(s0), neg_q_s1}, 2));
+        Expr* q_s1 = internal_times((Expr*[]){expr_copy(q), expr_copy(s1)}, 2);
+        Expr* neg_q_s1 = internal_times((Expr*[]){expr_new_integer(-1), q_s1}, 2);
+        Expr* s2 = internal_plus((Expr*[]){expr_copy(s0), neg_q_s1}, 2);
 
         // t2 = t0 - q * t1
-        Expr* q_t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(q), expr_copy(t1)}, 2));
-        Expr* neg_q_t1 = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), q_t1}, 2));
-        Expr* t2 = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(t0), neg_q_t1}, 2));
+        Expr* q_t1 = internal_times((Expr*[]){expr_copy(q), expr_copy(t1)}, 2);
+        Expr* neg_q_t1 = internal_times((Expr*[]){expr_new_integer(-1), q_t1}, 2);
+        Expr* t2 = internal_plus((Expr*[]){expr_copy(t0), neg_q_t1}, 2);
 
-        s2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){s2}, 1));
-        t2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){t2}, 1));
-        r2 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){r2}, 1));
+        s2 = internal_expand((Expr*[]){s2}, 1);
+        t2 = internal_expand((Expr*[]){t2}, 1);
+        r2 = internal_expand((Expr*[]){r2}, 1);
 
         if (!mod_p) {
-            s2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){s2}, 1))}, 1));
-            t2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){t2}, 1))}, 1));
-            r2 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){r2}, 1))}, 1));
+            s2 = internal_cancel((Expr*[]){internal_together((Expr*[]){s2}, 1)}, 1);
+            t2 = internal_cancel((Expr*[]){internal_together((Expr*[]){t2}, 1)}, 1);
+            r2 = internal_cancel((Expr*[]){internal_together((Expr*[]){r2}, 1)}, 1);
         } else {
-            s2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){s2, expr_copy(mod_p)}, 2));
-            t2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){t2, expr_copy(mod_p)}, 2));
-            r2 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){r2, expr_copy(mod_p)}, 2));
+            s2 = internal_polynomialmod((Expr*[]){s2, expr_copy(mod_p)}, 2);
+            t2 = internal_polynomialmod((Expr*[]){t2, expr_copy(mod_p)}, 2);
+            r2 = internal_polynomialmod((Expr*[]){r2, expr_copy(mod_p)}, 2);
         }
 
         expr_free(r0); r0 = r1; r1 = r2;
@@ -2297,25 +2298,25 @@ Expr* builtin_polynomialextendedgcd(Expr* res) {
                 if (lc->type == EXPR_INTEGER && mod_p->type == EXPR_INTEGER) {
                     lc_inv = expr_new_integer(mod_inverse_int_poly(lc->data.integer, mod_p->data.integer));
                 } else {
-                    lc_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2));
-                    lc_inv = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){lc_inv, expr_copy(mod_p)}, 2));
+                    lc_inv = internal_power((Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2);
+                    lc_inv = internal_polynomialmod((Expr*[]){lc_inv, expr_copy(mod_p)}, 2);
                 }
             } else {
-                lc_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2));
+                lc_inv = internal_power((Expr*[]){expr_copy(lc), expr_new_integer(-1)}, 2);
             }
 
-            Expr* nr0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(r0), expr_copy(lc_inv)}, 2))}, 1));
-            Expr* ns0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(s0), expr_copy(lc_inv)}, 2))}, 1));
-            Expr* nt0 = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(t0), expr_copy(lc_inv)}, 2))}, 1));
+            Expr* nr0 = internal_expand((Expr*[]){internal_times((Expr*[]){expr_copy(r0), expr_copy(lc_inv)}, 2)}, 1);
+            Expr* ns0 = internal_expand((Expr*[]){internal_times((Expr*[]){expr_copy(s0), expr_copy(lc_inv)}, 2)}, 1);
+            Expr* nt0 = internal_expand((Expr*[]){internal_times((Expr*[]){expr_copy(t0), expr_copy(lc_inv)}, 2)}, 1);
             
             if (!mod_p) {
-                nr0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){nr0}, 1))}, 1));
-                ns0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){ns0}, 1))}, 1));
-                nt0 = eval_and_free(expr_new_function(expr_new_symbol("Cancel"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){nt0}, 1))}, 1));
+                nr0 = internal_cancel((Expr*[]){internal_together((Expr*[]){nr0}, 1)}, 1);
+                ns0 = internal_cancel((Expr*[]){internal_together((Expr*[]){ns0}, 1)}, 1);
+                nt0 = internal_cancel((Expr*[]){internal_together((Expr*[]){nt0}, 1)}, 1);
             } else {
-                nr0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){nr0, expr_copy(mod_p)}, 2));
-                ns0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){ns0, expr_copy(mod_p)}, 2));
-                nt0 = eval_and_free(expr_new_function(expr_new_symbol("PolynomialMod"), (Expr*[]){nt0, expr_copy(mod_p)}, 2));
+                nr0 = internal_polynomialmod((Expr*[]){nr0, expr_copy(mod_p)}, 2);
+                ns0 = internal_polynomialmod((Expr*[]){ns0, expr_copy(mod_p)}, 2);
+                nt0 = internal_polynomialmod((Expr*[]){nt0, expr_copy(mod_p)}, 2);
             }
 
             expr_free(r0); r0 = nr0;
