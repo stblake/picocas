@@ -263,33 +263,49 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         return success;
     }
 
-    if (expr->type != pattern->type) {
-        return false;
+    bool matched_normally = false;
+    if (expr->type == pattern->type) {
+        switch (expr->type) {
+            case EXPR_INTEGER:
+                matched_normally = (expr->data.integer == pattern->data.integer); break;
+            case EXPR_REAL:
+                matched_normally = (expr->data.real == pattern->data.real); break;
+            case EXPR_SYMBOL:
+                matched_normally = (strcmp(expr->data.symbol, pattern->data.symbol) == 0); break;
+            case EXPR_STRING:
+                matched_normally = (strcmp(expr->data.string, pattern->data.string) == 0); break;
+            case EXPR_FUNCTION: {
+                size_t saved_env_count = env->count;
+                if (match(expr->data.function.head, pattern->data.function.head, env)) {
+                    if (match_args(expr->data.function.args, expr->data.function.arg_count,
+                                   pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count)) {
+                        matched_normally = true;
+                    } else {
+                        env_rollback(env, saved_env_count);
+                    }
+                } else {
+                    env_rollback(env, saved_env_count);
+                }
+                break;
+            }
+        }
     }
 
-    switch (expr->type) {
-        case EXPR_INTEGER:
-            return expr->data.integer == pattern->data.integer;
-        case EXPR_REAL:
-            return expr->data.real == pattern->data.real;
-        case EXPR_SYMBOL:
-            return strcmp(expr->data.symbol, pattern->data.symbol) == 0;
-        case EXPR_STRING:
-            return strcmp(expr->data.string, pattern->data.string) == 0;
-        case EXPR_FUNCTION:
-            if (!match(expr->data.function.head, pattern->data.function.head, env)) {
-                if (pattern->data.function.head->type == EXPR_SYMBOL) {
-                    SymbolDef* def = symtab_get_def(pattern->data.function.head->data.symbol);
-                    if (def && (def->attributes & ATTR_ONEIDENTITY)) {
-                        Expr* args[1] = { expr };
-                        return match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count);
-                    }
-                }
-                return false;
+    if (matched_normally) return true;
+
+    // Try OneIdentity if pattern is a function
+    if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL) {
+        SymbolDef* def = symtab_get_def(pattern->data.function.head->data.symbol);
+        if (def && (def->attributes & ATTR_ONEIDENTITY)) {
+            size_t saved_env_count = env->count;
+            Expr* args[1] = { expr };
+            if (match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count)) {
+                return true;
             }
-            return match_args(expr->data.function.args, expr->data.function.arg_count,
-                              pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count);
+            env_rollback(env, saved_env_count);
+        }
     }
+
     return false;
 }
 
