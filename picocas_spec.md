@@ -1816,6 +1816,13 @@ Out[1]= 25
 - `_h`: Matches expression with head `h`.
 - `p ? test`: `PatternTest[p, test]`.
 - `lhs /; condition`: Conditional matching.
+- `p:def`: `Optional[p, def]`, matches `p`, but if omitted defaults to `def`.
+- `x_.`: `Optional[Pattern[x, _]]`, matches `x_`, but if omitted defaults to globally specified `Default` values.
+
+#### Default Values
+- `Default[f] = val`: Sets the default value for arguments of `f`.
+- Built-in default values include `0` for `Plus` and `1` for `Times` and `Power`.
+- Used automatically by the pattern matcher when `_.` is present in the pattern.
 
 ## 3. Operators and Precedence
 

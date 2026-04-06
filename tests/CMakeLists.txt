@@ -41,6 +41,7 @@ set(COMMON_SRC
     ../src/datetime.c
     ../src/linalg.c
     ../src/load.c
+    ../src/default_helper.c
 )
 
 add_executable(expr_tests

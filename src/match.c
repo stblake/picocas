@@ -4,6 +4,7 @@
 #include "print.h"
 #include "symtab.h"
 #include "attr.h"
+#include "default_helper.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -120,7 +121,7 @@ static bool is_sequence_blank(Expr* e, Expr** head_out, int* min_len) {
     return false;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head);
+static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats);
 
 #include "part.h" // for expr_head
 
@@ -150,7 +151,7 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
                 return false;
             }
             bool res = match_args(expr->data.function.args, expr->data.function.arg_count,
-                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond, inner_pat->data.function.head);
+                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond, inner_pat->data.function.head, inner_pat->data.function.arg_count);
             if (!res) env_rollback(env, saved_env_count);
             return res;
         }
@@ -281,18 +282,18 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
                     SymbolDef* def = symtab_get_def(pattern->data.function.head->data.symbol);
                     if (def && (def->attributes & ATTR_ONEIDENTITY)) {
                         Expr* args[1] = { expr };
-                        return match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head);
+                        return match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count);
                     }
                 }
                 return false;
             }
             return match_args(expr->data.function.args, expr->data.function.arg_count,
-                              pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head);
+                              pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count);
     }
     return false;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head) {
+static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats) {
     if (n_pats == 0) {
         if (n_exprs != 0) return false;
         if (!condition) return true;
@@ -360,10 +361,8 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         Expr* def_val = NULL;
         if (opt_container->data.function.arg_count == 2) {
             def_val = expr_copy(opt_container->data.function.args[1]);
-        } else if (pat_head && pat_head->type == EXPR_SYMBOL) {
-            const char* hn = pat_head->data.symbol;
-            if (strcmp(hn, "Plus") == 0) def_val = expr_new_integer(0);
-            else if (strcmp(hn, "Times") == 0 || strcmp(hn, "Power") == 0) def_val = expr_new_integer(1);
+        } else {
+            def_val = get_default_value(pat_head, total_pats - n_pats + 1, total_pats);
         }
 
         if (def_val) {
@@ -376,7 +375,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             }
             expr_free(def_val);
 
-            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) {
+            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
                 return true;
             }
             env_rollback(env, saved_env_count);
@@ -436,50 +435,47 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                     env_set(env, p_sym->data.symbol, seq_val);
                     expr_free(seq_val);
                 }
-            }
+                }
 
-            if (match_args(exprs + k, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
+                if (match_args(exprs + k, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) return true;
 
-            env_rollback(env, saved_env_count);
-        }
-    } else if (n_exprs > 0) {
-        if (match(exprs[0], opt_pat, env)) {
-            if (match_args(exprs + 1, n_exprs - 1, pats + 1, n_pats - 1, env, condition, pat_head)) return true;
-            env_rollback(env, saved_env_count);
-        }
-    }
+                env_rollback(env, saved_env_count);
+                }
+                } else if (n_exprs > 0) {
+                if (match(exprs[0], opt_pat, env)) {
+                if (match_args(exprs + 1, n_exprs - 1, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) return true;
+                env_rollback(env, saved_env_count);
+                }
+                }
 
-    if (is_optional && !is_shortest) {
-        size_t saved_env_count = env->count;
-        Expr* def_val = NULL;
-        if (opt_container->data.function.arg_count == 2) {
-            def_val = expr_copy(opt_container->data.function.args[1]);
-        } else if (pat_head && pat_head->type == EXPR_SYMBOL) {
-            const char* hn = pat_head->data.symbol;
-            if (strcmp(hn, "Plus") == 0) def_val = expr_new_integer(0);
-            else if (strcmp(hn, "Times") == 0 || strcmp(hn, "Power") == 0) def_val = expr_new_integer(1);
-        }
+                if (is_optional && !is_shortest) {
+                size_t saved_env_count = env->count;
+                Expr* def_val = NULL;
+                if (opt_container->data.function.arg_count == 2) {
+                def_val = expr_copy(opt_container->data.function.args[1]);
+                } else {
+                def_val = get_default_value(pat_head, total_pats - n_pats + 1, total_pats);
+                }
 
-        if (def_val) {
-            Expr* inner_p = opt_pat;
-            Expr* p_sym = NULL;
-            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
+                if (def_val) {
+                Expr* inner_p = opt_pat;
+                Expr* p_sym = NULL;
+                if (is_pattern(opt_pat, &p_sym, &inner_p)) {
                 if (p_sym && p_sym->type == EXPR_SYMBOL) {
                     env_set(env, p_sym->data.symbol, def_val);
                 }
-            }
-            expr_free(def_val);
+                }
+                expr_free(def_val);
 
-            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head)) {
+                if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
                 return true;
-            }
-            env_rollback(env, saved_env_count);
-        }
-    }
+                }
+                env_rollback(env, saved_env_count);
+                }
+                }
 
-    return false;
-    }
-Expr* replace_bindings(Expr* expr, MatchEnv* env) {
+                return false;
+                }Expr* replace_bindings(Expr* expr, MatchEnv* env) {
     if (!expr) return NULL;
     
     if (expr->type == EXPR_SYMBOL) {
