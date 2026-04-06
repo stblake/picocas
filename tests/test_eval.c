@@ -587,25 +587,26 @@ void test_sqrt() {
 }
 
 void test_apply() {
+    symtab_clear_symbol("myApplyFunc");
     // Plus @@ {1, 2, 3} -> 6
     Expr* e1 = parse_expression("Plus @@ {1, 2, 3}");
     Expr* res1 = evaluate(e1);
     ASSERT(res1 && res1->type == EXPR_INTEGER && res1->data.integer == 6);
     expr_free(e1); expr_free(res1);
 
-    // f @@ {a, b} -> f[a, b]
-    Expr* e2 = parse_expression("f @@ {a, b}");
+    // myApplyFunc @@ {a, b} -> myApplyFunc[a, b]
+    Expr* e2 = parse_expression("myApplyFunc @@ {a, b}");
     Expr* res2 = evaluate(e2);
-    ASSERT(res2 && res2->type == EXPR_FUNCTION && strcmp(res2->data.function.head->data.symbol, "f") == 0);
+    ASSERT(res2 && res2->type == EXPR_FUNCTION && strcmp(res2->data.function.head->data.symbol, "myApplyFunc") == 0);
     ASSERT(res2->data.function.arg_count == 2);
     expr_free(e2); expr_free(res2);
 
-    // f @@@ {{a, b}, {c, d}} -> {f[a, b], f[c, d]}
-    Expr* e3 = parse_expression("f @@@ {{a, b}, {c, d}}");
+    // myApplyFunc @@@ {{a, b}, {c, d}} -> {myApplyFunc[a, b], myApplyFunc[c, d]}
+    Expr* e3 = parse_expression("myApplyFunc @@@ {{a, b}, {c, d}}");
     Expr* res3 = evaluate(e3);
     ASSERT(res3 && res3->type == EXPR_FUNCTION && strcmp(res3->data.function.head->data.symbol, "List") == 0);
     ASSERT(res3->data.function.arg_count == 2);
-    ASSERT(res3->data.function.args[0]->type == EXPR_FUNCTION && strcmp(res3->data.function.args[0]->data.function.head->data.symbol, "f") == 0);
+    ASSERT(res3->data.function.args[0]->type == EXPR_FUNCTION && strcmp(res3->data.function.args[0]->data.function.head->data.symbol, "myApplyFunc") == 0);
     expr_free(e3); expr_free(res3);
 }
 

@@ -132,6 +132,32 @@ static Expr* get_expr_head_borrowed(Expr* e) {
     return NULL;
 }
 
+static bool next_combination(int* comb, int n, int k) {
+    if (k == 0) return false;
+    int i = k - 1;
+    while (i >= 0 && comb[i] == n - k + i) {
+        i--;
+    }
+    if (i < 0) return false;
+    comb[i]++;
+    for (int j = i + 1; j < k; j++) {
+        comb[j] = comb[j - 1] + 1;
+    }
+    return true;
+}
+
+static void extract_subset(Expr** exprs, size_t n_exprs, int* comb, int k, Expr** subset, Expr** remainder) {
+    int c_idx = 0;
+    int r_idx = 0;
+    for (int i = 0; i < (int)n_exprs; i++) {
+        if (c_idx < k && comb[c_idx] == i) {
+            subset[c_idx++] = exprs[i];
+        } else {
+            remainder[r_idx++] = exprs[i];
+        }
+    }
+}
+
 bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
     if (!pattern) return false;
     if (!expr) return false;
@@ -412,86 +438,160 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         is_seq = is_sequence_blank(opt_pat, &b_head, &min_len);
     }
 
+    bool is_orderless = false;
+    bool is_flat = false;
+    if (pat_head && pat_head->type == EXPR_SYMBOL) {
+        SymbolDef* def = symtab_get_def(pat_head->data.symbol);
+        if (def) {
+            if (def->attributes & ATTR_FLAT) is_flat = true;
+            if (def->attributes & ATTR_ORDERLESS) is_orderless = true;
+        }
+    }
+
+    size_t min_k, max_k;
     if (is_seq) {
-        for (size_t k = min_len; k <= n_exprs; k++) {
-            bool type_ok = true;
-            if (b_head) {
-                for (size_t i = 0; i < k; i++) {
-                    Expr* h = get_expr_head_borrowed(exprs[i]);
-                    bool ok = false;
-                    if (h) {
-                        ok = expr_eq(h, b_head);
-                    } else if (b_head->type == EXPR_SYMBOL) {
-                        const char* hn = b_head->data.symbol;
-                        if (exprs[i]->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) ok = true;
-                        else if (exprs[i]->type == EXPR_REAL && strcmp(hn, "Real") == 0) ok = true;
-                        else if (exprs[i]->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) ok = true;
-                        else if (exprs[i]->type == EXPR_STRING && strcmp(hn, "String") == 0) ok = true;
-                    }
-                    if (!ok) {
-                        type_ok = false;
-                        break;
+        min_k = min_len;
+        max_k = n_exprs;
+    } else if (is_flat) {
+        min_k = 1;
+        max_k = n_exprs;
+    } else {
+        min_k = 1;
+        max_k = (n_exprs > 0) ? 1 : 0;
+    }
+
+    for (size_t k = min_k; k <= max_k; k++) {
+        if (k > n_exprs) break;
+        
+        int* comb = NULL;
+        if (k > 0) {
+            comb = malloc(k * sizeof(int));
+            for (int i = 0; i < (int)k; i++) comb[i] = i;
+        }
+
+        do {
+            Expr** subset = NULL;
+            Expr** remainder = NULL;
+            if (k > 0) subset = malloc(k * sizeof(Expr*));
+            if (n_exprs - k > 0) remainder = malloc((n_exprs - k) * sizeof(Expr*));
+            
+            extract_subset(exprs, n_exprs, comb, (int)k, subset, remainder);
+
+            bool matched_this_combo = false;
+            size_t saved_env = env->count;
+
+            if (is_seq) {
+                bool type_ok = true;
+                if (b_head) {
+                    for (size_t i = 0; i < k; i++) {
+                        Expr* h = get_expr_head_borrowed(subset[i]);
+                        bool ok = false;
+                        if (h) {
+                            ok = expr_eq(h, b_head);
+                        } else if (b_head->type == EXPR_SYMBOL) {
+                            const char* hn = b_head->data.symbol;
+                            if (subset[i]->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) ok = true;
+                            else if (subset[i]->type == EXPR_REAL && strcmp(hn, "Real") == 0) ok = true;
+                            else if (subset[i]->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) ok = true;
+                            else if (subset[i]->type == EXPR_STRING && strcmp(hn, "String") == 0) ok = true;
+                        }
+                        if (!ok) {
+                            type_ok = false;
+                            break;
+                        }
                     }
                 }
+
+                if (type_ok) {
+                    if (p_sym) {
+                        Expr* seq_val = expr_new_function(expr_new_symbol("Sequence"), NULL, k);
+                        for (size_t i = 0; i < k; i++) seq_val->data.function.args[i] = expr_copy(subset[i]);
+                        
+                        Expr* existing = env_get(env, p_sym->data.symbol);
+                        if (existing) {
+                            if (expr_eq(seq_val, existing)) {
+                                matched_this_combo = true;
+                            }
+                            expr_free(seq_val);
+                        } else {
+                            env_set(env, p_sym->data.symbol, seq_val);
+                            expr_free(seq_val);
+                            matched_this_combo = true;
+                        }
+                    } else {
+                        matched_this_combo = true;
+                    }
+                }
+
+                if (matched_this_combo) {
+                    if (match_args(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
+                        if (subset) free(subset);
+                        if (remainder) free(remainder);
+                        if (comb) free(comb);
+                        return true;
+                    }
+                }
+            } else {
+                Expr* matched_val = NULL;
+                if (k == 1) {
+                    matched_val = expr_copy(subset[0]);
+                } else if (k > 1) {
+                    matched_val = expr_new_function(expr_copy(pat_head), NULL, k);
+                    for (size_t i = 0; i < k; i++) {
+                        matched_val->data.function.args[i] = expr_copy(subset[i]);
+                    }
+                }
+
+                if (matched_val && match(matched_val, opt_pat, env)) {
+                    if (match_args(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
+                        expr_free(matched_val);
+                        if (subset) free(subset);
+                        if (remainder) free(remainder);
+                        if (comb) free(comb);
+                        return true;
+                    }
+                }
+                if (matched_val) expr_free(matched_val);
             }
-            if (!type_ok) continue;
 
-            if (p_sym) {
-                Expr* seq_val = expr_new_function(expr_new_symbol("Sequence"), NULL, k);
-                for (size_t i = 0; i < k; i++) seq_val->data.function.args[i] = expr_copy(exprs[i]);
+            env_rollback(env, saved_env);
 
-                Expr* existing = env_get(env, p_sym->data.symbol);
-                if (existing) {
-                    if (!expr_eq(seq_val, existing)) {
-                        expr_free(seq_val);
-                        continue;
-                    }
-                    expr_free(seq_val);
-                } else {
-                    env_set(env, p_sym->data.symbol, seq_val);
-                    expr_free(seq_val);
-                }
-                }
+            if (subset) free(subset);
+            if (remainder) free(remainder);
 
-                if (match_args(exprs + k, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) return true;
+        } while (is_orderless && next_combination(comb, n_exprs, (int)k));
+        
+        if (comb) free(comb);
+    }
 
-                env_rollback(env, saved_env_count);
-                }
-                } else if (n_exprs > 0) {
-                if (match(exprs[0], opt_pat, env)) {
-                if (match_args(exprs + 1, n_exprs - 1, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) return true;
-                env_rollback(env, saved_env_count);
-                }
-                }
+    if (is_optional && !is_shortest) {
+        size_t saved_env_count = env->count;
+        Expr* def_val = NULL;
+        if (opt_container->data.function.arg_count == 2) {
+            def_val = expr_copy(opt_container->data.function.args[1]);
+        } else {
+            def_val = get_default_value(pat_head, total_pats - n_pats + 1, total_pats);
+        }
 
-                if (is_optional && !is_shortest) {
-                size_t saved_env_count = env->count;
-                Expr* def_val = NULL;
-                if (opt_container->data.function.arg_count == 2) {
-                def_val = expr_copy(opt_container->data.function.args[1]);
-                } else {
-                def_val = get_default_value(pat_head, total_pats - n_pats + 1, total_pats);
-                }
-
-                if (def_val) {
-                Expr* inner_p = opt_pat;
-                Expr* p_sym = NULL;
-                if (is_pattern(opt_pat, &p_sym, &inner_p)) {
+        if (def_val) {
+            Expr* inner_p = opt_pat;
+            Expr* p_sym = NULL;
+            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
                 if (p_sym && p_sym->type == EXPR_SYMBOL) {
                     env_set(env, p_sym->data.symbol, def_val);
                 }
-                }
-                expr_free(def_val);
+            }
+            expr_free(def_val);
 
-                if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
+            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
                 return true;
-                }
-                env_rollback(env, saved_env_count);
-                }
-                }
+            }
+            env_rollback(env, saved_env_count);
+        }
+    }
 
-                return false;
-                }Expr* replace_bindings(Expr* expr, MatchEnv* env) {
+    return false;
+}Expr* replace_bindings(Expr* expr, MatchEnv* env) {
     if (!expr) return NULL;
     
     if (expr->type == EXPR_SYMBOL) {
