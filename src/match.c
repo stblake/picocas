@@ -389,16 +389,18 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
 
     Expr* p = pats[0];
     
-    // Handle Optional
+    // Handle Optional, Longest, Shortest
     bool is_optional = false;
-    bool is_shortest = false;
+    bool is_shortest = false; // For Optional, default is Longest
+    bool is_longest = false;  // For Sequence/Repeated, default is Shortest
     Expr* opt_pat = p;
     Expr* opt_container = p;
 
     if (p->type == EXPR_FUNCTION && p->data.function.head->type == EXPR_SYMBOL) {
         const char* head = p->data.function.head->data.symbol;
         if (strcmp(head, "Shortest") == 0) {
-            if (p->data.function.arg_count == 1) {
+            is_shortest = true;
+            if (p->data.function.arg_count >= 1) {
                 Expr* inner = p->data.function.args[0];
                 if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
                     strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
@@ -413,11 +415,13 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                 }
             }
         } else if (strcmp(head, "Longest") == 0) {
-            if (p->data.function.arg_count == 1) {
+            is_longest = true;
+            if (p->data.function.arg_count >= 1) {
                 Expr* inner = p->data.function.args[0];
                 if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
                     strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
                     is_optional = true;
+                    is_shortest = false; // Optional defaults to Longest, Longest wrapper enforces it
                     opt_container = inner;
                     if (inner->data.function.arg_count >= 1) {
                         opt_pat = inner->data.function.args[0];
@@ -464,7 +468,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     }
 
     // Attempt to match by consuming exprs
-    size_t saved_env_count = env->count;
+    // size_t saved_env_count = env->count;
     Expr* inner_p = opt_pat;
     Expr* p_sym = NULL;
     int min_len = 0;
@@ -507,14 +511,16 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         max_k = (n_exprs > 0) ? 1 : 0;
     }
 
-    for (size_t k = min_k; k <= max_k; k++) {
-        if (k > n_exprs) break;
-        
-        int* comb = NULL;
-        if (k > 0) {
-            comb = malloc(k * sizeof(int));
-            for (int i = 0; i < (int)k; i++) comb[i] = i;
-        }
+    if (min_k <= max_k) {
+        for (size_t step = 0; step <= max_k - min_k; step++) {
+            size_t k = is_longest ? (max_k - step) : (min_k + step);
+            if (k > n_exprs) continue;
+            
+            int* comb = NULL;
+            if (k > 0) {
+                comb = malloc(k * sizeof(int));
+                for (int i = 0; i < (int)k; i++) comb[i] = i;
+            }
 
         do {
             Expr** subset = NULL;
@@ -618,6 +624,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         } while (is_orderless && next_combination(comb, n_exprs, (int)k));
         
         if (comb) free(comb);
+        }
     }
 
     if (is_optional && !is_shortest) {
@@ -647,7 +654,9 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
     }
 
     return false;
-}Expr* replace_bindings(Expr* expr, MatchEnv* env) {
+}
+
+Expr* replace_bindings(Expr* expr, MatchEnv* env) {
     if (!expr) return NULL;
     
     if (expr->type == EXPR_SYMBOL) {

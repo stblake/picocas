@@ -115,6 +115,12 @@ int main() {
     run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {RepeatedNull[_, 2]} -> x", "{x, x, x, {a, a, a}, x, x}");
     run_test("{{}, {a}, {a,a}, {a,a,a}, {a,b}, {b,b}} /. {RepeatedNull[z_, 3]} -> x", "{x, x, x, x, {a, b}, x}");
 
+    // Longest and Shortest
+    run_test("{a,b,c,d,e,f} /. {x__, y__} :> {y}", "{b, c, d, e, f}"); // Default Shortest behavior
+    run_test("{a,b,c,d,e,f} /. {Longest[x__], y__} :> {y}", "{f}");
+    run_test("{a,b,c,d,e,f} /. {Shortest[x__], y__} :> {x}", "{a}");
+    run_test("{a,b,c,d,e,f} /. {x__, Longest[y__]} :> {x}", "{a}");
+
     printf("All Replace tests passed!\n");
     symtab_clear();
     return 0;

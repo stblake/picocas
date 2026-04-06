@@ -105,6 +105,12 @@ void test_match_extensive_sequences() {
 
     // Sequences in Condition
     ASSERT(test_match_q("f[1, 2]", "f[x__] /; Length[{x}] === 2") == true);
+    
+    // Longest and Shortest constraints (tested via ReplaceAll)
+    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Pattern[x, BlankSequence[]], Pattern[y, BlankSequence[]]], List[x]]] === {a}", "True") == true);
+    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Pattern[x, BlankSequence[]], Longest[Pattern[y, BlankSequence[]]]], List[x]]] === {a}", "True") == true);
+    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Longest[Pattern[x, BlankSequence[]]], Pattern[y, BlankSequence[]]], List[y]]] === {f}", "True") == true);
+    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Shortest[Pattern[x, BlankSequence[]]], Pattern[y, BlankSequence[]]], List[x]]] === {a}", "True") == true);
 }
 
 void test_match_extensive_named_sequences() {
