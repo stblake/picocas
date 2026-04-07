@@ -205,6 +205,7 @@ typedef enum {
     OP_LESSEQUAL,
     OP_GREATEREQUAL,
     OP_SAMEQ,
+    OP_UNSAMEQ,
     OP_APPLY,
     OP_APPLY1,
     OP_RULE,
@@ -245,6 +246,8 @@ static OperatorDef get_operator(const char* pos) {
     
     if (strncmp(pos, "===", 3) == 0) {
         def.type = OP_SAMEQ; def.prec = 290; def.head_name = "SameQ"; def.len = 3;
+    } else if (strncmp(pos, "=!=", 3) == 0) {
+        def.type = OP_UNSAMEQ; def.prec = 290; def.head_name = "UnsameQ"; def.len = 3;
     } else if (strncmp(pos, "@@@", 3) == 0) {
         def.type = OP_APPLY1; def.prec = 620; def.right_assoc = 1; def.head_name = "Apply1"; def.len = 3;
     } else if (strncmp(pos, "//.", 3) == 0) {
@@ -602,6 +605,18 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
             Expr* neg_right = expr_new_function(expr_new_symbol("Times"), args_times, 2);
             Expr* args_plus[2] = { left, neg_right };
             left = expr_new_function(expr_new_symbol("Plus"), args_plus, 2);
+        } else if (op_def.type == OP_DIVIDE) {
+            Expr* minus_one = expr_new_integer(-1);
+            Expr* args_power[2] = { right, minus_one };
+            Expr* inv_right = expr_new_function(expr_new_symbol("Power"), args_power, 2);
+            
+            if (left->type == EXPR_INTEGER && left->data.integer == 1) {
+                expr_free(left);
+                left = inv_right;
+            } else {
+                Expr* args_times[2] = { left, inv_right };
+                left = expr_new_function(expr_new_symbol("Times"), args_times, 2);
+            }
         } else if (op_def.type == OP_APPLY) {
             Expr* args[2] = { left, right };
             left = expr_new_function(expr_new_symbol("Apply"), args, 2);

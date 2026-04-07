@@ -7,6 +7,8 @@ Expr* builtin_replace_part(Expr* res);
 Expr* builtin_replace(Expr* res);
 Expr* builtin_replace_all(Expr* res);
 Expr* builtin_replace_repeated(Expr* res);
+Expr* builtin_cases(Expr* res);
+
 void replace_init(void);
 
 #endif

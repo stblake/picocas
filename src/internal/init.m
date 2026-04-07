@@ -1,1 +1,2 @@
-f[x_] := x^2; g[x_] := x^3;
+Get["src/internal/deriv.m"];
+Get["src/internal/integrals.m"];

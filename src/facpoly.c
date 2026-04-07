@@ -164,6 +164,8 @@ static Expr* factor_square_free_poly(Expr* P, Expr** vars, size_t var_count) {
         Expr* D_div_P_i = exact_poly_div(D, P_i, vars, var_count);
         if (!D_div_P_i) {
             expr_free(C_next_prime);
+            expr_free(C_next);
+            expr_free(P_i);
             break;
         }
         

@@ -106,19 +106,19 @@ Expr* builtin_log(Expr* res) {
         // Exact evaluations for special constants
         if (z->type == EXPR_INTEGER && z->data.integer == 0) {
             Expr* ret = make_minus_infinity(); // Log[0] = -Infinity
-            expr_free(res); return ret;
+            return ret;
         }
         if (z->type == EXPR_INTEGER && z->data.integer == 1) {
             Expr* ret = expr_new_integer(0); // Log[1] = 0
-            expr_free(res); return ret;
+            return ret;
         }
         if (is_infinity(z)) {
             Expr* ret = expr_new_symbol("Infinity"); // Log[Infinity] = Infinity
-            expr_free(res); return ret;
+            return ret;
         }
         if (z->type == EXPR_SYMBOL && strcmp(z->data.symbol, "E") == 0) {
             Expr* ret = expr_new_integer(1); // Log[E] = 1
-            expr_free(res); return ret;
+            return ret;
         }
 
         // Approximate numerical evaluation
@@ -129,7 +129,6 @@ Expr* builtin_log(Expr* res) {
             Expr* ret = NULL;
             if (cimag(c) == 0.0 && creal(c) > 0.0) ret = expr_new_real(creal(s));
             else ret = make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
-            expr_free(res);
             return ret;
         }
     } 
@@ -141,7 +140,7 @@ Expr* builtin_log(Expr* res) {
         // Log[b, b] = 1
         if (expr_eq(b, z)) {
             Expr* ret = expr_new_integer(1);
-            expr_free(res); return ret;
+            return ret;
         }
 
         // Attempt to return exact rational results for integer bases and arguments (e.g. Log[2, 8] = 3)
@@ -157,7 +156,7 @@ Expr* builtin_log(Expr* res) {
                 }
                 if (temp == 1) {
                     Expr* ret = expr_new_integer(p);
-                    expr_free(res); return ret;
+                    return ret;
                 }
             }
         }
@@ -173,13 +172,13 @@ Expr* builtin_log(Expr* res) {
 
         Expr* times_args[2] = { num, inv_den };
         Expr* ret = expr_new_function(expr_new_symbol("Times"), times_args, 2);
-        expr_free(res);
         return ret;
     }
 
     // Remains unevaluated if it doesn't match above rules
     return NULL;
 }
+
 /*
  * builtin_exp:
  * Implements the evaluation logic for the 'Exp' function.
@@ -187,27 +186,27 @@ Expr* builtin_log(Expr* res) {
 Expr* builtin_exp(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* z = res->data.function.args[0];
-    
+
     // Exact evaluations for special constants
     if (z->type == EXPR_INTEGER && z->data.integer == 0) {
         Expr* ret = expr_new_integer(1); // Exp[0] = 1
-        expr_free(res); return ret;
+        return ret;
     }
     if (is_minus_infinity(z)) {
         Expr* ret = expr_new_integer(0); // Exp[-Infinity] = 0
-        expr_free(res); return ret;
+        return ret;
     }
     if (is_infinity(z)) {
         Expr* ret = expr_new_symbol("Infinity"); // Exp[Infinity] = Infinity
-        expr_free(res); return ret;
+        return ret;
     }
-    
+
     // Exact evaluation of Exp[I * q * Pi] using Euler's formula (e^{i x} = Cos[x] + I Sin[x])
     // The argument z may be internally structured as Times[Complex[0, q], Pi]
     if (z->type == EXPR_FUNCTION && strcmp(z->data.function.head->data.symbol, "Times") == 0) {
         bool has_pi = false;
         Expr* im_coeff = NULL;
-        
+
         // Scan the arguments of Times to identify a pure imaginary coefficient and Pi
         for (size_t i = 0; i < z->data.function.arg_count; i++) {
             Expr* arg = z->data.function.args[i];
@@ -223,7 +222,7 @@ Expr* builtin_exp(Expr* res) {
                 }
             }
         }
-        
+
         // If we found Pi and exactly one pure imaginary coefficient (total args = 2)
         if (has_pi && im_coeff && z->data.function.arg_count == 2) {
             int64_t n, d;
@@ -232,28 +231,27 @@ Expr* builtin_exp(Expr* res) {
                 // Construct the angle y = im_coeff * Pi
                 Expr* y_args[2] = { expr_copy(im_coeff), expr_new_symbol("Pi") };
                 Expr* y = expr_new_function(expr_new_symbol("Times"), y_args, 2);
-                
+
                 // Construct Cos[y]
                 Expr* cos_args[1] = { expr_copy(y) };
                 Expr* cos_part = expr_new_function(expr_new_symbol("Cos"), cos_args, 1);
-                
+
                 // Construct I * Sin[y]
                 Expr* sin_args[1] = { y }; // y ownership is transferred here
                 Expr* sin_part = expr_new_function(expr_new_symbol("Sin"), sin_args, 1);
-                
+
                 Expr* i_sym = make_complex(expr_new_integer(0), expr_new_integer(1));
                 Expr* i_sin_args[2] = { i_sym, sin_part };
                 Expr* i_sin_part = expr_new_function(expr_new_symbol("Times"), i_sin_args, 2);
-                
+
                 // Combine into Plus[Cos[y], Times[I, Sin[y]]]
                 Expr* plus_args[2] = { cos_part, i_sin_part };
                 Expr* ret = expr_new_function(expr_new_symbol("Plus"), plus_args, 2);
-                expr_free(res);
                 return ret;
             }
         }
     }
-    
+
     // Approximate numerical evaluation
     double complex c;
     if (get_approx(z, &c)) {
@@ -262,10 +260,9 @@ Expr* builtin_exp(Expr* res) {
         Expr* ret = NULL;
         if (cimag(c) == 0.0) ret = expr_new_real(creal(s));
         else ret = make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
-        expr_free(res);
         return ret;
     }
-    
+
     // Remains unevaluated if it doesn't match above rules
     return NULL;
 }

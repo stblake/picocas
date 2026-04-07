@@ -186,13 +186,23 @@ static bool apply_assignment(Expr* lhs, Expr* rhs, bool is_delayed) {
             Expr* expr_part_assign(Expr* lhs, Expr* rhs); // Forward declare or include part.h
             Expr* assigned = expr_part_assign(lhs, rhs);
             if (assigned) {
+                expr_free(assigned);
                 return true;
             }
             return false;
         } else if (lhs->data.function.head->type == EXPR_SYMBOL) {
             /* Pattern-based assignment (DownValues) */
             /* We use the entire lhs as the pattern, and its head as the key */
-            symtab_add_down_value(lhs->data.function.head->data.symbol, lhs, rhs);
+            const char* symbol_name = lhs->data.function.head->data.symbol;
+            if (strcmp(symbol_name, "Condition") == 0 && lhs->data.function.arg_count == 2) {
+                Expr* actual_lhs = lhs->data.function.args[0];
+                if (actual_lhs->type == EXPR_FUNCTION && actual_lhs->data.function.head->type == EXPR_SYMBOL) {
+                    symbol_name = actual_lhs->data.function.head->data.symbol;
+                } else if (actual_lhs->type == EXPR_SYMBOL) {
+                    symbol_name = actual_lhs->data.symbol;
+                }
+            }
+            symtab_add_down_value(symbol_name, lhs, rhs);
             return true;
         }
     }

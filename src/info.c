@@ -111,6 +111,11 @@ void info_init(void) {
     symtab_set_docstring("Ceiling", "Ceiling[x] gives the smallest integer greater than or equal to x.");
     symtab_set_docstring("Round", "Round[x] rounds x to the nearest integer.");
 
+    // Calculus
+    symtab_set_docstring("D", "D[f, x] gives the partial derivative of f with respect to x.\nD[f, {x, n}] gives the nth partial derivative.\nD[f, x, y, ...] gives the mixed derivative.");
+    symtab_set_docstring("Dt", "Dt[f] gives the total derivative of f.\nDt[f, x] gives the total derivative of f with respect to x.\nDt[f, {x, n}] gives the nth total derivative.");
+    symtab_set_docstring("Derivative", "Derivative[n][f][x] represents the nth derivative of a function f evaluated at x.");
+
     // System / Assignments
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");
     symtab_set_docstring("SetDelayed", "lhs := rhs assigns rhs to lhs, evaluating it only when needed.");
@@ -143,6 +148,7 @@ void info_init(void) {
     symtab_set_docstring("Replace", "Replace[expr, rules] applies rules to the entire expr. Replace[expr, rules, levelspec] applies rules to parts of expr specified by levelspec.");
     symtab_set_docstring("ReplaceAll", "expr /. rules or ReplaceAll[expr, rules] applies rules to transform each subpart of expr.");
     symtab_set_docstring("ReplaceRepeated", "expr //. rules or ReplaceRepeated[expr, rules] repeatedly applies rules until the expression no longer changes.");
+    symtab_set_docstring("Cases", "Cases[{e1, e2, ...}, pattern] gives a list of the ei that match the pattern.\nCases[{e1, ...}, pattern -> rhs] gives a list of the values of rhs corresponding to the ei that match the pattern.\nCases[expr, pattern, levelspec] gives a list of all parts of expr on levels specified by levelspec that match the pattern.\nCases[expr, pattern -> rhs, levelspec] gives the values of rhs that match the pattern.\nCases[expr, pattern, levelspec, n] gives the first n parts in expr that match the pattern.\nCases[pattern] represents an operator form of Cases that can be applied to an expression.");
 
     // Polynomials
     symtab_set_docstring("Expand", "Expand[expr] expands out products and powers in expr.\nExpand[expr, patt] leaves unexpanded any parts of expr that are free of the pattern patt.");

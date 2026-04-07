@@ -70,7 +70,14 @@ Expr* builtin_times(Expr* res) {
         if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL || is_rational(arg, NULL, NULL)) {
             Expr* next = multiply_numbers(num_prod, arg); expr_free(num_prod); num_prod = next;
         } else if (is_complex(arg, NULL, NULL) || (arg->type == EXPR_SYMBOL && strcmp(arg->data.symbol, "I") == 0)) {
-            Expr* c_arg = (arg->type == EXPR_SYMBOL) ? make_complex(expr_new_integer(0), expr_new_integer(1)) : expr_copy(arg);
+            Expr* c_arg;
+            if (arg->type == EXPR_SYMBOL) {
+                Expr* z0 = expr_new_integer(0);
+                Expr* z1 = expr_new_integer(1);
+                c_arg = make_complex(z0, z1);
+            } else {
+                c_arg = expr_copy(arg);
+            }
             if (!complex_val) complex_val = c_arg;
             else {
                 Expr *re1, *im1, *re2, *im2;
@@ -85,7 +92,6 @@ Expr* builtin_times(Expr* res) {
                 }, 2));
                 expr_free(complex_val); expr_free(c_arg);
                 complex_val = make_complex(re, im);
-                expr_free(re); expr_free(im);
             }
         } else {
             Expr* base = arg; Expr* exponent;
@@ -117,7 +123,7 @@ Expr* builtin_times(Expr* res) {
         Expr* nr = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(num_prod), expr_copy(re)}, 2));
         Expr* ni = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(num_prod), expr_copy(im)}, 2));
         expr_free(complex_val); complex_val = make_complex(nr, ni);
-        expr_free(nr); expr_free(ni); expr_free(num_prod); num_prod = expr_new_integer(1);
+        expr_free(num_prod); num_prod = expr_new_integer(1);
     }
 
     size_t final_count = 0;

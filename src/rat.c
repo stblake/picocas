@@ -243,7 +243,8 @@ static Expr* cancel_recursive(Expr* e) {
 
 Expr* builtin_cancel(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
-    return cancel_recursive(res->data.function.args[0]);
+    Expr* ret = cancel_recursive(res->data.function.args[0]);
+    return ret;
 }
 
 static Expr* together_recursive(Expr* e) {
@@ -335,7 +336,8 @@ static Expr* together_recursive(Expr* e) {
 
 Expr* builtin_together(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
-    return together_recursive(res->data.function.args[0]);
+    Expr* ret = together_recursive(res->data.function.args[0]);
+    return ret;
 }
 
 void rat_init(void) {

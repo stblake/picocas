@@ -172,7 +172,8 @@ Expr* builtin_expand(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
     Expr* patt = NULL;
     if (res->data.function.arg_count == 2) patt = res->data.function.args[1];
-    return expr_expand_patt(res->data.function.args[0], patt);
+    Expr* ret = expr_expand_patt(res->data.function.args[0], patt);
+    return ret;
 }
 
 void expand_init(void) {
