@@ -25,12 +25,24 @@ void test_position() {
     assert_eval_eq("Position[x^2+y^2,Power,Heads->False]", "{}", 0);
 }
 
+void test_count() {
+    assert_eval_eq("Count[{a,b,a,a,b,c,b},b]", "3", 0);
+    assert_eval_eq("Count[{a,2,a,a,1,c,b,3,3},_Integer]", "4", 0);
+    assert_eval_eq("Count[{a,b,a,a,b,c,b,a,a},Except[b]]", "6", 0);
+    assert_eval_eq("Count[{{a,a,b},b,{a,b,a}},b,2]", "3", 0);
+    assert_eval_eq("Count[{{a,a,b},b,{a,b,a}},b,{2}]", "2", 0);
+    assert_eval_eq("Count[x^3+1.5x^2+Pi x +7,_?NumberQ,-1]", "4", 0);
+    assert_eval_eq("Count[5,_?NumberQ,-1]", "0", 0);
+    assert_eval_eq("Count[5,_?NumberQ,{0,-1}]", "1", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
     
     TEST(test_cases);
     TEST(test_position);
+    TEST(test_count);
     
     printf("All patterns tests passed!\n");
     symtab_clear();
