@@ -32,7 +32,9 @@ void run_test(const char* input) {
 void test_timing() {
     // Timing should return a list: {time, result}
     // E.g. Timing[Plus[2, 3]] -> {time, 5}
-    Expr* e = evaluate(parse_expression("Timing[2 + 3]"));
+    Expr* p = parse_expression("Timing[2 + 3]");
+    Expr* e = evaluate(p);
+    expr_free(p);
     assert(e->type == EXPR_FUNCTION);
     assert(strcmp(e->data.function.head->data.symbol, "List") == 0);
     assert(e->data.function.arg_count == 2);
@@ -43,7 +45,9 @@ void test_timing() {
 }
 
 void test_repeated_timing() {
-    Expr* e = evaluate(parse_expression("RepeatedTiming[2 + 3]"));
+    Expr* p = parse_expression("RepeatedTiming[2 + 3]");
+    Expr* e = evaluate(p);
+    expr_free(p);
     assert(e->type == EXPR_FUNCTION);
     assert(strcmp(e->data.function.head->data.symbol, "List") == 0);
     assert(e->data.function.arg_count == 2);

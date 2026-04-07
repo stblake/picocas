@@ -126,8 +126,6 @@ void core_init(void) {
     symtab_add_own_value("I", sym_I, val_I);
     expr_free(sym_I);
     expr_free(val_I);
-    expr_free(zero);
-    expr_free(one);
     
     comparisons_init();
     boolean_init();
@@ -630,8 +628,6 @@ Expr* builtin_quotient(Expr* res) {
             Expr* re_part = expr_new_integer((int64_t)result_cplx.re);
             Expr* im_part = expr_new_integer((int64_t)result_cplx.im);
             Expr* result = make_complex(re_part, im_part);
-            expr_free(re_part);
-            expr_free(im_part);
             return result;
         }
     } else { 

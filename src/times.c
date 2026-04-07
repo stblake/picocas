@@ -84,7 +84,8 @@ Expr* builtin_times(Expr* res) {
                     expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_copy(re2), expr_copy(im1)}, 2)
                 }, 2));
                 expr_free(complex_val); expr_free(c_arg);
-                complex_val = make_complex(re, im); expr_free(re); expr_free(im);
+                complex_val = make_complex(re, im);
+                expr_free(re); expr_free(im);
             }
         } else {
             Expr* base = arg; Expr* exponent;

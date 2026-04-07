@@ -98,34 +98,52 @@ static Expr* make_minus_infinity() {
  */
 Expr* builtin_log(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
-    
+
     // Log[z] - Natural logarithm
     if (res->data.function.arg_count == 1) {
         Expr* z = res->data.function.args[0];
-        
+
         // Exact evaluations for special constants
-        if (z->type == EXPR_INTEGER && z->data.integer == 0) return make_minus_infinity(); // Log[0] = -Infinity
-        if (z->type == EXPR_INTEGER && z->data.integer == 1) return expr_new_integer(0); // Log[1] = 0
-        if (is_infinity(z)) return expr_new_symbol("Infinity"); // Log[Infinity] = Infinity
-        if (z->type == EXPR_SYMBOL && strcmp(z->data.symbol, "E") == 0) return expr_new_integer(1); // Log[E] = 1
-        
+        if (z->type == EXPR_INTEGER && z->data.integer == 0) {
+            Expr* ret = make_minus_infinity(); // Log[0] = -Infinity
+            expr_free(res); return ret;
+        }
+        if (z->type == EXPR_INTEGER && z->data.integer == 1) {
+            Expr* ret = expr_new_integer(0); // Log[1] = 0
+            expr_free(res); return ret;
+        }
+        if (is_infinity(z)) {
+            Expr* ret = expr_new_symbol("Infinity"); // Log[Infinity] = Infinity
+            expr_free(res); return ret;
+        }
+        if (z->type == EXPR_SYMBOL && strcmp(z->data.symbol, "E") == 0) {
+            Expr* ret = expr_new_integer(1); // Log[E] = 1
+            expr_free(res); return ret;
+        }
+
         // Approximate numerical evaluation
         double complex c;
         if (get_approx(z, &c)) {
             double complex s = clog(c);
             // Return real result if output is purely real, otherwise return complex
-            if (cimag(c) == 0.0 && creal(c) > 0.0) return expr_new_real(creal(s));
-            return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+            Expr* ret = NULL;
+            if (cimag(c) == 0.0 && creal(c) > 0.0) ret = expr_new_real(creal(s));
+            else ret = make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+            expr_free(res);
+            return ret;
         }
     } 
     // Log[b, z] - Logarithm to base b
     else if (res->data.function.arg_count == 2) {
         Expr* b = res->data.function.args[0];
         Expr* z = res->data.function.args[1];
-        
+
         // Log[b, b] = 1
-        if (expr_eq(b, z)) return expr_new_integer(1);
-        
+        if (expr_eq(b, z)) {
+            Expr* ret = expr_new_integer(1);
+            expr_free(res); return ret;
+        }
+
         // Attempt to return exact rational results for integer bases and arguments (e.g. Log[2, 8] = 3)
         if (b->type == EXPR_INTEGER && z->type == EXPR_INTEGER) {
             int64_t bv = b->data.integer;
@@ -138,28 +156,30 @@ Expr* builtin_log(Expr* res) {
                     p++;
                 }
                 if (temp == 1) {
-                    return expr_new_integer(p);
+                    Expr* ret = expr_new_integer(p);
+                    expr_free(res); return ret;
                 }
             }
         }
-        
+
         // Default rewrite: Log[b, z] -> Log[z] / Log[b]
         Expr* num_args[1] = { expr_copy(z) };
         Expr* den_args[1] = { expr_copy(b) };
         Expr* num = expr_new_function(expr_new_symbol("Log"), num_args, 1);
         Expr* den = expr_new_function(expr_new_symbol("Log"), den_args, 1);
-        
+
         Expr* pow_args[2] = { den, expr_new_integer(-1) };
         Expr* inv_den = expr_new_function(expr_new_symbol("Power"), pow_args, 2);
-        
+
         Expr* times_args[2] = { num, inv_den };
-        return expr_new_function(expr_new_symbol("Times"), times_args, 2);
+        Expr* ret = expr_new_function(expr_new_symbol("Times"), times_args, 2);
+        expr_free(res);
+        return ret;
     }
-    
+
     // Remains unevaluated if it doesn't match above rules
     return NULL;
 }
-
 /*
  * builtin_exp:
  * Implements the evaluation logic for the 'Exp' function.
@@ -169,9 +189,18 @@ Expr* builtin_exp(Expr* res) {
     Expr* z = res->data.function.args[0];
     
     // Exact evaluations for special constants
-    if (z->type == EXPR_INTEGER && z->data.integer == 0) return expr_new_integer(1); // Exp[0] = 1
-    if (is_minus_infinity(z)) return expr_new_integer(0); // Exp[-Infinity] = 0
-    if (is_infinity(z)) return expr_new_symbol("Infinity"); // Exp[Infinity] = Infinity
+    if (z->type == EXPR_INTEGER && z->data.integer == 0) {
+        Expr* ret = expr_new_integer(1); // Exp[0] = 1
+        expr_free(res); return ret;
+    }
+    if (is_minus_infinity(z)) {
+        Expr* ret = expr_new_integer(0); // Exp[-Infinity] = 0
+        expr_free(res); return ret;
+    }
+    if (is_infinity(z)) {
+        Expr* ret = expr_new_symbol("Infinity"); // Exp[Infinity] = Infinity
+        expr_free(res); return ret;
+    }
     
     // Exact evaluation of Exp[I * q * Pi] using Euler's formula (e^{i x} = Cos[x] + I Sin[x])
     // The argument z may be internally structured as Times[Complex[0, q], Pi]
@@ -218,7 +247,9 @@ Expr* builtin_exp(Expr* res) {
                 
                 // Combine into Plus[Cos[y], Times[I, Sin[y]]]
                 Expr* plus_args[2] = { cos_part, i_sin_part };
-                return expr_new_function(expr_new_symbol("Plus"), plus_args, 2);
+                Expr* ret = expr_new_function(expr_new_symbol("Plus"), plus_args, 2);
+                expr_free(res);
+                return ret;
             }
         }
     }
@@ -228,8 +259,11 @@ Expr* builtin_exp(Expr* res) {
     if (get_approx(z, &c)) {
         double complex s = cexp(c);
         // Return real result if output is purely real, otherwise return complex
-        if (cimag(c) == 0.0) return expr_new_real(creal(s));
-        return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+        Expr* ret = NULL;
+        if (cimag(c) == 0.0) ret = expr_new_real(creal(s));
+        else ret = make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+        expr_free(res);
+        return ret;
     }
     
     // Remains unevaluated if it doesn't match above rules

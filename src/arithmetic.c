@@ -160,7 +160,7 @@ bool is_complex(Expr* e, Expr** re, Expr** im) {
 }
 
 Expr* make_complex(Expr* re, Expr* im) {
-    Expr* args[2] = { expr_copy(re), expr_copy(im) };
+    Expr* args[2] = { re, im };
     return expr_new_function(expr_new_symbol("Complex"), args, 2);
 }
 
