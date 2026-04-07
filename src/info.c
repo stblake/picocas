@@ -179,6 +179,16 @@ void info_init(void) {
     symtab_set_docstring("Timing", "Timing[expr] evaluates expr, and returns a list of the time in seconds used, together with the result obtained.");
     symtab_set_docstring("RepeatedTiming", "RepeatedTiming[expr] evaluates expr repeatedly and returns a list of the average time in seconds used, together with the result obtained.\nRepeatedTiming[expr, t] does repeated evaluation for at least t seconds.");
 
+    // Comparisons
+    symtab_set_docstring("SameQ", "lhs === rhs yields True if the expression lhs is identical to rhs, and yields False otherwise.");
+    symtab_set_docstring("UnsameQ", "lhs =!= rhs yields True if the expression lhs is not identical to rhs, and yields False otherwise.");
+    symtab_set_docstring("Equal", "lhs == rhs yields True if lhs and rhs are equal.");
+    symtab_set_docstring("Unequal", "lhs != rhs yields True if lhs and rhs are not equal.");
+    symtab_set_docstring("Less", "x < y yields True if x is strictly less than y.");
+    symtab_set_docstring("Greater", "x > y yields True if x is strictly greater than y.");
+    symtab_set_docstring("LessEqual", "x <= y yields True if x is less than or equal to y.");
+    symtab_set_docstring("GreaterEqual", "x >= y yields True if x is greater than or equal to y.");
+
     // Primes
     symtab_set_docstring("FactorInteger", "FactorInteger[n] gives a list of the prime factors of the integer n, together with their exponents.");
     symtab_set_docstring("EulerPhi", "EulerPhi[n] gives the Euler totient function phi(n).");
