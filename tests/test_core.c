@@ -8,6 +8,23 @@
 #include "print.h"
 #include "parse.h"
 
+void test_numericq(void) {
+    assert_eval_eq("NumericQ[3]", "True", 0);
+    assert_eval_eq("NumericQ[3.14]", "True", 0);
+    assert_eval_eq("NumericQ[Pi]", "True", 0);
+    assert_eval_eq("NumericQ[E]", "True", 0);
+    assert_eval_eq("NumericQ[I]", "True", 0);
+    assert_eval_eq("NumericQ[Infinity]", "True", 0);
+    assert_eval_eq("NumericQ[x]", "False", 0);
+    assert_eval_eq("NumericQ[Sin[Sqrt[2]]]", "True", 0);
+    assert_eval_eq("NumericQ[Sin[x]]", "False", 0);
+    
+    assert_eval_eq("SetAttributes[f, NumericFunction]", "Null", 0);
+    assert_eval_eq("NumericQ[f[Pi, Sin[1+I]]]", "True", 0);
+    assert_eval_eq("NumericQ[f[Pi, x]]", "False", 0);
+    assert_eval_eq("Clear[f]", "Null", 0);
+}
+
 void test_numberq(void) {
     // Test case 1: NumberQ[123] -> True
     Expr* e1 = parse_expression("NumberQ[123]");
@@ -635,6 +652,7 @@ int main(void) {
     core_init();
     
     TEST(test_numberq);
+    TEST(test_numericq);
     TEST(test_atomq);
     TEST(test_integerq);
     TEST(test_evenq_oddq);

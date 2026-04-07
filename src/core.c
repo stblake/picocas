@@ -89,6 +89,7 @@ void core_init(void) {
     symtab_add_builtin("MatchQ", builtin_matchq);
     symtab_add_builtin("CompoundExpression", builtin_compoundexpression);
     symtab_add_builtin("NumberQ", builtin_numberq);
+    symtab_add_builtin("NumericQ", builtin_numericq);
     symtab_add_builtin("IntegerQ", builtin_integerq);
     symtab_add_builtin("EvenQ", builtin_evenq);
     symtab_add_builtin("OddQ", builtin_oddq);
@@ -104,6 +105,7 @@ void core_init(void) {
 
     symtab_get_def("AtomQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("NumberQ")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("NumericQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("IntegerQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("EvenQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("OddQ")->attributes |= ATTR_PROTECTED;
@@ -440,6 +442,48 @@ Expr* builtin_numberq(Expr* res) {
         }
     }
 
+    return expr_new_symbol("False");
+}
+
+static bool is_numeric_quantity(Expr* e) {
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL) return true;
+    if (e->type == EXPR_SYMBOL) {
+        const char* name = e->data.symbol;
+        if (strcmp(name, "Pi") == 0 || strcmp(name, "E") == 0 || strcmp(name, "I") == 0 ||
+            strcmp(name, "Infinity") == 0 || strcmp(name, "ComplexInfinity") == 0 ||
+            strcmp(name, "EulerGamma") == 0 || strcmp(name, "GoldenRatio") == 0 ||
+            strcmp(name, "Catalan") == 0 || strcmp(name, "Degree") == 0) {
+            return true;
+        }
+        return false;
+    }
+    if (e->type == EXPR_FUNCTION) {
+        if (e->data.function.head->type == EXPR_SYMBOL) {
+            const char* head_name = e->data.function.head->data.symbol;
+            if (strcmp(head_name, "Complex") == 0 || strcmp(head_name, "Rational") == 0) return true;
+            
+            SymbolDef* def = symtab_get_def(head_name);
+            if (def && (def->attributes & ATTR_NUMERICFUNCTION)) {
+                for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                    if (!is_numeric_quantity(e->data.function.args[i])) return false;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+    return false;
+}
+
+Expr* builtin_numericq(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
+        return NULL; 
+    }
+
+    Expr* arg = res->data.function.args[0];
+    if (is_numeric_quantity(arg)) {
+        return expr_new_symbol("True");
+    }
     return expr_new_symbol("False");
 }
 

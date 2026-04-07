@@ -17,6 +17,7 @@ Expr* builtin_out(Expr* res);
 Expr* builtin_compoundexpression(Expr* res);
 Expr* builtin_atomq(Expr* res);
 Expr* builtin_numberq(Expr* res);
+Expr* builtin_numericq(Expr* res);
 Expr* builtin_integerq(Expr* res);
 Expr* builtin_evenq(Expr* res);
 Expr* builtin_oddq(Expr* res);
