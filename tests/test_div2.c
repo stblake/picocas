@@ -18,7 +18,7 @@ int main() {
     Expr* B = parse_expression("x+y");
     
     // Get vars from A
-    Expr* var_call = evaluate(parse_expression("Variables[x^2+2x y+y^2]"));
+    Expr* var_call = eval_and_free(parse_expression("Variables[x^2+2x y+y^2]"));
     size_t var_count = var_call->data.function.arg_count;
     Expr** vars = malloc(sizeof(Expr*) * var_count);
     for(size_t i=0; i<var_count; i++) vars[i] = expr_copy(var_call->data.function.args[i]);

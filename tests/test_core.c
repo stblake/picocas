@@ -188,22 +188,22 @@ void test_integerq(void) {
 
 void test_evenq_oddq(void) {
     // EvenQ tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[2]"))), "True") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[3]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[0]"))), "True") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[-4]"))), "True") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[2.0]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[x]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("EvenQ[1/2]"))), "False") == 0);
+    assert_eval_eq("EvenQ[2]", "True", 0);
+    assert_eval_eq("EvenQ[3]", "False", 0);
+    assert_eval_eq("EvenQ[0]", "True", 0);
+    assert_eval_eq("EvenQ[-4]", "True", 0);
+    assert_eval_eq("EvenQ[2.0]", "False", 0);
+    assert_eval_eq("EvenQ[x]", "False", 0);
+    assert_eval_eq("EvenQ[1/2]", "False", 0);
 
     // OddQ tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[3]"))), "True") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[2]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[-5]"))), "True") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[0]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[3.0]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[x]"))), "False") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("OddQ[1/2]"))), "False") == 0);
+    assert_eval_eq("OddQ[3]", "True", 0);
+    assert_eval_eq("OddQ[2]", "False", 0);
+    assert_eval_eq("OddQ[-5]", "True", 0);
+    assert_eval_eq("OddQ[0]", "False", 0);
+    assert_eval_eq("OddQ[3.0]", "False", 0);
+    assert_eval_eq("OddQ[x]", "False", 0);
+    assert_eval_eq("OddQ[1/2]", "False", 0);
 }
 
 void assert_streq_double(const char* actual, const char* expected) {
@@ -222,237 +222,237 @@ void assert_streq_double(const char* actual, const char* expected) {
 
 void test_mod(void) {
     // Integer tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[7, 3]"))), "1") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[-7, 3]"))), "2") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[7, -3]"))), "-2") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[-7, -3]"))), "-1") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[6, 3]"))), "0") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[0, 5]"))), "0") == 0);
+    assert_eval_eq("Mod[7, 3]", "1", 0);
+    assert_eval_eq("Mod[-7, 3]", "2", 0);
+    assert_eval_eq("Mod[7, -3]", "-2", 0);
+    assert_eval_eq("Mod[-7, -3]", "-1", 0);
+    assert_eval_eq("Mod[6, 3]", "0", 0);
+    assert_eval_eq("Mod[0, 5]", "0", 0);
 
     // Real tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[11.25, 3]"))), "2.25") == 0);
-    assert_streq_double(expr_to_string(evaluate(parse_expression("Mod[11.25, 4.125]"))), "3.");
-    assert_streq_double(expr_to_string(evaluate(parse_expression("Mod[7.5, 2.5]"))), "0.");
+    assert_eval_eq("Mod[11.25, 3]", "2.25", 0);
+    assert_streq_double(expr_to_string(eval_and_free(parse_expression("Mod[11.25, 4.125]"))), "3.");
+    assert_streq_double(expr_to_string(eval_and_free(parse_expression("Mod[7.5, 2.5]"))), "0.");
 
     // Mixed type tests
-    assert_streq_double(expr_to_string(evaluate(parse_expression("Mod[10, 2.5]"))), "0.");
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[10.5, 3]"))), "1.5") == 0);
+    assert_streq_double(expr_to_string(eval_and_free(parse_expression("Mod[10, 2.5]"))), "0.");
+    assert_eval_eq("Mod[10.5, 3]", "1.5", 0);
 
     // 3-argument offset tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[11, 5, 2]"))), "6") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[1, 5, 2]"))), "6") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[2, 5, 2]"))), "2") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[6, 5, 2]"))), "6") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[7, 5, 2]"))), "2") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[11.5, 5, 2]"))), "6.5") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Mod[11, 5, -1]"))), "1") == 0);
+    assert_eval_eq("Mod[11, 5, 2]", "6", 0);
+    assert_eval_eq("Mod[1, 5, 2]", "6", 0);
+    assert_eval_eq("Mod[2, 5, 2]", "2", 0);
+    assert_eval_eq("Mod[6, 5, 2]", "6", 0);
+    assert_eval_eq("Mod[7, 5, 2]", "2", 0);
+    assert_eval_eq("Mod[11.5, 5, 2]", "6.5", 0);
+    assert_eval_eq("Mod[11, 5, -1]", "1", 0);
 }
 
 void test_quotient(void) {
     // Integer tests (floor)
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[10, 3]"))), "3") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[-10, 3]"))), "-4") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[10, -3]"))), "-4") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[-10, -3]"))), "3") == 0);
+    assert_eval_eq("Quotient[10, 3]", "3", 0);
+    assert_eval_eq("Quotient[-10, 3]", "-4", 0);
+    assert_eval_eq("Quotient[10, -3]", "-4", 0);
+    assert_eval_eq("Quotient[-10, -3]", "3", 0);
 
     // Rational and Real tests (floor)
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[111/4, 5/4]"))), "22") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[144.144, 11.12]"))), "12") == 0);
+    assert_eval_eq("Quotient[111/4, 5/4]", "22", 0);
+    assert_eval_eq("Quotient[144.144, 11.12]", "12", 0);
 
     // Complex test (rounds to nearest integer)
-    char* s_complex = expr_to_string_fullform(evaluate(parse_expression("Quotient[17.5+6I, 1+2I]")));
+    char* s_complex = expr_to_string_fullform(eval_and_free(parse_expression("Quotient[17.5+6I, 1+2I]")));
     assert(strcmp(s_complex, "Complex[6, -6]") == 0);
     free(s_complex);
 
     // 3-argument tests
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[11, 3, 1]"))), "3") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[10, 3, 1]"))), "3") == 0);
-    assert(strcmp(expr_to_string(evaluate(parse_expression("Quotient[12, 3, 1]"))), "3") == 0);
+    assert_eval_eq("Quotient[11, 3, 1]", "3", 0);
+    assert_eval_eq("Quotient[10, 3, 1]", "3", 0);
+    assert_eval_eq("Quotient[12, 3, 1]", "3", 0);
 }
 
 void test_quotientremainder(void) {
     // Basic test
-    char* s1 = expr_to_string_fullform(evaluate(parse_expression("QuotientRemainder[10, 3]")));
+    char* s1 = expr_to_string_fullform(eval_and_free(parse_expression("QuotientRemainder[10, 3]")));
     assert(strcmp(s1, "List[3, 1]") == 0);
     free(s1);
 
     // Real numbers test
-    char* s2 = expr_to_string_fullform(evaluate(parse_expression("QuotientRemainder[11.25, 3]")));
+    char* s2 = expr_to_string_fullform(eval_and_free(parse_expression("QuotientRemainder[11.25, 3]")));
     assert(strcmp(s2, "List[3, 2.25]") == 0);
     free(s2);
 
     // Negative test
-    char* s3 = expr_to_string_fullform(evaluate(parse_expression("QuotientRemainder[-10, 3]")));
+    char* s3 = expr_to_string_fullform(eval_and_free(parse_expression("QuotientRemainder[-10, 3]")));
     assert(strcmp(s3, "List[-4, 2]") == 0);
     free(s3);
 }
 
 void test_re_im(void) {
-    char* s1 = expr_to_string_fullform(evaluate(parse_expression("Re[Complex[2, 3]]")));
+    char* s1 = expr_to_string_fullform(eval_and_free(parse_expression("Re[Complex[2, 3]]")));
     assert(strcmp(s1, "2") == 0);
     free(s1);
 
-    char* s2 = expr_to_string_fullform(evaluate(parse_expression("Im[Complex[2, 3]]")));
+    char* s2 = expr_to_string_fullform(eval_and_free(parse_expression("Im[Complex[2, 3]]")));
     assert(strcmp(s2, "3") == 0);
     free(s2);
 
-    char* s3 = expr_to_string_fullform(evaluate(parse_expression("Re[5]")));
+    char* s3 = expr_to_string_fullform(eval_and_free(parse_expression("Re[5]")));
     assert(strcmp(s3, "5") == 0);
     free(s3);
 
-    char* s4 = expr_to_string_fullform(evaluate(parse_expression("Im[5]")));
+    char* s4 = expr_to_string_fullform(eval_and_free(parse_expression("Im[5]")));
     assert(strcmp(s4, "0") == 0);
     free(s4);
 
-    char* s5 = expr_to_string_fullform(evaluate(parse_expression("ReIm[Complex[2, 3]]")));
+    char* s5 = expr_to_string_fullform(eval_and_free(parse_expression("ReIm[Complex[2, 3]]")));
     assert(strcmp(s5, "List[2, 3]") == 0);
     free(s5);
 
-    char* s6 = expr_to_string_fullform(evaluate(parse_expression("ReIm[5]")));
+    char* s6 = expr_to_string_fullform(eval_and_free(parse_expression("ReIm[5]")));
     assert(strcmp(s6, "List[5, 0]") == 0);
     free(s6);
 }
 
 void test_abs_conjugate(void) {
-    char* s1 = expr_to_string_fullform(evaluate(parse_expression("Abs[-5]")));
+    char* s1 = expr_to_string_fullform(eval_and_free(parse_expression("Abs[-5]")));
     assert(strcmp(s1, "5") == 0);
     free(s1);
 
-    char* s2 = expr_to_string_fullform(evaluate(parse_expression("Abs[-3.14]")));
+    char* s2 = expr_to_string_fullform(eval_and_free(parse_expression("Abs[-3.14]")));
     assert(strcmp(s2, "3.14") == 0);
     free(s2);
 
-    char* s3 = expr_to_string_fullform(evaluate(parse_expression("Abs[Complex[3, 4]]")));
+    char* s3 = expr_to_string_fullform(eval_and_free(parse_expression("Abs[Complex[3, 4]]")));
     assert(strcmp(s3, "5") == 0);
     free(s3);
 
-    char* s4 = expr_to_string_fullform(evaluate(parse_expression("Conjugate[Complex[2, 3]]")));
+    char* s4 = expr_to_string_fullform(eval_and_free(parse_expression("Conjugate[Complex[2, 3]]")));
     assert(strcmp(s4, "Complex[2, -3]") == 0);
     free(s4);
 
-    char* s5 = expr_to_string_fullform(evaluate(parse_expression("Conjugate[5]")));
+    char* s5 = expr_to_string_fullform(eval_and_free(parse_expression("Conjugate[5]")));
     assert(strcmp(s5, "5") == 0);
     free(s5);
 }
 
 void test_arg(void) {
-    char* s1 = expr_to_string_fullform(evaluate(parse_expression("Arg[0]")));
+    char* s1 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[0]")));
     assert(strcmp(s1, "0") == 0);
     free(s1);
 
-    char* s2 = expr_to_string_fullform(evaluate(parse_expression("Arg[5]")));
+    char* s2 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[5]")));
     assert(strcmp(s2, "0") == 0);
     free(s2);
 
-    char* s3 = expr_to_string_fullform(evaluate(parse_expression("Arg[-5]")));
+    char* s3 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[-5]")));
     assert(strcmp(s3, "Pi") == 0);
     free(s3);
 
-    char* s4 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[0, 2]]")));
+    char* s4 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[0, 2]]")));
     assert(strcmp(s4, "Times[Rational[1, 2], Pi]") == 0);
     free(s4);
 
-    char* s5 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[0, -2]]")));
+    char* s5 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[0, -2]]")));
     assert(strcmp(s5, "Times[Rational[-1, 2], Pi]") == 0);
     free(s5);
     
-    char* s6 = expr_to_string_fullform(evaluate(parse_expression("Arg[x]")));
+    char* s6 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[x]")));
     assert(strcmp(s6, "Arg[x]") == 0);
     free(s6);
 
-    char* s7 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[1, 1]]")));
+    char* s7 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[1, 1]]")));
     assert(strcmp(s7, "Times[Rational[1, 4], Pi]") == 0);
     free(s7);
 
-    char* s8 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[-1, 1]]")));
+    char* s8 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[-1, 1]]")));
     assert(strcmp(s8, "Times[Rational[3, 4], Pi]") == 0);
     free(s8);
 
-    char* s9 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[-1, -1]]")));
+    char* s9 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[-1, -1]]")));
     assert(strcmp(s9, "Times[Rational[-3, 4], Pi]") == 0);
     free(s9);
 
-    char* s10 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[1, -1]]")));
+    char* s10 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[1, -1]]")));
     assert(strcmp(s10, "Times[Rational[-1, 4], Pi]") == 0);
     free(s10);
 
-    char* s11 = expr_to_string_fullform(evaluate(parse_expression("Arg[Complex[1, 2]]")));
+    char* s11 = expr_to_string_fullform(eval_and_free(parse_expression("Arg[Complex[1, 2]]")));
     assert(strcmp(s11, "ArcTan[1, 2]") == 0);
     free(s11);
 }
 
 void test_trig(void) {
-    char* s1 = expr_to_string_fullform(evaluate(parse_expression("Sin[0]")));
+    char* s1 = expr_to_string_fullform(eval_and_free(parse_expression("Sin[0]")));
     assert(strcmp(s1, "0") == 0); free(s1);
     
-    char* s2 = expr_to_string_fullform(evaluate(parse_expression("Cos[0]")));
+    char* s2 = expr_to_string_fullform(eval_and_free(parse_expression("Cos[0]")));
     assert(strcmp(s2, "1") == 0); free(s2);
 
-    char* s3 = expr_to_string_fullform(evaluate(parse_expression("Sin[Times[Rational[1, 6], Pi]]")));
+    char* s3 = expr_to_string_fullform(eval_and_free(parse_expression("Sin[Times[Rational[1, 6], Pi]]")));
     assert(strcmp(s3, "Rational[1, 2]") == 0); free(s3);
 
-    char* s4 = expr_to_string_fullform(evaluate(parse_expression("Cos[Times[Rational[1, 3], Pi]]")));
+    char* s4 = expr_to_string_fullform(eval_and_free(parse_expression("Cos[Times[Rational[1, 3], Pi]]")));
     assert(strcmp(s4, "Rational[1, 2]") == 0); free(s4);
 
-    char* s5 = expr_to_string_fullform(evaluate(parse_expression("Tan[Times[Rational[1, 4], Pi]]")));
+    char* s5 = expr_to_string_fullform(eval_and_free(parse_expression("Tan[Times[Rational[1, 4], Pi]]")));
     assert(strcmp(s5, "1") == 0); free(s5);
     
-    char* s6 = expr_to_string_fullform(evaluate(parse_expression("ArcSin[0]")));
+    char* s6 = expr_to_string_fullform(eval_and_free(parse_expression("ArcSin[0]")));
     assert(strcmp(s6, "0") == 0); free(s6);
     
-    char* s7 = expr_to_string_fullform(evaluate(parse_expression("ArcCos[1]")));
+    char* s7 = expr_to_string_fullform(eval_and_free(parse_expression("ArcCos[1]")));
     assert(strcmp(s7, "0") == 0); free(s7);
 
-    char* s8 = expr_to_string_fullform(evaluate(parse_expression("ArcTan[0]")));
+    char* s8 = expr_to_string_fullform(eval_and_free(parse_expression("ArcTan[0]")));
     assert(strcmp(s8, "0") == 0); free(s8);
 }
 
 void test_gcd_lcm(void) {
     // GCD tests
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[12, 18, 24]"))), "6") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[1/2, 1/3]"))), "Rational[1, 6]") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[0, 5]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[]"))), "0") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[-5]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("GCD[x]"))), "x") == 0);
+    assert_eval_eq("GCD[12, 18, 24]", "6", 1);
+    assert_eval_eq("GCD[1/2, 1/3]", "Rational[1, 6]", 1);
+    assert_eval_eq("GCD[0, 5]", "5", 1);
+    assert_eval_eq("GCD[]", "0", 1);
+    assert_eval_eq("GCD[-5]", "5", 1);
+    assert_eval_eq("GCD[x]", "x", 1);
 
     // LCM tests
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[12, 18, 24]"))), "72") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[1/2, 1/3]"))), "1") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[0, 5]"))), "0") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[]"))), "1") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[-5]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LCM[x]"))), "x") == 0);
+    assert_eval_eq("LCM[12, 18, 24]", "72", 1);
+    assert_eval_eq("LCM[1/2, 1/3]", "1", 1);
+    assert_eval_eq("LCM[0, 5]", "0", 1);
+    assert_eval_eq("LCM[]", "1", 1);
+    assert_eval_eq("LCM[-5]", "5", 1);
+    assert_eval_eq("LCM[x]", "x", 1);
 }
 
 void test_primeq(void) {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[2]"))), "True") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[3]"))), "True") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[4]"))), "False") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[17]"))), "True") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[1]"))), "False") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[0]"))), "False") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[-2]"))), "True") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[-17]"))), "True") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[11.5]"))), "False") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[x]"))), "PrimeQ[x]") == 0);
+    assert_eval_eq("PrimeQ[2]", "True", 1);
+    assert_eval_eq("PrimeQ[3]", "True", 1);
+    assert_eval_eq("PrimeQ[4]", "False", 1);
+    assert_eval_eq("PrimeQ[17]", "True", 1);
+    assert_eval_eq("PrimeQ[1]", "False", 1);
+    assert_eval_eq("PrimeQ[0]", "False", 1);
+    assert_eval_eq("PrimeQ[-2]", "True", 1);
+    assert_eval_eq("PrimeQ[-17]", "True", 1);
+    assert_eval_eq("PrimeQ[11.5]", "False", 1);
+    assert_eval_eq("PrimeQ[x]", "PrimeQ[x]", 1);
     
     // Large prime (from user request)
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimeQ[-59]"))), "True") == 0);
+    assert_eval_eq("PrimeQ[-59]", "True", 1);
 }
 
 void test_factorinteger(void) {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[12]"))), "List[List[2, 2], List[3, 1]]") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[-12]"))), "List[List[-1, 1], List[2, 2], List[3, 1]]") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[1/2]"))), "List[List[2, -1]]") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[3/4]"))), "List[List[2, -2], List[3, 1]]") == 0);
+    assert_eval_eq("FactorInteger[12]", "List[List[2, 2], List[3, 1]]", 1);
+    assert_eval_eq("FactorInteger[-12]", "List[List[-1, 1], List[2, 2], List[3, 1]]", 1);
+    assert_eval_eq("FactorInteger[1/2]", "List[List[2, -1]]", 1);
+    assert_eval_eq("FactorInteger[3/4]", "List[List[2, -2], List[3, 1]]", 1);
     
     // Partial factorization
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[100, 1]"))), "List[List[2, 2], 25]") == 0);
+    assert_eval_eq("FactorInteger[100, 1]", "List[List[2, 2], 25]", 1);
     
     // Automatic (easy factors)
     // 13835058055282163713 as int64_t is -4611686018427387903, which is 3 * -1537228672809129301
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("FactorInteger[13835058055282163713, Automatic]"))), "List[List[-1, 1], List[3, 1], 1537228672809129301]") == 0);
+    assert_eval_eq("FactorInteger[13835058055282163713, Automatic]", "List[List[-1, 1], List[3, 1], 1537228672809129301]", 1);
 }
 
 void test_eulerphi(void) {
@@ -533,56 +533,56 @@ void test_binomial(void) {
 }
 
 void test_nextprime(void) {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[3]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[4]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2.5]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[10, 1]"))), "11") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[10, 2]"))), "13") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[5, -1]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[5, -2]"))), "2") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("NextPrime[2, -1]"))), "NextPrime[2, -1]") == 0);
+    assert_eval_eq("NextPrime[2]", "3", 1);
+    assert_eval_eq("NextPrime[3]", "5", 1);
+    assert_eval_eq("NextPrime[4]", "5", 1);
+    assert_eval_eq("NextPrime[2.5]", "3", 1);
+    assert_eval_eq("NextPrime[10, 1]", "11", 1);
+    assert_eval_eq("NextPrime[10, 2]", "13", 1);
+    assert_eval_eq("NextPrime[5, -1]", "3", 1);
+    assert_eval_eq("NextPrime[5, -2]", "2", 1);
+    assert_eval_eq("NextPrime[2, -1]", "NextPrime[2, -1]", 1);
 }
 
 void test_primepi(void) {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimePi[10]"))), "4") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimePi[100]"))), "25") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimePi[1000]"))), "168") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimePi[10000]"))), "1229") == 0);
+    assert_eval_eq("PrimePi[10]", "4", 1);
+    assert_eval_eq("PrimePi[100]", "25", 1);
+    assert_eval_eq("PrimePi[1000]", "168", 1);
+    assert_eval_eq("PrimePi[10000]", "1229", 1);
     
     // Listable
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("PrimePi[{10, 100}]"))), "List[4, 25]") == 0);
+    assert_eval_eq("PrimePi[{10, 100}]", "List[4, 25]", 1);
 }
 
 void test_depth(void) {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[a]"))), "1") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[{a}]"))), "2") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[{{a}}]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[{{{a}}}]"))), "4") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[{{{a}, b}}]"))), "4") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[1 + x^2]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[f[f[f[x]]]]"))), "4") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[f[g[h[x]]]]"))), "4") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[12345]"))), "1") == 0);
-    Expr* e_depth = evaluate(parse_expression("Depth[3+I]"));
+    assert_eval_eq("Depth[a]", "1", 1);
+    assert_eval_eq("Depth[{a}]", "2", 1);
+    assert_eval_eq("Depth[{{a}}]", "3", 1);
+    assert_eval_eq("Depth[{{{a}}}]", "4", 1);
+    assert_eval_eq("Depth[{{{a}, b}}]", "4", 1);
+    assert_eval_eq("Depth[1 + x^2]", "3", 1);
+    assert_eval_eq("Depth[f[f[f[x]]]]", "4", 1);
+    assert_eval_eq("Depth[f[g[h[x]]]]", "4", 1);
+    assert_eval_eq("Depth[12345]", "1", 1);
+    Expr* e_depth = eval_and_free(parse_expression("Depth[3+I]"));
     char* s_depth = expr_to_string_fullform(e_depth);
     assert(strcmp(s_depth, "1") == 0);
     free(s_depth);
     expr_free(e_depth);
 
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[1/2]"))), "1") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[Sqrt[2]]"))), "2") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[h[{{{a}}}][x, y]]"))), "2") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("Depth[h[{{{a}}}][x, y], Heads -> True]"))), "6") == 0);
+    assert_eval_eq("Depth[1/2]", "1", 1);
+    assert_eval_eq("Depth[Sqrt[2]]", "2", 1);
+    assert_eval_eq("Depth[h[{{{a}}}][x, y]]", "2", 1);
+    assert_eval_eq("Depth[h[{{{a}}}][x, y], Heads -> True]", "6", 1);
 }
 
 void test_leafcount() {
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[1+a+b^2]"))), "6") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[x,y]]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[a,b][x,y]]"))), "5") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[I]"))), "3") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[{1/2, 1+I}]"))), "7") == 0);
-    assert(strcmp(expr_to_string_fullform(evaluate(parse_expression("LeafCount[f[x,y], Heads->False]"))), "2") == 0);
+    assert_eval_eq("LeafCount[1+a+b^2]", "6", 1);
+    assert_eval_eq("LeafCount[f[x,y]]", "3", 1);
+    assert_eval_eq("LeafCount[f[a,b][x,y]]", "5", 1);
+    assert_eval_eq("LeafCount[I]", "3", 1);
+    assert_eval_eq("LeafCount[{1/2, 1+I}]", "7", 1);
+    assert_eval_eq("LeafCount[f[x,y], Heads->False]", "2", 1);
 }
 
 void test_bytecount() {

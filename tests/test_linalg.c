@@ -88,7 +88,7 @@ void test_rowreduce() {
     run_test("RowReduce[{{a, b, c}, {d, e, f}, {g, h, i}}]", "List[List[1, 0, 0], List[0, 1, 0], List[0, 0, 1]]");
     
     // Check symbolic fractional simplification: Note that Expand changes the exact output string.
-    Expr* t = evaluate(parse_expression("RowReduce[{{a, b, c}, {d, e, f}, {a + d, b + e, c + f}}]"));
+    Expr* t = eval_and_free(parse_expression("RowReduce[{{a, b, c}, {d, e, f}, {a + d, b + e, c + f}}]"));
     char* res_str = expr_to_string_fullform(t);
     
     // We expect the first two rows to have the elements `(ce-bf)/(ae-bd)` and `(cd-af)/(bd-ae)`.
