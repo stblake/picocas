@@ -42,6 +42,19 @@ In[3]:= 123[[0]]
 Out[3]= Integer
 ```
 
+#### Extract
+Extracts the part of an expression at the position specified by `pos`.
+- `Extract[expr, pos]`
+- `Extract[expr, {pos1, pos2, ...}]`
+- `Extract[expr, pos, h]`
+- `Extract[pos]`
+
+**Features**:
+- Position specifications have the same form as those returned by `Position`.
+- `Extract[expr, {i, j, ...}]` is equivalent to `Part[expr, i, j, ...]`.
+- `pos` can be of the more general form `{part1, part2, ...}` where `parti` are `Part` specifications such as an integer `i`, `All` or `Span`.
+- You can use `Extract[expr, ..., Hold]` to extract parts without evaluation.
+
 #### Span
 - `i;;j`: Represents a span of elements `i` through `j`.
 - `i;;`: Represents a span from `i` to the end.

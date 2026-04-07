@@ -7,6 +7,7 @@
 Expr* expr_part(Expr* expr, Expr** indices, size_t nindices);
 Expr* expr_part_assign(Expr* lhs, Expr* rhs);
 Expr* builtin_part(Expr* res);
+Expr* builtin_extract(Expr* res);
 Expr* expr_head(Expr* e);
 Expr* builtin_head(Expr* res);
 Expr* builtin_first(Expr* res);

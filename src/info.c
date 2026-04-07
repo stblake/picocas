@@ -19,6 +19,7 @@ void info_init(void) {
 
     // Structural Manipulation
     symtab_set_docstring("Part", "expr[[i]] or Part[expr, i] gives the i-th part of expr.");
+    symtab_set_docstring("Extract", "Extract[expr, pos] extracts the part of expr at the position specified by pos.\nExtract[expr, {pos1, pos2, ...}] extracts a list of parts of expr.\nExtract[expr, pos, h] extracts parts of expr, wrapping each of them with head h before evaluation.\nExtract[pos] represents an operator form of Extract that can be applied to an expression.");
     symtab_set_docstring("Span", "i;;j represents a span of elements i through j. i;;j;;k represents a span in steps of k.");
     
     // Linear Algebra

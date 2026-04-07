@@ -507,8 +507,36 @@ void test_span_assignment() {
     free(s_rt2); expr_free(rt2); expr_free(st2);
 }
 
+void test_extract() {
+    assert_eval_eq("Extract[{1,2,3,4},{2}]", "2", 0);
+    assert_eval_eq("Extract[{2}][{a,b,c,d}]", "b", 0);
+    assert_eval_eq("Extract[f[g[1,2],h[3]],{1,2}]", "2", 0);
+    assert_eval_eq("Extract[f[g[1,2],h[x^2]],{{1,2},{2,1,1}}]", "{2, x}", 0);
+    assert_eval_eq("Extract[{{a,b,c},{d,e,f},{g,h,i}}, {All,2}]", "{b, e, h}", 0);
+    assert_eval_eq("e = f[g[1,2],{h[3]}]; p = Position[e,_Integer]; Extract[e,p]", "{1, 2, 3}", 0);
+    assert_eval_eq("Clear[e]", "Null", 0);
+    assert_eval_eq("Extract[{a,b,c,d,e}, {3}]", "c", 0);
+    assert_eval_eq("Extract[{a,b,c,d,e}, {{1},{4},{3}}]", "{a, d, c}", 0);
+    assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{1,3}]", "a[1, 3]", 0);
+    assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{{1},{3}}]", "{{a[1, 1], a[1, 2], a[1, 3]}, {a[3, 1], a[3, 2], a[3, 3]}}", 0);
+    assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{{1,3}}]", "{a[1, 3]}", 0);
+    assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{{1,2},{3,3},{2,1}}]", "{a[1, 2], a[3, 3], a[2, 1]}", 0);
+    assert_eval_eq("Extract[{a,b,c,d,e}, {{1},{2},{5}},Hold]", "{Hold[a], Hold[b], Hold[e]}", 0);
+    assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{All,1}]", "{Rule[a, 1], Rule[c, 3], Rule[f, 6]}", 0);
+    assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{2,All,2}]", "{3, 4, 5}", 0);
+    assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{All,All,1}]", "{{a, b}, {c, d, e}, {f}}", 0);
+    assert_eval_eq("Extract[e[f[1,2,3],g[4,5,6],h[7,8,9]],{All,1}]", "e[1, 4, 7]", 0);
+    assert_eval_eq("Extract[Range[10],{3;;5}]", "{3, 4, 5}", 0);
+    assert_eval_eq("Extract[{a,b,c,d,e,f},{1;;-1;;2}]", "{a, c, e}", 0);
+    assert_eval_eq("Extract[f[1,2,3,4,5,6,7,8,9,10],{-1;;1;;-3}]", "f[10, 7, 4, 1]", 0);
+    assert_eval_eq("Extract[{{1,2},{3,4,5}},{All,1;;2}]", "{{1, 2}, {3, 4}}", 0);
+    assert_eval_eq("Extract[{{1,2},{3,4,5}},{All,{1,-1}}]", "{{1, 2}, {3, 5}}", 0);
+    assert_eval_eq("Extract[{a:>1^2, b:>2^2,c:>3^3},{1;;2,2},Hold]", "Hold[{Power[1, 2], Power[2, 2]}]", 0);
+}
+
 // Part-specific test runner
 void run_part_tests() {
+    TEST(test_extract);
     TEST(test_span_parsing);
     TEST(test_span_assignment);
     TEST(test_part_single_index);

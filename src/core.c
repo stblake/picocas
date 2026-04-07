@@ -47,11 +47,16 @@ void core_init(void) {
     symtab_add_builtin("Dimensions", builtin_dimensions);
     symtab_add_builtin("Clear", builtin_clear);
     symtab_add_builtin("Part", builtin_part);
+    symtab_add_builtin("Extract", builtin_extract);
     symtab_add_builtin("Head", builtin_head);
     symtab_add_builtin("First", builtin_first);
     symtab_add_builtin("Last", builtin_last);
     symtab_add_builtin("Most", builtin_most);
     symtab_add_builtin("Rest", builtin_rest);
+
+    symtab_get_def("Clear")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
+    symtab_get_def("Part")->attributes |= ATTR_NHOLDREST | ATTR_PROTECTED;
+    symtab_get_def("Extract")->attributes |= ATTR_NHOLDREST | ATTR_PROTECTED;
     symtab_add_builtin("Insert", builtin_insert);
     symtab_add_builtin("Delete", builtin_delete);
     symtab_add_builtin("Append", builtin_append);

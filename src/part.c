@@ -355,21 +355,79 @@ Expr* builtin_part(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) {
         return NULL;
     }
-    
+
     Expr* expr = res->data.function.args[0];
     Expr** indices = res->data.function.args + 1;
     size_t nindices = res->data.function.arg_count - 1;
-    
+
     // Mathematica allows [[0]] even for atoms
     if (nindices > 0 && indices[0]->type == EXPR_INTEGER && indices[0]->data.integer == 0) {
         // Allowed
     } else {
         if (is_atomic(expr)) return NULL;
     }
-    
+
     return expr_part(expr, indices, nindices);
 }
 
+static Expr* extract_single(Expr* expr, Expr* pos, Expr* h) {
+    if (pos->type != EXPR_FUNCTION || strcmp(pos->data.function.head->data.symbol, "List") != 0) return NULL;
+    size_t nindices = pos->data.function.arg_count;
+    Expr** indices = pos->data.function.args;
+    Expr* part = expr_part(expr, indices, nindices);
+    if (!part) {
+        return NULL;
+    }
+    if (h) {
+        Expr* args[1] = { part };
+        return expr_new_function(expr_copy(h), args, 1);
+    }
+    return part;
+}
+
+Expr* builtin_extract(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc == 1) { // Operator form
+        Expr* slot_args[1] = { expr_new_integer(1) };
+        Expr* slot = expr_new_function(expr_new_symbol("Slot"), slot_args, 1);
+        Expr* inner_args[2] = { slot, expr_copy(res->data.function.args[0]) };
+        Expr* inner_extract = expr_new_function(expr_new_symbol("Extract"), inner_args, 2);
+        Expr* func_args[1] = { inner_extract };
+        return expr_new_function(expr_new_symbol("Function"), func_args, 1);
+    }
+    if (argc < 2 || argc > 3) return NULL;
+    Expr* expr = res->data.function.args[0];
+    Expr* pos = res->data.function.args[1];
+    Expr* h = (argc == 3) ? res->data.function.args[2] : NULL;
+
+    bool is_list_of_pos = false;
+    if (pos->type == EXPR_FUNCTION && strcmp(pos->data.function.head->data.symbol, "List") == 0) {
+        if (pos->data.function.arg_count > 0 && pos->data.function.args[0]->type == EXPR_FUNCTION && strcmp(pos->data.function.args[0]->data.function.head->data.symbol, "List") == 0) {
+            is_list_of_pos = true;
+        } else if (pos->data.function.arg_count == 0) {
+            is_list_of_pos = false;
+        }
+    } else {
+        return NULL; // pos must be a List
+    }
+
+    if (is_list_of_pos) {
+        size_t npos = pos->data.function.arg_count;
+        Expr** args = malloc(sizeof(Expr*) * npos);
+        for (size_t i = 0; i < npos; i++) {
+            args[i] = extract_single(expr, pos->data.function.args[i], h);
+            if (!args[i]) {
+                for (size_t j = 0; j < i; j++) expr_free(args[j]);
+                free(args);
+                return NULL;
+            }
+        }
+        return expr_new_function(expr_new_symbol("List"), args, npos);
+    } else {
+        return extract_single(expr, pos, h);
+    }
+}
 Expr* builtin_first(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
