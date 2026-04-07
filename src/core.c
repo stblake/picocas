@@ -8,6 +8,7 @@
 #include "list.h"
 #include "replace.h"
 #include "patterns.h"
+#include "cond.h"
 #include "complex.h"
 #include "trig.h"
 #include "hyperbolic.h"
@@ -140,6 +141,7 @@ void core_init(void) {
     list_init();
     replace_init();
     patterns_init();
+    cond_init();
     complex_init();
     trig_init();
     hyperbolic_init();

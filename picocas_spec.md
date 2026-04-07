@@ -1713,6 +1713,30 @@ In[2]:= Select[{1, 2, 4, 7, 6, 2}, # > 2 &, 1]
 Out[2]= {4}
 ```
 
+### Control Flow
+
+#### If
+Evaluates condition and executes the corresponding branch.
+- `If[condition, t, f]`: Gives `t` if `condition` evaluates to `True`, and `f` if it evaluates to `False`.
+- `If[condition, t, f, u]`: Gives `u` if `condition` evaluates to neither `True` nor `False`.
+
+**Features**:
+- `HoldRest`, evaluating only the chosen branch.
+- Remains unevaluated if the condition is undetermined and `u` is not provided.
+- `If[condition, t]` returns `Null` if `condition` evaluates to `False`.
+
+```mathematica
+In[1]:= If[True, x, y]
+Out[1]= x
+
+In[2]:= If[a < b, 1, 0, Indeterminate]
+Out[2]= Indeterminate
+```
+
+#### TrueQ
+Tests whether an expression evaluates explicitly to `True`.
+- `TrueQ[expr]`: Yields `True` if `expr` is `True`, and `False` otherwise.
+
 ### Assignment and Rules
 
 #### Set (=), SetDelayed (:=)
