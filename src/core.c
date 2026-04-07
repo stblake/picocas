@@ -7,6 +7,7 @@
 #include "boolean.h"
 #include "list.h"
 #include "replace.h"
+#include "patterns.h"
 #include "complex.h"
 #include "trig.h"
 #include "hyperbolic.h"
@@ -131,6 +132,7 @@ void core_init(void) {
     boolean_init();
     list_init();
     replace_init();
+    patterns_init();
     complex_init();
     trig_init();
     hyperbolic_init();

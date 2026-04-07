@@ -121,13 +121,6 @@ int main() {
     run_test("{a,b,c,d,e,f} /. {Shortest[x__], y__} :> {x}", "{a}");
     run_test("{a,b,c,d,e,f} /. {x__, Longest[y__]} :> {x}", "{a}");
 
-    // Cases tests
-    run_test("Cases[{1, 1, f[a], 2, 3, y, f[8], 9, f[10]}, _Integer]", "{1, 1, 2, 3, 9}");
-    run_test("Cases[{1, 1, f[a], 2, 3, y, f[8], 9, f[10]}, f[x_] -> x]", "{a, 8, 10}");
-    run_test("Cases[{{1, 2}, {2}, {3, 4, 1}, {5, 4}, {3, 3}}, {_, _}]", "{{1, 2}, {5, 4}, {3, 3}}");
-    run_test("Cases[{{1, 4, a, 0}, {b, 3, 2, 2}, {c, c, 5, 5}}, _Integer, 2]", "{1, 4, 0, 3, 2, 2, 5, 5}");
-    run_test("Cases[{f[{a, b}], f[{a}], g[{a}], f[{a, b, c, d}]}, f[x_] :> Length[x]]", "{2, 1, 4}");
-
     printf("All Replace tests passed!\n");
     symtab_clear();
     return 0;

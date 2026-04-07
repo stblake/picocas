@@ -22,6 +22,8 @@ set(COMMON_SRC
     ../src/funcprog.c
     ../src/boolean.c
     ../src/list.c
+    ../src/patterns.c
+    ../src/patterns.c
     ../src/replace.c
     ../src/complex.c
     ../src/trig.c
@@ -98,6 +100,12 @@ add_executable(list_tests
     ${COMMON_SRC}
 )
 target_include_directories(list_tests PRIVATE ../src)
+
+add_executable(patterns_tests
+    test_patterns.c
+    ${COMMON_SRC}
+)
+target_link_libraries(patterns_tests m)
 
 add_executable(replace_tests
     test_replace.c
@@ -217,3 +225,4 @@ add_executable(parfrac_tests
 target_include_directories(parfrac_tests PRIVATE ../src)
 add_executable(polymod_tests test_polymod.c ${COMMON_SRC})
 target_include_directories(polymod_tests PRIVATE ../src)
+target_include_directories(patterns_tests PRIVATE ../src)

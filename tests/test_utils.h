@@ -20,6 +20,9 @@ static inline void assert_eval_eq(const char* input, const char* expected, int i
     struct Expr* evaluated = evaluate(parsed);
     expr_free(parsed);
     char* str = is_fullform ? expr_to_string_fullform(evaluated) : expr_to_string(evaluated);
+    if (strcmp(str, expected) != 0) {
+        fprintf(stderr, "FAIL: %s\n  Expected: %s\n  Actual:   %s\n", input, expected, str);
+    }
     assert(strcmp(str, expected) == 0);
     free(str);
     expr_free(evaluated);
