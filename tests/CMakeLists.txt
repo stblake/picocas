@@ -43,6 +43,7 @@ set(COMMON_SRC
     ../src/datetime.c
     ../src/linalg.c
     ../src/load.c
+    ../src/iter.c
     ../src/cond.c
     ../src/default_helper.c
 )
@@ -101,6 +102,13 @@ add_executable(list_tests
     ${COMMON_SRC}
 )
 target_include_directories(list_tests PRIVATE ../src)
+
+add_executable(iter_tests
+    test_iter.c
+    ${COMMON_SRC}
+)
+target_link_libraries(iter_tests m)
+target_include_directories(iter_tests PRIVATE ../src)
 
 add_executable(cond_tests
     test_cond.c

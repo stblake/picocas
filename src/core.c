@@ -9,6 +9,7 @@
 #include "replace.h"
 #include "patterns.h"
 #include "cond.h"
+#include "iter.h"
 #include "complex.h"
 #include "trig.h"
 #include "hyperbolic.h"
@@ -142,6 +143,7 @@ void core_init(void) {
     replace_init();
     patterns_init();
     cond_init();
+    iter_init();
     complex_init();
     trig_init();
     hyperbolic_init();
@@ -163,15 +165,22 @@ void core_init(void) {
 Expr* builtin_compoundexpression(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     if (res->data.function.arg_count == 0) return expr_new_symbol("Null");
-    
+
     Expr* last_val = NULL;
     for (size_t i = 0; i < res->data.function.arg_count; i++) {
         if (last_val) expr_free(last_val);
         last_val = evaluate(res->data.function.args[i]);
+        if (last_val->type == EXPR_FUNCTION && last_val->data.function.head->type == EXPR_SYMBOL) {
+            const char* hname = last_val->data.function.head->data.symbol;
+            if (strcmp(hname, "Return") == 0 || strcmp(hname, "Break") == 0 || 
+                strcmp(hname, "Continue") == 0 || strcmp(hname, "Throw") == 0 || 
+                strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
+                break;
+            }
+        }
     }
     return last_val;
 }
-
 Expr* builtin_clear(Expr* res) {
     if (res->type == EXPR_FUNCTION) {
         for (size_t i = 0; i < res->data.function.arg_count; i++) {

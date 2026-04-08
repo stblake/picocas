@@ -118,7 +118,8 @@ void info_init(void) {
     symtab_set_docstring("Dt", "Dt[f] gives the total derivative of f.\nDt[f, x] gives the total derivative of f with respect to x.\nDt[f, {x, n}] gives the nth total derivative.");
     symtab_set_docstring("Derivative", "Derivative[n][f][x] represents the nth derivative of a function f evaluated at x.");
 
-    // System / Assignments
+    // Control Flow
+    symtab_set_docstring("Do", "Do[expr, n] evaluates expr n times.\nDo[expr, {i, imax}] evaluates expr with i successively taking on values 1 through imax.\nDo[expr, {i, imin, imax, di}] uses steps di.");
     symtab_set_docstring("If", "If[condition, t, f] gives t if condition evaluates to True, and f if it evaluates to False.\nIf[condition, t, f, u] gives u if condition evaluates to neither True nor False.");
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");

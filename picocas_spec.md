@@ -1715,6 +1715,28 @@ Out[2]= {4}
 
 ### Control Flow
 
+#### Do
+Evaluates an expression sequentially over an iteration range.
+- `Do[expr, n]`: Evaluates `expr` `n` times.
+- `Do[expr, {i, imax}]`: Evaluates `expr` with `i` from 1 to `imax`.
+- `Do[expr, {i, imin, imax, di}]`: Evaluates `expr` with `i` taking values from `imin` to `imax` in steps of `di`.
+- `Do[expr, {i, list}]`: Evaluates `expr` with `i` taking values from `list`.
+- `Do[expr, spec1, spec2, ...]`: Evaluates `expr` looping over `spec1` internally.
+
+**Features**:
+- `HoldAll`, evaluating its body only after arguments are substituted.
+- Employs exact dynamic iteration identical to `Table` but discards the evaluated results, returning `Null`.
+- Supports explicit break states (`Return`, `Break`, `Continue`, `Throw`, `Abort`, `Quit`).
+- Can execute an infinite loop using `Do[expr, Infinity]`.
+
+```mathematica
+In[1]:= Do[Print[i], {i, 3}]
+Out[1]= Null
+
+In[2]:= Do[If[i == 3, Break[]]; Print[i], {i, 5}]
+Out[2]= Null
+```
+
 #### If
 Evaluates condition and executes the corresponding branch.
 - `If[condition, t, f]`: Gives `t` if `condition` evaluates to `True`, and `f` if it evaluates to `False`.
