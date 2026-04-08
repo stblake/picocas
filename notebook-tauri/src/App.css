@@ -1,0 +1,368 @@
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f5f5f5;
+  color: #333;
+  line-height: 1.5;
+}
+
+/* Notebook */
+.notebook {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+}
+
+.notebook-header {
+  padding: 12px 0 16px;
+  border-bottom: 2px solid #dd1100;
+  margin-bottom: 20px;
+}
+
+.notebook-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.notebook-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #dd1100;
+  letter-spacing: -0.5px;
+}
+
+.notebook-filename {
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.notebook-toolbar {
+  display: flex;
+  gap: 6px;
+}
+
+.nb-btn {
+  padding: 4px 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.nb-btn:hover {
+  background: #f5f5f5;
+  border-color: #bbb;
+  color: #333;
+}
+
+.notebook-cells {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Cell */
+.cell {
+  position: relative;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cell:hover {
+  border-color: #ccc;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.cell:hover .cell-toolbar {
+  opacity: 1;
+}
+
+.cell-evaluating {
+  border-color: #4a90d9;
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
+}
+
+/* Cell toolbar */
+.cell-toolbar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+
+.cell-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: #999;
+  font-size: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.cell-toolbar-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  color: #555;
+}
+
+.cell-toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.cell-toolbar-delete:hover:not(:disabled) {
+  background: #fee;
+  color: #c00;
+}
+
+/* Cell input row */
+.cell-input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cell-label {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 8px;
+  user-select: none;
+}
+
+.cell-label-in {
+  color: #4a90d9;
+  min-width: 72px;
+}
+
+.cell-label-out {
+  color: #888;
+  min-width: 72px;
+}
+
+.cell-input-wrapper {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #fafafa;
+}
+
+.cell-input-wrapper:focus-within {
+  border-color: #4a90d9;
+  background: #fff;
+}
+
+.cell-input-editor .cm-editor {
+  background: transparent;
+}
+
+/* Evaluate button */
+.cell-eval-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 4px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  color: #4a90d9;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.cell-eval-btn:hover:not(:disabled) {
+  background: #f0f6ff;
+  border-color: #4a90d9;
+}
+
+.cell-eval-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #4a90d9;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Cell output row */
+.cell-output-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cell-output-wrapper {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.cell-output-math {
+  padding: 4px 0;
+}
+
+.cell-output-math .katex-display {
+  margin: 0;
+  text-align: left;
+}
+
+.cell-output-text {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 14px;
+  color: #333;
+  padding: 4px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cell-output-error {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, Monaco, monospace;
+  font-size: 14px;
+  color: #c00;
+  padding: 4px 0;
+  white-space: pre-wrap;
+}
+
+/* Add cell row */
+.add-cell-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-cell-btn {
+  flex: 1;
+  padding: 9px;
+  border: 2px dashed #ddd;
+  border-radius: 6px;
+  background: transparent;
+  color: #999;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.add-cell-btn:hover {
+  border-color: #4a90d9;
+  color: #4a90d9;
+  background: #f0f6ff;
+}
+
+/* Text cell */
+.cell-text {
+  background: #fafafa;
+}
+
+.text-cell-editor {
+  display: block;
+  width: 100%;
+  min-height: 24px;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.5;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+}
+
+.text-cell-editor:focus {
+  background: #f8f8f8;
+}
+
+.text-cell-rendered {
+  padding: 4px 2px;
+  cursor: text;
+  min-height: 28px;
+  line-height: 1.5;
+}
+
+.text-cell-rendered:hover {
+  background: rgba(74, 144, 217, 0.04);
+  border-radius: 4px;
+}
+
+.text-cell-rendered h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 4px;
+}
+
+.text-cell-rendered h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+.text-cell-rendered h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+.text-cell-rendered p {
+  font-size: 13px;
+  color: #555;
+  margin: 2px 0;
+}

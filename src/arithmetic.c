@@ -325,8 +325,13 @@ Expr* builtin_factorial(Expr* res) {
                 int64_t f = 1;
                 for (int64_t i = 2; i <= n; i++) f *= i;
                 return expr_new_integer(f);
+            } else if (n <= 170) {
+                /* Exact for 21-170 via double (loses precision but stays finite) */
+                double f = 1.0;
+                for (int64_t i = 2; i <= n; i++) f *= (double)i;
+                return expr_new_real(f);
             } else {
-                return expr_copy(res);
+                return expr_new_symbol("Overflow");
             }
         } else if (d == 2 || d == -2) {
             if (d == -2) { n = -n; }
