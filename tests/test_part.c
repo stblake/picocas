@@ -531,7 +531,7 @@ void test_extract() {
     assert_eval_eq("Extract[f[1,2,3,4,5,6,7,8,9,10],{-1;;1;;-3}]", "f[10, 7, 4, 1]", 0);
     assert_eval_eq("Extract[{{1,2},{3,4,5}},{All,1;;2}]", "{{1, 2}, {3, 4}}", 0);
     assert_eval_eq("Extract[{{1,2},{3,4,5}},{All,{1,-1}}]", "{{1, 2}, {3, 5}}", 0);
-    assert_eval_eq("Extract[{a:>1^2, b:>2^2,c:>3^3},{1;;2,2},Hold]", "Hold[{Power[1, 2], Power[2, 2]}]", 0);
+    assert_eval_eq("Extract[{a:>1^2, b:>2^2,c:>3^3},{1;;2,2},Hold]", "Hold[{1^2, 2^2}]", 0);
 }
 
 // Part-specific test runner

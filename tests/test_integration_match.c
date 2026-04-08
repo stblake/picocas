@@ -40,6 +40,19 @@ void test_integration_match() {
     expr_free(input);
     expr_free(output);
     
+    Expr* input2 = parse_expression("int[(4 x + 5)^2, x]");
+    ASSERT(input2 != NULL);
+    Expr* output2 = evaluate(input2);
+    ASSERT(output2 != NULL);
+    
+    char* s2 = expr_to_string(output2);
+    printf("Result 2: %s\n", s2);
+    ASSERT_STR_EQ(s2, "(5 + 4 x)^3/12");
+    
+    free(s2);
+    expr_free(input2);
+    expr_free(output2);
+    
     symtab_clear();
 }
 

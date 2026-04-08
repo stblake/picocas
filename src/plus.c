@@ -78,8 +78,6 @@ static Expr* add_numbers(Expr* a, Expr* b) {
         }
 
         Expr* res = make_complex(p1, p2);
-        expr_free(p1);
-        expr_free(p2);
         return res;
     }
 

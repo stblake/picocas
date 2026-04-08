@@ -108,8 +108,6 @@ static Expr* do_piecewise_1(Expr* x, int op) {
         Expr* im_res = do_piecewise_1(im, op);
         if (re_res && im_res) {
             Expr* combined = make_complex(re_res, im_res);
-            expr_free(re_res);
-            expr_free(im_res);
             return combined;
         }
         if (re_res) expr_free(re_res);

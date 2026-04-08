@@ -146,8 +146,6 @@ Expr* builtin_power(Expr* res) {
                     Expr* c_re = expr_new_real(r * cos(theta));
                     Expr* c_im = expr_new_real(r * sin(theta));
                     Expr* comp = make_complex(c_re, c_im);
-                    expr_free(c_re);
-                    expr_free(c_im);
                     return comp;
                 }
                 
@@ -162,8 +160,6 @@ Expr* builtin_power(Expr* res) {
                 Expr* c_re = expr_new_real(r_re);
                 Expr* c_im = expr_new_real(r_im);
                 Expr* comp = make_complex(c_re, c_im);
-                expr_free(c_re);
-                expr_free(c_im);
                 return comp;
             }
         }

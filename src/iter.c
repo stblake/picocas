@@ -142,7 +142,6 @@ Expr* builtin_do(Expr* res) {
     }
 
     Expr* returned_val = NULL;
-    bool finished = false;
 
     if (is_n_times) {
         int64_t n = is_inf ? 0 : imax_e->data.integer;
@@ -157,18 +156,15 @@ Expr* builtin_do(Expr* res) {
                         returned_val = expr_new_symbol("Null");
                     }
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Break") == 0) {
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Continue") == 0) {
                     expr_free(eval_expr);
                     continue;
                 } else if (strcmp(hname, "Throw") == 0 || strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
                     returned_val = eval_expr;
-                    finished = true;
                     break;
                 }
             }
@@ -187,18 +183,15 @@ Expr* builtin_do(Expr* res) {
                         returned_val = expr_new_symbol("Null");
                     }
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Break") == 0) {
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Continue") == 0) {
                     expr_free(eval_expr);
                     continue;
                 } else if (strcmp(hname, "Throw") == 0 || strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
                     returned_val = eval_expr;
-                    finished = true;
                     break;
                 }
             }
@@ -206,7 +199,6 @@ Expr* builtin_do(Expr* res) {
         }
     } else {
         double val = min_val;
-        int steps = 0;
         Expr* curr_e = expr_copy(imin_e);
         while (is_inf || (di_val > 0 && val <= max_val + 1e-14) || (di_val < 0 && val >= max_val - 1e-14)) {
             Expr* i_val = is_real ? expr_new_real(val) : expr_copy(curr_e);
@@ -224,11 +216,9 @@ Expr* builtin_do(Expr* res) {
                         returned_val = expr_new_symbol("Null");
                     }
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Break") == 0) {
                     expr_free(eval_expr);
-                    finished = true;
                     break;
                 } else if (strcmp(hname, "Continue") == 0) {
                     expr_free(eval_expr);
@@ -246,11 +236,9 @@ Expr* builtin_do(Expr* res) {
                     } else {
                         val += di_val;
                     }
-                    steps++;
                     continue;
                 } else if (strcmp(hname, "Throw") == 0 || strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
                     returned_val = eval_expr;
-                    finished = true;
                     break;
                 }
             }
@@ -272,7 +260,6 @@ Expr* builtin_do(Expr* res) {
                 val += di_val;
             }
             
-            steps++;
             // Note: unlike Table, Do[expr, Infinity] might loop millions of times, but we don't forcefully break unless needed.
         }
         if (curr_e) expr_free(curr_e);

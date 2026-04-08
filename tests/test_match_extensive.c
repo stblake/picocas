@@ -107,10 +107,25 @@ void test_match_extensive_sequences() {
     ASSERT(test_match_q("f[1, 2]", "f[x__] /; Length[{x}] === 2") == true);
     
     // Longest and Shortest constraints (tested via ReplaceAll)
-    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Pattern[x, BlankSequence[]], Pattern[y, BlankSequence[]]], List[x]]] === {a}", "True") == true);
-    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Pattern[x, BlankSequence[]], Longest[Pattern[y, BlankSequence[]]]], List[x]]] === {a}", "True") == true);
-    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Longest[Pattern[x, BlankSequence[]]], Pattern[y, BlankSequence[]]], List[y]]] === {f}", "True") == true);
-    ASSERT(test_match_q("ReplaceAll[{a,b,c,d,e,f}, RuleDelayed[List[Shortest[Pattern[x, BlankSequence[]]], Pattern[y, BlankSequence[]]], List[x]]] === {a}", "True") == true);
+    Expr* e1 = evaluate(parse_or_die("ReplaceAll[{a,b,c,d,e,f}, {x__, y__} :> {x}]"));
+    Expr* r1 = parse_or_die("{a}");
+    ASSERT(expr_eq(e1, r1) == true);
+    expr_free(e1); expr_free(r1);
+
+    Expr* e2 = evaluate(parse_or_die("ReplaceAll[{a,b,c,d,e,f}, {x__, Longest[y__]} :> {x}]"));
+    Expr* r2 = parse_or_die("{a}");
+    ASSERT(expr_eq(e2, r2) == true);
+    expr_free(e2); expr_free(r2);
+
+    Expr* e3 = evaluate(parse_or_die("ReplaceAll[{a,b,c,d,e,f}, {Longest[x__], y__} :> {y}]"));
+    Expr* r3 = parse_or_die("{f}");
+    ASSERT(expr_eq(e3, r3) == true);
+    expr_free(e3); expr_free(r3);
+
+    Expr* e4 = evaluate(parse_or_die("ReplaceAll[{a,b,c,d,e,f}, {Shortest[x__], y__} :> {x}]"));
+    Expr* r4 = parse_or_die("{a}");
+    ASSERT(expr_eq(e4, r4) == true);
+    expr_free(e4); expr_free(r4);
 }
 
 void test_match_extensive_named_sequences() {
