@@ -103,6 +103,14 @@ Expr* builtin_abs(Expr* res) {
         return ret;
     }
     int64_t n, d;
+    if (arg->type == EXPR_BIGINT) {
+        mpz_t r;
+        mpz_init(r);
+        mpz_abs(r, arg->data.bigint);
+        Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+        mpz_clear(r);
+        return result;
+    }
     if (arg->type == EXPR_INTEGER) {
         int64_t val = arg->data.integer;
         return expr_new_integer(val < 0 ? -val : val);

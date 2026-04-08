@@ -234,3 +234,8 @@ target_include_directories(parfrac_tests PRIVATE ../src)
 add_executable(polymod_tests test_polymod.c ${COMMON_SRC})
 target_include_directories(polymod_tests PRIVATE ../src)
 target_include_directories(patterns_tests PRIVATE ../src)
+
+add_executable(bigint_tests test_bigint.c ${COMMON_SRC})
+target_include_directories(bigint_tests PRIVATE ../src /opt/homebrew/include)
+target_link_directories(bigint_tests PRIVATE /opt/homebrew/lib)
+target_link_libraries(bigint_tests gmp)

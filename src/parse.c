@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
+#include <gmp.h>
 
 // Private parser state
 typedef struct {
@@ -84,20 +85,42 @@ static Expr* parse_number(ParserState* s) {
             start++;
         }
 
-        uint64_t ullval = 0;
         const char* current = start;
         while (isdigit(*current)) {
-            ullval = ullval * 10 + (*current - '0');
             current++;
         }
-        
+
         if (current == start) return NULL;
+
+        // Collect digit string into buffer (with optional sign)
+        size_t digit_len = (size_t)(current - start);
+        size_t buf_len = digit_len + (negative ? 1 : 0) + 1;
+        char buf[256];
+        char* heap_buf = NULL;
+        char* num_str = buf;
+        if (buf_len > sizeof(buf)) {
+            heap_buf = malloc(buf_len);
+            num_str = heap_buf;
+        }
+        size_t idx = 0;
+        if (negative) num_str[idx++] = '-';
+        memcpy(num_str + idx, start, digit_len);
+        num_str[idx + digit_len] = '\0';
+
         s->pos = current;
 
-        int64_t val = (int64_t)ullval;
-        if (negative) val = -val;
-        
-        return expr_new_integer(val);
+        Expr* result;
+        if (digit_len > 19) {
+            // More digits than INT64_MAX (19 digits) — skip strtoll, go straight to bigint
+            result = expr_new_bigint_from_str(num_str);
+        } else {
+            errno = 0;
+            char* endptr;
+            long long llval = strtoll(num_str, &endptr, 10);
+            result = (errno == ERANGE) ? expr_new_bigint_from_str(num_str) : expr_new_integer((int64_t)llval);
+        }
+        if (heap_buf) free(heap_buf);
+        return result;
     }
 }
 

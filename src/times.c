@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <gmp.h>
 
 static bool is_overflow(Expr* e) {
     return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
@@ -22,9 +23,31 @@ static Expr* multiply_numbers(Expr* a, Expr* b) {
         if (is_rational(b, &n, &d)) vb = (double)n / d;
         return expr_new_real(va * vb);
     }
+    if (a->type == EXPR_BIGINT || b->type == EXPR_BIGINT) {
+        mpz_t av, bv, r;
+        expr_to_mpz(a, av);
+        expr_to_mpz(b, bv);
+        mpz_init(r);
+        mpz_mul(r, av, bv);
+        mpz_clear(av); mpz_clear(bv);
+        Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+        mpz_clear(r);
+        return res;
+    }
+
     if (a->type == EXPR_INTEGER && b->type == EXPR_INTEGER) {
         __int128_t res = (__int128_t)a->data.integer * b->data.integer;
-        if (res > INT64_MAX || res < INT64_MIN) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+        if (res > INT64_MAX || res < INT64_MIN) {
+            mpz_t av, bv, r;
+            expr_to_mpz(a, av);
+            expr_to_mpz(b, bv);
+            mpz_init(r);
+            mpz_mul(r, av, bv);
+            mpz_clear(av); mpz_clear(bv);
+            Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clear(r);
+            return result;
+        }
         return expr_new_integer((int64_t)res);
     }
     int64_t n1, d1, n2, d2;
@@ -67,7 +90,7 @@ Expr* builtin_times(Expr* res) {
             free(groups); return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
         }
 
-        if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL || is_rational(arg, NULL, NULL)) {
+        if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL || arg->type == EXPR_BIGINT || is_rational(arg, NULL, NULL)) {
             Expr* next = multiply_numbers(num_prod, arg); expr_free(num_prod); num_prod = next;
         } else if (is_complex(arg, NULL, NULL) || (arg->type == EXPR_SYMBOL && strcmp(arg->data.symbol, "I") == 0)) {
             Expr* c_arg;

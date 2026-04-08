@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <gmp.h>
 
 static int64_t ipow(int64_t base, int64_t exp, bool* overflow) {
     if (exp < 0) return 0;
@@ -52,6 +53,18 @@ static void factor_out_kth_power(int64_t n, int64_t k, int64_t* out_m, int64_t* 
     }
     *out_m = m;
     *out_r = r;
+}
+
+static Expr* bigint_pow(const Expr* base, int64_t exp) {
+    if (exp < 0) return NULL;
+    mpz_t b, r;
+    expr_to_mpz(base, b);
+    mpz_init(r);
+    mpz_pow_ui(r, b, (unsigned long)exp);
+    mpz_clear(b);
+    Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+    mpz_clear(r);
+    return result;
 }
 
 Expr* make_power(Expr* base, Expr* exp) {
@@ -180,19 +193,37 @@ Expr* builtin_power(Expr* res) {
         }
     }
 
+    if (base->type == EXPR_BIGINT && exp->type == EXPR_INTEGER) {
+        int64_t e = exp->data.integer;
+        if (e > 0) {
+            return bigint_pow(base, e);
+        }
+        if (e < 0) {
+            Expr* denom = bigint_pow(base, -e);
+            if (!denom) return NULL;
+            Expr* p_args[2] = { denom, expr_new_integer(-1) };
+            return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+        }
+    }
+
     if (base->type == EXPR_INTEGER && exp->type == EXPR_INTEGER) {
         int64_t b = base->data.integer;
         int64_t e = exp->data.integer;
         if (e > 0) {
             bool overflow = false;
             int64_t res_val = ipow(b, e, &overflow);
-            if (overflow) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+            if (overflow) return bigint_pow(base, e);
             return expr_new_integer(res_val);
         }
         if (e < 0) {
             bool overflow = false;
             int64_t res_val = ipow(b, -e, &overflow);
-            if (overflow) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+            if (overflow) {
+                Expr* denom = bigint_pow(base, -e);
+                if (!denom) return NULL;
+                Expr* p_args[2] = { denom, expr_new_integer(-1) };
+                return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+            }
             return make_rational(1, res_val);
         }
     }

@@ -1,4 +1,5 @@
 #include "match.h"
+#include <gmp.h>
 #include "part.h"
 #include "eval.h"
 #include "print.h"
@@ -339,6 +340,8 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
                 matched_normally = (strcmp(expr->data.symbol, pattern->data.symbol) == 0); break;
             case EXPR_STRING:
                 matched_normally = (strcmp(expr->data.string, pattern->data.string) == 0); break;
+            case EXPR_BIGINT:
+                matched_normally = (mpz_cmp(expr->data.bigint, pattern->data.bigint) == 0); break;
             case EXPR_FUNCTION: {
                 size_t saved_env_count = env->count;
                 if (match(expr->data.function.head, pattern->data.function.head, env)) {
