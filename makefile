@@ -1,7 +1,17 @@
 
 CC = gcc
-CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I./src/external/ecm -I/opt/homebrew/include -I/usr/local/include
-LDFLAGS = src/external/ecm/.libs/libecm.a -lreadline -L/opt/homebrew/lib -L/usr/local/lib -lgmp
+CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I./src/external/ecm -I/usr/local/include
+
+ifneq ($(wildcard /opt/homebrew/include),)
+CFLAGS += -I/opt/homebrew/include
+endif
+
+LDFLAGS = src/external/ecm/.libs/libecm.a -lreadline -L/usr/local/lib -lgmp
+
+ifneq ($(wildcard /opt/homebrew/lib),)
+LDFLAGS += -L/opt/homebrew/lib
+endif
+
 SRC_DIR = src
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:.c=.o)

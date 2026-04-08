@@ -31,6 +31,7 @@ void info_init(void) {
     symtab_set_docstring("RowReduce", "RowReduce[m] gives the row-reduced form of the matrix m.");
     symtab_set_docstring("IdentityMatrix", "IdentityMatrix[n] gives the n x n identity matrix.\nIdentityMatrix[{m, n}] gives the m x n identity matrix.");
     symtab_set_docstring("DiagonalMatrix", "DiagonalMatrix[list] gives a matrix with the elements of list on the leading diagonal, and zero elsewhere.\nDiagonalMatrix[list, k] gives a matrix with the elements of list on the k-th diagonal.\nDiagonalMatrix[list, k, n] pads with zeros to create an n x n matrix.");
+    symtab_set_docstring("FullForm", "FullForm[expr] prints as the full internal structure of expr, without any special formatting.");
     symtab_set_docstring("Head", "Head[expr] gives the head of expr.");
     symtab_set_docstring("Length", "Length[expr] gives the number of elements in expr.");
     symtab_set_docstring("Dimensions", "Dimensions[expr] gives a list of the dimensions of expr.");

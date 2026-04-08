@@ -2,8 +2,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(picocas_tests)
 
-include_directories(/usr/local/include /opt/homebrew/include ../src/external/ecm)
-link_directories(/usr/local/lib /opt/homebrew/lib)
+include_directories(/usr/local/include ../src/external/ecm)
+if(EXISTS "/opt/homebrew/include")
+    include_directories(/opt/homebrew/include)
+endif()
+link_directories(/usr/local/lib)
+if(EXISTS "/opt/homebrew/lib")
+    link_directories(/opt/homebrew/lib)
+endif()
 link_libraries(gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
 
 set(COMMON_SRC

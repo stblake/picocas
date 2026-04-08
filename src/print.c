@@ -83,7 +83,10 @@ static void print_standard(Expr* e, int parent_prec) {
     if (e->data.function.head->type == EXPR_SYMBOL) {
         const char* head = e->data.function.head->data.symbol;
         
-        if (strcmp(head, "Rational") == 0 && e->data.function.arg_count == 2) {
+        if (strcmp(head, "FullForm") == 0 && e->data.function.arg_count == 1) {
+            expr_print_fullform(e->data.function.args[0]);
+        }
+        else if (strcmp(head, "Rational") == 0 && e->data.function.arg_count == 2) {
             print_standard(e->data.function.args[0], 470);
             printf("/");
             print_standard(e->data.function.args[1], 470);
@@ -176,13 +179,6 @@ static void print_standard(Expr* e, int parent_prec) {
                     } else {
                         num_args[num_count++] = expr_copy(arg);
                     }
-                } else if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "Rational") == 0 && arg->data.function.arg_count == 2) {
-                    Expr* n = arg->data.function.args[0];
-                    Expr* d = arg->data.function.args[1];
-                    if (!(n->type == EXPR_INTEGER && n->data.integer == 1)) {
-                        num_args[num_count++] = expr_copy(n);
-                    }
-                    den_args[den_count++] = expr_copy(d);
                 } else {
                     num_args[num_count++] = expr_copy(arg);
                 }
