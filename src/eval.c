@@ -357,18 +357,32 @@ Expr* evaluate_step(Expr* e) {
                     Expr* rhs = res->data.function.args[1];
                     int is_delayed = (strcmp(head_name, "SetDelayed") == 0);
                     
-                    /* For Set (not SetDelayed), we might need to evaluate the LHS to find the actual target */
+                    /* For Set and SetDelayed, we evaluate the arguments of the LHS to find the actual target */
                     /* e.g. f[x] = 1 where x=c should define f[c]=1 */
+                    /* Patterns must also be evaluated to canonical form to match evaluated inputs. */
                     Expr* target_lhs = lhs;
                     bool free_target = false;
-                    if (!is_delayed && lhs->type == EXPR_FUNCTION) {
+                    if (lhs->type == EXPR_FUNCTION) {
                         /* Only evaluate arguments, not the head, to avoid matching existing rules */
                         Expr** eval_args = malloc(sizeof(Expr*) * lhs->data.function.arg_count);
                         bool is_part = (lhs->data.function.head->type == EXPR_SYMBOL && strcmp(lhs->data.function.head->data.symbol, "Part") == 0);
                         
+                        uint32_t lhs_attrs = ATTR_NONE;
+                        if (lhs->data.function.head->type == EXPR_SYMBOL) {
+                            lhs_attrs = get_attributes(lhs->data.function.head->data.symbol);
+                        }
+
                         for (size_t i = 0; i < lhs->data.function.arg_count; i++) {
-                            if (is_part && i == 0) {
-                                eval_args[i] = expr_copy(lhs->data.function.args[i]); // Hold the first argument of Part
+                            bool hold = false;
+                            if ((lhs_attrs & ATTR_HOLDALLCOMPLETE) == ATTR_HOLDALLCOMPLETE) hold = true;
+                            else if ((lhs_attrs & ATTR_HOLDALL) == ATTR_HOLDALL) hold = true;
+                            else if (i == 0 && (lhs_attrs & ATTR_HOLDFIRST)) hold = true;
+                            else if (i > 0 && (lhs_attrs & ATTR_HOLDREST)) hold = true;
+                            
+                            if (is_part && i == 0) hold = true; // Hold the first argument of Part
+                            
+                            if (hold) {
+                                eval_args[i] = expr_copy(lhs->data.function.args[i]);
                             } else {
                                 eval_args[i] = evaluate(lhs->data.function.args[i]);
                             }

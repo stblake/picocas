@@ -398,9 +398,15 @@ static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch
             case EXPR_REAL:
                 if (expr->data.real == pattern->data.real) return call_parent(env, parent);
                 return false;
-            case EXPR_SYMBOL:
+            case EXPR_SYMBOL: {
+                Expr* bound = env_get(env, pattern->data.symbol);
+                if (bound) {
+                    if (expr_eq(expr, bound)) return call_parent(env, parent);
+                    return false;
+                }
                 if (strcmp(expr->data.symbol, pattern->data.symbol) == 0) return call_parent(env, parent);
                 return false;
+            }
             case EXPR_STRING:
                 if (strcmp(expr->data.string, pattern->data.string) == 0) return call_parent(env, parent);
                 return false;

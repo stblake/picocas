@@ -46,7 +46,7 @@ static SymbolAttr builtin_attrs[] = {
     {"Function", ATTR_HOLDALL | ATTR_PROTECTED},
     {"MatchQ", ATTR_PROTECTED},
     {"PatternTest", ATTR_HOLDREST | ATTR_PROTECTED},
-    {"Condition", ATTR_HOLDALL | ATTR_PROTECTED},
+    {"Condition", ATTR_HOLDREST | ATTR_PROTECTED},
     {"Rule", ATTR_PROTECTED},
     {"RuleDelayed", ATTR_HOLDREST | ATTR_PROTECTED | ATTR_SEQUENCEHOLD},
     {"Equal", ATTR_PROTECTED},

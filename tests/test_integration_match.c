@@ -53,6 +53,25 @@ void test_integration_match() {
     expr_free(input2);
     expr_free(output2);
     
+    // Second rule
+    Expr* rule_set2 = parse_expression("int[x_/((a_ + b_. x_) (c_ + d_. x_)), x_] /; FreeQ[{a, b, c, d}, x] := With[{k = a d - b c, u = a + b x, v = c + d x}, 1/k (a/b Log[u] - c/d Log[v])]");
+    Expr* rule_res2 = evaluate(rule_set2);
+    expr_free(rule_res2);
+    expr_free(rule_set2);
+
+    Expr* input3 = parse_expression("int[x/((3 x + 1) (7 x - 1)), x]");
+    ASSERT(input3 != NULL);
+    Expr* output3 = evaluate(input3);
+    ASSERT(output3 != NULL);
+
+    char* s3 = expr_to_string(output3);
+    printf("Result 3: %s\n", s3);
+    ASSERT_STR_EQ(s3, "(-1 (-Log[-1 + 7 x]/7 - Log[1 + 3 x]/3))/10");
+
+    free(s3);
+    expr_free(input3);
+    expr_free(output3);
+
     symtab_clear();
 }
 
