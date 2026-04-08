@@ -2,9 +2,9 @@
 cmake_minimum_required(VERSION 3.10)
 project(picocas_tests)
 
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
-link_libraries(gmp m)
+include_directories(/usr/local/include /opt/homebrew/include ../src/external/ecm)
+link_directories(/usr/local/lib /opt/homebrew/lib)
+link_libraries(gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
 
 set(COMMON_SRC
     ../src/expr.c
@@ -250,7 +250,7 @@ target_include_directories(patterns_tests PRIVATE ../src)
 add_executable(bigint_tests test_bigint.c ${COMMON_SRC})
 target_include_directories(bigint_tests PRIVATE ../src /usr/local/include)
 target_link_directories(bigint_tests PRIVATE /usr/local/lib)
-target_link_libraries(bigint_tests gmp)
+target_link_libraries(bigint_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
 add_executable(integrals_tests test_integrals.c ${COMMON_SRC})
 target_include_directories(integrals_tests PRIVATE ../src)
-target_link_libraries(integrals_tests gmp m)
+target_link_libraries(integrals_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)

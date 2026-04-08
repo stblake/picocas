@@ -1,7 +1,7 @@
 
 CC = gcc
-CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/usr/local/include
-LDFLAGS = -lreadline -L/usr/local/lib -lgmp
+CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I./src/external/ecm -I/opt/homebrew/include -I/usr/local/include
+LDFLAGS = src/external/ecm/.libs/libecm.a -lreadline -L/opt/homebrew/lib -L/usr/local/lib -lgmp
 SRC_DIR = src
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:.c=.o)
@@ -16,7 +16,7 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c src/external/ecm/.libs/libecm.a
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(SRC_DIR)/boolean.o: $(SRC_DIR)/boolean.c

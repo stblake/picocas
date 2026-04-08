@@ -1,0 +1,3 @@
+[submodule "src/external/ecm"]
+	path = src/external/ecm
+	url = https://gitlab.inria.fr/zimmerma/ecm.git

@@ -2,6 +2,8 @@
 #include "arithmetic.h"
 #include "expr.h"
 #include "eval.h"
+#include "symtab.h"
+#include "attr.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -316,167 +318,188 @@ static uint64_t pollard_rho_brent(uint64_t n) {
     }
 }
 
-typedef struct {
-    int64_t p;
-    int64_t count;
-} Factor;
 
-static void add_factor(Factor* factors, int* num_factors, int64_t p, int64_t count) {
+#include <gmp.h>
+#include "ecm.h"
+
+#include <gmp.h>
+#include "ecm.h"
+
+typedef struct {
+    mpz_t p;
+    int64_t count;
+} FactorMpz;
+
+static void add_factor_mpz(FactorMpz* factors, int* num_factors, mpz_t p, int64_t count) {
     for (int i = 0; i < *num_factors; i++) {
-        if (factors[i].p == p) {
+        if (mpz_cmp(factors[i].p, p) == 0) {
             factors[i].count += count;
             return;
         }
     }
-    factors[*num_factors].p = p;
+    mpz_init_set(factors[*num_factors].p, p);
     factors[*num_factors].count = count;
     (*num_factors)++;
 }
 
-static void factorize_internal(uint64_t n, Factor* factors, int* num_factors, int* k_limit) {
-    if (n == 1) return;
+static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit) {
+    if (mpz_cmp_ui(n, 1) <= 0) return;
     if (*k_limit > 0 && *num_factors >= *k_limit) return;
 
-    if (is_prime_internal(n)) {
-        add_factor(factors, num_factors, (int64_t)n, 1);
+    if (mpz_probab_prime_p(n, 25)) {
+        add_factor_mpz(factors, num_factors, n, 1);
         return;
     }
 
-    uint64_t d = pollard_rho_brent(n);
-    if (d == n) { 
-        add_factor(factors, num_factors, (int64_t)n, 1);
-        return;
+    // Trial division for small primes
+    static const uint32_t small_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
+    int n_small = sizeof(small_primes)/sizeof(small_primes[0]);
+    for (int i = 0; i < n_small; i++) {
+        if (mpz_divisible_ui_p(n, small_primes[i])) {
+            int64_t count = 0;
+            while (mpz_divisible_ui_p(n, small_primes[i])) {
+                count++;
+                mpz_divexact_ui(n, n, small_primes[i]);
+            }
+            mpz_t sp;
+            mpz_init_set_ui(sp, small_primes[i]);
+            add_factor_mpz(factors, num_factors, sp, count);
+            mpz_clear(sp);
+            
+            if (mpz_cmp_ui(n, 1) == 0) return;
+            if (mpz_probab_prime_p(n, 25)) {
+                add_factor_mpz(factors, num_factors, n, 1);
+                return;
+            }
+            if (*k_limit > 0 && *num_factors >= *k_limit) return;
+        }
+    }
+
+    mpz_t f;
+    mpz_init(f);
+    ecm_params params;
+    ecm_init(params);
+    params->B1done = 100.0; /* We can do a quick check with small B1 */
+
+    int found = 0;
+    // Try ECM with increasing bounds
+    double B1_bounds[] = {2000.0, 11000.0, 50000.0, 250000.0, 1000000.0, 3000000.0, 11000000.0};
+    int num_bounds = sizeof(B1_bounds)/sizeof(B1_bounds[0]);
+    
+    for (int i = 0; i < num_bounds && !found; i++) {
+        for (int tries = 0; tries < 10 && !found; tries++) {
+            if (ecm_factor(f, n, B1_bounds[i], params) > 0) {
+                found = 1;
+            }
+        }
     }
     
-    factorize_internal(d, factors, num_factors, k_limit);
-    factorize_internal(n / d, factors, num_factors, k_limit);
+    ecm_clear(params);
+
+    if (found) {
+        mpz_t n_f;
+        mpz_init(n_f);
+        mpz_divexact(n_f, n, f);
+        
+        factorize_mpz(f, factors, num_factors, k_limit);
+        factorize_mpz(n_f, factors, num_factors, k_limit);
+        mpz_clear(n_f);
+    } else {
+        // If ECM fails to find a factor within reasonable bounds, just add n as a factor
+        add_factor_mpz(factors, num_factors, n, 1);
+    }
+    mpz_clear(f);
+}
+
+static int compare_factors_mpz(const void* a, const void* b) {
+    const FactorMpz* fa = (const FactorMpz*)a;
+    const FactorMpz* fb = (const FactorMpz*)b;
+    return mpz_cmp(fa->p, fb->p);
 }
 
 Expr* builtin_factorinteger(Expr* res) {
     if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
     
     Expr* n_expr = res->data.function.args[0];
-    int64_t n_num, n_den;
-    if (!is_rational(n_expr, &n_num, &n_den)) return NULL;
+    mpz_t num, den;
+    bool is_rat = false;
+
+    if (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_BIGINT) {
+        expr_to_mpz(n_expr, num);
+        mpz_init_set_ui(den, 1);
+        is_rat = true;
+    } else {
+        int64_t n_num, n_den;
+        if (is_rational(n_expr, &n_num, &n_den)) {
+            mpz_init_set_si(num, n_num);
+            mpz_init_set_si(den, n_den);
+            is_rat = true;
+        }
+    }
+
+    if (!is_rat) return NULL;
 
     int k_limit = -1;
-    bool automatic = false;
     if (res->data.function.arg_count == 2) {
         Expr* k_expr = res->data.function.args[1];
         if (k_expr->type == EXPR_INTEGER) {
             k_limit = (int)k_expr->data.integer;
         } else if (k_expr->type == EXPR_SYMBOL && strcmp(k_expr->data.symbol, "Automatic") == 0) {
-            automatic = true;
+            
         } else {
+            mpz_clear(num); mpz_clear(den);
             return NULL;
         }
     }
 
-    Factor factors[128];
+    FactorMpz factors[1024];
     int num_factors = 0;
 
-    if (n_num < 0) {
-        factors[num_factors].p = -1;
-        factors[num_factors].count = 1;
-        num_factors++;
-        n_num = -n_num;
-    } else if (n_num == 0) {
-        factors[num_factors].p = 0;
-        factors[num_factors].count = 1;
-        num_factors++;
-        n_num = 1;
+    if (mpz_cmp_ui(num, 0) < 0) {
+        mpz_t minus_one;
+        mpz_init_set_si(minus_one, -1);
+        add_factor_mpz(factors, &num_factors, minus_one, 1);
+        mpz_clear(minus_one);
+        mpz_neg(num, num);
+    } else if (mpz_cmp_ui(num, 0) == 0) {
+        mpz_t zero;
+        mpz_init_set_ui(zero, 0);
+        add_factor_mpz(factors, &num_factors, zero, 1);
+        mpz_clear(zero);
+        mpz_set_ui(num, 1);
     }
 
-    uint64_t val = (uint64_t)n_num;
-    uint64_t d_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-    int distinct_found = 0;
-
-    for (int i = 0; i < 12; i++) {
-        uint64_t p = d_primes[i];
-        if (val % p == 0) {
-            if (k_limit > 0 && distinct_found >= k_limit) goto done_factors;
-            int64_t count = 0;
-            while (val > 1 && val % p == 0) {
-                count++;
-                val /= p;
-            }
-            factors[num_factors].p = (int64_t)p;
-            factors[num_factors].count = count;
-            num_factors++;
-            distinct_found++;
-        }
-    }
-
-    if (!automatic) {
-        while (val > 1) {
-            if (k_limit > 0 && distinct_found >= k_limit) break;
-            
-            uint64_t d;
-            if (is_prime_internal(val)) {
-                d = val;
-            } else {
-                d = pollard_rho_brent(val);
-                while (!is_prime_internal(d)) {
-                    d = pollard_rho_brent(d);
-                }
-            }
-
-            int64_t count = 0;
-            while (val % d == 0) {
-                count++;
-                val /= d;
-            }
-            factors[num_factors].p = (int64_t)d;
-            factors[num_factors].count = count;
-            num_factors++;
-            distinct_found++;
-        }
-    }
-
-done_factors:
-    if (n_den > 1) {
-        uint64_t d_val = (uint64_t)n_den;
-        Factor d_factors[128];
+    // Since ECM extracts small factors first, Automatic doesn't need to be treated differently.
+    factorize_mpz(num, factors, &num_factors, &k_limit);
+    
+    if (mpz_cmp_ui(den, 1) > 0) {
+        FactorMpz d_factors[1024];
         int d_num_factors = 0;
         int d_limit = -1;
-        factorize_internal(d_val, d_factors, &d_num_factors, &d_limit);
+        factorize_mpz(den, d_factors, &d_num_factors, &d_limit);
         for (int i = 0; i < d_num_factors; i++) {
-            add_factor(factors, &num_factors, d_factors[i].p, -d_factors[i].count);
+            add_factor_mpz(factors, &num_factors, d_factors[i].p, -d_factors[i].count);
+            mpz_clear(d_factors[i].p);
         }
     }
 
-    for (int i = 0; i < num_factors - 1; i++) {
-        for (int j = i + 1; j < num_factors; j++) {
-            int64_t pi = factors[i].p;
-            int64_t pj = factors[j].p;
-            if (pi > pj) {
-                Factor tmp = factors[i];
-                factors[i] = factors[j];
-                factors[j] = tmp;
-            }
-        }
-    }
+    qsort(factors, num_factors, sizeof(FactorMpz), compare_factors_mpz);
 
-    size_t total_count = num_factors + (val > 1 ? 1 : 0);
-    Expr** list_args = malloc(sizeof(Expr*) * total_count);
+    Expr** list_args = malloc(sizeof(Expr*) * num_factors);
     for (int i = 0; i < num_factors; i++) {
         Expr** pair = malloc(sizeof(Expr*) * 2);
-        pair[0] = expr_new_integer(factors[i].p);
+        pair[0] = expr_bigint_normalize(expr_new_bigint_from_mpz(factors[i].p));
         pair[1] = expr_new_integer(factors[i].count);
         list_args[i] = expr_new_function(expr_new_symbol("List"), pair, 2);
         free(pair);
-    }
-    if (val > 1) {
-        list_args[num_factors] = expr_new_integer((int64_t)val);
+        mpz_clear(factors[i].p);
     }
 
-    Expr* result = expr_new_function(expr_new_symbol("List"), list_args, total_count);
+    Expr* result = expr_new_function(expr_new_symbol("List"), list_args, num_factors);
     free(list_args);
+    mpz_clear(num); mpz_clear(den);
     return result;
 }
-
-#include "symtab.h"
-#include "attr.h"
 
 Expr* builtin_eulerphi(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
@@ -530,4 +553,3 @@ void facint_init(void) {
     symtab_get_def("EulerPhi")->attributes |= (ATTR_PROTECTED | ATTR_LISTABLE);
     symtab_get_def("NextPrime")->attributes |= (ATTR_PROTECTED | ATTR_READPROTECTED | ATTR_LISTABLE);
 }
-
