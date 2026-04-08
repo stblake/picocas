@@ -15,8 +15,8 @@ void test_mean() {
     } tests[] = {
         {"Mean[{1, 2, 3, 4}]", "5/2"},
         {"Mean[{1.2, 2.8}]", "2.0"},
-        {"Mean[{a, b, c, d}]", "(a + b + c + d)/4"},
-        {"Mean[{{a, u}, {b, v}, {c, w}}]", "{(a + b + c)/3, (u + v + w)/3}"}
+        {"Mean[{a, b, c, d}]", "1/4 (a + b + c + d)"},
+        {"Mean[{{a, u}, {b, v}, {c, w}}]", "{1/3 (a + b + c), 1/3 (u + v + w)}"}
     };
 
     for (int i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {

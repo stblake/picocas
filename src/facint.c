@@ -178,8 +178,13 @@ Expr* builtin_primeq(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
 
-    if (arg->type == EXPR_INTEGER) {
-        if (is_prime_internal((uint64_t)llabs(arg->data.integer))) {
+    if (arg->type == EXPR_INTEGER || arg->type == EXPR_BIGINT) {
+        mpz_t n;
+        expr_to_mpz(arg, n);
+        int is_prime = mpz_probab_prime_p(n, 25);
+        mpz_clear(n);
+        
+        if (is_prime) {
             return expr_new_symbol("True");
         } else {
             return expr_new_symbol("False");
@@ -211,60 +216,44 @@ Expr* builtin_nextprime(Expr* res) {
 
     if (k == 0) return expr_copy(x_expr);
 
-    int64_t start_val;
-    if (x_expr->type == EXPR_INTEGER) {
-        start_val = x_expr->data.integer;
+    mpz_t current;
+    if (x_expr->type == EXPR_INTEGER || x_expr->type == EXPR_BIGINT) {
+        expr_to_mpz(x_expr, current);
     } else if (x_expr->type == EXPR_REAL) {
-        start_val = (int64_t)floor(x_expr->data.real);
+        mpz_init_set_d(current, floor(x_expr->data.real));
     } else {
         int64_t n, d;
         if (is_rational(x_expr, &n, &d)) {
-            start_val = n / d;
+            int64_t start_val = n / d;
             if (n < 0 && n % d != 0) start_val--; 
+            mpz_init_set_si(current, start_val);
         } else {
             return NULL;
         }
     }
 
-    uint64_t current = (uint64_t)start_val;
-    int64_t count = llabs(k);
-
     if (k > 0) {
-        current = (start_val < 2) ? 2 : (uint64_t)start_val;
-        if (start_val < 2) count--;
-
-        while (count > 0) {
-            if (current < 2) current = 2;
-            else if (current == 2) current = 3;
-            else {
-                current++;
-                if (current % 2 == 0) current++;
-                while (!is_prime_internal(current)) {
-                    current += 2;
-                }
-            }
-            count--;
+        for (int64_t i = 0; i < k; i++) {
+            mpz_nextprime(current, current);
         }
     } else {
-        if (start_val <= 2) return NULL;
-        
-        while (count > 0) {
-            if (current == 3) current = 2;
-            else if (current <= 2) return NULL; 
-            else {
-                if (current % 2 == 0) current--;
-                else current -= 2;
-                
-                while (current > 2 && !is_prime_internal(current)) {
-                    current -= 2;
-                }
-                if (current < 2) return NULL;
+        int64_t count = -k;
+        for (int64_t i = 0; i < count; i++) {
+            if (mpz_cmp_ui(current, 2) <= 0) {
+                mpz_clear(current);
+                return NULL;
             }
-            count--;
+            int found = mpz_prevprime(current, current);
+            if (!found) {
+                mpz_clear(current);
+                return NULL;
+            }
         }
     }
 
-    return expr_new_integer((int64_t)current);
+    Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(current));
+    mpz_clear(current);
+    return result;
 }
 
 static uint64_t abs_diff(uint64_t a, uint64_t b) {
