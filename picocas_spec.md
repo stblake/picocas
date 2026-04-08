@@ -1737,6 +1737,24 @@ In[2]:= Do[If[i == 3, Break[]]; Print[i], {i, 5}]
 Out[2]= Null
 ```
 
+#### For
+Executes a loop with an initialization, condition test, increment, and body.
+- `For[start, test, incr, body]`: Evaluates `start`, then repeatedly evaluates `body` and `incr` until `test` fails to give `True`.
+- `For[start, test, incr]`: Executes the loop with a `Null` body.
+
+**Features**:
+- Evaluates its arguments in a nonstandard way (sequence: `test`, `body`, `incr`).
+- Has attribute `HoldAll`.
+- `Break[]` exits the loop.
+- `Continue[]` skips the rest of the body and proceeds to evaluating `incr`.
+- Exits as soon as `test` fails.
+- Returns `Null` unless an explicit `Return` is evaluated.
+
+```mathematica
+In[1]:= For[i=0, i<4, i++, Print[i]]
+Out[1]= Null
+```
+
 #### If
 Evaluates condition and executes the corresponding branch.
 - `If[condition, t, f]`: Gives `t` if `condition` evaluates to `True`, and `f` if it evaluates to `False`.

@@ -297,7 +297,96 @@ Expr* builtin_do(Expr* res) {
     return expr_new_symbol("Null");
 }
 
+Expr* builtin_for(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 3 || argc > 4) return NULL;
+
+    Expr* start = res->data.function.args[0];
+    Expr* test = res->data.function.args[1];
+    Expr* incr = res->data.function.args[2];
+    Expr* body = (argc == 4) ? res->data.function.args[3] : NULL;
+
+    Expr* eval_start = evaluate(start);
+    expr_free(eval_start);
+
+    Expr* returned_val = NULL;
+
+    while (true) {
+        Expr* eval_test = evaluate(test);
+        bool condition_met = false;
+        if (eval_test->type == EXPR_SYMBOL && strcmp(eval_test->data.symbol, "True") == 0) {
+            condition_met = true;
+        }
+        expr_free(eval_test);
+        if (!condition_met) {
+            break;
+        }
+
+        if (body) {
+            Expr* eval_body = evaluate(body);
+            if (eval_body->type == EXPR_FUNCTION && eval_body->data.function.head->type == EXPR_SYMBOL) {
+                const char* hname = eval_body->data.function.head->data.symbol;
+                if (strcmp(hname, "Return") == 0) {
+                    if (eval_body->data.function.arg_count > 0) {
+                        returned_val = expr_copy(eval_body->data.function.args[0]);
+                    } else {
+                        returned_val = expr_new_symbol("Null");
+                    }
+                    expr_free(eval_body);
+                    break;
+                } else if (strcmp(hname, "Break") == 0) {
+                    expr_free(eval_body);
+                    break;
+                } else if (strcmp(hname, "Continue") == 0) {
+                    expr_free(eval_body);
+                    // Continue to incr
+                } else if (strcmp(hname, "Throw") == 0 || strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
+                    returned_val = eval_body;
+                    break;
+                } else {
+                    expr_free(eval_body);
+                }
+            } else {
+                expr_free(eval_body);
+            }
+        }
+
+        Expr* eval_incr = evaluate(incr);
+        if (eval_incr->type == EXPR_FUNCTION && eval_incr->data.function.head->type == EXPR_SYMBOL) {
+            const char* hname = eval_incr->data.function.head->data.symbol;
+            if (strcmp(hname, "Return") == 0) {
+                if (eval_incr->data.function.arg_count > 0) {
+                    returned_val = expr_copy(eval_incr->data.function.args[0]);
+                } else {
+                    returned_val = expr_new_symbol("Null");
+                }
+                expr_free(eval_incr);
+                break;
+            } else if (strcmp(hname, "Break") == 0) {
+                expr_free(eval_incr);
+                break;
+            } else if (strcmp(hname, "Continue") == 0) {
+                expr_free(eval_incr);
+                // Continue to next iteration
+            } else if (strcmp(hname, "Throw") == 0 || strcmp(hname, "Abort") == 0 || strcmp(hname, "Quit") == 0) {
+                returned_val = eval_incr;
+                break;
+            } else {
+                expr_free(eval_incr);
+            }
+        } else {
+            expr_free(eval_incr);
+        }
+    }
+
+    if (returned_val) return returned_val;
+    return expr_new_symbol("Null");
+}
+
 void iter_init(void) {
     symtab_add_builtin("Do", builtin_do);
     symtab_get_def("Do")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
+    symtab_add_builtin("For", builtin_for);
+    symtab_get_def("For")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
 }

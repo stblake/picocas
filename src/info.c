@@ -120,6 +120,7 @@ void info_init(void) {
 
     // Control Flow
     symtab_set_docstring("Do", "Do[expr, n] evaluates expr n times.\nDo[expr, {i, imax}] evaluates expr with i successively taking on values 1 through imax.\nDo[expr, {i, imin, imax, di}] uses steps di.");
+    symtab_set_docstring("For", "For[start, test, incr, body] executes start, then repeatedly evaluates body and incr until test fails to give True.");
     symtab_set_docstring("If", "If[condition, t, f] gives t if condition evaluates to True, and f if it evaluates to False.\nIf[condition, t, f, u] gives u if condition evaluates to neither True nor False.");
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");
