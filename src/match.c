@@ -160,7 +160,19 @@ static bool is_repeated(Expr* e, Expr** rep_pat, int* min_len, int* max_len) {
     return true;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats);
+typedef struct ParentMatch {
+    Expr** exprs;
+    size_t n_exprs;
+    Expr** pats;
+    size_t n_pats;
+    Expr* condition;
+    Expr* pat_head;
+    size_t total_pats;
+    struct ParentMatch* parent;
+} ParentMatch;
+
+static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch* parent);
+static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats, ParentMatch* parent);
 
 #include "part.h" // for expr_head
 
@@ -197,11 +209,46 @@ static void extract_subset(Expr** exprs, size_t n_exprs, int* comb, int k, Expr*
     }
 }
 
-bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
+// Call parent if exists, otherwise return true (or check top condition)
+static bool call_parent(MatchEnv* env, ParentMatch* parent) {
+    if (parent) {
+        return match_args_internal(parent->exprs, parent->n_exprs, parent->pats, parent->n_pats, env, parent->condition, parent->pat_head, parent->total_pats, parent->parent);
+    }
+    return true;
+}
+
+static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch* parent) {
     if (!pattern) return false;
     if (!expr) return false;
 
-    // Handle Condition at the top level of the match
+    // Handle Except
+    if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(pattern->data.function.head->data.symbol, "Except") == 0) {
+        if (pattern->data.function.arg_count == 1) {
+            size_t saved_env_count = env->count;
+            if (match_internal(expr, pattern->data.function.args[0], env, NULL)) {
+                env_rollback(env, saved_env_count);
+                return false;
+            }
+            return call_parent(env, parent);
+        }
+        if (pattern->data.function.arg_count == 2) {
+            size_t saved_env_count = env->count;
+            if (!match_internal(expr, pattern->data.function.args[1], env, NULL)) {
+                env_rollback(env, saved_env_count);
+                return false;
+            }
+            size_t inner_saved = env->count;
+            if (match_internal(expr, pattern->data.function.args[0], env, NULL)) {
+                env_rollback(env, saved_env_count);
+                return false;
+            }
+            env_rollback(env, inner_saved);
+            return call_parent(env, parent);
+        }
+    }
+
+    // Handle Condition
     if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL &&
         strcmp(pattern->data.function.head->data.symbol, "Condition") == 0) {
         if (pattern->data.function.arg_count != 2) return false;
@@ -211,19 +258,18 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         
         if (inner_pat->type == EXPR_FUNCTION && expr->type == EXPR_FUNCTION) {
             size_t saved_env_count = env->count;
-            if (!match(expr->data.function.head, inner_pat->data.function.head, env)) {
+            if (!match_internal(expr->data.function.head, inner_pat->data.function.head, env, NULL)) {
                 env_rollback(env, saved_env_count);
                 return false;
             }
-            bool res = match_args(expr->data.function.args, expr->data.function.arg_count,
-                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond, inner_pat->data.function.head, inner_pat->data.function.arg_count);
+            bool res = match_args_internal(expr->data.function.args, expr->data.function.arg_count,
+                                 inner_pat->data.function.args, inner_pat->data.function.arg_count, env, cond, inner_pat->data.function.head, inner_pat->data.function.arg_count, parent);
             if (!res) env_rollback(env, saved_env_count);
             return res;
         }
 
-        // For non-functions or head mismatch, use the simple one-shot check
         size_t saved_env_count = env->count;
-        if (!match(expr, inner_pat, env)) {
+        if (!match_internal(expr, inner_pat, env, NULL)) {
             env_rollback(env, saved_env_count);
             return false;
         }
@@ -232,43 +278,49 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         expr_free(expanded_test);
         bool success = (result->type == EXPR_SYMBOL && strcmp(result->data.symbol, "True") == 0);
         expr_free(result);
-        if (!success) env_rollback(env, saved_env_count);
-        return success;
+        if (!success) {
+            env_rollback(env, saved_env_count);
+            return false;
+        }
+        return call_parent(env, parent);
     }
 
     Expr* b_head = NULL;
     if (is_blank(pattern, &b_head)) {
-        if (!b_head) return true;
-        
-        Expr* h = get_expr_head_borrowed(expr);
-        if (h) return expr_eq(h, b_head);
-        
-        // Atom head: check against symbol names
-        if (b_head->type == EXPR_SYMBOL) {
-            const char* hn = b_head->data.symbol;
-            if (expr->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) return true;
-            if (expr->type == EXPR_REAL && strcmp(hn, "Real") == 0) return true;
-            if (expr->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) return true;
-            if (expr->type == EXPR_STRING && strcmp(hn, "String") == 0) return true;
+        bool head_ok = false;
+        if (!b_head) head_ok = true;
+        else {
+            Expr* h = get_expr_head_borrowed(expr);
+            if (h) head_ok = expr_eq(h, b_head);
+            else if (b_head->type == EXPR_SYMBOL) {
+                const char* hn = b_head->data.symbol;
+                if (expr->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) head_ok = true;
+                else if (expr->type == EXPR_REAL && strcmp(hn, "Real") == 0) head_ok = true;
+                else if (expr->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) head_ok = true;
+                else if (expr->type == EXPR_STRING && strcmp(hn, "String") == 0) head_ok = true;
+            }
         }
+        if (head_ok) return call_parent(env, parent);
         return false;
     }
 
     int min_len = 0;
     if (is_sequence_blank(pattern, &b_head, &min_len)) {
         if (min_len > 1) return false;
-        if (!b_head) return true;
-        
-        Expr* h = get_expr_head_borrowed(expr);
-        if (h) return expr_eq(h, b_head);
-        
-        if (b_head->type == EXPR_SYMBOL) {
-            const char* hn = b_head->data.symbol;
-            if (expr->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) return true;
-            if (expr->type == EXPR_REAL && strcmp(hn, "Real") == 0) return true;
-            if (expr->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) return true;
-            if (expr->type == EXPR_STRING && strcmp(hn, "String") == 0) return true;
+        bool head_ok = false;
+        if (!b_head) head_ok = true;
+        else {
+            Expr* h = get_expr_head_borrowed(expr);
+            if (h) head_ok = expr_eq(h, b_head);
+            else if (b_head->type == EXPR_SYMBOL) {
+                const char* hn = b_head->data.symbol;
+                if (expr->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) head_ok = true;
+                else if (expr->type == EXPR_REAL && strcmp(hn, "Real") == 0) head_ok = true;
+                else if (expr->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) head_ok = true;
+                else if (expr->type == EXPR_STRING && strcmp(hn, "String") == 0) head_ok = true;
+            }
         }
+        if (head_ok) return call_parent(env, parent);
         return false;
     }
 
@@ -277,18 +329,26 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
     if (is_pattern(pattern, &p_sym, &p_pat)) {
         if (p_sym->type == EXPR_SYMBOL) {
             size_t saved_env_count = env->count;
-            if (!match(expr, p_pat, env)) {
-                env_rollback(env, saved_env_count);
+            // Match p_pat first
+            if (!match_internal(expr, p_pat, env, NULL)) {
                 return false;
             }
+            // Then handle binding and parent
             Expr* existing = env_get(env, p_sym->data.symbol);
             if (existing) {
-                if (expr_eq(expr, existing)) return true;
+                if (!expr_eq(expr, existing)) {
+                    env_rollback(env, saved_env_count);
+                    return false;
+                }
+                // Match with parent
+                if (call_parent(env, parent)) return true;
                 env_rollback(env, saved_env_count);
                 return false;
             } else {
                 env_set(env, p_sym->data.symbol, expr);
-                return true;
+                if (call_parent(env, parent)) return true;
+                env_rollback(env, saved_env_count);
+                return false;
             }
         }
     }
@@ -298,7 +358,7 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         strcmp(pattern->data.function.head->data.symbol, "Alternatives") == 0) {
         size_t saved_env_count = env->count;
         for (size_t i = 0; i < pattern->data.function.arg_count; i++) {
-            if (match(expr, pattern->data.function.args[i], env)) return true;
+            if (match_internal(expr, pattern->data.function.args[i], env, parent)) return true;
             env_rollback(env, saved_env_count);
         }
         return false;
@@ -309,8 +369,7 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         strcmp(pattern->data.function.head->data.symbol, "PatternTest") == 0) {
         if (pattern->data.function.arg_count != 2) return false;
         size_t saved_env_count = env->count;
-        if (!match(expr, pattern->data.function.args[0], env)) {
-            env_rollback(env, saved_env_count);
+        if (!match_internal(expr, pattern->data.function.args[0], env, NULL)) {
             return false;
         }
         
@@ -324,39 +383,40 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         expr_free(result);
         if (!success) {
             env_rollback(env, saved_env_count);
+            return false;
         }
-        return success;
+        if (call_parent(env, parent)) return true;
+        env_rollback(env, saved_env_count);
+        return false;
     }
 
-    bool matched_normally = false;
     if (expr->type == pattern->type) {
         switch (expr->type) {
             case EXPR_INTEGER:
-                matched_normally = (expr->data.integer == pattern->data.integer); break;
+                if (expr->data.integer == pattern->data.integer) return call_parent(env, parent);
+                return false;
             case EXPR_REAL:
-                matched_normally = (expr->data.real == pattern->data.real); break;
+                if (expr->data.real == pattern->data.real) return call_parent(env, parent);
+                return false;
             case EXPR_SYMBOL:
-                matched_normally = (strcmp(expr->data.symbol, pattern->data.symbol) == 0); break;
+                if (strcmp(expr->data.symbol, pattern->data.symbol) == 0) return call_parent(env, parent);
+                return false;
             case EXPR_STRING:
-                matched_normally = (strcmp(expr->data.string, pattern->data.string) == 0); break;
+                if (strcmp(expr->data.string, pattern->data.string) == 0) return call_parent(env, parent);
+                return false;
             case EXPR_FUNCTION: {
                 size_t saved_env_count = env->count;
-                if (match(expr->data.function.head, pattern->data.function.head, env)) {
-                    if (match_args(expr->data.function.args, expr->data.function.arg_count,
-                                   pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count)) {
-                        matched_normally = true;
-                    } else {
-                        env_rollback(env, saved_env_count);
+                if (match_internal(expr->data.function.head, pattern->data.function.head, env, NULL)) {
+                    if (match_args_internal(expr->data.function.args, expr->data.function.arg_count,
+                                   pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count, parent)) {
+                        return true;
                     }
-                } else {
-                    env_rollback(env, saved_env_count);
                 }
+                env_rollback(env, saved_env_count);
                 break;
             }
         }
     }
-
-    if (matched_normally) return true;
 
     // Try OneIdentity if pattern is a function
     if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL) {
@@ -364,7 +424,7 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
         if (def && (def->attributes & ATTR_ONEIDENTITY)) {
             size_t saved_env_count = env->count;
             Expr* args[1] = { expr };
-            if (match_args(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count)) {
+            if (match_args_internal(args, 1, pattern->data.function.args, pattern->data.function.arg_count, env, NULL, pattern->data.function.head, pattern->data.function.arg_count, parent)) {
                 return true;
             }
             env_rollback(env, saved_env_count);
@@ -374,17 +434,25 @@ bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
     return false;
 }
 
-static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats) {
+bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
+    return match_internal(expr, pattern, env, NULL);
+}
+
+static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats, ParentMatch* parent) {
+    
     if (n_pats == 0) {
         if (n_exprs != 0) return false;
-        if (!condition) return true;
         
-        Expr* expanded_test = replace_bindings(condition, env);
-        Expr* result = evaluate(expanded_test);
-        expr_free(expanded_test);
-        bool success = (result->type == EXPR_SYMBOL && strcmp(result->data.symbol, "True") == 0);
-        expr_free(result);
-        return success;
+        if (condition) {
+            Expr* expanded_test = replace_bindings(condition, env);
+            Expr* result = evaluate(expanded_test);
+            expr_free(expanded_test);
+            bool success = (result->type == EXPR_SYMBOL && strcmp(result->data.symbol, "True") == 0);
+            expr_free(result);
+            if (!success) return false;
+        }
+        
+        return call_parent(env, parent);
     }
 
     Expr* p = pats[0];
@@ -438,9 +506,6 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
         }
     }
 
-    // Helper logic to test "without consuming" (i.e. default value)
-    // We will inline it below in two places depending on is_shortest.
-
     if (is_optional && is_shortest) {
         size_t saved_env_count = env->count;
         Expr* def_val = NULL;
@@ -460,15 +525,13 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             }
             expr_free(def_val);
 
-            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
+            if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
             }
             env_rollback(env, saved_env_count);
         }
     }
 
-    // Attempt to match by consuming exprs
-    // size_t saved_env_count = env->count;
     Expr* inner_p = opt_pat;
     Expr* p_sym = NULL;
     int min_len = 0;
@@ -530,7 +593,6 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             
             extract_subset(exprs, n_exprs, comb, (int)k, subset, remainder);
 
-            bool matched_this_combo = false;
             size_t saved_env = env->count;
 
             if (is_seq || is_rep) {
@@ -540,27 +602,20 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                         for (size_t i = 0; i < k; i++) {
                             Expr* h = get_expr_head_borrowed(subset[i]);
                             bool ok = false;
-                            if (h) {
-                                ok = expr_eq(h, b_head);
-                            } else if (b_head->type == EXPR_SYMBOL) {
+                            if (h) ok = expr_eq(h, b_head);
+                            else if (b_head->type == EXPR_SYMBOL) {
                                 const char* hn = b_head->data.symbol;
                                 if (subset[i]->type == EXPR_INTEGER && strcmp(hn, "Integer") == 0) ok = true;
                                 else if (subset[i]->type == EXPR_REAL && strcmp(hn, "Real") == 0) ok = true;
                                 else if (subset[i]->type == EXPR_SYMBOL && strcmp(hn, "Symbol") == 0) ok = true;
                                 else if (subset[i]->type == EXPR_STRING && strcmp(hn, "String") == 0) ok = true;
                             }
-                            if (!ok) {
-                                type_ok = false;
-                                break;
-                            }
+                            if (!ok) { type_ok = false; break; }
                         }
                     }
                 } else if (is_rep) {
                     for (size_t i = 0; i < k; i++) {
-                        if (!match(subset[i], rep_pat, env)) {
-                            type_ok = false;
-                            break;
-                        }
+                        if (!match_internal(subset[i], rep_pat, env, NULL)) { type_ok = false; break; }
                     }
                 }
 
@@ -568,29 +623,24 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                     if (p_sym) {
                         Expr* seq_val = expr_new_function(expr_new_symbol("Sequence"), NULL, k);
                         for (size_t i = 0; i < k; i++) seq_val->data.function.args[i] = expr_copy(subset[i]);
-                        
                         Expr* existing = env_get(env, p_sym->data.symbol);
                         if (existing) {
                             if (expr_eq(seq_val, existing)) {
-                                matched_this_combo = true;
+                                if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                                    expr_free(seq_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                }
                             }
-                            expr_free(seq_val);
                         } else {
                             env_set(env, p_sym->data.symbol, seq_val);
-                            expr_free(seq_val);
-                            matched_this_combo = true;
+                            if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                                expr_free(seq_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                            }
                         }
+                        expr_free(seq_val);
                     } else {
-                        matched_this_combo = true;
-                    }
-                }
-
-                if (matched_this_combo) {
-                    if (match_args(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
-                        if (subset) free(subset);
-                        if (remainder) free(remainder);
-                        if (comb) free(comb);
-                        return true;
+                        if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                            if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                        }
                     }
                 }
             } else {
@@ -604,20 +654,16 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
                     }
                 }
 
-                if (matched_val && match(matched_val, opt_pat, env)) {
-                    if (match_args(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
-                        expr_free(matched_val);
-                        if (subset) free(subset);
-                        if (remainder) free(remainder);
-                        if (comb) free(comb);
-                        return true;
+                if (matched_val) {
+                    ParentMatch pm = { remainder, n_exprs - k, pats + 1, n_pats - 1, condition, pat_head, total_pats, parent };
+                    if (match_internal(matched_val, opt_pat, env, &pm)) {
+                        expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
                     }
+                    expr_free(matched_val);
                 }
-                if (matched_val) expr_free(matched_val);
             }
 
             env_rollback(env, saved_env);
-
             if (subset) free(subset);
             if (remainder) free(remainder);
 
@@ -646,7 +692,7 @@ static bool match_args(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats,
             }
             expr_free(def_val);
 
-            if (match_args(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats)) {
+            if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
             }
             env_rollback(env, saved_env_count);
