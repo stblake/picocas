@@ -156,6 +156,7 @@ Expr* expr_head(Expr* e) {
     if (!e) return NULL;
     switch (e->type) {
         case EXPR_INTEGER: return expr_new_symbol("Integer");
+        case EXPR_BIGINT: return expr_new_symbol("Integer");
         case EXPR_REAL: return expr_new_symbol("Real");
         case EXPR_SYMBOL: return expr_new_symbol("Symbol");
         case EXPR_STRING: return expr_new_symbol("String");

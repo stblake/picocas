@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(picocas_tests)
 
+include_directories(/usr/local/include)
+link_directories(/usr/local/lib)
+link_libraries(gmp m)
+
 set(COMMON_SRC
     ../src/expr.c
     ../src/parse.c
@@ -244,6 +248,9 @@ target_include_directories(polymod_tests PRIVATE ../src)
 target_include_directories(patterns_tests PRIVATE ../src)
 
 add_executable(bigint_tests test_bigint.c ${COMMON_SRC})
-target_include_directories(bigint_tests PRIVATE ../src /opt/homebrew/include)
-target_link_directories(bigint_tests PRIVATE /opt/homebrew/lib)
+target_include_directories(bigint_tests PRIVATE ../src /usr/local/include)
+target_link_directories(bigint_tests PRIVATE /usr/local/lib)
 target_link_libraries(bigint_tests gmp)
+add_executable(integrals_tests test_integrals.c ${COMMON_SRC})
+target_include_directories(integrals_tests PRIVATE ../src)
+target_link_libraries(integrals_tests gmp m)

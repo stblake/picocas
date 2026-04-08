@@ -1,7 +1,7 @@
 
 CC = gcc
-CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/opt/homebrew/include
-LDFLAGS = -lreadline -L/opt/homebrew/lib -lgmp
+CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/usr/local/include
+LDFLAGS = -lreadline -L/usr/local/lib -lgmp
 SRC_DIR = src
 SRC = $(wildcard $(SRC_DIR)/*.c)
 OBJ = $(SRC:.c=.o)

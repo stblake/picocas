@@ -585,48 +585,67 @@ Expr* builtin_mod(Expr* res) {
     Expr* n_expr = res->data.function.args[1];
 
     if (res->data.function.arg_count == 2) {
-        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL);
-        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL);
+        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL || m_expr->type == EXPR_BIGINT);
+        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL || n_expr->type == EXPR_BIGINT);
         if (!m_is_num || !n_is_num) return NULL;
 
-        if (m_expr->type == EXPR_INTEGER && n_expr->type == EXPR_INTEGER) {
-            int64_t m = m_expr->data.integer;
-            int64_t n = n_expr->data.integer;
-            if (n == 0) return NULL;
-            int64_t r = m % n;
-            if (r != 0 && (r * n) < 0) {
-                r += n;
+        if ((m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_BIGINT) && 
+            (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_BIGINT)) {
+            
+            mpz_t m, n, r;
+            expr_to_mpz(m_expr, m);
+            expr_to_mpz(n_expr, n);
+            if (mpz_cmp_ui(n, 0) == 0) {
+                mpz_clears(m, n, NULL);
+                return NULL;
             }
-            return expr_new_integer(r);
-        } else {
-            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (double)m_expr->data.integer;
-            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (double)n_expr->data.integer;
+            
+            mpz_init(r);
+            mpz_fdiv_r(r, m, n);
+            
+            Expr* out = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clears(m, n, r, NULL);
+            return out;
+        } else if (m_expr->type == EXPR_BIGINT || n_expr->type == EXPR_BIGINT || m_expr->type == EXPR_INTEGER || n_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL || n_expr->type == EXPR_REAL) {
+            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (m_expr->type == EXPR_INTEGER) ? (double)m_expr->data.integer : (m_expr->type == EXPR_BIGINT) ? mpz_get_d(m_expr->data.bigint) : 0.0;
+            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (n_expr->type == EXPR_INTEGER) ? (double)n_expr->data.integer : (n_expr->type == EXPR_BIGINT) ? mpz_get_d(n_expr->data.bigint) : 0.0;
             if (n_val == 0.0) return NULL;
             double result = m_val - n_val * floor(m_val / n_val);
             return expr_new_real(result);
         }
     } else { 
         Expr* d_expr = res->data.function.args[2];
-        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL);
-        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL);
-        bool d_is_num = (d_expr->type == EXPR_INTEGER || d_expr->type == EXPR_REAL);
+        bool m_is_num = (m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL || m_expr->type == EXPR_BIGINT);
+        bool n_is_num = (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_REAL || n_expr->type == EXPR_BIGINT);
+        bool d_is_num = (d_expr->type == EXPR_INTEGER || d_expr->type == EXPR_REAL || d_expr->type == EXPR_BIGINT);
         if (!m_is_num || !n_is_num || !d_is_num) return NULL;
 
-        if (m_expr->type == EXPR_INTEGER && n_expr->type == EXPR_INTEGER && d_expr->type == EXPR_INTEGER) {
-            int64_t m = m_expr->data.integer;
-            int64_t n = n_expr->data.integer;
-            int64_t d = d_expr->data.integer;
-            if (n == 0) return NULL;
-            int64_t m_minus_d = m - d;
-            int64_t r = m_minus_d % n;
-            if (r != 0 && (r * n) < 0) {
-                r += n;
+        if ((m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_BIGINT) && 
+            (n_expr->type == EXPR_INTEGER || n_expr->type == EXPR_BIGINT) && 
+            (d_expr->type == EXPR_INTEGER || d_expr->type == EXPR_BIGINT)) {
+            
+            mpz_t m, n, d, m_minus_d, r;
+            expr_to_mpz(m_expr, m);
+            expr_to_mpz(n_expr, n);
+            expr_to_mpz(d_expr, d);
+            
+            if (mpz_cmp_ui(n, 0) == 0) {
+                mpz_clears(m, n, d, NULL);
+                return NULL;
             }
-            return expr_new_integer(d + r);
-        } else {
-            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (double)m_expr->data.integer;
-            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (double)n_expr->data.integer;
-            double d_val = (d_expr->type == EXPR_REAL) ? d_expr->data.real : (double)d_expr->data.integer;
+            
+            mpz_inits(m_minus_d, r, NULL);
+            mpz_sub(m_minus_d, m, d);
+            mpz_fdiv_r(r, m_minus_d, n);
+            mpz_add(r, r, d);
+            
+            Expr* out = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clears(m, n, d, m_minus_d, r, NULL);
+            return out;
+        } else if (m_expr->type == EXPR_BIGINT || n_expr->type == EXPR_BIGINT || d_expr->type == EXPR_BIGINT || m_expr->type == EXPR_INTEGER || n_expr->type == EXPR_INTEGER || d_expr->type == EXPR_INTEGER || m_expr->type == EXPR_REAL || n_expr->type == EXPR_REAL || d_expr->type == EXPR_REAL) {
+            double m_val = (m_expr->type == EXPR_REAL) ? m_expr->data.real : (m_expr->type == EXPR_INTEGER) ? (double)m_expr->data.integer : (m_expr->type == EXPR_BIGINT) ? mpz_get_d(m_expr->data.bigint) : 0.0;
+            double n_val = (n_expr->type == EXPR_REAL) ? n_expr->data.real : (n_expr->type == EXPR_INTEGER) ? (double)n_expr->data.integer : (n_expr->type == EXPR_BIGINT) ? mpz_get_d(n_expr->data.bigint) : 0.0;
+            double d_val = (d_expr->type == EXPR_REAL) ? d_expr->data.real : (d_expr->type == EXPR_INTEGER) ? (double)d_expr->data.integer : (d_expr->type == EXPR_BIGINT) ? mpz_get_d(d_expr->data.bigint) : 0.0;
             if (n_val == 0.0) return NULL;
             double m_minus_d = m_val - d_val;
             double mod_val = m_minus_d - n_val * floor(m_minus_d / n_val);
@@ -634,6 +653,7 @@ Expr* builtin_mod(Expr* res) {
             return expr_new_real(result);
         }
     }
+    return NULL;
 }
 
 typedef struct { double re; double im; } Cplx;
@@ -641,6 +661,10 @@ typedef struct { double re; double im; } Cplx;
 static bool get_numeric_as_complex(Expr* e, Cplx* out) {
     if (e->type == EXPR_INTEGER) {
         *out = (Cplx){ .re = (double)e->data.integer, .im = 0.0 };
+        return true;
+    }
+    if (e->type == EXPR_BIGINT) {
+        *out = (Cplx){ .re = mpz_get_d(e->data.bigint), .im = 0.0 };
         return true;
     }
     if (e->type == EXPR_REAL) {

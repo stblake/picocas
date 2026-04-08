@@ -118,9 +118,9 @@ Expr* builtin_power(Expr* res) {
     bool base_comp = is_complex(base, &re_b, &im_b);
     bool exp_comp = is_complex(exp, &re_e, &im_e);
 
-    if (base_comp || exp_comp || base->type == EXPR_REAL || exp->type == EXPR_REAL) {
-        bool base_num = (base->type == EXPR_INTEGER || base->type == EXPR_REAL || is_rational(base, NULL, NULL) || base_comp);
-        bool exp_num = (exp->type == EXPR_INTEGER || exp->type == EXPR_REAL || is_rational(exp, NULL, NULL) || exp_comp);
+    if (base_comp || exp_comp || base->type == EXPR_REAL || exp->type == EXPR_REAL || base->type == EXPR_BIGINT || exp->type == EXPR_BIGINT) {
+        bool base_num = (base->type == EXPR_INTEGER || base->type == EXPR_REAL || base->type == EXPR_BIGINT || is_rational(base, NULL, NULL) || base_comp);
+        bool exp_num = (exp->type == EXPR_INTEGER || exp->type == EXPR_REAL || exp->type == EXPR_BIGINT || is_rational(exp, NULL, NULL) || exp_comp);
 
         if (base_num && exp_num) {
             bool has_real = (base->type == EXPR_REAL || exp->type == EXPR_REAL || 
@@ -131,22 +131,22 @@ Expr* builtin_power(Expr* res) {
                 int64_t n, d;
                 
                 if (base_comp) {
-                    vbase_re = (re_b->type == EXPR_REAL) ? re_b->data.real : (re_b->type == EXPR_INTEGER) ? (double)re_b->data.integer : 0;
-                    vbase_im = (im_b->type == EXPR_REAL) ? im_b->data.real : (im_b->type == EXPR_INTEGER) ? (double)im_b->data.integer : 0;
+                    vbase_re = (re_b->type == EXPR_REAL) ? re_b->data.real : (re_b->type == EXPR_INTEGER) ? (double)re_b->data.integer : (re_b->type == EXPR_BIGINT) ? mpz_get_d(re_b->data.bigint) : 0;
+                    vbase_im = (im_b->type == EXPR_REAL) ? im_b->data.real : (im_b->type == EXPR_INTEGER) ? (double)im_b->data.integer : (im_b->type == EXPR_BIGINT) ? mpz_get_d(im_b->data.bigint) : 0;
                     if (is_rational(re_b, &n, &d)) vbase_re = (double)n / d;
                     if (is_rational(im_b, &n, &d)) vbase_im = (double)n / d;
                 } else {
-                    vbase_re = (base->type == EXPR_REAL) ? base->data.real : (base->type == EXPR_INTEGER) ? (double)base->data.integer : 0;
+                    vbase_re = (base->type == EXPR_REAL) ? base->data.real : (base->type == EXPR_INTEGER) ? (double)base->data.integer : (base->type == EXPR_BIGINT) ? mpz_get_d(base->data.bigint) : 0;
                     if (is_rational(base, &n, &d)) vbase_re = (double)n / d;
                 }
                 
                 if (exp_comp) {
-                    vexp_re = (re_e->type == EXPR_REAL) ? re_e->data.real : (re_e->type == EXPR_INTEGER) ? (double)re_e->data.integer : 0;
-                    vexp_im = (im_e->type == EXPR_REAL) ? im_e->data.real : (im_e->type == EXPR_INTEGER) ? (double)im_e->data.integer : 0;
+                    vexp_re = (re_e->type == EXPR_REAL) ? re_e->data.real : (re_e->type == EXPR_INTEGER) ? (double)re_e->data.integer : (re_e->type == EXPR_BIGINT) ? mpz_get_d(re_e->data.bigint) : 0;
+                    vexp_im = (im_e->type == EXPR_REAL) ? im_e->data.real : (im_e->type == EXPR_INTEGER) ? (double)im_e->data.integer : (im_e->type == EXPR_BIGINT) ? mpz_get_d(im_e->data.bigint) : 0;
                     if (is_rational(re_e, &n, &d)) vexp_re = (double)n / d;
                     if (is_rational(im_e, &n, &d)) vexp_im = (double)n / d;
                 } else {
-                    vexp_re = (exp->type == EXPR_REAL) ? exp->data.real : (exp->type == EXPR_INTEGER) ? (double)exp->data.integer : 0;
+                    vexp_re = (exp->type == EXPR_REAL) ? exp->data.real : (exp->type == EXPR_INTEGER) ? (double)exp->data.integer : (exp->type == EXPR_BIGINT) ? mpz_get_d(exp->data.bigint) : 0;
                     if (is_rational(exp, &n, &d)) vexp_re = (double)n / d;
                 }
 

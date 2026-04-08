@@ -468,8 +468,8 @@ void test_factorinteger(void) {
     assert_eval_eq("FactorInteger[100, 1]", "List[List[2, 2], 25]", 1);
     
     // Automatic (easy factors)
-    // 13835058055282163713 as int64_t is -4611686018427387903, which is 3 * -1537228672809129301
-    assert_eval_eq("FactorInteger[13835058055282163713, Automatic]", "List[List[-1, 1], List[3, 1], 1537228672809129301]", 1);
+    // 13835058055282163713 as int64_t was -4611686018427387903, which is 3 * -1537228672809129301
+    assert_eval_eq("FactorInteger[-4611686018427387903, Automatic]", "List[List[-1, 1], List[3, 1], 1537228672809129301]", 1);
 }
 
 void test_eulerphi(void) {
@@ -519,8 +519,7 @@ void test_factorial(void) {
     assert(strcmp(s, "Times[-2, Power[Pi, Rational[1, 2]]]") == 0); free(s); expr_free(res); expr_free(e);
 
     e = parse_expression("21!"); res = evaluate(e); s = expr_to_string_fullform(res);
-    printf("s for 21! is: %s\n", s);
-    assert(strcmp(s, "Factorial[21]") == 0); free(s); expr_free(res); expr_free(e);
+    assert(strcmp(s, "51090942171709440000") == 0); free(s); expr_free(res); expr_free(e);
 }
 
 void test_binomial(void) {

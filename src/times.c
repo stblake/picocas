@@ -16,11 +16,19 @@ static bool is_overflow(Expr* e) {
 static Expr* multiply_numbers(Expr* a, Expr* b) {
     if (is_overflow(a) || is_overflow(b)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
     if (a->type == EXPR_REAL || b->type == EXPR_REAL) {
-        double va = (a->type == EXPR_REAL) ? a->data.real : (a->type == EXPR_INTEGER) ? (double)a->data.integer : 0.0;
-        double vb = (b->type == EXPR_REAL) ? b->data.real : (b->type == EXPR_INTEGER) ? (double)b->data.integer : 0.0;
+        double va = 0.0, vb = 0.0;
         int64_t n, d;
-        if (is_rational(a, &n, &d)) va = (double)n / d;
-        if (is_rational(b, &n, &d)) vb = (double)n / d;
+        
+        if (a->type == EXPR_REAL) va = a->data.real;
+        else if (a->type == EXPR_INTEGER) va = (double)a->data.integer;
+        else if (a->type == EXPR_BIGINT) va = mpz_get_d(a->data.bigint);
+        else if (is_rational(a, &n, &d)) va = (double)n / d;
+
+        if (b->type == EXPR_REAL) vb = b->data.real;
+        else if (b->type == EXPR_INTEGER) vb = (double)b->data.integer;
+        else if (b->type == EXPR_BIGINT) vb = mpz_get_d(b->data.bigint);
+        else if (is_rational(b, &n, &d)) vb = (double)n / d;
+        
         return expr_new_real(va * vb);
     }
     if (a->type == EXPR_BIGINT || b->type == EXPR_BIGINT) {

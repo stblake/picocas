@@ -133,6 +133,13 @@ int main(void) {
     TEST(test_bigint_printing);
     TEST(test_power_large_exponent);
     TEST(test_abs_bigint);
+    
+    // Additional GMP integration tests
+    assert_eval_eq("Binomial[100, 50]", "100891344545564193334812497256", 0);
+    assert_eval_eq("PowerMod[2, 100, 101]", "1", 0); // Fermat's Little Theorem: 2^(101-1) mod 101 = 1
+    assert_eval_eq("PowerMod[2, 10, 3]", "1", 0);
+    assert_eval_eq("PowerMod[3, -2, 7]", "4", 0);
+    assert_eval_eq("Mod[10^30, 7]", "1", 0);
 
     printf("\nAll bigint tests passed!\n");
     return 0;

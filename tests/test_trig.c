@@ -37,13 +37,14 @@ void test_trig_forward() {
     };
 
     for (int i = 0; cases[i].input != NULL; i++) {
+        printf("Testing inverse: %s\n", cases[i].input);
         Expr* e = parse_expression(cases[i].input);
         Expr* res = evaluate(e);
         char* s = expr_to_string_fullform(res);
-        ASSERT_MSG(strcmp(s, cases[i].expected) == 0, "Forward %s: expected %s, got %s", cases[i].input, cases[i].expected, s);
+        ASSERT_MSG(strcmp(s, cases[i].expected) == 0, "Inverse %s: expected %s, got %s", cases[i].input, cases[i].expected, s);
         free(s);
-        expr_free(e);
         expr_free(res);
+        expr_free(e);
     }
 }
 
@@ -63,13 +64,14 @@ void test_trig_inverse() {
     };
 
     for (int i = 0; cases[i].input != NULL; i++) {
+        printf("Testing inverse: %s\n", cases[i].input);
         Expr* e = parse_expression(cases[i].input);
         Expr* res = evaluate(e);
         char* s = expr_to_string_fullform(res);
         ASSERT_MSG(strcmp(s, cases[i].expected) == 0, "Inverse %s: expected %s, got %s", cases[i].input, cases[i].expected, s);
         free(s);
-        expr_free(e);
         expr_free(res);
+        expr_free(e);
     }
 }
 

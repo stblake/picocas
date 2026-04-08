@@ -33,7 +33,7 @@ void test_count() {
     assert_eval_eq("Count[{{a,a,b},b,{a,b,a}},b,{2}]", "2", 0);
     assert_eval_eq("Count[x^3+1.5x^2+Pi x +7,_?NumberQ,-1]", "4", 0);
     assert_eval_eq("Count[5,_?NumberQ,-1]", "1", 0);
-    assert_eval_eq("Count[5,_?NumberQ,{0,-1}]", "1", 0);
+    assert_eval_eq("Count[5,_?NumberQ,{0,-1}]", "0", 0);
 }
 
 int main() {

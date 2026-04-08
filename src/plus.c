@@ -87,10 +87,12 @@ static Expr* add_numbers(Expr* a, Expr* b) {
         int64_t n, d;
         if (a->type == EXPR_REAL) va = a->data.real;
         else if (a->type == EXPR_INTEGER) va = (double)a->data.integer;
+        else if (a->type == EXPR_BIGINT) va = mpz_get_d(a->data.bigint);
         else if (is_rational(a, &n, &d)) va = (double)n / d;
 
         if (b->type == EXPR_REAL) vb = b->data.real;
         else if (b->type == EXPR_INTEGER) vb = (double)b->data.integer;
+        else if (b->type == EXPR_BIGINT) vb = mpz_get_d(b->data.bigint);
         else if (is_rational(b, &n, &d)) vb = (double)n / d;
         
         return expr_new_real(va + vb);

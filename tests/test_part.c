@@ -496,7 +496,6 @@ void test_span_assignment() {
     Expr* st1 = parse_expression("t = {a, b, c, d, e, f, g, h}; t[[2;;5]] = x; t");
     Expr* rt1 = evaluate(st1);
     char* s_rt1 = expr_to_string_fullform(rt1);
-    printf("DEBUG span assignment 1: %s\n", s_rt1);
     ASSERT_STR_EQ(s_rt1, "List[a, x, x, x, x, f, g, h]");
     free(s_rt1); expr_free(rt1); expr_free(st1);
 
@@ -514,7 +513,7 @@ void test_extract() {
     assert_eval_eq("Extract[f[g[1,2],h[x^2]],{{1,2},{2,1,1}}]", "{2, x}", 0);
     assert_eval_eq("Extract[{{a,b,c},{d,e,f},{g,h,i}}, {All,2}]", "{b, e, h}", 0);
     assert_eval_eq("e = f[g[1,2],{h[3]}]; p = Position[e,_Integer]; Extract[e,p]", "{1, 2, 3}", 0);
-    assert_eval_eq("Clear[e]", "Null", 0);
+    assert_eval_eq("Clear[e, p]", "Null", 0);
     assert_eval_eq("Extract[{a,b,c,d,e}, {3}]", "c", 0);
     assert_eval_eq("Extract[{a,b,c,d,e}, {{1},{4},{3}}]", "{a, d, c}", 0);
     assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{1,3}]", "a[1, 3]", 0);

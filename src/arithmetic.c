@@ -226,8 +226,8 @@ Expr* builtin_divide(Expr* res) {
     Expr* den = res->data.function.args[1];
 
     if (num->type == EXPR_REAL || den->type == EXPR_REAL) {
-        double vnum = (num->type == EXPR_REAL) ? num->data.real : (double)num->data.integer;
-        double vden = (den->type == EXPR_REAL) ? den->data.real : (double)den->data.integer;
+        double vnum = (num->type == EXPR_REAL) ? num->data.real : (num->type == EXPR_INTEGER) ? (double)num->data.integer : (num->type == EXPR_BIGINT) ? mpz_get_d(num->data.bigint) : 0.0;
+        double vden = (den->type == EXPR_REAL) ? den->data.real : (den->type == EXPR_INTEGER) ? (double)den->data.integer : (den->type == EXPR_BIGINT) ? mpz_get_d(den->data.bigint) : 0.0;
         if (vden == 0.0) {
             printf("Power::infy: Infinite expression 1/0 encountered.\n");
             return expr_new_symbol("ComplexInfinity");
@@ -295,43 +295,39 @@ Expr* builtin_powermod(Expr* res) {
     Expr* b_expr = res->data.function.args[1];
     Expr* m_expr = res->data.function.args[2];
     
-    if (a_expr->type != EXPR_INTEGER || m_expr->type != EXPR_INTEGER) return NULL;
-    int64_t a = a_expr->data.integer;
-    int64_t m = m_expr->data.integer;
-    if (m == 0) return NULL;
-    
-    if (b_expr->type == EXPR_INTEGER) {
-        int64_t b = b_expr->data.integer;
-        if (b < 0) {
-            int64_t inv = mod_inverse(a, m);
-            if (inv == -1) return expr_copy(res); // Unevaluated if no inverse
-            return expr_new_integer(mod_pow(inv, -b, m));
-        } else {
-            return expr_new_integer(mod_pow(a, b, m));
-        }
-    } else if (b_expr->type == EXPR_FUNCTION && b_expr->data.function.head->type == EXPR_SYMBOL && strcmp(b_expr->data.function.head->data.symbol, "Rational") == 0 && b_expr->data.function.arg_count == 2) {
-        Expr* num = b_expr->data.function.args[0];
-        Expr* den = b_expr->data.function.args[1];
-        if (num->type == EXPR_INTEGER && num->data.integer == 1 && den->type == EXPR_INTEGER) {
-            int64_t r = den->data.integer;
-            if (r > 0) {
-                int64_t target_a = a % m;
-                if (target_a < 0) target_a += m;
-                int64_t abs_m = m < 0 ? -m : m;
-                
-                // Brute force root finding (only up to a reasonable cap to avoid hanging)
-                if (abs_m <= 1000000LL) {
-                    for (int64_t x = 0; x < abs_m; x++) {
-                        if (mod_pow(x, r, abs_m) == target_a) {
-                            return expr_new_integer(x);
-                        }
-                    }
-                    return expr_copy(res); // Unevaluated if no root
-                }
-            }
-        }
+    if (!(a_expr->type == EXPR_INTEGER || a_expr->type == EXPR_BIGINT) || 
+        !(m_expr->type == EXPR_INTEGER || m_expr->type == EXPR_BIGINT)) return NULL;
+
+    mpz_t a, m;
+    expr_to_mpz(a_expr, a);
+    expr_to_mpz(m_expr, m);
+    if (mpz_cmp_ui(m, 0) == 0) {
+        mpz_clear(a); mpz_clear(m);
+        return NULL;
     }
     
+    if (b_expr->type == EXPR_INTEGER || b_expr->type == EXPR_BIGINT) {
+        mpz_t b, r;
+        expr_to_mpz(b_expr, b);
+        mpz_init(r);
+        if (mpz_cmp_ui(b, 0) < 0) {
+            mpz_t inv, b_neg;
+            mpz_inits(inv, b_neg, NULL);
+            if (mpz_invert(inv, a, m) == 0) {
+                mpz_clears(inv, b_neg, b, a, m, r, NULL);
+                return expr_copy(res);
+            }
+            mpz_neg(b_neg, b);
+            mpz_powm(r, inv, b_neg, m);
+            mpz_clears(inv, b_neg, NULL);
+        } else {
+            mpz_powm(r, a, b, m);
+        }
+        Expr* out = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+        mpz_clears(b, a, m, r, NULL);
+        return out;
+    }
+    mpz_clears(a, m, NULL);
     return NULL;
 }
 
@@ -403,72 +399,75 @@ Expr* builtin_binomial(Expr* res) {
 
     int64_t n_num = 0, n_den = 1, m_num = 0, m_den = 1;
     bool n_is_rat = false;
-    if (arg_n->type == EXPR_INTEGER) { n_num = arg_n->data.integer; n_den = 1; n_is_rat = true; }
+    if (arg_n->type == EXPR_INTEGER || arg_n->type == EXPR_BIGINT) { n_is_rat = true; }
     else if (is_rational(arg_n, &n_num, &n_den)) { n_is_rat = true; }
 
     bool m_is_rat = false;
-    if (arg_m->type == EXPR_INTEGER) { m_num = arg_m->data.integer; m_den = 1; m_is_rat = true; }
+    if (arg_m->type == EXPR_INTEGER || arg_m->type == EXPR_BIGINT) { m_is_rat = true; }
     else if (is_rational(arg_m, &m_num, &m_den)) { m_is_rat = true; }
     
     if (n_is_rat && m_is_rat) {
-        if (m_den == 1 && n_den == 1) {
-            int64_t m = m_num;
-            if (m < 0) return expr_new_integer(0);
+        if ((arg_n->type == EXPR_INTEGER || arg_n->type == EXPR_BIGINT) && 
+            (arg_m->type == EXPR_INTEGER || arg_m->type == EXPR_BIGINT)) {
             
-            int64_t n = n_num;
-            if (n >= 0 && m > n) return expr_new_integer(0);
+            mpz_t n, m;
+            expr_to_mpz(arg_n, n);
+            expr_to_mpz(arg_m, m);
             
-            int64_t sign = 1;
-            if (n < 0) {
-                if (m % 2 != 0) sign = -1;
-                n = -n + m - 1;
+            if (mpz_cmp_ui(m, 0) < 0) {
+                mpz_clear(n); mpz_clear(m);
+                return expr_new_integer(0);
+            }
+            if (mpz_cmp_ui(n, 0) >= 0 && mpz_cmp(m, n) > 0) {
+                mpz_clear(n); mpz_clear(m);
+                return expr_new_integer(0);
             }
             
-            if (m > n / 2) m = n - m;
+            mpz_t r;
+            mpz_init(r);
             
-            int64_t result = 1;
-            for (int64_t i = 1; i <= m; i++) {
-                int64_t next_num = n - i + 1;
-                if (result > INT64_MAX / next_num) {
-                    return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+            if (mpz_cmp_ui(n, 0) < 0) {
+                // Binomial[n, m] = (-1)^m * Binomial[-n+m-1, m] for n < 0
+                mpz_t temp_n;
+                mpz_init(temp_n);
+                mpz_neg(temp_n, n);
+                mpz_add(temp_n, temp_n, m);
+                mpz_sub_ui(temp_n, temp_n, 1);
+                
+                mpz_bin_ui(r, temp_n, mpz_get_ui(m));
+                
+                if (mpz_odd_p(m)) {
+                    mpz_neg(r, r);
                 }
-                result = result * next_num / i;
-            }
-            return expr_new_integer(result * sign);
-        }
-        
-        int64_t diff_num = n_num * m_den - m_num * n_den;
-        int64_t diff_den = n_den * m_den;
-        if (diff_num % diff_den == 0) {
-            int64_t k = diff_num / diff_den;
-            if (k < 0) return expr_new_integer(0);
-            Expr* new_m = expr_new_integer(k);
-            Expr* new_call = eval_and_free(expr_new_function(expr_new_symbol("Binomial"), (Expr*[]){expr_copy(arg_n), new_m}, 2));
-            return new_call;
-        }
-    }
-    
-    if (m_is_rat && m_den == 1) {
-        int64_t m = m_num;
-        if (m < 0) return expr_new_integer(0);
-        if (m == 0) return expr_new_integer(1);
-        if (m == 1) return expr_copy(arg_n);
-        
-        Expr** args = malloc(sizeof(Expr*) * m);
-        for (int64_t i = 0; i < m; i++) {
-            if (i == 0) {
-                args[i] = expr_copy(arg_n);
+                mpz_clear(temp_n);
             } else {
-                args[i] = eval_and_free(expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(arg_n), expr_new_integer(-i)}, 2));
+                mpz_bin_ui(r, n, mpz_get_ui(m));
+            }
+            
+            Expr* out = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clears(n, m, r, NULL);
+            return out;
+        } else {
+            // Handle fractional case...
+            if (arg_n->type == EXPR_INTEGER) { n_num = arg_n->data.integer; n_den = 1; }
+            if (arg_m->type == EXPR_INTEGER) { m_num = arg_m->data.integer; m_den = 1; }
+            int64_t n = n_num; int64_t m = m_num;
+            if (m_den == 2 && n_den == 2) {
+                if (m > 0 && n > 0 && m <= n) {
+                    int64_t num = 1;
+                    for (int64_t i = 1; i <= m; i += 2) {
+                        num *= (n - i + 2);
+                    }
+                    int64_t den = 1;
+                    for (int64_t i = 1; i <= m; i += 2) {
+                        den *= (i + 1);
+                    }
+                    return make_rational(num, den);
+                }
+            } else if (n_den == 1 && m_den == 1) {
+                // Fallback for huge rationals?
             }
         }
-        Expr* num = eval_and_free(expr_new_function(expr_new_symbol("Times"), args, m));
-        free(args);
-        
-        Expr* den = eval_and_free(expr_new_function(expr_new_symbol("Factorial"), (Expr*[]){expr_new_integer(m)}, 1));
-        Expr* den_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){den, expr_new_integer(-1)}, 2));
-        return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){num, den_inv}, 2));
     }
-    
     return NULL;
 }
