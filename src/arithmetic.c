@@ -249,44 +249,8 @@ Expr* builtin_divide(Expr* res) {
     return expr_new_function(expr_new_symbol("Times"), t_args, 2);
 }
 
-static int64_t ext_gcd(int64_t a, int64_t b, int64_t *x, int64_t *y) {
-    if (a == 0) {
-        *x = 0; *y = 1;
-        return b;
-    }
-    int64_t x1, y1;
-    int64_t d = ext_gcd(b % a, a, &x1, &y1);
-    *x = y1 - (b / a) * x1;
-    *y = x1;
-    return d;
-}
 
-static int64_t mod_inverse(int64_t a, int64_t m) {
-    if (m == 0) return -1;
-    if (m < 0) m = -m;
-    if (m == 1) return 0;
-    a %= m;
-    if (a < 0) a += m;
-    int64_t x, y;
-    int64_t g = ext_gcd(a, m, &x, &y);
-    if (g != 1) return -1;
-    return (x % m + m) % m;
-}
 
-static int64_t mod_pow(int64_t a, int64_t b, int64_t m) {
-    if (m == 0) return 0;
-    if (m < 0) m = -m;
-    if (m == 1) return 0;
-    a %= m;
-    if (a < 0) a += m;
-    int64_t res = 1;
-    while (b > 0) {
-        if (b & 1) res = (int64_t)((__int128_t)res * a % m);
-        a = (int64_t)((__int128_t)a * a % m);
-        b >>= 1;
-    }
-    return res;
-}
 
 Expr* builtin_powermod(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
