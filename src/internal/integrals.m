@@ -1847,35 +1847,35 @@ Integrate[Coth[x_]^2, x_] := x - Coth[x];
 Integrate[Csch[x_]^2, x_] := -Coth[x];
 
 (* Formula 547 *)
-Integrate[Sinh[x_]^m_ Cosh[x_]^n_, x_] /; FreeQ[{m, n}, x] && m + n =!= 0 := 
+Integrate[Sinh[x_]^m_Integer Cosh[x_]^n_Integer, x_] /; FreeQ[{m, n}, x] && m + n =!= 0 := 
   (Sinh[x]^(m + 1) Cosh[x]^(n - 1))/(m + n) + (n - 1)/(m + n) Integrate[Sinh[x]^m Cosh[x]^(n - 2), x];
 
 (* Formula 548 *)
-Integrate[1/(Sinh[x_]^m_ Cosh[x_]^n_), x_] /; FreeQ[{m, n}, x] && m =!= 1 := 
+Integrate[1/(Sinh[x_]^m_Integer Cosh[x_]^n_Integer), x_] /; FreeQ[{m, n}, x] && m =!= 1 := 
   -1/((m - 1) Sinh[x]^(m - 1) Cosh[x]^(n - 1)) - (m + n - 2)/(m - 1) Integrate[1/(Sinh[x]^(m - 2) Cosh[x]^n), x];
 
 (* Formula 550 *)
-Integrate[Tanh[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 1 := 
+Integrate[Tanh[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   -Tanh[a x]^(n - 1)/(a (n - 1)) + Integrate[Tanh[a x]^(n - 2), x];
 
 (* Formula 554 *)
-Integrate[Coth[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 1 := 
+Integrate[Coth[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   -Coth[a x]^(n - 1)/(a (n - 1)) + Integrate[Coth[a x]^(n - 2), x];
 
 (* Sinh Reduction (missing from CRC tables) *)
-Integrate[Sinh[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 0 := 
+Integrate[Sinh[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   (Sinh[a x]^(n - 1) Cosh[a x])/(a n) - (n - 1)/n Integrate[Sinh[a x]^(n - 2), x];
 
 (* Cosh Reduction (missing from CRC tables) *)
-Integrate[Cosh[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 0 := 
+Integrate[Cosh[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   (Cosh[a x]^(n - 1) Sinh[a x])/(a n) + (n - 1)/n Integrate[Cosh[a x]^(n - 2), x];
 
 (* Sech Reduction (missing from CRC tables) *)
-Integrate[Sech[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 1 := 
+Integrate[Sech[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   (Sech[a x]^(n - 2) Tanh[a x])/(a (n - 1)) + (n - 2)/(n - 1) Integrate[Sech[a x]^(n - 2), x];
 
 (* Csch Reduction (missing from CRC tables) *)
-Integrate[Csch[a_. x_]^n_, x_] /; FreeQ[{a, n}, x] && n =!= 1 := 
+Integrate[Csch[a_. x_]^n_Integer, x_] /; FreeQ[{a, n}, x] && n > 1 := 
   -(Csch[a x]^(n - 2) Coth[a x])/(a (n - 1)) - (n - 2)/(n - 1) Integrate[Csch[a x]^(n - 2), x];
 
 (* Formula 556 - 558 *)
