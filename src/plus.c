@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <gmp.h>
 
 static bool is_overflow(Expr* e) {
     return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
@@ -23,16 +24,16 @@ static void get_coeff_base(Expr* e, Expr** coeff, Expr** base, bool* allocated_b
         return;
     }
 
-    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational(e, NULL, NULL) || is_complex(e, NULL, NULL)) {
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || e->type == EXPR_BIGINT || is_rational(e, NULL, NULL) || is_complex(e, NULL, NULL)) {
         *coeff = expr_copy(e);
         *base = NULL;
         return;
     }
-    
+
     if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Times") == 0) {
         if (e->data.function.arg_count >= 2) {
             Expr* first = e->data.function.args[0];
-            if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || is_rational(first, NULL, NULL) || is_complex(first, NULL, NULL)) {
+            if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || first->type == EXPR_BIGINT || is_rational(first, NULL, NULL) || is_complex(first, NULL, NULL)) {
                 *coeff = expr_copy(first);
                 if (e->data.function.arg_count == 2) {
                     *base = e->data.function.args[1];
@@ -95,9 +96,31 @@ static Expr* add_numbers(Expr* a, Expr* b) {
         return expr_new_real(va + vb);
     }
 
+    if (a->type == EXPR_BIGINT || b->type == EXPR_BIGINT) {
+        mpz_t av, bv, r;
+        expr_to_mpz(a, av);
+        expr_to_mpz(b, bv);
+        mpz_init(r);
+        mpz_add(r, av, bv);
+        mpz_clear(av); mpz_clear(bv);
+        Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+        mpz_clear(r);
+        return res;
+    }
+
     if (a->type == EXPR_INTEGER && b->type == EXPR_INTEGER) {
         __int128_t res = (__int128_t)a->data.integer + b->data.integer;
-        if (res > INT64_MAX || res < INT64_MIN) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+        if (res > INT64_MAX || res < INT64_MIN) {
+            mpz_t av, bv, r;
+            expr_to_mpz(a, av);
+            expr_to_mpz(b, bv);
+            mpz_init(r);
+            mpz_add(r, av, bv);
+            mpz_clear(av); mpz_clear(bv);
+            Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clear(r);
+            return result;
+        }
         return expr_new_integer((int64_t)res);
     }
 

@@ -11,13 +11,15 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <math.h>
+#include <gmp.h>
 
 typedef enum {
     EXPR_INTEGER,
     EXPR_REAL,
     EXPR_SYMBOL,
     EXPR_STRING,
-    EXPR_FUNCTION
+    EXPR_FUNCTION,
+    EXPR_BIGINT
 } ExprType;
 
 typedef struct Expr {
@@ -28,10 +30,11 @@ typedef struct Expr {
         char* symbol;
         char* string;
         struct {
-            struct Expr* head; 
+            struct Expr* head;
             struct Expr** args;
             size_t arg_count;
         } function;
+        mpz_t bigint;
     } data;
 } Expr;
 
@@ -47,5 +50,15 @@ Expr* expr_copy(Expr* e);
 bool expr_eq(const Expr* a, const Expr* b);
 int expr_compare(const Expr* a, const Expr* b);
 uint64_t expr_hash(const Expr* e);
+
+/* BigInt constructors */
+Expr* expr_new_bigint_from_mpz(const mpz_t val);
+Expr* expr_new_bigint_from_int64(int64_t val);
+Expr* expr_new_bigint_from_str(const char* str);
+
+/* Helpers used by arithmetic modules */
+void  expr_to_mpz(const Expr* e, mpz_t out);
+bool  expr_is_integer_like(const Expr* e);
+Expr* expr_bigint_normalize(Expr* e);
 
 #endif // EXPR_H

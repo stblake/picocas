@@ -1,4 +1,5 @@
 #include "match.h"
+#include <gmp.h>
 #include "part.h"
 #include "eval.h"
 #include "print.h"
@@ -409,6 +410,9 @@ static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch
             }
             case EXPR_STRING:
                 if (strcmp(expr->data.string, pattern->data.string) == 0) return call_parent(env, parent);
+                return false;
+            case EXPR_BIGINT:
+                if (mpz_cmp(expr->data.bigint, pattern->data.bigint) == 0) return call_parent(env, parent);
                 return false;
             case EXPR_FUNCTION: {
                 size_t saved_env_count = env->count;

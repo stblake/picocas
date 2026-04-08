@@ -71,10 +71,62 @@ Expr* expr_new_function(Expr* head, Expr** args, size_t arg_count) {
     return e;
 }
 
-// Deallocate an expression. 
+// BigInt constructors
+Expr* expr_new_bigint_from_mpz(const mpz_t val) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_BIGINT;
+    mpz_init_set(e->data.bigint, val);
+    return e;
+}
+
+Expr* expr_new_bigint_from_int64(int64_t val) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_BIGINT;
+    mpz_init_set_si(e->data.bigint, val);
+    return e;
+}
+
+Expr* expr_new_bigint_from_str(const char* str) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_BIGINT;
+    if (mpz_init_set_str(e->data.bigint, str, 10) == -1) {
+        mpz_clear(e->data.bigint);
+        free(e);
+        return NULL;
+    }
+    return e;
+}
+
+void expr_to_mpz(const Expr* e, mpz_t out) {
+    if (e->type == EXPR_INTEGER) {
+        mpz_init_set_si(out, e->data.integer);
+    } else { // EXPR_BIGINT
+        mpz_init_set(out, e->data.bigint);
+    }
+}
+
+bool expr_is_integer_like(const Expr* e) {
+    return e && (e->type == EXPR_INTEGER || e->type == EXPR_BIGINT);
+}
+
+Expr* expr_bigint_normalize(Expr* e) {
+    if (e->type == EXPR_BIGINT && mpz_fits_slong_p(e->data.bigint)) {
+        long val = mpz_get_si(e->data.bigint);
+        Expr* result = expr_new_integer((int64_t)val);
+        mpz_clear(e->data.bigint);
+        free(e);
+        return result;
+    }
+    return e;
+}
+
+// Deallocate an expression.
 void expr_free(Expr* e) {
     if (!e) return;
-    
+
     switch (e->type) {
         case EXPR_SYMBOL:
         case EXPR_STRING:
@@ -88,6 +140,9 @@ void expr_free(Expr* e) {
                 }
             }
             if (e->data.function.args) free(e->data.function.args);
+            break;
+        case EXPR_BIGINT:
+            mpz_clear(e->data.bigint);
             break;
         default:
             break;
@@ -131,6 +186,9 @@ Expr* expr_copy(Expr* e) {
                 copy->data.function.args = NULL;
             }
             break;
+        case EXPR_BIGINT:
+            mpz_init_set(copy->data.bigint, e->data.bigint);
+            break;
         default:
             break;
     }
@@ -141,8 +199,21 @@ Expr* expr_copy(Expr* e) {
 bool expr_eq(const Expr* a, const Expr* b) {
     if (a == b) return true;
     if (!a || !b) return false;
-    if (a->type != b->type) return false;
-    
+    if (a->type != b->type) {
+        // Cross-type equality: EXPR_INTEGER vs EXPR_BIGINT
+        if ((a->type == EXPR_INTEGER && b->type == EXPR_BIGINT) ||
+            (a->type == EXPR_BIGINT && b->type == EXPR_INTEGER)) {
+            mpz_t va, vb;
+            expr_to_mpz(a, va);
+            expr_to_mpz(b, vb);
+            bool result = (mpz_cmp(va, vb) == 0);
+            mpz_clear(va);
+            mpz_clear(vb);
+            return result;
+        }
+        return false;
+    }
+
     switch (a->type) {
         case EXPR_INTEGER:
             return a->data.integer == b->data.integer;
@@ -161,12 +232,14 @@ bool expr_eq(const Expr* a, const Expr* b) {
             }
             return true;
         }
+        case EXPR_BIGINT:
+            return mpz_cmp(a->data.bigint, b->data.bigint) == 0;
     }
     return false;
 }
 
 static int get_canonical_rank(const Expr* e) {
-    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || is_rational((Expr*)e, NULL, NULL)) return 0;
+    if (e->type == EXPR_INTEGER || e->type == EXPR_BIGINT || e->type == EXPR_REAL || is_rational((Expr*)e, NULL, NULL)) return 0;
     if (is_complex((Expr*)e, NULL, NULL)) return 1;
     if (e->type == EXPR_STRING) return 2;
     if (e->type == EXPR_SYMBOL) return 3;
@@ -175,6 +248,7 @@ static int get_canonical_rank(const Expr* e) {
 
 static double get_numeric_value(const Expr* e) {
     if (e->type == EXPR_INTEGER) return (double)e->data.integer;
+    if (e->type == EXPR_BIGINT) return mpz_get_d(e->data.bigint);
     if (e->type == EXPR_REAL) return e->data.real;
     int64_t n, d;
     if (is_rational((Expr*)e, &n, &d)) return (double)n / d;
@@ -215,7 +289,7 @@ static Expr* get_main_factor(Expr* e) {
     }
     if (strcmp(head->data.symbol, "Times") == 0 && e->data.function.arg_count >= 1) {
         Expr* first = e->data.function.args[0];
-        if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || is_rational(first, NULL, NULL)) {
+        if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || first->type == EXPR_BIGINT || is_rational(first, NULL, NULL)) {
             if (e->data.function.arg_count == 2) return get_main_factor(e->data.function.args[1]);
             return e->data.function.args[1];
         }
@@ -249,6 +323,22 @@ int expr_compare(const Expr* a, const Expr* b) {
 
     switch (rank_a) {
         case 0: { // Number
+            // Fast path: plain int64 comparison without GMP overhead
+            if (a->type == EXPR_INTEGER && b->type == EXPR_INTEGER) {
+                if (a->data.integer < b->data.integer) return -1;
+                if (a->data.integer > b->data.integer) return 1;
+                return 0;
+            }
+            // Exact comparison when either operand is a BigInt
+            if (expr_is_integer_like(a) && expr_is_integer_like(b)) {
+                mpz_t ma, mb;
+                expr_to_mpz(a, ma);
+                expr_to_mpz(b, mb);
+                int cmp = mpz_cmp(ma, mb);
+                mpz_clear(ma);
+                mpz_clear(mb);
+                return cmp;
+            }
             double va = get_numeric_value(a);
             double vb = get_numeric_value(b);
             if (va < vb) return -1;
@@ -367,6 +457,16 @@ uint64_t expr_hash(const Expr* e) {
             h *= prime;
             for (size_t i = 0; i < e->data.function.arg_count; i++) {
                 h ^= expr_hash(e->data.function.args[i]);
+                h *= prime;
+            }
+            break;
+        }
+        case EXPR_BIGINT: {
+            h ^= (uint64_t)(mpz_sgn(e->data.bigint) + 2);
+            h *= prime;
+            size_t nlimbs = mpz_size(e->data.bigint);
+            for (size_t i = 0; i < nlimbs; i++) {
+                h ^= mpz_getlimbn(e->data.bigint, i);
                 h *= prime;
             }
             break;

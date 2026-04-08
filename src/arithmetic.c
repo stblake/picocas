@@ -3,8 +3,8 @@
 #include "eval.h"
 #include <stdlib.h>
 #include <string.h>
-
 #include <stdint.h>
+#include <gmp.h>
 
 int64_t gcd(int64_t a, int64_t b) {
     a = llabs(a);
@@ -29,6 +29,28 @@ Expr* builtin_gcd(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     size_t count = res->data.function.arg_count;
     if (count == 0) return expr_new_integer(0);
+
+    // Single pass: detect any bigint while confirming all args are integer-like
+    bool any_bigint = false, all_integer_like = true;
+    for (size_t i = 0; i < count; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (!expr_is_integer_like(arg)) { all_integer_like = false; break; }
+        if (arg->type == EXPR_BIGINT) any_bigint = true;
+    }
+
+    if (all_integer_like && any_bigint) {
+        mpz_t running, tmp;
+        mpz_init_set_ui(running, 0);
+        for (size_t i = 0; i < count; i++) {
+            expr_to_mpz(res->data.function.args[i], tmp);
+            mpz_abs(tmp, tmp);
+            mpz_gcd(running, running, tmp);
+            mpz_clear(tmp);
+        }
+        Expr* result = expr_bigint_normalize(expr_new_bigint_from_mpz(running));
+        mpz_clear(running);
+        return result;
+    }
 
     int64_t running_n = 0;
     int64_t running_d = 1;
@@ -326,7 +348,12 @@ Expr* builtin_factorial(Expr* res) {
                 for (int64_t i = 2; i <= n; i++) f *= i;
                 return expr_new_integer(f);
             } else {
-                return expr_copy(res);
+                mpz_t result;
+                mpz_init(result);
+                mpz_fac_ui(result, (unsigned long)n);
+                Expr* r = expr_new_bigint_from_mpz(result);
+                mpz_clear(result);
+                return r;
             }
         } else if (d == 2 || d == -2) {
             if (d == -2) { n = -n; }

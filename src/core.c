@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gmp.h>
 #include "rat.h"
 #include "parfrac.h"
 
@@ -445,7 +446,7 @@ Expr* builtin_numberq(Expr* res) {
 
     Expr* arg = res->data.function.args[0];
 
-    if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL) {
+    if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL || arg->type == EXPR_BIGINT) {
         return expr_new_symbol("True");
     }
 
@@ -462,7 +463,7 @@ Expr* builtin_numberq(Expr* res) {
 }
 
 static bool is_numeric_quantity(Expr* e) {
-    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL) return true;
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || e->type == EXPR_BIGINT) return true;
     if (e->type == EXPR_SYMBOL) {
         const char* name = e->data.symbol;
         if (strcmp(name, "Pi") == 0 || strcmp(name, "E") == 0 || strcmp(name, "I") == 0 ||
@@ -505,12 +506,12 @@ Expr* builtin_numericq(Expr* res) {
 
 Expr* builtin_integerq(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
-        return NULL; 
+        return NULL;
     }
 
     Expr* arg = res->data.function.args[0];
 
-    if (arg->type == EXPR_INTEGER) {
+    if (expr_is_integer_like(arg)) {
         return expr_new_symbol("True");
     }
 
@@ -537,7 +538,7 @@ Expr* builtin_information(Expr* res) {
 
 Expr* builtin_evenq(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
-        return NULL; 
+        return NULL;
     }
 
     Expr* arg = res->data.function.args[0];
@@ -548,12 +549,16 @@ Expr* builtin_evenq(Expr* res) {
         }
     }
 
+    if (arg->type == EXPR_BIGINT) {
+        return mpz_even_p(arg->data.bigint) ? expr_new_symbol("True") : expr_new_symbol("False");
+    }
+
     return expr_new_symbol("False");
 }
 
 Expr* builtin_oddq(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) {
-        return NULL; 
+        return NULL;
     }
 
     Expr* arg = res->data.function.args[0];
@@ -562,6 +567,10 @@ Expr* builtin_oddq(Expr* res) {
         if (arg->data.integer % 2 != 0) {
             return expr_new_symbol("True");
         }
+    }
+
+    if (arg->type == EXPR_BIGINT) {
+        return mpz_odd_p(arg->data.bigint) ? expr_new_symbol("True") : expr_new_symbol("False");
     }
 
     return expr_new_symbol("False");

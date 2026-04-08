@@ -260,6 +260,7 @@ Expr* evaluate_step(Expr* e) {
         case EXPR_INTEGER:
         case EXPR_REAL:
         case EXPR_STRING:
+        case EXPR_BIGINT:
             return expr_copy(e);
             
         case EXPR_SYMBOL: {

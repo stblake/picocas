@@ -59,6 +59,12 @@ void expr_print_fullform(Expr* e) {
         case EXPR_SYMBOL: printf("%s", e->data.symbol); break;
         case EXPR_STRING: printf("\"%s\"", e->data.string); break;
         case EXPR_FUNCTION: print_function_fullform(e); break;
+        case EXPR_BIGINT: {
+            char* str = mpz_get_str(NULL, 10, e->data.bigint);
+            printf("%s", str);
+            free(str);
+            break;
+        }
     }
 }
 
