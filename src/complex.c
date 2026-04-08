@@ -96,11 +96,10 @@ Expr* builtin_abs(Expr* res) {
         Expr* sum = expr_new_function(expr_new_symbol("Plus"), args_plus, 2);
         free(args_plus);
         
-        Expr** args_sqrt = malloc(sizeof(Expr*) * 1);
-        args_sqrt[0] = sum;
-        Expr* ret = expr_new_function(expr_new_symbol("Sqrt"), args_sqrt, 1);
-        free(args_sqrt);
-        return ret;
+        Expr* rat_args[2] = { expr_new_integer(1), expr_new_integer(2) };
+        Expr* half = expr_new_function(expr_new_symbol("Rational"), rat_args, 2);
+        Expr* pow_args[2] = { sum, half };
+        return expr_new_function(expr_new_symbol("Power"), pow_args, 2);
     }
     int64_t n, d;
     if (arg->type == EXPR_INTEGER) {

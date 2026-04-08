@@ -180,6 +180,14 @@ static Expr* parse_function(ParserState* s, Expr* head) {
     }
     s->pos++;  // Skip ']'
     
+    if (head && head->type == EXPR_SYMBOL && strcmp(head->data.symbol, "Sqrt") == 0 && count == 1) {
+        expr_free(head);
+        Expr* rat_args[2] = { expr_new_integer(1), expr_new_integer(2) };
+        Expr* half = expr_new_function(expr_new_symbol("Rational"), rat_args, 2);
+        Expr* pow_args[2] = { args[0], half };
+        return expr_new_function(expr_new_symbol("Power"), pow_args, 2);
+    }
+    
     Expr* func = expr_new_function(head, args, count);
     return func;
 }
@@ -606,16 +614,21 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
             Expr* args_plus[2] = { left, neg_right };
             left = expr_new_function(expr_new_symbol("Plus"), args_plus, 2);
         } else if (op_def.type == OP_DIVIDE) {
-            Expr* minus_one = expr_new_integer(-1);
-            Expr* args_power[2] = { right, minus_one };
-            Expr* inv_right = expr_new_function(expr_new_symbol("Power"), args_power, 2);
-            
-            if (left->type == EXPR_INTEGER && left->data.integer == 1) {
-                expr_free(left);
-                left = inv_right;
+            if (left->type == EXPR_INTEGER && right->type == EXPR_INTEGER) {
+                Expr* rat_args[2] = { left, right };
+                left = expr_new_function(expr_new_symbol("Rational"), rat_args, 2);
             } else {
-                Expr* args_times[2] = { left, inv_right };
-                left = expr_new_function(expr_new_symbol("Times"), args_times, 2);
+                Expr* minus_one = expr_new_integer(-1);
+                Expr* args_power[2] = { right, minus_one };
+                Expr* inv_right = expr_new_function(expr_new_symbol("Power"), args_power, 2);
+                
+                if (left->type == EXPR_INTEGER && left->data.integer == 1) {
+                    expr_free(left);
+                    left = inv_right;
+                } else {
+                    Expr* args_times[2] = { left, inv_right };
+                    left = expr_new_function(expr_new_symbol("Times"), args_times, 2);
+                }
             }
         } else if (op_def.type == OP_APPLY) {
             Expr* args[2] = { left, right };
