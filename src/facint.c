@@ -396,7 +396,13 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     
     ecm_clear(params);
 
+
     if (found) {
+        if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
+            add_factor_mpz(factors, num_factors, n, 1);
+            mpz_clear(f);
+            return;
+        }
         mpz_t n_f;
         mpz_init(n_f);
         mpz_divexact(n_f, n, f);
