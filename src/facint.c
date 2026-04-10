@@ -413,7 +413,12 @@ static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
     mpz_clears(x, y, g, r, q, ys, c, diff, NULL);
 }
 
-static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit) {
+#define METHOD_AUTOMATIC 0
+#define METHOD_TRIAL 1
+#define METHOD_POLLARD_RHO 2
+#define METHOD_ECM 3
+
+static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit, int method) {
     if (mpz_cmp_ui(n, 1) <= 0) return;
     if (*k_limit > 0 && *num_factors >= *k_limit) return;
 
@@ -423,6 +428,8 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     }
 
     // Trial division for small primes
+    if (method == METHOD_AUTOMATIC || method == METHOD_TRIAL) {
+
     static const uint32_t small_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
     int n_small = sizeof(small_primes)/sizeof(small_primes[0]);
     for (int i = 0; i < n_small; i++) {
@@ -447,23 +454,38 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     }
 
 
+    }
+    if (method == METHOD_TRIAL) {
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        return;
+    }
     mpz_t f;
     mpz_init(f);
 
-    pollard_rho_brent_mpz(f, n);
+    if (method == METHOD_AUTOMATIC || method == METHOD_POLLARD_RHO) {
+        pollard_rho_brent_mpz(f, n);
+
     if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
         mpz_t n_f;
         mpz_init(n_f);
         mpz_divexact(n_f, n, f);
         
-        factorize_mpz(f, factors, num_factors, k_limit);
-        factorize_mpz(n_f, factors, num_factors, k_limit);
+        factorize_mpz(f, factors, num_factors, k_limit, method);
+        factorize_mpz(n_f, factors, num_factors, k_limit, method);
         mpz_clear(n_f);
         mpz_clear(f);
         return;
     }
 
-    ecm_params params;
+    }
+    if (method == METHOD_POLLARD_RHO) {
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        mpz_clear(f);
+        return;
+    }
+    
+    if (method == METHOD_AUTOMATIC || method == METHOD_ECM) {
+        ecm_params params;
     ecm_init(params);
     params->B1done = 100.0; /* We can do a quick check with small B1 */
 
@@ -483,6 +505,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     ecm_clear(params);
 
 
+
     if (found) {
         if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
             add_factor_mpz(factors, num_factors, n, 1);
@@ -493,12 +516,13 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         mpz_init(n_f);
         mpz_divexact(n_f, n, f);
         
-        factorize_mpz(f, factors, num_factors, k_limit);
-        factorize_mpz(n_f, factors, num_factors, k_limit);
+        factorize_mpz(f, factors, num_factors, k_limit, method);
+        factorize_mpz(n_f, factors, num_factors, k_limit, method);
         mpz_clear(n_f);
     } else {
         // If ECM fails to find a factor within reasonable bounds, just add n as a factor
         add_factor_mpz(factors, num_factors, n, 1);
+    }
     }
     mpz_clear(f);
 }
@@ -510,7 +534,7 @@ static int compare_factors_mpz(const void* a, const void* b) {
 }
 
 Expr* builtin_factorinteger(Expr* res) {
-    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
+    if (res->type != EXPR_FUNCTION || (res->data.function.arg_count < 1 || res->data.function.arg_count > 3)) return NULL;
     
     Expr* n_expr = res->data.function.args[0];
     mpz_t num, den;
@@ -531,18 +555,34 @@ Expr* builtin_factorinteger(Expr* res) {
 
     if (!is_rat) return NULL;
 
+    int method = METHOD_AUTOMATIC;
     int k_limit = -1;
-    if (res->data.function.arg_count == 2) {
-        Expr* k_expr = res->data.function.args[1];
-        if (k_expr->type == EXPR_INTEGER) {
-            k_limit = (int)k_expr->data.integer;
-        } else if (k_expr->type == EXPR_SYMBOL && strcmp(k_expr->data.symbol, "Automatic") == 0) {
-            
+
+    for (size_t i = 1; i < res->data.function.arg_count; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type == EXPR_INTEGER) {
+            k_limit = (int)arg->data.integer;
+        } else if (arg->type == EXPR_SYMBOL && strcmp(arg->data.symbol, "Automatic") == 0) {
+            // keep default
+        } else if ((arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && (strcmp(arg->data.function.head->data.symbol, "Rule") == 0 || strcmp(arg->data.function.head->data.symbol, "RuleDelayed") == 0)) && arg->data.function.arg_count == 2) {
+            Expr* lhs = arg->data.function.args[0];
+            Expr* rhs = arg->data.function.args[1];
+            if (lhs->type == EXPR_SYMBOL && strcmp(lhs->data.symbol, "Method") == 0) {
+                if (rhs->type == EXPR_STRING) {
+                    if (strcmp(rhs->data.string, "TrialDivision") == 0) method = METHOD_TRIAL;
+                    else if (strcmp(rhs->data.string, "PollardRho") == 0) method = METHOD_POLLARD_RHO;
+                    else if (strcmp(rhs->data.string, "ECM") == 0) method = METHOD_ECM;
+                    else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
+                } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
+                    method = METHOD_AUTOMATIC;
+                }
+            }
         } else {
             mpz_clear(num); mpz_clear(den);
             return NULL;
         }
     }
+
 
     FactorMpz factors[1024];
     int num_factors = 0;
@@ -562,13 +602,13 @@ Expr* builtin_factorinteger(Expr* res) {
     }
 
     // Since ECM extracts small factors first, Automatic doesn't need to be treated differently.
-    factorize_mpz(num, factors, &num_factors, &k_limit);
+    factorize_mpz(num, factors, &num_factors, &k_limit, method);
     
     if (mpz_cmp_ui(den, 1) > 0) {
         FactorMpz d_factors[1024];
         int d_num_factors = 0;
         int d_limit = -1;
-        factorize_mpz(den, d_factors, &d_num_factors, &d_limit);
+        factorize_mpz(den, d_factors, &d_num_factors, &d_limit, method);
         for (int i = 0; i < d_num_factors; i++) {
             add_factor_mpz(factors, &num_factors, d_factors[i].p, -d_factors[i].count);
             mpz_clear(d_factors[i].p);
