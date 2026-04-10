@@ -1507,6 +1507,14 @@ Out[3]= {4, 25}
 - `FactorInteger[n]`: Returns a list of prime factors and their exponents.
 - `FactorInteger[n, k]`: Partial factorization, at most `k` distinct factors.
 - `FactorInteger[n, Automatic]`: Pulls out easy factors using trial division.
+- `FactorInteger[n, Method -> method]`: Factors `n` using a specific algorithmic method.
+
+**Options for `Method`**:
+- `"Automatic"`: (Default) Attempts factorization by sequentially executing Trial Division, Pollard's Rho, and ECM.
+- `"TrialDivision"`: Extracts bounds matching the first 1000 computed primes and halts cleanly. Composite residues are preserved.
+- `"PollardRho"`: Executes the Brent cycle-finding variant of Pollard's Rho algorithm targeting GMP bignums.
+- `"Fermat"`: Explores factors symmetrically close to the square root boundary natively on large integers.
+- `"ECM"`: Explicitly triggers Elliptic-Curve Method discovery natively.
 
 **Features**:
 - `Listable`, `Protected`.
