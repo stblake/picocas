@@ -331,6 +331,88 @@ static void add_factor_mpz(FactorMpz* factors, int* num_factors, mpz_t p, int64_
     (*num_factors)++;
 }
 
+
+static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
+    if (mpz_even_p(n)) {
+        mpz_set_ui(factor, 2);
+        return;
+    }
+    if (mpz_probab_prime_p(n, 25)) {
+        mpz_set(factor, n);
+        return;
+    }
+
+    mpz_t x, y, g, r, q, ys, c, diff;
+    mpz_inits(x, y, g, r, q, ys, c, diff, NULL);
+
+    unsigned long y_start = 2;
+    unsigned long c_val = 1;
+    unsigned long m = 128;
+
+    while (y_start < 100) {
+        mpz_set_ui(x, y_start);
+        mpz_set_ui(y, y_start);
+        mpz_set_ui(c, c_val);
+        mpz_set_ui(g, 1);
+        mpz_set_ui(r, 1);
+        mpz_set_ui(q, 1);
+
+        int max_iters = 14; 
+        while (mpz_cmp_ui(g, 1) == 0 && max_iters-- > 0) {
+            mpz_set(x, y);
+            unsigned long r_val = mpz_get_ui(r);
+            for (unsigned long i = 0; i < r_val; i++) {
+                mpz_mul(y, y, y);
+                mpz_add(y, y, c);
+                mpz_mod(y, y, n);
+            }
+
+            unsigned long k = 0;
+            while (k < r_val && mpz_cmp_ui(g, 1) == 0) {
+                mpz_set(ys, y);
+                unsigned long limit = (m < r_val - k) ? m : r_val - k;
+                for (unsigned long i = 0; i < limit; i++) {
+                    mpz_mul(y, y, y);
+                    mpz_add(y, y, c);
+                    mpz_mod(y, y, n);
+
+                    mpz_sub(diff, x, y);
+                    mpz_abs(diff, diff);
+                    mpz_mul(q, q, diff);
+                    mpz_mod(q, q, n);
+                }
+                mpz_gcd(g, q, n);
+                k += limit;
+            }
+            mpz_mul_ui(r, r, 2);
+        }
+
+        if (mpz_cmp(g, n) == 0) {
+            do {
+                mpz_mul(ys, ys, ys);
+                mpz_add(ys, ys, c);
+                mpz_mod(ys, ys, n);
+
+                mpz_sub(diff, x, ys);
+                mpz_abs(diff, diff);
+                mpz_gcd(g, diff, n);
+            } while (mpz_cmp_ui(g, 1) == 0);
+        }
+
+        if (mpz_cmp(g, n) != 0 && mpz_cmp_ui(g, 1) > 0) {
+            mpz_set(factor, g);
+            mpz_clears(x, y, g, r, q, ys, c, diff, NULL);
+            return;
+        }
+
+        y_start++;
+        c_val++;
+    }
+
+    mpz_set_ui(factor, 0);
+    mpz_clears(x, y, g, r, q, ys, c, diff, NULL);
+}
+
 static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit) {
     if (mpz_cmp_ui(n, 1) <= 0) return;
     if (*k_limit > 0 && *num_factors >= *k_limit) return;
@@ -364,8 +446,23 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         }
     }
 
+
     mpz_t f;
     mpz_init(f);
+
+    pollard_rho_brent_mpz(f, n);
+    if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
+        mpz_t n_f;
+        mpz_init(n_f);
+        mpz_divexact(n_f, n, f);
+        
+        factorize_mpz(f, factors, num_factors, k_limit);
+        factorize_mpz(n_f, factors, num_factors, k_limit);
+        mpz_clear(n_f);
+        mpz_clear(f);
+        return;
+    }
+
     ecm_params params;
     ecm_init(params);
     params->B1done = 100.0; /* We can do a quick check with small B1 */
