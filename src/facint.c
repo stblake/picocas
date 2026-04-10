@@ -587,10 +587,10 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     if (method == METHOD_AUTOMATIC || method == METHOD_TRIAL) {
 
     init_primepi();
-    int n_small = (method == METHOD_TRIAL) ? 1000 : 25;
+    uint32_t n_small = (method == METHOD_TRIAL) ? 1000 : 25;
     if (n_small > total_pi_primes) n_small = total_pi_primes;
 
-    for (int i = 0; i < n_small; i++) {
+    for (uint32_t i = 0; i < n_small; i++) {
         uint32_t p = pi_primes[i];
         if (mpz_divisible_ui_p(n, p)) {
             int64_t count = 0;
