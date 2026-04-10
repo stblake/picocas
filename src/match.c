@@ -467,55 +467,35 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
 
     Expr* p = pats[0];
     
-    // Handle Optional, Longest, Shortest
     bool is_optional = false;
-    bool is_shortest = false; // For Optional, default is Longest
-    bool is_longest = false;  // For Sequence/Repeated, default is Shortest
-    Expr* opt_pat = p;
+    bool is_shortest = false;
+    bool is_longest = false;
     Expr* opt_container = p;
+    Expr* bind_sym = NULL;
+    Expr* current_p = p;
 
-    if (p->type == EXPR_FUNCTION && p->data.function.head->type == EXPR_SYMBOL) {
-        const char* head = p->data.function.head->data.symbol;
-        if (strcmp(head, "Shortest") == 0) {
+    while (current_p->type == EXPR_FUNCTION && current_p->data.function.head->type == EXPR_SYMBOL && current_p->data.function.arg_count >= 1) {
+        const char* head = current_p->data.function.head->data.symbol;
+        if (strcmp(head, "Pattern") == 0 && current_p->data.function.arg_count == 2) {
+            bind_sym = current_p->data.function.args[0];
+            current_p = current_p->data.function.args[1];
+        } else if (strcmp(head, "Shortest") == 0) {
             is_shortest = true;
-            if (p->data.function.arg_count >= 1) {
-                Expr* inner = p->data.function.args[0];
-                if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
-                    strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
-                    is_optional = true;
-                    is_shortest = true;
-                    opt_container = inner;
-                    if (inner->data.function.arg_count >= 1) {
-                        opt_pat = inner->data.function.args[0];
-                    }
-                } else {
-                    opt_pat = inner;
-                }
-            }
+            current_p = current_p->data.function.args[0];
         } else if (strcmp(head, "Longest") == 0) {
             is_longest = true;
-            if (p->data.function.arg_count >= 1) {
-                Expr* inner = p->data.function.args[0];
-                if (inner->type == EXPR_FUNCTION && inner->data.function.head->type == EXPR_SYMBOL &&
-                    strcmp(inner->data.function.head->data.symbol, "Optional") == 0) {
-                    is_optional = true;
-                    is_shortest = false; // Optional defaults to Longest, Longest wrapper enforces it
-                    opt_container = inner;
-                    if (inner->data.function.arg_count >= 1) {
-                        opt_pat = inner->data.function.args[0];
-                    }
-                } else {
-                    opt_pat = inner;
-                }
-            }
+            is_shortest = false;
+            current_p = current_p->data.function.args[0];
         } else if (strcmp(head, "Optional") == 0) {
             is_optional = true;
-            if (p->data.function.arg_count >= 1) {
-                opt_pat = p->data.function.args[0];
-            }
+            opt_container = current_p;
+            current_p = current_p->data.function.args[0];
+        } else {
+            break;
         }
     }
-
+    
+    Expr* opt_pat = current_p;
     if (is_optional && is_shortest) {
         size_t saved_env_count = env->count;
         Expr* def_val = NULL;
@@ -526,14 +506,14 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
         }
 
         if (def_val) {
+            Expr* p_sym = bind_sym;
             Expr* inner_p = opt_pat;
-            Expr* p_sym = NULL;
-            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
-                if (p_sym && p_sym->type == EXPR_SYMBOL) {
-                    env_set(env, p_sym->data.symbol, def_val);
-                }
+            if (!p_sym) is_pattern(opt_pat, &p_sym, &inner_p);
+            if (p_sym && p_sym->type == EXPR_SYMBOL) {
+                env_set(env, p_sym->data.symbol, def_val);
             }
             expr_free(def_val);
+
 
             if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
@@ -543,7 +523,7 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
     }
 
     Expr* inner_p = opt_pat;
-    Expr* p_sym = NULL;
+    Expr* p_sym = bind_sym;
     int min_len = 0;
     int max_len = -1;
     Expr* b_head = NULL;
@@ -551,13 +531,14 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
 
     bool is_seq = false;
     bool is_rep = false;
-    if (is_pattern(opt_pat, &p_sym, &inner_p)) {
+    if (!p_sym && is_pattern(opt_pat, &p_sym, &inner_p)) {
         is_seq = is_sequence_blank(inner_p, &b_head, &min_len);
         if (!is_seq) is_rep = is_repeated(inner_p, &rep_pat, &min_len, &max_len);
     } else {
-        is_seq = is_sequence_blank(opt_pat, &b_head, &min_len);
-        if (!is_seq) is_rep = is_repeated(opt_pat, &rep_pat, &min_len, &max_len);
+        is_seq = is_sequence_blank(inner_p, &b_head, &min_len);
+        if (!is_seq) is_rep = is_repeated(inner_p, &rep_pat, &min_len, &max_len);
     }
+
 
     bool is_orderless = false;
     bool is_flat = false;
@@ -665,12 +646,32 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
                 }
 
                 if (matched_val) {
-                    ParentMatch pm = { remainder, n_exprs - k, pats + 1, n_pats - 1, condition, pat_head, total_pats, parent };
-                    if (match_internal(matched_val, opt_pat, env, &pm)) {
-                        expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                    size_t saved_env_inner = env->count;
+                    if (match_internal(matched_val, inner_p, env, NULL)) {
+                        if (p_sym) {
+                            Expr* existing = env_get(env, p_sym->data.symbol);
+                            if (existing) {
+                                if (expr_eq(matched_val, existing)) {
+                                    if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                                        expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                    }
+                                }
+                            } else {
+                                env_set(env, p_sym->data.symbol, matched_val);
+                                if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                                    expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                }
+                            }
+                        } else {
+                            if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+                                expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                            }
+                        }
                     }
+                    env_rollback(env, saved_env_inner);
                     expr_free(matched_val);
                 }
+
             }
 
             env_rollback(env, saved_env);
@@ -693,14 +694,14 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
         }
 
         if (def_val) {
+            Expr* p_sym = bind_sym;
             Expr* inner_p = opt_pat;
-            Expr* p_sym = NULL;
-            if (is_pattern(opt_pat, &p_sym, &inner_p)) {
-                if (p_sym && p_sym->type == EXPR_SYMBOL) {
-                    env_set(env, p_sym->data.symbol, def_val);
-                }
+            if (!p_sym) is_pattern(opt_pat, &p_sym, &inner_p);
+            if (p_sym && p_sym->type == EXPR_SYMBOL) {
+                env_set(env, p_sym->data.symbol, def_val);
             }
             expr_free(def_val);
+
 
             if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
