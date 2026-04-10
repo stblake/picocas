@@ -413,7 +413,41 @@ static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
     mpz_clears(x, y, g, r, q, ys, c, diff, NULL);
 }
 
+
+static void fermat_factor_mpz(mpz_t factor, mpz_t n) {
+    if (mpz_even_p(n)) {
+        mpz_set_ui(factor, 2);
+        return;
+    }
+    
+    mpz_t a, b2, tmp;
+    mpz_inits(a, b2, tmp, NULL);
+    
+    mpz_sqrt(a, n);
+    mpz_mul(tmp, a, a);
+    if (mpz_cmp(tmp, n) < 0) {
+        mpz_add_ui(a, a, 1);
+    }
+    
+    while (1) {
+        mpz_mul(tmp, a, a);
+        mpz_sub(b2, tmp, n);
+        if (mpz_perfect_square_p(b2)) {
+            mpz_sqrt(tmp, b2);
+            mpz_sub(factor, a, tmp);
+            if (mpz_cmp_ui(factor, 1) == 0) {
+                mpz_add(factor, a, tmp);
+            }
+            break;
+        }
+        mpz_add_ui(a, a, 1);
+    }
+    
+    mpz_clears(a, b2, tmp, NULL);
+}
+
 #define METHOD_AUTOMATIC 0
+#define METHOD_FERMAT 4
 #define METHOD_TRIAL 1
 #define METHOD_POLLARD_RHO 2
 #define METHOD_ECM 3
@@ -424,6 +458,29 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
     if (mpz_probab_prime_p(n, 25)) {
         add_factor_mpz(factors, num_factors, n, 1);
+        return;
+    }
+
+
+    if (method == METHOD_FERMAT) {
+        mpz_t f;
+        mpz_init(f);
+        fermat_factor_mpz(f, n);
+        
+        if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
+            mpz_t n_f;
+            mpz_init(n_f);
+            mpz_divexact(n_f, n, f);
+            
+            factorize_mpz(f, factors, num_factors, k_limit, method);
+            factorize_mpz(n_f, factors, num_factors, k_limit, method);
+            mpz_clear(n_f);
+            mpz_clear(f);
+            return;
+        }
+        
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        mpz_clear(f);
         return;
     }
 
@@ -575,6 +632,7 @@ Expr* builtin_factorinteger(Expr* res) {
                     if (strcmp(rhs->data.string, "TrialDivision") == 0) method = METHOD_TRIAL;
                     else if (strcmp(rhs->data.string, "PollardRho") == 0) method = METHOD_POLLARD_RHO;
                     else if (strcmp(rhs->data.string, "ECM") == 0) method = METHOD_ECM;
+                    else if (strcmp(rhs->data.string, "Fermat") == 0) method = METHOD_FERMAT;
                     else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
                 } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
                     method = METHOD_AUTOMATIC;
