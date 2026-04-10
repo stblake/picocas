@@ -446,7 +446,83 @@ static void fermat_factor_mpz(mpz_t factor, mpz_t n) {
     mpz_clears(a, b2, tmp, NULL);
 }
 
+
+static void cfrac_factor_mpz(mpz_t factor, mpz_t n) {
+    if (mpz_even_p(n)) {
+        mpz_set_ui(factor, 2);
+        return;
+    }
+    if (mpz_perfect_square_p(n)) {
+        mpz_sqrt(factor, n);
+        return;
+    }
+
+    mpz_t P, Q, a, a0, A, A_prev, S, g, tmp, next_A;
+    mpz_inits(P, Q, a, a0, A, A_prev, S, g, tmp, next_A, NULL);
+
+    mpz_sqrt(a0, n);
+
+    mpz_set_ui(P, 0);
+    mpz_set_ui(Q, 1);
+    mpz_set(a, a0);
+
+    mpz_set_ui(A_prev, 1);
+    mpz_mod(A, a0, n);
+
+    unsigned long k = 1;
+    mpz_set_ui(factor, 0);
+
+    while (k < 10000000) {
+        mpz_mul(tmp, a, Q);
+        mpz_sub(tmp, tmp, P);
+        mpz_set(P, tmp);
+        
+        mpz_mul(tmp, P, P);
+        mpz_sub(tmp, n, tmp);
+        mpz_divexact(Q, tmp, Q);
+        
+        mpz_add(tmp, a0, P);
+        mpz_fdiv_q(a, tmp, Q);
+        
+        mpz_mul(tmp, a, A);
+        mpz_add(tmp, tmp, A_prev);
+        mpz_mod(next_A, tmp, n);
+        
+        mpz_set(A_prev, A);
+        mpz_set(A, next_A);
+        
+        if (k % 2 == 0) {
+            if (mpz_perfect_square_p(Q)) {
+                mpz_sqrt(S, Q);
+                
+                mpz_sub(tmp, A_prev, S);
+                mpz_gcd(g, tmp, n);
+                if (mpz_cmp_ui(g, 1) > 0 && mpz_cmp(g, n) < 0) {
+                    mpz_set(factor, g);
+                    break;
+                }
+                
+                mpz_add(tmp, A_prev, S);
+                mpz_gcd(g, tmp, n);
+                if (mpz_cmp_ui(g, 1) > 0 && mpz_cmp(g, n) < 0) {
+                    mpz_set(factor, g);
+                    break;
+                }
+            }
+        }
+        
+        k++;
+        
+        if (mpz_cmp_ui(Q, 1) == 0 && k > 1) {
+            break;
+        }
+    }
+
+    mpz_clears(P, Q, a, a0, A, A_prev, S, g, tmp, next_A, NULL);
+}
+
 #define METHOD_AUTOMATIC 0
+#define METHOD_CFRAC 5
 #define METHOD_FERMAT 4
 #define METHOD_TRIAL 1
 #define METHOD_POLLARD_RHO 2
@@ -466,6 +542,29 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         mpz_t f;
         mpz_init(f);
         fermat_factor_mpz(f, n);
+        
+        if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
+            mpz_t n_f;
+            mpz_init(n_f);
+            mpz_divexact(n_f, n, f);
+            
+            factorize_mpz(f, factors, num_factors, k_limit, method);
+            factorize_mpz(n_f, factors, num_factors, k_limit, method);
+            mpz_clear(n_f);
+            mpz_clear(f);
+            return;
+        }
+        
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        mpz_clear(f);
+        return;
+    }
+
+
+    if (method == METHOD_CFRAC) {
+        mpz_t f;
+        mpz_init(f);
+        cfrac_factor_mpz(f, n);
         
         if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
             mpz_t n_f;
@@ -633,6 +732,7 @@ Expr* builtin_factorinteger(Expr* res) {
                     else if (strcmp(rhs->data.string, "PollardRho") == 0) method = METHOD_POLLARD_RHO;
                     else if (strcmp(rhs->data.string, "ECM") == 0) method = METHOD_ECM;
                     else if (strcmp(rhs->data.string, "Fermat") == 0) method = METHOD_FERMAT;
+                    else if (strcmp(rhs->data.string, "CFRAC") == 0) method = METHOD_CFRAC;
                     else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
                 } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
                     method = METHOD_AUTOMATIC;

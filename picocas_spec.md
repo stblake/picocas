@@ -1514,6 +1514,7 @@ Out[3]= {4, 25}
 - `"TrialDivision"`: Extracts bounds matching the first 1000 computed primes and halts cleanly. Composite residues are preserved.
 - `"PollardRho"`: Executes the Brent cycle-finding variant of Pollard's Rho algorithm targeting GMP bignums.
 - `"Fermat"`: Explores factors symmetrically close to the square root boundary natively on large integers.
+- `"CFRAC"`: Implements the continued fraction integer factorization method natively on GMP bignums.
 - `"ECM"`: Explicitly triggers Elliptic-Curve Method discovery natively.
 
 **Features**:
