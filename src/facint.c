@@ -430,17 +430,20 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     // Trial division for small primes
     if (method == METHOD_AUTOMATIC || method == METHOD_TRIAL) {
 
-    static const uint32_t small_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97};
-    int n_small = sizeof(small_primes)/sizeof(small_primes[0]);
+    init_primepi();
+    int n_small = (method == METHOD_TRIAL) ? 1000 : 25;
+    if (n_small > total_pi_primes) n_small = total_pi_primes;
+
     for (int i = 0; i < n_small; i++) {
-        if (mpz_divisible_ui_p(n, small_primes[i])) {
+        uint32_t p = pi_primes[i];
+        if (mpz_divisible_ui_p(n, p)) {
             int64_t count = 0;
-            while (mpz_divisible_ui_p(n, small_primes[i])) {
+            while (mpz_divisible_ui_p(n, p)) {
                 count++;
-                mpz_divexact_ui(n, n, small_primes[i]);
+                mpz_divexact_ui(n, n, p);
             }
             mpz_t sp;
-            mpz_init_set_ui(sp, small_primes[i]);
+            mpz_init_set_ui(sp, p);
             add_factor_mpz(factors, num_factors, sp, count);
             mpz_clear(sp);
             
