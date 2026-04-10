@@ -448,7 +448,8 @@ static Expr* apply_replace_repeated_nested(Expr* expr, Expr* rules_expr) {
     Expr* current = expr_copy(expr);
     int iterations = 0;
     while (iterations < 65536) {
-        Expr* next = apply_replace_all_nested(current, rules_expr);
+        Expr* next_raw = apply_replace_all_nested(current, rules_expr);
+        Expr* next = eval_and_free(next_raw);
         if (expr_eq(current, next)) {
             expr_free(next);
             return current;
