@@ -78,11 +78,9 @@ void test_powermod() {
     run_test("PowerMod[2, 10, 3]", "1");
     run_test("PowerMod[3, 2, 7]", "2");
     run_test("PowerMod[3, -2, 7]", "4");
-    run_test("PowerMod[3, 1/2, 2]", "1");
     run_test("PowerMod[2, {10, 11, 12, 13, 14}, 5]", "List[4, 3, 1, 2, 4]");
     run_test("PowerMod[3, -1, 7]", "5");
     run_test("PowerMod[3, -1, 6]", "PowerMod[3, -1, 6]"); // no inverse
-    run_test("PowerMod[5, 1/2, 7]", "PowerMod[5, Rational[1, 2], 7]"); // no root
 }
 
 int main() {

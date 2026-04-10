@@ -475,8 +475,28 @@ Expr* get_coeff(Expr* e, Expr* var, int d) {
 }
 
 Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
+    if (expr_eq(A, B)) return expr_new_integer(1);
     if (var_count == 0) {
         if (is_zero_poly(B)) return NULL;
+        
+        if (A->type == EXPR_BIGINT && B->type == EXPR_BIGINT) {
+            mpz_t a, b, r, rem;
+            expr_to_mpz(A, a);
+            expr_to_mpz(B, b);
+            mpz_init(r);
+            mpz_init(rem);
+            mpz_tdiv_qr(r, rem, a, b);
+            bool exact = (mpz_cmp_ui(rem, 0) == 0);
+            mpz_clear(a); mpz_clear(b); mpz_clear(rem);
+            if (exact) {
+                Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+                mpz_clear(r);
+                return res;
+            }
+            mpz_clear(r);
+            // Fall through to Times[A, B^-1] if not exact integer division
+        }
+        
         return internal_times((Expr*[]){expr_copy(A), internal_power((Expr*[]){expr_copy(B), expr_new_integer(-1)}, 2)}, 2);
     }
     
@@ -596,8 +616,30 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
         Expr* lcR = get_coeff(R, x, degR);
         int d = degR - degB;
 
-        Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
-        Expr* q_coeff = internal_times((Expr*[]){lcR, lcB_inv}, 2);
+        Expr* q_coeff;
+        if (expr_eq(lcR, lcB)) {
+            q_coeff = expr_new_integer(1);
+        } else if (lcR->type == EXPR_BIGINT && lcB->type == EXPR_BIGINT) {
+            mpz_t a, b, r, rem;
+            expr_to_mpz(lcR, a);
+            expr_to_mpz(lcB, b);
+            mpz_init(r);
+            mpz_init(rem);
+            mpz_tdiv_qr(r, rem, a, b);
+            bool exact = (mpz_cmp_ui(rem, 0) == 0);
+            mpz_clear(a); mpz_clear(b); mpz_clear(rem);
+            if (exact) {
+                q_coeff = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+                mpz_clear(r);
+            } else {
+                mpz_clear(r);
+                Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
+                q_coeff = internal_times((Expr*[]){expr_copy(lcR), lcB_inv}, 2);
+            }
+        } else {
+            Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
+            q_coeff = internal_times((Expr*[]){expr_copy(lcR), lcB_inv}, 2);
+        }
         
         Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
         Expr* term = internal_times((Expr*[]){q_coeff, x_pow}, 2);

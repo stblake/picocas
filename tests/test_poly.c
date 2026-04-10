@@ -181,6 +181,12 @@ void test_power_simplification() {
     run_test("Power[Rational[2, 3], -2]", "Rational[9, 4]");
 }
 
+void test_bigint_poly() {
+    run_test("PolynomialGCD[104857600000000000000000000 (x^2 - 1), 104857600000000000000000000 (x^3 - 1)]", "Times[104857600000000000000000000, Plus[-1, x]]");
+    run_test("PolynomialQuotient[104857600000000000000000000 x^2 - 104857600000000000000000000, 104857600000000000000000000 x - 104857600000000000000000000, x]", "Plus[1, x]");
+    run_test("PolynomialRemainder[104857600000000000000000000 x^2 - 104857600000000000000000000, x - 1, x]", "0");
+}
+
 int main() {
     setbuf(stdout, NULL);
     printf("Starting poly_tests\n");
@@ -202,6 +208,7 @@ int main() {
     TEST(test_decompose);
     TEST(test_hornerform);
     TEST(test_resultant);
+    TEST(test_bigint_poly);
     TEST(test_discriminant);
     TEST(test_polynomialextendedgcd);
     

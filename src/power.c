@@ -197,8 +197,8 @@ Expr* builtin_power(Expr* res) {
         if (e < 0) {
             Expr* denom = bigint_pow(base, -e);
             if (!denom) return NULL;
-            Expr* p_args[2] = { denom, expr_new_integer(-1) };
-            return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+            Expr* r_args[2] = { expr_new_integer(1), denom };
+            return expr_new_function(expr_new_symbol("Rational"), r_args, 2);
         }
     }
 
@@ -217,8 +217,8 @@ Expr* builtin_power(Expr* res) {
             if (overflow) {
                 Expr* denom = bigint_pow(base, -e);
                 if (!denom) return NULL;
-                Expr* p_args[2] = { denom, expr_new_integer(-1) };
-                return expr_new_function(expr_new_symbol("Power"), p_args, 2);
+                Expr* r_args[2] = { expr_new_integer(1), denom };
+                return expr_new_function(expr_new_symbol("Rational"), r_args, 2);
             }
             return make_rational(1, res_val);
         }
