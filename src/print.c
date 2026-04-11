@@ -385,9 +385,11 @@ Expr* builtin_print(Expr* res) {
 }
 
 Expr* builtin_fullform(Expr* res) {
+    (void)res;
     return NULL; // Unevaluated wrapper
 }
 
 Expr* builtin_inputform(Expr* res) {
+    (void)res;
     return NULL; // Unevaluated wrapper
 }
