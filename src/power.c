@@ -27,6 +27,10 @@ static int64_t ipow(int64_t base, int64_t exp, bool* overflow) {
         }
         exp /= 2;
         if (exp > 0) {
+            if (b > INT64_MAX || b < INT64_MIN) {
+                *overflow = true;
+                return 0;
+            }
             b *= b;
         }
     }
