@@ -11,6 +11,8 @@ typedef struct {
     Expr** values;
     size_t count;
     size_t capacity;
+    bool (*callback)(struct MatchEnv*, void*);
+    void* callback_data;
 } MatchEnv;
 
 // Create a new empty match environment

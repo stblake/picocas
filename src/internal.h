@@ -157,6 +157,7 @@ Expr* internal_replace_part(Expr** args, size_t count);
 Expr* internal_replace(Expr** args, size_t count);
 Expr* internal_replace_all(Expr** args, size_t count);
 Expr* internal_replace_repeated(Expr** args, size_t count);
+Expr* internal_replacelist(Expr** args, size_t count);
 Expr* internal_module(Expr** args, size_t count);
 Expr* internal_block(Expr** args, size_t count);
 Expr* internal_with(Expr** args, size_t count);

@@ -159,6 +159,7 @@ extern Expr* builtin_replace_part(Expr* res);
 extern Expr* builtin_replace(Expr* res);
 extern Expr* builtin_replace_all(Expr* res);
 extern Expr* builtin_replace_repeated(Expr* res);
+extern Expr* builtin_replacelist(Expr* res);
 extern Expr* builtin_module(Expr* res);
 extern Expr* builtin_block(Expr* res);
 extern Expr* builtin_with(Expr* res);
@@ -349,6 +350,7 @@ Expr* internal_replace_part(Expr** args, size_t count) { return internal_call_im
 Expr* internal_replace(Expr** args, size_t count) { return internal_call_impl("Replace", builtin_replace, args, count); }
 Expr* internal_replace_all(Expr** args, size_t count) { return internal_call_impl("ReplaceAll", builtin_replace_all, args, count); }
 Expr* internal_replace_repeated(Expr** args, size_t count) { return internal_call_impl("ReplaceRepeated", builtin_replace_repeated, args, count); }
+Expr* internal_replacelist(Expr** args, size_t count) { return internal_call_impl("ReplaceList", builtin_replacelist, args, count); }
 Expr* internal_module(Expr** args, size_t count) { return internal_call_impl("Module", builtin_module, args, count); }
 Expr* internal_block(Expr** args, size_t count) { return internal_call_impl("Block", builtin_block, args, count); }
 Expr* internal_with(Expr** args, size_t count) { return internal_call_impl("With", builtin_with, args, count); }

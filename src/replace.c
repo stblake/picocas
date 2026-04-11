@@ -470,6 +470,102 @@ Expr* builtin_replace_repeated(Expr* res) {
     return apply_replace_repeated_nested(expr, rules_expr);
 }
 
+
+typedef struct {
+    Expr* replacement;
+    bool delayed;
+    Expr** results;
+    size_t count;
+    size_t cap;
+    int64_t limit;
+} ReplaceListState;
+
+static bool replacelist_callback(struct MatchEnv* env, void* user_data) {
+    ReplaceListState* state = (ReplaceListState*)user_data;
+    
+    if (state->limit >= 0 && (int64_t)state->count >= state->limit) return true;
+    
+    Expr* repl = replace_bindings(state->replacement, env);
+    if (state->delayed) {
+        repl = eval_and_free(repl);
+    }
+    
+    if (state->count == state->cap) {
+        state->cap *= 2;
+        state->results = realloc(state->results, sizeof(Expr*) * state->cap);
+    }
+    state->results[state->count++] = repl;
+    
+    return false;
+}
+
+Expr* builtin_replacelist(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2 || argc > 3) return NULL;
+
+    Expr* expr = res->data.function.args[0];
+    Expr* rules_expr = res->data.function.args[1];
+    
+    int64_t limit = -1;
+    if (argc == 3) {
+        Expr* l_expr = res->data.function.args[2];
+        if (l_expr->type == EXPR_INTEGER) {
+            limit = l_expr->data.integer;
+        }
+    }
+    
+    size_t cap = 16;
+    size_t num_rules = 0;
+    ReplaceRule* rules = malloc(sizeof(ReplaceRule) * cap);
+    
+    if (rules_expr->type == EXPR_FUNCTION && strcmp(rules_expr->data.function.head->data.symbol, "List") == 0) {
+        for (size_t i = 0; i < rules_expr->data.function.arg_count; i++) {
+            Expr* r = rules_expr->data.function.args[i];
+            if (is_rule(r) && r->data.function.arg_count == 2) {
+                if (num_rules == cap) { cap *= 2; rules = realloc(rules, sizeof(ReplaceRule) * cap); }
+                rules[num_rules].pattern = r->data.function.args[0];
+                rules[num_rules].replacement = r->data.function.args[1];
+                rules[num_rules].delayed = strcmp(r->data.function.head->data.symbol, "RuleDelayed") == 0;
+                num_rules++;
+            }
+        }
+    } else if (is_rule(rules_expr) && rules_expr->data.function.arg_count == 2) {
+        rules[num_rules].pattern = rules_expr->data.function.args[0];
+        rules[num_rules].replacement = rules_expr->data.function.args[1];
+        rules[num_rules].delayed = strcmp(rules_expr->data.function.head->data.symbol, "RuleDelayed") == 0;
+        num_rules++;
+    }
+    
+    ReplaceListState state;
+    state.results = malloc(sizeof(Expr*) * 16);
+    state.count = 0;
+    state.cap = 16;
+    state.limit = limit;
+    
+    for (size_t i = 0; i < num_rules; i++) {
+        state.replacement = rules[i].replacement;
+        state.delayed = rules[i].delayed;
+        
+        MatchEnv* env = env_new();
+        env->callback = replacelist_callback;
+        env->callback_data = &state;
+        
+        match(expr, rules[i].pattern, env);
+        env_free(env);
+        
+        if (state.limit >= 0 && (int64_t)state.count >= state.limit) {
+            break;
+        }
+    }
+    
+    free(rules);
+    
+    Expr* list = expr_new_function(expr_new_symbol("List"), state.results, state.count);
+    free(state.results);
+    return list;
+}
+
 void replace_init(void) {
     symtab_add_builtin("ReplacePart", builtin_replace_part);
     symtab_add_builtin("Replace", builtin_replace);
@@ -478,4 +574,6 @@ void replace_init(void) {
     symtab_get_def("ReplaceAll")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("ReplaceRepeated", builtin_replace_repeated);
     symtab_get_def("ReplaceRepeated")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("ReplaceList", builtin_replacelist);
+    symtab_get_def("ReplaceList")->attributes |= ATTR_PROTECTED;
 }

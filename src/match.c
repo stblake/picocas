@@ -26,6 +26,8 @@ MatchEnv* env_new(void) {
     MatchEnv* env = malloc(sizeof(MatchEnv));
     env->count = 0;
     env->capacity = 8;
+    env->callback = NULL;
+    env->callback_data = NULL;
     env->symbols = malloc(sizeof(char*) * env->capacity);
     env->values = malloc(sizeof(Expr*) * env->capacity);
     return env;
@@ -211,12 +213,22 @@ static void extract_subset(Expr** exprs, size_t n_exprs, int* comb, int k, Expr*
 }
 
 // Call parent if exists, otherwise return true (or check top condition)
+
+static ParentMatch top_level_sentinel = {0};
+
 static bool call_parent(MatchEnv* env, ParentMatch* parent) {
+    if (parent == &top_level_sentinel) {
+        if (env->callback) {
+            return env->callback(env, env->callback_data);
+        }
+        return true;
+    }
     if (parent) {
         return match_args_internal(parent->exprs, parent->n_exprs, parent->pats, parent->n_pats, env, parent->condition, parent->pat_head, parent->total_pats, parent->parent);
     }
     return true;
 }
+
 
 static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch* parent) {
     if (!pattern) return false;
@@ -445,7 +457,7 @@ static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch
 }
 
 bool match(Expr* expr, Expr* pattern, MatchEnv* env) {
-    return match_internal(expr, pattern, env, NULL);
+    return match_internal(expr, pattern, env, &top_level_sentinel);
 }
 
 static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_t n_pats, MatchEnv* env, Expr* condition, Expr* pat_head, size_t total_pats, ParentMatch* parent) {
