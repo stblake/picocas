@@ -1,6 +1,6 @@
 # PicoCAS
 
-PicoCAS is a tiny, AI Agent-generated, symbolic computer algebra system (CAS) heavily inspired by the core architecture and evaluation semantics of Mathematica (the Wolfram Language). Written entirely in C99, PicoCAS implements a recursive expression model, structural pattern matching, rewriting rules, and a surprisingly extensive library of built-in functions.
+PicoCAS is a tiny, AI Agent-generated, symbolic computer algebra system (CAS) heavily inspired by the core architecture and evaluation semantics of Mathematica. Written entirely in C99, PicoCAS implements a recursive expression model, structural pattern matching, rewriting rules, and a surprisingly extensive library of built-in functions.
 
 The name "PicoCAS" pays homage to David Stoutemyer's seminal PICOMATH-80 tiny computer algebra system. PicoCAS has the goal of implementing the core of the Mathematica programming language, and the algebraic and calculus capabilities of the Derive computer algebra system.
 
