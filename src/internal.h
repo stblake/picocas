@@ -128,6 +128,7 @@ Expr* internal_through(Expr** args, size_t count);
 Expr* internal_select(Expr** args, size_t count);
 Expr* internal_freeq(Expr** args, size_t count);
 Expr* internal_sort(Expr** args, size_t count);
+Expr* internal_orderedq(Expr** args, size_t count);
 Expr* internal_level(Expr** args, size_t count);
 Expr* internal_depth(Expr** args, size_t count);
 Expr* internal_leafcount(Expr** args, size_t count);

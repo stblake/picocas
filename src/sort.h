@@ -4,5 +4,6 @@
 #include "expr.h"
 
 Expr* builtin_sort(Expr* res);
+Expr* builtin_orderedq(Expr* res);
 
 #endif // SORT_H

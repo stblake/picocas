@@ -50,6 +50,21 @@ void test_sort_custom() {
              "List[List[c, 1], List[a, 2], List[d, 3]]");
 }
 
+
+void test_orderedq() {
+    run_test("OrderedQ[{e, e}]", "True");
+    run_test("OrderedQ[{1, 4, 2}]", "False");
+    run_test("OrderedQ[{\"cat\", \"catfish\", \"fish\"}]", "True");
+    run_test("OrderedQ[{1, Sqrt[2], 2, E, 3, Pi}]", "False");
+    run_test("OrderedQ[{1, Sqrt[2], 2, E, 3, Pi}, Less]", "True");
+    run_test("OrderedQ[{{a, 2}, {c, 1}, {d, 3}}, #1[[2]] < #2[[2]] &]", "False");
+    run_test("OrderedQ[{x, y, x + y}]", "True");
+    run_test("OrderedQ[f[b, a, c]]", "False");
+    run_test("OrderedQ[{4, 3, 2, 1}, Greater]", "True");
+    run_test("OrderedQ[{4, 3, 3, 1}, Greater]", "False");
+    run_test("OrderedQ[{4, 3, 3, 1}, GreaterEqual]", "True");
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -60,6 +75,7 @@ int main() {
     
     TEST(test_sort_canonical);
     TEST(test_sort_custom);
+    TEST(test_orderedq);
     
     printf("All sort tests passed!\n");
     return 0;

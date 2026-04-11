@@ -86,6 +86,8 @@ void core_init(void) {
     symtab_add_builtin("Select", builtin_select);
     symtab_add_builtin("FreeQ", builtin_freeq);
     symtab_add_builtin("Sort", builtin_sort);
+    symtab_add_builtin("OrderedQ", builtin_orderedq);
+    symtab_get_def("OrderedQ")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("PolynomialQ", builtin_polynomialq);
     symtab_add_builtin("Variables", builtin_variables);
     symtab_add_builtin("Level", builtin_level);

@@ -130,6 +130,7 @@ extern Expr* builtin_through(Expr* res);
 extern Expr* builtin_select(Expr* res);
 extern Expr* builtin_freeq(Expr* res);
 extern Expr* builtin_sort(Expr* res);
+extern Expr* builtin_orderedq(Expr* res);
 extern Expr* builtin_level(Expr* res);
 extern Expr* builtin_depth(Expr* res);
 extern Expr* builtin_leafcount(Expr* res);
@@ -319,6 +320,7 @@ Expr* internal_through(Expr** args, size_t count) { return internal_call_impl("T
 Expr* internal_select(Expr** args, size_t count) { return internal_call_impl("Select", builtin_select, args, count); }
 Expr* internal_freeq(Expr** args, size_t count) { return internal_call_impl("FreeQ", builtin_freeq, args, count); }
 Expr* internal_sort(Expr** args, size_t count) { return internal_call_impl("Sort", builtin_sort, args, count); }
+Expr* internal_orderedq(Expr** args, size_t count) { return internal_call_impl("OrderedQ", builtin_orderedq, args, count); }
 Expr* internal_level(Expr** args, size_t count) { return internal_call_impl("Level", builtin_level, args, count); }
 Expr* internal_depth(Expr** args, size_t count) { return internal_call_impl("Depth", builtin_depth, args, count); }
 Expr* internal_leafcount(Expr** args, size_t count) { return internal_call_impl("LeafCount", builtin_leafcount, args, count); }
