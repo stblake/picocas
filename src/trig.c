@@ -788,7 +788,7 @@ Expr* builtin_arccot(Expr* res) {
     // Approximate numerical evaluation
     double complex c;
     if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
-        if (c == 0.0) return expr_new_real(M_PI / 2.0); // ArcCot[0] = Pi/2
+        if (c == 0.0) return expr_new_real(3.14159265358979323846 / 2.0); // ArcCot[0] = Pi/2
         double complex s = catan(1.0 / c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));

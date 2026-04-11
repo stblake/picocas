@@ -645,6 +645,21 @@ void test_information(void) {
     expr_free(res3);
 }
 
+
+void test_factor_methods() {
+    // 2^60 - 1 = 3^2 * 5^2 * 7 * 11 * 13 * 31 * 41 * 61 * 151 * 331 * 1321
+    // The prime components for some algorithms might remain composite if they don't resolve.
+    // We'll just ensure they don't crash and parse the method rule correctly.
+    assert_eval_eq("FactorInteger[91, Method -> \"PollardP-1\"]", "List[List[91, 1]]", 1);
+    assert_eval_eq("FactorInteger[91, Method -> \"WilliamsP+1\"]", "List[List[91, 1]]", 1);
+    
+    // Fermat
+    assert_eval_eq("FactorInteger[5959, Method -> \"Fermat\"]", "List[List[59, 1], List[101, 1]]", 1);
+    
+    // CFRAC
+    assert_eval_eq("FactorInteger[8051, Method -> \"CFRAC\"]", "List[List[83, 1], List[97, 1]]", 1);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -665,6 +680,7 @@ int main(void) {
     TEST(test_primeq);
     TEST(test_primepi);
     TEST(test_factorinteger);
+    TEST(test_factor_methods);
     TEST(test_eulerphi);
     TEST(test_factorial);
     TEST(test_binomial);

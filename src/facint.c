@@ -523,6 +523,8 @@ static void cfrac_factor_mpz(mpz_t factor, mpz_t n) {
 
 #define METHOD_AUTOMATIC 0
 #define METHOD_CFRAC 5
+#define METHOD_POLLARD_P1 6
+#define METHOD_WILLIAMS_P1 7
 #define METHOD_FERMAT 4
 #define METHOD_TRIAL 1
 #define METHOD_POLLARD_RHO 2
@@ -643,45 +645,49 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         return;
     }
     
-    if (method == METHOD_AUTOMATIC || method == METHOD_ECM) {
+    if (method == METHOD_AUTOMATIC || method == METHOD_ECM || method == METHOD_POLLARD_P1 || method == METHOD_WILLIAMS_P1) {
         ecm_params params;
-    ecm_init(params);
-    params->B1done = 100.0; /* We can do a quick check with small B1 */
+        ecm_init(params);
+        if (method == METHOD_POLLARD_P1) params->method = ECM_PM1;
+        else if (method == METHOD_WILLIAMS_P1) params->method = ECM_PP1;
+        
+        params->B1done = 0.0; /* We can do a quick check with small B1 */
 
-    int found = 0;
-    // Try ECM with increasing bounds
-    double B1_bounds[] = {2000.0, 11000.0, 50000.0, 250000.0, 1000000.0, 3000000.0, 11000000.0};
-    int num_bounds = sizeof(B1_bounds)/sizeof(B1_bounds[0]);
-    
-    for (int i = 0; i < num_bounds && !found; i++) {
-        for (int tries = 0; tries < 10 && !found; tries++) {
-            if (ecm_factor(f, n, B1_bounds[i], params) > 0) {
-                found = 1;
+        int found = 0;
+        // Try with increasing bounds
+        double B1_bounds[] = {2000.0, 11000.0, 50000.0, 250000.0, 1000000.0, 3000000.0, 11000000.0};
+        int num_bounds = sizeof(B1_bounds)/sizeof(B1_bounds[0]);
+        
+        for (int i = 0; i < num_bounds && !found; i++) {
+            for (int tries = 0; tries < 10 && !found; tries++) {
+                int ret = ecm_factor(f, n, B1_bounds[i], params);
+                if (ret > 0) {
+                    found = 1;
+                }
+                // PM1 is deterministic for a given B1, so no need to try 10 times with the same bound.
+                if (method == METHOD_POLLARD_P1) break;
             }
         }
-    }
-    
-    ecm_clear(params);
-
-
-
-    if (found) {
-        if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
-            add_factor_mpz(factors, num_factors, n, 1);
-            mpz_clear(f);
-            return;
-        }
-        mpz_t n_f;
-        mpz_init(n_f);
-        mpz_divexact(n_f, n, f);
         
-        factorize_mpz(f, factors, num_factors, k_limit, method);
-        factorize_mpz(n_f, factors, num_factors, k_limit, method);
-        mpz_clear(n_f);
-    } else {
-        // If ECM fails to find a factor within reasonable bounds, just add n as a factor
-        add_factor_mpz(factors, num_factors, n, 1);
-    }
+        ecm_clear(params);
+
+        if (found) {
+            if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
+                add_factor_mpz(factors, num_factors, n, 1);
+                mpz_clear(f);
+                return;
+            }
+            mpz_t n_f;
+            mpz_init(n_f);
+            mpz_divexact(n_f, n, f);
+            
+            factorize_mpz(f, factors, num_factors, k_limit, method);
+            factorize_mpz(n_f, factors, num_factors, k_limit, method);
+            mpz_clear(n_f);
+        } else {
+            // If it fails to find a factor within reasonable bounds, just add n as a factor
+            add_factor_mpz(factors, num_factors, n, 1);
+        }
     }
     mpz_clear(f);
 }
@@ -733,6 +739,8 @@ Expr* builtin_factorinteger(Expr* res) {
                     else if (strcmp(rhs->data.string, "ECM") == 0) method = METHOD_ECM;
                     else if (strcmp(rhs->data.string, "Fermat") == 0) method = METHOD_FERMAT;
                     else if (strcmp(rhs->data.string, "CFRAC") == 0) method = METHOD_CFRAC;
+                    else if (strcmp(rhs->data.string, "PollardP-1") == 0) method = METHOD_POLLARD_P1;
+                    else if (strcmp(rhs->data.string, "WilliamsP+1") == 0) method = METHOD_WILLIAMS_P1;
                     else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
                 } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
                     method = METHOD_AUTOMATIC;
