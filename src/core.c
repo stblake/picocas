@@ -35,6 +35,7 @@
 #include "power.h"
 #include "funcprog.h"
 #include "match.h"
+#include "print.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,6 +112,9 @@ void core_init(void) {
     symtab_add_builtin("PowerMod", builtin_powermod);
     symtab_add_builtin("Factorial", builtin_factorial);
     symtab_add_builtin("Binomial", builtin_binomial);
+    symtab_add_builtin("Print", builtin_print);
+    symtab_add_builtin("FullForm", builtin_fullform);
+    symtab_add_builtin("InputForm", builtin_inputform);
     symtab_add_builtin("Information", builtin_information);
 
     symtab_get_def("AtomQ")->attributes |= ATTR_PROTECTED;
@@ -129,6 +133,9 @@ void core_init(void) {
     symtab_get_def("PowerMod")->attributes |= ATTR_LISTABLE | ATTR_PROTECTED;
     symtab_get_def("Factorial")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
     symtab_get_def("Binomial")->attributes |= (ATTR_PROTECTED | ATTR_NUMERICFUNCTION | ATTR_LISTABLE);
+    symtab_get_def("Print")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("FullForm")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("InputForm")->attributes |= ATTR_PROTECTED;
 
     facint_init();
 

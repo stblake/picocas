@@ -897,6 +897,27 @@ Predicates for testing lists and their structures.
 - `EvenQ[n]`: `True` if `n` is an even integer.
 - `OddQ[n]`: `True` if `n` is an odd integer.
 
+#### Print
+- `Print[expr1, expr2, ...]` prints the expressions to stdout and returns `Null`.
+- Supports `FullForm` and `InputForm` wrappers.
+
+```mathematica
+In[1]:= Print["Result: ", x + y]
+Result: x + y
+Out[1]= Null
+
+In[2]:= Print[x + y // FullForm]
+Plus[x, y]
+Out[2]= Null
+```
+
+#### FullForm
+- `FullForm[expr]` causes `expr` to be printed in its full internal form.
+- `expr // FullForm` is a common shortcut.
+
+#### InputForm
+- `InputForm[expr]` causes `expr` to be printed in a form suitable for input (standard form in PicoCAS).
+
 #### Information
 Returns a formatted string containing the syntax and description of a symbol.
 - `Information[symbol]`

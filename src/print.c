@@ -86,6 +86,9 @@ static void print_standard(Expr* e, int parent_prec) {
         if (strcmp(head, "FullForm") == 0 && e->data.function.arg_count == 1) {
             expr_print_fullform(e->data.function.args[0]);
         }
+        else if (strcmp(head, "InputForm") == 0 && e->data.function.arg_count == 1) {
+            print_standard(e->data.function.args[0], parent_prec);
+        }
         else if (strcmp(head, "Rational") == 0 && e->data.function.arg_count == 2) {
             print_standard(e->data.function.args[0], 470);
             printf("/");
@@ -368,4 +371,23 @@ char* expr_to_string_fullform(Expr* e) {
     fclose(stream);
     
     return buffer;
+}
+
+#include "symtab.h"
+
+Expr* builtin_print(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    for (size_t i = 0; i < res->data.function.arg_count; i++) {
+        print_standard(res->data.function.args[i], 0);
+    }
+    printf("\n");
+    return expr_new_symbol("Null");
+}
+
+Expr* builtin_fullform(Expr* res) {
+    return NULL; // Unevaluated wrapper
+}
+
+Expr* builtin_inputform(Expr* res) {
+    return NULL; // Unevaluated wrapper
 }

@@ -260,3 +260,9 @@ target_link_libraries(bigint_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm
 add_executable(integrals_tests test_integrals.c ${COMMON_SRC})
 target_include_directories(integrals_tests PRIVATE ../src)
 target_link_libraries(integrals_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
+
+add_executable(print_tests
+    test_print.c
+    ${COMMON_SRC}
+)
+target_include_directories(print_tests PRIVATE ../src)
