@@ -82,74 +82,84 @@ Out[14]= {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67
 
 It's easy to confirm they are all prime numbers: 
 ```
-In[8]:= PrimeQ /@ %
-Out[8]= {True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True}
+In[15]:= PrimeQ /@ %
+Out[15]= {True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True}
 ```
 
 Below we see a more complex pattern that implements a run-length encoding. In addition to `BlankNullSequence`, `Blank`, and `Condition`, this pattern makes use of `Longest` and `Repeated`: 
 
 ```mathematica
-In[9]:= rleRule = {pre___, r:Longest[seq_ ..], post___} /; Length[{r}]>1 :> {pre, {seq, Length[{r}]}, post};
+In[16]:= rleRule = {pre___, r:Longest[seq_ ..], post___} /; Length[{r}]>1 :> {pre, {seq, Length[{r}]}, post};
 
-In[10]:= data = {"A", "A", "A", "B", "B", "C", "A", "A"};
+In[17]:= data = {"A", "A", "A", "B", "B", "C", "A", "A"};
 
-In[11]:= data //. rleRule 
-Out[11]= {{"A", 3}, {"B", 2}, "C", {"A", 2}}
+In[18]:= data //. rleRule 
+Out[18]= {{"A", 3}, {"B", 2}, "C", {"A", 2}}
 ```
 
 Patterns are not just limited to transformation rules, here's an example where we count the number of primes less than 1000 that are of the form 4 n + 3: 
 
 ```mathematica
-In[12]:= Count[Range[1000], p_?PrimeQ /; Mod[p,4] == 3]
-Out[12]= 87
+In[19]:= Count[Range[1000], p_?PrimeQ /; Mod[p,4] == 3]
+Out[19]= 87
 ```
 
 Next we'll look at an application of `Flat` pattern matching. As multiplication is associative, it has the attribute `Flat`:
 
 ```mathematica
-In[13]:= MemberQ[Attributes[Times], Flat] 
-Out[13]= True
+In[20]:= MemberQ[Attributes[Times], Flat] 
+Out[20]= True
 ```
 
 We can implement a rule for expanding out the logarithm of products: 
 
 ```mathematica
-In[14]:= logExpand = Log[x_ * y_] :> Log[x] + Log[y];
+In[21]:= logExpand = Log[x_ * y_] :> Log[x] + Log[y];
 
-In[15]:= Log[a * b * c * d] /. logExpand
-Out[15]= Log[a] + Log[b c d]
+In[22]:= Log[a * b * c * d] /. logExpand
+Out[22]= Log[a] + Log[b c d]
 ```
 
 This works because the pattern matcher matches `x_ y_` to `Times[a, Times[b, c, d]`. We can apply this rule two more times to fully expand out the expression: 
 
 ```mathematica
-In[16]:= % /. logExpand
-Out[16]= Log[a] + Log[b] + Log[c d]
+In[23]:= % /. logExpand
+Out[23]= Log[a] + Log[b] + Log[c d]
 
-In[17]:= % /. logExpand
-Out[17]= Log[a] + Log[b] + Log[c] + Log[d]
+In[24]:= % /. logExpand
+Out[24]= Log[a] + Log[b] + Log[c] + Log[d]
 ```
 
 Alternatively, we could have done this with `ReplaceRepeated` (`//.`): 
 
 ```mathematica
-In[18]:= Log[a * b * c * d] //. logExpand
-Out[18]= Log[a] + Log[b] + Log[c] + Log[d]
+In[25]:= Log[a * b * c * d] //. logExpand
+Out[25]= Log[a] + Log[b] + Log[c] + Log[d]
 ```
 
 The pattern matcher supports backtracking, here's an example where we find all positive integers `a, b, c`, such that `a + b c == 71`:
 
 ```mathematica
-In[19]:= ReplaceList[Range[71], {a___,x_,b___,y_,c___,z_,d___} /; x + y z === 71 :> {x,y,z}]
-Out[19]= {{1, 2, 35}, {1, 5, 14}, {1, 7, 10}, {2, 3, 23}, {3, 4, 17}, {5, 6, 11}}
+In[26]:= ReplaceList[Range[71], {a___,x_,b___,y_,c___,z_,d___} /; x + y z === 71 :> {x,y,z}]
+Out[26]= {{1, 2, 35}, {1, 5, 14}, {1, 7, 10}, {2, 3, 23}, {3, 4, 17}, {5, 6, 11}}
 
-In[20]:= Print[HoldForm[ #1 + #2 #3 == 71 ] // InputForm] & @@@ %;
+In[27]:= Print[HoldForm[ #1 + #2 #3 == 71 ] // InputForm] & @@@ %;
 1 + 2 35 == 71
 1 + 5 14 == 71
 1 + 7 10 == 71
 2 + 3 23 == 71
 3 + 4 17 == 71
 5 + 6 11 == 71
+```
+
+We can also use pattern constraints `Longest` and `Shortest` to find the smallest and largest difference between `x` and `y`:
+
+```mathematica
+In[28]:= Range[71] /. {a___,x_,Shortest[b___],y_,c___,z_,d___} /; x + y z === 71 :> {x,y,z}
+Out[28]= {1, 2, 35}
+
+In[29]:= Range[71] /. {a___,x_,Longest[b___],y_,c___,z_,d___} /; x + y z === 71 :> {x,y,z}
+Out[29]= {1, 7, 10}
 ```
 
 [1] https://en.wikipedia.org/wiki/Derive_(computer_algebra_system)
