@@ -32,15 +32,59 @@ static Expr* multiply_numbers(Expr* a, Expr* b) {
         return expr_new_real(va * vb);
     }
     if (a->type == EXPR_BIGINT || b->type == EXPR_BIGINT) {
+        int64_t n1 = 1, d1 = 1, n2 = 1, d2 = 1;
+        bool a_is_rat = is_rational(a, &n1, &d1);
+        bool b_is_rat = is_rational(b, &n2, &d2);
+        
         mpz_t av, bv, r;
-        expr_to_mpz(a, av);
-        expr_to_mpz(b, bv);
+        if (a_is_rat) mpz_init_set_si(av, n1);
+        else expr_to_mpz(a, av);
+        
+        if (b_is_rat) mpz_init_set_si(bv, n2);
+        else expr_to_mpz(b, bv);
+        
         mpz_init(r);
         mpz_mul(r, av, bv);
         mpz_clear(av); mpz_clear(bv);
-        Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+        
+        // Now handle the denominators!
+        int64_t den = d1 * d2;
+        if (den == 1) {
+            Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clear(r);
+            return res;
+        }
+        
+        // Compute GCD of r and den
+        mpz_t m_den, m_gcd;
+        mpz_inits(m_den, m_gcd, NULL);
+        mpz_set_si(m_den, den);
+        mpz_gcd(m_gcd, r, m_den);
+        
+        mpz_divexact(r, r, m_gcd);
+        mpz_divexact(m_den, m_den, m_gcd);
+        
+        int64_t final_den = mpz_get_si(m_den);
+        mpz_clears(m_den, m_gcd, NULL);
+        
+        if (final_den == 1) {
+            Expr* res = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
+            mpz_clear(r);
+            return res;
+        }
+        
+        // Return Times[num, Power[den, -1]] if we can't form a Rational (which only holds int64_t)
+        // Wait, if final_den is small, we can form Rational ? No, Rational holds 2 args. If num is BigInt, we can't use Rational.
+        // Or can we? Rational usually holds integers.
+        // Actually, if we return Times[BigInt, Power[final_den, -1]], it'll infinite loop.
+        // Because multiply_numbers will be called again!
+        // We MUST return something that won't trigger multiply_numbers.
+        // Wait! In PicoCAS, Rational CAN hold BigInts?! Let's allow it:
+        Expr* r_num = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
         mpz_clear(r);
-        return res;
+        Expr* r_den = expr_new_integer(final_den);
+        Expr* r_args[2] = { r_num, r_den };
+        return expr_new_function(expr_new_symbol("Rational"), r_args, 2);
     }
 
     if (a->type == EXPR_INTEGER && b->type == EXPR_INTEGER) {

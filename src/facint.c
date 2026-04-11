@@ -8,6 +8,17 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#define METHOD_AUTOMATIC 0
+#define METHOD_RBD 9
+#define METHOD_DIXON 8
+#define METHOD_CFRAC 5
+#define METHOD_POLLARD_P1 6
+#define METHOD_WILLIAMS_P1 7
+#define METHOD_FERMAT 4
+#define METHOD_TRIAL 1
+#define METHOD_POLLARD_RHO 2
+#define METHOD_ECM 3
+
 
 // Modular multiplication: (a * b) % m
 static uint64_t mul_mod(uint64_t a, uint64_t b, uint64_t m) {
@@ -332,7 +343,7 @@ static void add_factor_mpz(FactorMpz* factors, int* num_factors, mpz_t p, int64_
 }
 
 
-static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
+static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n, int method) {
     if (mpz_even_p(n)) {
         mpz_set_ui(factor, 2);
         return;
@@ -349,7 +360,7 @@ static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
     unsigned long c_val = 1;
     unsigned long m = 128;
 
-    while (y_start < 100) {
+    while (y_start < (unsigned long)((method == METHOD_POLLARD_RHO) ? 10 : 100)) {
         mpz_set_ui(x, y_start);
         mpz_set_ui(y, y_start);
         mpz_set_ui(c, c_val);
@@ -357,7 +368,7 @@ static void pollard_rho_brent_mpz(mpz_t factor, mpz_t n) {
         mpz_set_ui(r, 1);
         mpz_set_ui(q, 1);
 
-        int max_iters = 14; 
+        int max_iters = (method == METHOD_POLLARD_RHO) ? 28 : 14; 
         while (mpz_cmp_ui(g, 1) == 0 && max_iters-- > 0) {
             mpz_set(x, y);
             unsigned long r_val = mpz_get_ui(r);
@@ -774,16 +785,6 @@ end_rbd:
     mpz_clears(a, b, diff, search_limit_z, tmp, Q, g, NULL);
 }
 
-#define METHOD_AUTOMATIC 0
-#define METHOD_RBD 9
-#define METHOD_DIXON 8
-#define METHOD_CFRAC 5
-#define METHOD_POLLARD_P1 6
-#define METHOD_WILLIAMS_P1 7
-#define METHOD_FERMAT 4
-#define METHOD_TRIAL 1
-#define METHOD_POLLARD_RHO 2
-#define METHOD_ECM 3
 
 static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit, int method, Expr* method_opt) {
     if (mpz_cmp_ui(n, 1) <= 0) return;
@@ -925,7 +926,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
     mpz_init(f);
 
     if (method == METHOD_AUTOMATIC || method == METHOD_POLLARD_RHO) {
-        pollard_rho_brent_mpz(f, n);
+        pollard_rho_brent_mpz(f, n, method);
 
     if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
         mpz_t n_f;

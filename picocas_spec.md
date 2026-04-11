@@ -1599,6 +1599,7 @@ Out[3]= {4, 25}
 - `"Automatic"`: (Default) Attempts factorization by sequentially executing Trial Division, Pollard's Rho, and ECM.
 - `"TrialDivision"`: Extracts bounds matching the first 1000 computed primes and halts cleanly. Composite residues are preserved.
 - `"PollardRho"`: Executes the Brent cycle-finding variant of Pollard's Rho algorithm targeting GMP bignums.
+- `{"BlakeRationalBaseDescent", "Base" -> a/b}`: Executes the Rational Base Descent algorithm specifically targeting semiprimes proximate to powers of `a/b`.
 - `"PollardP-1"`: Executes the Pollard $P-1$ algorithm, leveraging GMP and ECM natively.
 - `"WilliamsP+1"`: Executes the Williams $P+1$ algorithm via the ECM library natively.
 - `"Fermat"`: Explores factors symmetrically close to the square root boundary natively on large integers.
