@@ -521,7 +521,176 @@ static void cfrac_factor_mpz(mpz_t factor, mpz_t n) {
     mpz_clears(P, Q, a, a0, A, A_prev, S, g, tmp, next_A, NULL);
 }
 
+
+#define DIXON_K 400
+
+typedef struct {
+    mpz_t a;
+    int exp_parity[DIXON_K];
+    int exp_full[DIXON_K];
+} DixonRelation;
+
+static void dixon_factor_mpz(mpz_t factor, mpz_t n) {
+    if (mpz_even_p(n)) {
+        mpz_set_ui(factor, 2);
+        return;
+    }
+    if (mpz_perfect_square_p(n)) {
+        mpz_sqrt(factor, n);
+        return;
+    }
+
+    init_primepi();
+    int K = DIXON_K;
+    if ((int)total_pi_primes < K) K = total_pi_primes;
+
+    DixonRelation* rels = calloc((K + 16), sizeof(DixonRelation));
+    for (int i = 0; i < K + 16; i++) {
+        mpz_init(rels[i].a);
+    }
+
+    mpz_t z, a, tmp, sqrt_n;
+    mpz_inits(z, a, tmp, sqrt_n, NULL);
+
+    int found_rels = 0;
+    mpz_sqrt(sqrt_n, n);
+    mpz_add_ui(a, sqrt_n, 1);
+
+    int attempts = 0;
+    while (found_rels < K + 8 && attempts < 500000) {
+        mpz_mul(z, a, a);
+        mpz_mod(z, z, n);
+        mpz_set(tmp, z);
+
+        int exp_parity[DIXON_K] = {0};
+        int exp_full[DIXON_K] = {0};
+
+        for (int i = 0; i < K; i++) {
+            uint32_t p = pi_primes[i];
+            while (mpz_divisible_ui_p(tmp, p)) {
+                mpz_divexact_ui(tmp, tmp, p);
+                exp_parity[i] ^= 1;
+                exp_full[i]++;
+            }
+            if (mpz_cmp_ui(tmp, 1) == 0) break;
+        }
+
+        if (mpz_cmp_ui(tmp, 1) == 0) {
+            mpz_set(rels[found_rels].a, a);
+            memcpy(rels[found_rels].exp_parity, exp_parity, sizeof(int) * K);
+            memcpy(rels[found_rels].exp_full, exp_full, sizeof(int) * K);
+            found_rels++;
+        }
+
+        mpz_add_ui(a, a, 1);
+        attempts++;
+    }
+
+    mpz_clears(z, a, tmp, sqrt_n, NULL);
+
+    if (found_rels < K + 1) {
+        mpz_set_ui(factor, 0);
+        for (int i = 0; i < K + 16; i++) mpz_clear(rels[i].a);
+        free(rels);
+        return;
+    }
+
+    uint64_t* mat = calloc(found_rels, sizeof(uint64_t) * ((K + 63) / 64));
+    uint64_t* history = calloc(found_rels, sizeof(uint64_t) * ((found_rels + 63) / 64));
+
+    int words_k = (K + 63) / 64;
+    int words_r = (found_rels + 63) / 64;
+
+    for (int i = 0; i < found_rels; i++) {
+        for (int j = 0; j < K; j++) {
+            if (rels[i].exp_parity[j]) {
+                mat[i * words_k + (j / 64)] |= (1ULL << (j % 64));
+            }
+        }
+        history[i * words_r + (i / 64)] |= (1ULL << (i % 64));
+    }
+
+    int pivot_row = 0;
+    for (int c = 0; c < K && pivot_row < found_rels; c++) {
+        int r = pivot_row;
+        while (r < found_rels && (mat[r * words_k + (c / 64)] & (1ULL << (c % 64))) == 0) {
+            r++;
+        }
+        if (r == found_rels) continue;
+
+        if (r != pivot_row) {
+            for (int w = 0; w < words_k; w++) {
+                uint64_t t = mat[pivot_row * words_k + w];
+                mat[pivot_row * words_k + w] = mat[r * words_k + w];
+                mat[r * words_k + w] = t;
+            }
+            for (int w = 0; w < words_r; w++) {
+                uint64_t t = history[pivot_row * words_r + w];
+                history[pivot_row * words_r + w] = history[r * words_r + w];
+                history[r * words_r + w] = t;
+            }
+        }
+
+        for (int i = 0; i < found_rels; i++) {
+            if (i != pivot_row && (mat[i * words_k + (c / 64)] & (1ULL << (c % 64)))) {
+                for (int w = 0; w < words_k; w++) {
+                    mat[i * words_k + w] ^= mat[pivot_row * words_k + w];
+                }
+                for (int w = 0; w < words_r; w++) {
+                    history[i * words_r + w] ^= history[pivot_row * words_r + w];
+                }
+            }
+        }
+        pivot_row++;
+    }
+
+    mpz_t X, Y, gcd_res, p_pow;
+    mpz_inits(X, Y, gcd_res, p_pow, NULL);
+
+    mpz_set_ui(factor, 0);
+
+    for (int i = pivot_row; i < found_rels; i++) {
+        mpz_set_ui(X, 1);
+        int total_exp[DIXON_K] = {0};
+
+        for (int j = 0; j < found_rels; j++) {
+            if (history[i * words_r + (j / 64)] & (1ULL << (j % 64))) {
+                mpz_mul(X, X, rels[j].a);
+                mpz_mod(X, X, n);
+                for (int k = 0; k < K; k++) {
+                    total_exp[k] += rels[j].exp_full[k];
+                }
+            }
+        }
+
+        mpz_set_ui(Y, 1);
+        for (int k = 0; k < K; k++) {
+            if (total_exp[k] > 0) {
+                mpz_ui_pow_ui(p_pow, pi_primes[k], total_exp[k] / 2);
+                mpz_mul(Y, Y, p_pow);
+                mpz_mod(Y, Y, n);
+            }
+        }
+
+        mpz_sub(tmp, X, Y);
+        mpz_abs(tmp, tmp);
+        mpz_gcd(gcd_res, tmp, n);
+
+        if (mpz_cmp_ui(gcd_res, 1) > 0 && mpz_cmp(gcd_res, n) < 0) {
+            mpz_set(factor, gcd_res);
+            break;
+        }
+    }
+
+    mpz_clears(X, Y, gcd_res, p_pow, NULL);
+    free(mat);
+    free(history);
+    for (int i = 0; i < K + 16; i++) mpz_clear(rels[i].a);
+    free(rels);
+}
+
 #define METHOD_AUTOMATIC 0
+#define METHOD_DIXON 8
 #define METHOD_CFRAC 5
 #define METHOD_POLLARD_P1 6
 #define METHOD_WILLIAMS_P1 7
@@ -557,7 +726,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             return;
         }
         
-        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
         mpz_clear(f);
         return;
     }
@@ -580,7 +749,30 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             return;
         }
         
-        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        mpz_clear(f);
+        return;
+    }
+
+
+    if (method == METHOD_DIXON) {
+        mpz_t f;
+        mpz_init(f);
+        dixon_factor_mpz(f, n);
+        
+        if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
+            mpz_t n_f;
+            mpz_init(n_f);
+            mpz_divexact(n_f, n, f);
+            
+            factorize_mpz(f, factors, num_factors, k_limit, method);
+            factorize_mpz(n_f, factors, num_factors, k_limit, method);
+            mpz_clear(n_f);
+            mpz_clear(f);
+            return;
+        }
+        
+        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
         mpz_clear(f);
         return;
     }
@@ -617,7 +809,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
     }
     if (method == METHOD_TRIAL) {
-        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
         return;
     }
     mpz_t f;
@@ -640,7 +832,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
     }
     if (method == METHOD_POLLARD_RHO) {
-        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
         mpz_clear(f);
         return;
     }
@@ -673,7 +865,11 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
         if (found) {
             if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
-                add_factor_mpz(factors, num_factors, n, 1);
+                if (method == METHOD_AUTOMATIC) {
+                    add_factor_mpz(factors, num_factors, n, 1);
+                } else {
+                    factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+                }
                 mpz_clear(f);
                 return;
             }
@@ -685,8 +881,12 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             factorize_mpz(n_f, factors, num_factors, k_limit, method);
             mpz_clear(n_f);
         } else {
-            // If it fails to find a factor within reasonable bounds, just add n as a factor
-            add_factor_mpz(factors, num_factors, n, 1);
+            // If it fails to find a factor within reasonable bounds
+            if (method == METHOD_AUTOMATIC) {
+                add_factor_mpz(factors, num_factors, n, 1);
+            } else {
+                factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+            }
         }
     }
     mpz_clear(f);
@@ -741,6 +941,7 @@ Expr* builtin_factorinteger(Expr* res) {
                     else if (strcmp(rhs->data.string, "CFRAC") == 0) method = METHOD_CFRAC;
                     else if (strcmp(rhs->data.string, "PollardP-1") == 0) method = METHOD_POLLARD_P1;
                     else if (strcmp(rhs->data.string, "WilliamsP+1") == 0) method = METHOD_WILLIAMS_P1;
+                    else if (strcmp(rhs->data.string, "Dixon") == 0) method = METHOD_DIXON;
                     else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
                 } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
                     method = METHOD_AUTOMATIC;
