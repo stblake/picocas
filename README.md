@@ -12,7 +12,6 @@ The name "PicoCAS" pays homage to David Stoutemyer's seminal PICOMATH-80 tiny co
 * **Arbitrary Precision Arithmetic:** Powered natively by the GNU Multiple Precision Arithmetic Library (GMP) for handling operations on exceedingly large integers.
 * **Advanced Integer Factorization:** Includes a unified, automatic factorization pipeline, alongside explicit execution of algorithms such as:
     * Pollard's Rho, Pollard's $P-1$, Williams' $P+1$, Fermat, CFRAC, Dixon's Method, and the Elliptic Curve Method (ECM).
-    * Blake's *Rational Base Descent* (RBD) algorithm for quickly targeting semiprimes proximate to rational powers.
 * **Extensive Standard Library:** Built-in functions covering linear algebra, calculus, polynomial manipulation, combinatorics, statistics, list structures, and symbolic tensor operations.
 
 ---
