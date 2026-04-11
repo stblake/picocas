@@ -884,6 +884,33 @@ Range[n, m, d]
 	uses step d."
 ```
 
+#### MemberQ
+- `MemberQ[list, form]`: Returns `True` if an element of list matches form, and `False` otherwise.
+- `MemberQ[list, form, levelspec]`: Tests all parts of list specified by levelspec.
+- `MemberQ[form]`: Represents an operator form of `MemberQ` that can be applied to an expression.
+
+**Features**:
+- `Protected`.
+- Default option: `Heads -> False`.
+- `form` can be a structural pattern.
+- The first argument of `MemberQ` can have any head, not necessarily `List`.
+- Returns immediately upon finding the first match.
+- Standard level specifications are supported. The default value for `levelspec` in `MemberQ` is `{1}`.
+
+```mathematica
+In[1]:= MemberQ[{1, 3, 4, 1, 2}, 2]
+Out[1]= True
+
+In[2]:= MemberQ[{x^2, y^2, x^3}, x^_]
+Out[2]= True
+
+In[3]:= MemberQ[{{1, 1, 3, 0}, {2, 1, 2, 2}}, 0, 2]
+Out[3]= True
+
+In[4]:= MemberQ[{{1, 1, 3, 0}, {2, 1, 2, 2}}, 0]
+Out[4]= False
+```
+
 #### FreeQ
 Yields `True` if no subexpression in `expr` matches `form`, and yields `False` otherwise.
 - `FreeQ[expr, form]`

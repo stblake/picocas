@@ -379,6 +379,101 @@ Expr* builtin_count(Expr* res) {
     return expr_new_integer(count);
 }
 
+
+static bool do_member_at_level(Expr* e, int64_t current_level, int64_t min_l, int64_t max_l, bool heads, Expr* pattern) {
+    if (min_l >= 0 && max_l >= 0 && current_level > max_l) return false;
+
+    int64_t d = get_expr_depth_patterns(e, heads);
+
+    bool match_level = true;
+    if (min_l >= 0) {
+        if (current_level < min_l || current_level > max_l) match_level = false;
+    } else {
+        if (min_l < 0 && max_l == min_l && d != -min_l) match_level = false;
+        else if (min_l < 0 && max_l < 0 && (d < -max_l || d > -min_l)) match_level = false;
+    }
+
+    if (match_level) {
+        MatchEnv* env = env_new();
+        if (match(e, pattern, env)) {
+            env_free(env);
+            return true;
+        }
+        env_free(env);
+    }
+
+    if (e->type == EXPR_FUNCTION) {
+        if (heads) {
+            if (do_member_at_level(e->data.function.head, current_level + 1, min_l, max_l, heads, pattern)) return true;
+        }
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            if (do_member_at_level(e->data.function.args[i], current_level + 1, min_l, max_l, heads, pattern)) return true;
+        }
+    }
+    return false;
+}
+
+Expr* builtin_memberq(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    
+    if (argc == 1) {
+        Expr* slot_args[1] = { expr_new_integer(1) };
+        Expr* slot = expr_new_function(expr_new_symbol("Slot"), slot_args, 1);
+        Expr* inner_args[2] = { slot, expr_copy(res->data.function.args[0]) };
+        Expr* inner_memberq = expr_new_function(expr_new_symbol("MemberQ"), inner_args, 2);
+        Expr* func_args[1] = { inner_memberq };
+        return expr_new_function(expr_new_symbol("Function"), func_args, 1);
+    }
+    
+    if (argc < 2) return NULL;
+
+    Expr* expr = res->data.function.args[0];
+    Expr* pattern = res->data.function.args[1];
+
+    int64_t min_l = 1, max_l = 1;
+    bool heads = false;
+
+    if (argc >= 3) {
+        Expr* ls = res->data.function.args[2];
+        if (ls->type == EXPR_INTEGER) {
+            if (ls->data.integer < 0) {
+                min_l = ls->data.integer; max_l = ls->data.integer;
+            } else {
+                min_l = 1; max_l = ls->data.integer;
+            }
+        } else if (ls->type == EXPR_SYMBOL && strcmp(ls->data.symbol, "All") == 0) {
+            min_l = 1; max_l = 1000000;
+        } else if (ls->type == EXPR_SYMBOL && strcmp(ls->data.symbol, "Infinity") == 0) {
+            min_l = 1; max_l = 1000000;
+        } else if (ls->type == EXPR_FUNCTION && strcmp(ls->data.function.head->data.symbol, "List") == 0) {
+            if (ls->data.function.arg_count == 1 && ls->data.function.args[0]->type == EXPR_INTEGER) {
+                min_l = max_l = ls->data.function.args[0]->data.integer;
+            } else if (ls->data.function.arg_count == 2) {
+                if (ls->data.function.args[0]->type == EXPR_INTEGER) min_l = ls->data.function.args[0]->data.integer;
+                if (ls->data.function.args[1]->type == EXPR_INTEGER) max_l = ls->data.function.args[1]->data.integer;
+                else if (ls->data.function.args[1]->type == EXPR_SYMBOL && strcmp(ls->data.function.args[1]->data.symbol, "Infinity") == 0) max_l = 1000000;
+            }
+        }
+    }
+
+    for (size_t i = 2; i < argc; i++) {
+        Expr* opt = res->data.function.args[i];
+        if (opt->type == EXPR_FUNCTION && strcmp(opt->data.function.head->data.symbol, "Rule") == 0 && opt->data.function.arg_count == 2) {
+            if (opt->data.function.args[0]->type == EXPR_SYMBOL && strcmp(opt->data.function.args[0]->data.symbol, "Heads") == 0) {
+                if (opt->data.function.args[1]->type == EXPR_SYMBOL && strcmp(opt->data.function.args[1]->data.symbol, "True") == 0) heads = true;
+                else if (opt->data.function.args[1]->type == EXPR_SYMBOL && strcmp(opt->data.function.args[1]->data.symbol, "False") == 0) heads = false;
+            }
+        }
+    }
+
+    if (do_member_at_level(expr, 0, min_l, max_l, heads, pattern)) {
+        return expr_new_symbol("True");
+    } else {
+        return expr_new_symbol("False");
+    }
+}
+
 void patterns_init(void) {
     symtab_add_builtin("Cases", builtin_cases);
     symtab_get_def("Cases")->attributes |= ATTR_PROTECTED;
@@ -386,4 +481,6 @@ void patterns_init(void) {
     symtab_get_def("Position")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Count", builtin_count);
     symtab_get_def("Count")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("MemberQ", builtin_memberq);
+    symtab_get_def("MemberQ")->attributes |= ATTR_PROTECTED;
 }

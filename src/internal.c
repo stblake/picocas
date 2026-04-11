@@ -74,6 +74,7 @@ extern Expr* builtin_arcsech(Expr* res);
 extern Expr* builtin_arccsch(Expr* res);
 extern Expr* builtin_primeq(Expr* res);
 extern Expr* builtin_primepi(Expr* res);
+extern Expr* builtin_memberq(Expr* res);
 extern Expr* builtin_factorinteger(Expr* res);
 extern Expr* builtin_nextprime(Expr* res);
 extern Expr* builtin_eulerphi(Expr* res);
@@ -262,6 +263,7 @@ Expr* internal_arcsech(Expr** args, size_t count) { return internal_call_impl("A
 Expr* internal_arccsch(Expr** args, size_t count) { return internal_call_impl("ArcCsch", builtin_arccsch, args, count); }
 Expr* internal_primeq(Expr** args, size_t count) { return internal_call_impl("PrimeQ", builtin_primeq, args, count); }
 Expr* internal_primepi(Expr** args, size_t count) { return internal_call_impl("PrimePi", builtin_primepi, args, count); }
+Expr* internal_memberq(Expr** args, size_t count) { return internal_call_impl("MemberQ", builtin_memberq, args, count); }
 Expr* internal_factorinteger(Expr** args, size_t count) { return internal_call_impl("FactorInteger", builtin_factorinteger, args, count); }
 Expr* internal_nextprime(Expr** args, size_t count) { return internal_call_impl("NextPrime", builtin_nextprime, args, count); }
 Expr* internal_eulerphi(Expr** args, size_t count) { return internal_call_impl("EulerPhi", builtin_eulerphi, args, count); }

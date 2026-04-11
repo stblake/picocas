@@ -6,6 +6,7 @@
 Expr* builtin_cases(Expr* res);
 Expr* builtin_position(Expr* res);
 Expr* builtin_count(Expr* res);
+Expr* builtin_memberq(Expr* res);
 
 void patterns_init(void);
 

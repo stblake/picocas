@@ -36,6 +36,18 @@ void test_count() {
     assert_eval_eq("Count[5,_?NumberQ,{0,-1}]", "0", 0);
 }
 
+void test_memberq() {
+    assert_eval_eq("MemberQ[{1,3,4,1,2},2]", "True", 0);
+    assert_eval_eq("MemberQ[{1,3,4,1,5},2]", "False", 0);
+    assert_eval_eq("MemberQ[{x^2,y^2,x^3},x^_]", "True", 0);
+    assert_eval_eq("MemberQ[{{1,1,3,0},{2,1,2,2}},0,2]", "True", 0);
+    assert_eval_eq("MemberQ[{{1,1,3,0},{2,1,2,2}},0]", "False", 0);
+    assert_eval_eq("MemberQ[Table[Mod[2^i,7],{i,10}],1]", "True", 0);
+    assert_eval_eq("MemberQ[f[a,b,c],b]", "True", 0);
+    assert_eval_eq("MemberQ[f[a,b,c],d]", "False", 0);
+    assert_eval_eq("MemberQ[1]", "Function[MemberQ[Slot[1], 1]]", 1);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -43,6 +55,7 @@ int main() {
     TEST(test_cases);
     TEST(test_position);
     TEST(test_count);
+    TEST(test_memberq);
     
     printf("All patterns tests passed!\n");
     symtab_clear();

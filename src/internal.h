@@ -72,6 +72,7 @@ Expr* internal_arcsech(Expr** args, size_t count);
 Expr* internal_arccsch(Expr** args, size_t count);
 Expr* internal_primeq(Expr** args, size_t count);
 Expr* internal_primepi(Expr** args, size_t count);
+Expr* internal_memberq(Expr** args, size_t count);
 Expr* internal_factorinteger(Expr** args, size_t count);
 Expr* internal_nextprime(Expr** args, size_t count);
 Expr* internal_eulerphi(Expr** args, size_t count);
