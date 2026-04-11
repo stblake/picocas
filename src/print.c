@@ -17,7 +17,17 @@ static int get_expr_prec(Expr* e) {
     if (e->data.function.head->type != EXPR_SYMBOL) return 1000;
     
     const char* head = e->data.function.head->data.symbol;
+
+    if (strcmp(head, "Set") == 0 || strcmp(head, "SetDelayed") == 0) return 40;
+    if (strcmp(head, "Rule") == 0 || strcmp(head, "RuleDelayed") == 0) return 120;
+    if (strcmp(head, "Condition") == 0) return 130;
+    if (strcmp(head, "Alternatives") == 0) return 160;
+    if (strcmp(head, "Repeated") == 0 || strcmp(head, "RepeatedNull") == 0) return 170;
+    if (strcmp(head, "And") == 0) return 215;
+    if (strcmp(head, "Or") == 0) return 215;
+    if (strcmp(head, "Equal") == 0 || strcmp(head, "Unequal") == 0 || strcmp(head, "Less") == 0 || strcmp(head, "Greater") == 0 || strcmp(head, "LessEqual") == 0 || strcmp(head, "GreaterEqual") == 0 || strcmp(head, "SameQ") == 0 || strcmp(head, "UnsameQ") == 0) return 290;
     if (strcmp(head, "Plus") == 0) return 310;
+
     if (strcmp(head, "Times") == 0) return 400;
     if (strcmp(head, "Divide") == 0) return 470;
     if (strcmp(head, "Power") == 0) {
@@ -227,6 +237,31 @@ static void print_standard(Expr* e, int parent_prec) {
             free(num_args);
             for (size_t i = 0; i < den_count; i++) expr_free(den_args[i]);
             free(den_args);
+        }
+
+        else if ((strcmp(head, "Equal") == 0 || strcmp(head, "Unequal") == 0 || strcmp(head, "Less") == 0 || strcmp(head, "Greater") == 0 || strcmp(head, "LessEqual") == 0 || strcmp(head, "GreaterEqual") == 0 || strcmp(head, "SameQ") == 0 || strcmp(head, "UnsameQ") == 0 || strcmp(head, "Set") == 0 || strcmp(head, "SetDelayed") == 0 || strcmp(head, "Rule") == 0 || strcmp(head, "RuleDelayed") == 0 || strcmp(head, "Condition") == 0 || strcmp(head, "And") == 0 || strcmp(head, "Or") == 0 || strcmp(head, "Alternatives") == 0) && e->data.function.arg_count >= 2) {
+            const char* op = "";
+            if (strcmp(head, "Equal") == 0) op = " == ";
+            else if (strcmp(head, "Unequal") == 0) op = " != ";
+            else if (strcmp(head, "Less") == 0) op = " < ";
+            else if (strcmp(head, "Greater") == 0) op = " > ";
+            else if (strcmp(head, "LessEqual") == 0) op = " <= ";
+            else if (strcmp(head, "GreaterEqual") == 0) op = " >= ";
+            else if (strcmp(head, "SameQ") == 0) op = " === ";
+            else if (strcmp(head, "UnsameQ") == 0) op = " =!= ";
+            else if (strcmp(head, "Set") == 0) op = " = ";
+            else if (strcmp(head, "SetDelayed") == 0) op = " := ";
+            else if (strcmp(head, "Rule") == 0) op = " -> ";
+            else if (strcmp(head, "RuleDelayed") == 0) op = " :> ";
+            else if (strcmp(head, "Condition") == 0) op = " /; ";
+            else if (strcmp(head, "And") == 0) op = " && ";
+            else if (strcmp(head, "Or") == 0) op = " || ";
+            else if (strcmp(head, "Alternatives") == 0) op = " | ";
+
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                if (i > 0) printf("%s", op);
+                print_standard(e->data.function.args[i], my_prec);
+            }
         }
         else if (strcmp(head, "Plus") == 0) {
             for (size_t i = 0; i < e->data.function.arg_count; i++) {

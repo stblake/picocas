@@ -8,7 +8,7 @@
 void test_if() {
     assert_eval_eq("If[True, 1, 0]", "1", 0);
     assert_eval_eq("If[False, 1, 0]", "0", 0);
-    assert_eval_eq("If[a < b, 1, 0]", "If[Less[a, b], 1, 0]", 0);
+    assert_eval_eq("If[a < b, 1, 0]", "If[a < b, 1, 0]", 0);
     assert_eval_eq("If[a < b, 1, 0, Indeterminate]", "Indeterminate", 0);
     assert_eval_eq("If[False, 1]", "Null", 0);
     

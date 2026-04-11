@@ -521,7 +521,7 @@ void test_extract() {
     assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{{1,3}}]", "{a[1, 3]}", 0);
     assert_eval_eq("mat=Array[a,{3,3}]; Extract[mat,{{1,2},{3,3},{2,1}}]", "{a[1, 2], a[3, 3], a[2, 1]}", 0);
     assert_eval_eq("Extract[{a,b,c,d,e}, {{1},{2},{5}},Hold]", "{Hold[a], Hold[b], Hold[e]}", 0);
-    assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{All,1}]", "{Rule[a, 1], Rule[c, 3], Rule[f, 6]}", 0);
+    assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{All,1}]", "{a -> 1, c -> 3, f -> 6}", 0);
     assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{2,All,2}]", "{3, 4, 5}", 0);
     assert_eval_eq("rules={{a->1,b->2},{c->3,d->4,e->5},{f->6}}; Extract[rules,{All,All,1}]", "{{a, b}, {c, d, e}, {f}}", 0);
     assert_eval_eq("Extract[e[f[1,2,3],g[4,5,6],h[7,8,9]],{All,1}]", "e[1, 4, 7]", 0);
