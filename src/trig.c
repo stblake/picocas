@@ -1,3 +1,7 @@
+#define _USE_MATH_DEFINES
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include <complex.h>
 #include "trig.h"
 #include "arithmetic.h"
@@ -7,6 +11,9 @@
 #include "complex.h"
 #include "symtab.h"
 #include <math.h>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
 #include <string.h>
 #include <stdint.h>
 
@@ -788,7 +795,7 @@ Expr* builtin_arccot(Expr* res) {
     // Approximate numerical evaluation
     double complex c;
     if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
-        if (c == 0.0) return expr_new_real(3.14159265358979323846 / 2.0); // ArcCot[0] = Pi/2
+        if (c == 0.0) return expr_new_real(M_PI / 2.0); // ArcCot[0] = Pi/2
         double complex s = catan(1.0 / c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
