@@ -1107,36 +1107,6 @@ Expr* builtin_factorinteger(Expr* res) {
     }
 
 
-    bool incomplete = false;
-    for (int i = 0; i < num_factors; i++) {
-        if (mpz_cmp_ui(factors[i].p, 1) > 0) {
-            if (!mpz_probab_prime_p(factors[i].p, 25)) {
-                incomplete = true;
-                break;
-            }
-        }
-    }
-    
-    if (incomplete) {
-        for (int i = 0; i < num_factors; i++) {
-            mpz_clear(factors[i].p);
-        }
-        num_factors = 0;
-        if (mpz_cmp_ui(num_orig, 0) < 0) {
-            mpz_t m1, pos_n;
-            mpz_init_set_si(m1, -1);
-            add_factor_mpz(factors, &num_factors, m1, 1);
-            mpz_clear(m1);
-            
-            mpz_init_set(pos_n, num_orig);
-            mpz_neg(pos_n, pos_n);
-            add_factor_mpz(factors, &num_factors, pos_n, 1);
-            mpz_clear(pos_n);
-        } else {
-            add_factor_mpz(factors, &num_factors, num_orig, 1);
-        }
-    }
-
     qsort(factors, num_factors, sizeof(FactorMpz), compare_factors_mpz);
 
     Expr** list_args = malloc(sizeof(Expr*) * num_factors);
@@ -1151,7 +1121,7 @@ Expr* builtin_factorinteger(Expr* res) {
 
     Expr* result = expr_new_function(expr_new_symbol("List"), list_args, num_factors);
     free(list_args);
-    mpz_clear(num); mpz_clear(den);
+    mpz_clear(num); mpz_clear(den); mpz_clear(num_orig);
     return result;
 }
 
