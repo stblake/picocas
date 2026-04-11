@@ -1,12 +1,21 @@
+USE_ECM ?= 1
 
 CC = gcc
-CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I./src/external/ecm -I/usr/local/include
+CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/usr/local/include
+LDFLAGS = -lreadline -L/usr/local/lib -lgmp
+
+ifeq ($(USE_ECM), 1)
+CFLAGS += -I./src/external/ecm
+LDFLAGS := src/external/ecm/.libs/libecm.a $(LDFLAGS)
+ECM_TARGET = src/external/ecm/.libs/libecm.a
+else
+CFLAGS += -DNO_ECM
+ECM_TARGET =
+endif
 
 ifneq ($(wildcard /opt/homebrew/include),)
 CFLAGS += -I/opt/homebrew/include
 endif
-
-LDFLAGS = src/external/ecm/.libs/libecm.a -lreadline -L/usr/local/lib -lgmp
 
 ifneq ($(wildcard /opt/homebrew/lib),)
 LDFLAGS += -L/opt/homebrew/lib
@@ -26,11 +35,10 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-
 src/external/ecm/.libs/libecm.a:
 	./build_ecm.sh
 
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c src/external/ecm/.libs/libecm.a
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c $(ECM_TARGET)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(SRC_DIR)/boolean.o: $(SRC_DIR)/boolean.c

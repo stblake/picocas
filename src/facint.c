@@ -320,10 +320,14 @@ static uint64_t pollard_rho_brent(uint64_t n) {
 
 
 #include <gmp.h>
+#ifndef NO_ECM
 #include "ecm.h"
+#endif
 
 #include <gmp.h>
+#ifndef NO_ECM
 #include "ecm.h"
+#endif
 
 typedef struct {
     mpz_t p;
@@ -947,6 +951,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         return;
     }
     
+#ifndef NO_ECM
     if (method == METHOD_AUTOMATIC || method == METHOD_ECM || method == METHOD_POLLARD_P1 || method == METHOD_WILLIAMS_P1) {
         ecm_params params;
         ecm_init(params);
@@ -992,6 +997,17 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         }
     }
     mpz_clear(f);
+#else
+    if (method == METHOD_ECM || method == METHOD_POLLARD_P1 || method == METHOD_WILLIAMS_P1) {
+        add_factor_mpz(factors, num_factors, n, 1);
+        mpz_clear(f);
+        return;
+    }
+    if (method == METHOD_AUTOMATIC) {
+        add_factor_mpz(factors, num_factors, n, 1);
+    }
+    mpz_clear(f);
+#endif
 }
 
 static int compare_factors_mpz(const void* a, const void* b) {
