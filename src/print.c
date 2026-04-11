@@ -89,6 +89,9 @@ static void print_standard(Expr* e, int parent_prec) {
         else if (strcmp(head, "InputForm") == 0 && e->data.function.arg_count == 1) {
             print_standard(e->data.function.args[0], parent_prec);
         }
+        else if (strcmp(head, "HoldForm") == 0 && e->data.function.arg_count == 1) {
+            print_standard(e->data.function.args[0], parent_prec);
+        }
         else if (strcmp(head, "Rational") == 0 && e->data.function.arg_count == 2) {
             print_standard(e->data.function.args[0], 470);
             printf("/");

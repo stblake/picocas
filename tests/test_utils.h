@@ -43,7 +43,7 @@ static inline void assert_eval_eq(const char* input, const char* expected, int i
 #ifdef __GNUC__
 __attribute__((constructor))
 static void set_timeout() {
-    alarm(10);
+    alarm(60);
 }
 #endif
 

@@ -136,6 +136,7 @@ void core_init(void) {
     symtab_get_def("Print")->attributes |= ATTR_PROTECTED;
     symtab_get_def("FullForm")->attributes |= ATTR_PROTECTED;
     symtab_get_def("InputForm")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("HoldForm")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
 
     facint_init();
 

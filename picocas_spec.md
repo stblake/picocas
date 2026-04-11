@@ -915,6 +915,16 @@ Out[2]= Null
 - `FullForm[expr]` causes `expr` to be printed in its full internal form.
 - `expr // FullForm` is a common shortcut.
 
+
+#### HoldForm
+- `HoldForm[expr]` prints as the expression `expr`, with `expr` maintained in an unevaluated form.
+- Has attribute `HoldAll` and `Protected`.
+- It dissolves prior to printing but preserves the unevaluated `expr` it contains.
+
+```mathematica
+In[1]:= HoldForm[1 + 1]
+Out[1]= 1 + 1
+```
 #### InputForm
 - `InputForm[expr]` causes `expr` to be printed in a form suitable for input (standard form in PicoCAS).
 

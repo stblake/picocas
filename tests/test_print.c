@@ -40,6 +40,23 @@ void test_inputform_wrapper() {
     expr_free(res);
 }
 
+
+void test_holdform() {
+    Expr* e = parse_expression("HoldForm[1 + 1]");
+    Expr* res = evaluate(e);
+    
+    char* str = expr_to_string(res);
+    ASSERT(strcmp(str, "1 + 1") == 0);
+    free(str);
+    
+    char* full = expr_to_string_fullform(res);
+    ASSERT(strcmp(full, "HoldForm[Plus[1, 1]]") == 0);
+    free(full);
+    
+    expr_free(e);
+    expr_free(res);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -47,6 +64,7 @@ int main() {
     TEST(test_print_basic);
     TEST(test_fullform_wrapper);
     TEST(test_inputform_wrapper);
+    TEST(test_holdform);
     
     printf("All print tests passed!\n");
     return 0;
