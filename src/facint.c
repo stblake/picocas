@@ -472,7 +472,7 @@ static void cfrac_factor_mpz(mpz_t factor, mpz_t n) {
     unsigned long k = 1;
     mpz_set_ui(factor, 0);
 
-    while (k < 10000000) {
+    while (true) {
         mpz_mul(tmp, a, Q);
         mpz_sub(tmp, tmp, P);
         mpz_set(P, tmp);

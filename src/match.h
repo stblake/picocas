@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 // Environment to store pattern bindings (e.g., x -> 4)
-typedef struct {
+typedef struct MatchEnv {
     char** symbols;
     Expr** values;
     size_t count;
