@@ -726,7 +726,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             return;
         }
         
-        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
         mpz_clear(f);
         return;
     }
@@ -749,7 +749,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             return;
         }
         
-        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
         mpz_clear(f);
         return;
     }
@@ -772,7 +772,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             return;
         }
         
-        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
         mpz_clear(f);
         return;
     }
@@ -809,7 +809,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
     }
     if (method == METHOD_TRIAL) {
-        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
         return;
     }
     mpz_t f;
@@ -832,7 +832,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
     }
     if (method == METHOD_POLLARD_RHO) {
-        if (mpz_cmp_ui(n, 1) > 0) factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
         mpz_clear(f);
         return;
     }
@@ -865,11 +865,7 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
 
         if (found) {
             if (mpz_cmp_ui(f, 1) == 0 || mpz_cmp(f, n) == 0) {
-                if (method == METHOD_AUTOMATIC) {
-                    add_factor_mpz(factors, num_factors, n, 1);
-                } else {
-                    factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
-                }
+                add_factor_mpz(factors, num_factors, n, 1);
                 mpz_clear(f);
                 return;
             }
@@ -881,12 +877,8 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
             factorize_mpz(n_f, factors, num_factors, k_limit, method);
             mpz_clear(n_f);
         } else {
-            // If it fails to find a factor within reasonable bounds
-            if (method == METHOD_AUTOMATIC) {
-                add_factor_mpz(factors, num_factors, n, 1);
-            } else {
-                factorize_mpz(n, factors, num_factors, k_limit, METHOD_AUTOMATIC);
-            }
+            // If it fails to find a factor within reasonable bounds, just add n as a factor
+            add_factor_mpz(factors, num_factors, n, 1);
         }
     }
     mpz_clear(f);
