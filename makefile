@@ -26,6 +26,10 @@ all: $(TARGET)
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+
+src/external/ecm/.libs/libecm.a:
+	./build_ecm.sh
+
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c src/external/ecm/.libs/libecm.a
 	$(CC) $(CFLAGS) -c $< -o $@
 

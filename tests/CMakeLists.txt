@@ -10,6 +10,16 @@ link_directories(/usr/local/lib)
 if(EXISTS "/opt/homebrew/lib")
     link_directories(/opt/homebrew/lib)
 endif()
+
+add_custom_command(
+    OUTPUT ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a
+    COMMAND ./build_ecm.sh
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
+    COMMENT "Building ECM library"
+)
+
+add_custom_target(build_ecm DEPENDS ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
+
 link_libraries(gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
 
 set(COMMON_SRC
@@ -266,3 +276,40 @@ add_executable(print_tests
     ${COMMON_SRC}
 )
 target_include_directories(print_tests PRIVATE ../src)
+
+add_dependencies(expr_tests build_ecm)
+add_dependencies(parse_tests build_ecm)
+add_dependencies(eval_tests build_ecm)
+add_dependencies(match_tests build_ecm)
+add_dependencies(match_extensive_tests build_ecm)
+add_dependencies(symtab_tests build_ecm)
+add_dependencies(regression_tests build_ecm)
+add_dependencies(comparisons_tests build_ecm)
+add_dependencies(list_tests build_ecm)
+add_dependencies(iter_tests build_ecm)
+add_dependencies(cond_tests build_ecm)
+add_dependencies(patterns_tests build_ecm)
+add_dependencies(replace_tests build_ecm)
+add_dependencies(core_tests build_ecm)
+add_dependencies(trig_tests build_ecm)
+add_dependencies(hyperbolic_tests build_ecm)
+add_dependencies(logexp_tests build_ecm)
+add_dependencies(piecewise_tests build_ecm)
+add_dependencies(purefunc_tests build_ecm)
+add_dependencies(modular_tests build_ecm)
+add_dependencies(funcprog_through_tests build_ecm)
+add_dependencies(split_tests build_ecm)
+add_dependencies(sort_tests build_ecm)
+add_dependencies(backtrack_tests build_ecm)
+add_dependencies(poly_tests build_ecm)
+add_dependencies(expand_tests build_ecm)
+add_dependencies(stats_tests build_ecm)
+add_dependencies(datetime_tests build_ecm)
+add_dependencies(facpoly_tests build_ecm)
+add_dependencies(rat_tests build_ecm)
+add_dependencies(linalg_tests build_ecm)
+add_dependencies(parfrac_tests build_ecm)
+add_dependencies(polymod_tests build_ecm)
+add_dependencies(bigint_tests build_ecm)
+add_dependencies(integrals_tests build_ecm)
+add_dependencies(print_tests build_ecm)
