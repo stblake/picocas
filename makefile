@@ -2,7 +2,7 @@ USE_ECM ?= 1
 
 CC = gcc
 CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/usr/local/include
-LDFLAGS = -lreadline -L/usr/local/lib -lgmp
+LDFLAGS = -lreadline -L/usr/local/lib -lgmp -lm
 
 ifeq ($(USE_ECM), 1)
 CFLAGS += -I./src/external/ecm
