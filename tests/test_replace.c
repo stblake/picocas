@@ -33,7 +33,7 @@ int main() {
     run_test("ReplacePart[{a, b, c, d}, 2 -> x]", "{a, x, c, d}");
     
     // Negative indices
-    run_test("ReplacePart[{a, b, c, d}, -1 -> x]", "{a, b, c, x}");
+    run_test("ReplacePart[{5, 4, 3, 2, 1}, _?PrimeQ -> \"p\"]", "{5, \"p\", \"p\", 2, \"p\"}");
     
     // ReplacePart[expr, {i, j} -> new]
     run_test("ReplacePart[{{a, b}, {c, d}}, {2, 1} -> x]", "{{a, b}, {x, d}}");

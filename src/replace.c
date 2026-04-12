@@ -58,37 +58,26 @@ typedef struct {
 
 static bool check_match(RawRule* rules, size_t num_rules, PathElement* path, size_t depth, 
                         Expr** out_replacement, bool* out_delayed, MatchEnv** out_env) {
-    size_t num_aliases = 1 << depth;
     for (int64_t r = (int64_t)num_rules - 1; r >= 0; r--) {
-        for (size_t i = 0; i < num_aliases; i++) {
-            Expr** alias_args = NULL;
-            if (depth > 0) alias_args = malloc(sizeof(Expr*) * depth);
-            for (size_t d = 0; d < depth; d++) {
-                if (path[d].pos_index == 0) {
-                    alias_args[d] = expr_new_integer(0);
-                } else {
-                    if ((i >> d) & 1) {
-                        alias_args[d] = expr_new_integer(path[d].neg_index);
-                    } else {
-                        alias_args[d] = expr_new_integer(path[d].pos_index);
-                    }
-                }
-            }
-            Expr* alias_expr = expr_new_function(expr_new_symbol("List"), alias_args, depth);
-            
-            MatchEnv* env = env_new();
-            if (match(alias_expr, rules[r].pos_spec, env)) {
-                *out_replacement = rules[r].replacement;
-                *out_delayed = rules[r].delayed;
-                *out_env = env;
-                expr_free(alias_expr);
-                if (alias_args) free(alias_args);
-                return true;
-            }
-            env_free(env);
+        Expr** alias_args = NULL;
+        if (depth > 0) alias_args = malloc(sizeof(Expr*) * depth);
+        for (size_t d = 0; d < depth; d++) {
+            alias_args[d] = expr_new_integer(path[d].pos_index);
+        }
+        Expr* alias_expr = expr_new_function(expr_new_symbol("List"), alias_args, depth);
+        
+        MatchEnv* env = env_new();
+        if (match(alias_expr, rules[r].pos_spec, env)) {
+            *out_replacement = rules[r].replacement;
+            *out_delayed = rules[r].delayed;
+            *out_env = env;
             expr_free(alias_expr);
             if (alias_args) free(alias_args);
+            return true;
         }
+        env_free(env);
+        expr_free(alias_expr);
+        if (alias_args) free(alias_args);
     }
     return false;
 }
