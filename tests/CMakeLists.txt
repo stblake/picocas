@@ -53,6 +53,7 @@ set(COMMON_SRC
     ../src/patterns.c
     ../src/patterns.c
     ../src/replace.c
+    ${CMAKE_SOURCE_DIR}/../src/simp.c
     ../src/complex.c
     ../src/trig.c
     ../src/hyperbolic.c
@@ -115,7 +116,8 @@ add_executable(patterns_tests test_patterns.c ${COMMON_SRC})
 target_link_libraries(patterns_tests m)
 target_include_directories(patterns_tests PRIVATE ../src)
 
-add_executable(replace_tests test_replace.c ${COMMON_SRC})
+add_executable(replace_tests test_replace.c
+    ${CMAKE_SOURCE_DIR}/../src/simp.c ${COMMON_SRC})
 target_include_directories(replace_tests PRIVATE ../src)
 
 add_executable(core_tests test_core.c ${COMMON_SRC})
@@ -236,3 +238,12 @@ if(USE_ECM)
     add_dependencies(integrals_tests build_ecm)
     add_dependencies(print_tests build_ecm)
 endif()
+
+add_executable(simp_tests test_simp.c ${COMMON_SRC})
+target_include_directories(simp_tests PRIVATE ../src)
+if(USE_ECM)
+    target_link_libraries(simp_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
+else()
+    target_link_libraries(simp_tests gmp m)
+endif()
+add_test(NAME simp_tests COMMAND simp_tests)

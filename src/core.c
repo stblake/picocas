@@ -157,6 +157,8 @@ void core_init(void) {
     iter_init();
     complex_init();
     trig_init();
+    void simp_init(void);
+    simp_init();
     hyperbolic_init();
     logexp_init();
     piecewise_init();
