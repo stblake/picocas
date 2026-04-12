@@ -1,3 +1,4 @@
+#include "eval.h"
 #include "power.h"
 #include "arithmetic.h"
 #include "times.h"
@@ -184,6 +185,39 @@ Expr* builtin_power(Expr* res) {
     
     if (base_comp && exp->type == EXPR_INTEGER) {
         int64_t e = exp->data.integer;
+        if (e < 0 && e > -1000) {
+            // e < 0, compute (base^-e)^-1
+            Expr* pos_pow = expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(base), expr_new_integer(-e)}, 2);
+            Expr* denom = evaluate(pos_pow);
+            expr_free(pos_pow);
+            
+            // Now we have denom = a + b I. We need 1 / denom.
+            // We can emit: Divide[1, denom], which is: Times[1, Power[denom, -1]] -> WAIT that loops!
+            // No, we need to construct the conjugate division manually!
+            Expr* re; Expr* im;
+            if (is_complex(denom, &re, &im)) {
+                // conj = a - b I
+                Expr* conj = make_complex(expr_copy(re), expr_new_function(expr_new_symbol("Times"), (Expr*[]){expr_new_integer(-1), expr_copy(im)}, 2));
+                // mag_sq = a^2 + b^2
+                Expr* a2 = expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(re), expr_new_integer(2)}, 2);
+                Expr* b2 = expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_copy(im), expr_new_integer(2)}, 2);
+                Expr* mag_sq = expr_new_function(expr_new_symbol("Plus"), (Expr*[]){a2, b2}, 2);
+                
+                // Result = conj / mag_sq
+                Expr* res_ast = expr_new_function(expr_new_symbol("Divide"), (Expr*[]){conj, mag_sq}, 2);
+                Expr* result = evaluate(res_ast);
+                expr_free(res_ast);
+                expr_free(denom);
+                return result;
+            } else {
+                // If it evaluated to Real or Integer, just do Power[denom, -1] natively
+                Expr* res_ast = expr_new_function(expr_new_symbol("Divide"), (Expr*[]){expr_new_integer(1), expr_copy(denom)}, 2);
+                Expr* result = evaluate(res_ast);
+                expr_free(res_ast);
+                expr_free(denom);
+                return result;
+            }
+        }
         if (e >= 0 && e < 1000) { 
             Expr** prod_args = malloc(sizeof(Expr*) * (size_t)e);
             for(int64_t i=0; i<e; i++) prod_args[i] = expr_copy(base);

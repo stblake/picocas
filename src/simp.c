@@ -7,6 +7,36 @@
 
 static Expr* trig_to_exp_rules = NULL;
 
+static Expr* exp_to_trig_rules = NULL;
+static Expr* exp_to_trig_simp = NULL;
+
+Expr* builtin_exptotrig(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    Expr* replace_expr = expr_new_function(expr_new_symbol("ReplaceRepeated"), 
+                                           (Expr*[]){expr_copy(arg), expr_copy(exp_to_trig_rules)}, 2);
+    Expr* replaced = evaluate(replace_expr);
+    expr_free(replace_expr);
+
+    Expr* together_expr = expr_new_function(expr_new_symbol("Together"), 
+                                          (Expr*[]){replaced}, 1);
+    Expr* togethered = evaluate(together_expr);
+    expr_free(together_expr);
+
+    Expr* cancel_expr = expr_new_function(expr_new_symbol("Cancel"), 
+                                          (Expr*[]){togethered}, 1);
+    Expr* cancelled = evaluate(cancel_expr);
+    expr_free(cancel_expr);
+
+    Expr* rep_simp = expr_new_function(expr_new_symbol("ReplaceRepeated"), 
+                                          (Expr*[]){cancelled, expr_copy(exp_to_trig_simp)}, 2);
+    Expr* result = evaluate(rep_simp);
+    expr_free(rep_simp);
+
+    return result;
+}
+
 Expr* builtin_trigtoexp(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
@@ -55,6 +85,40 @@ void simp_init(void) {
 
     trig_to_exp_rules = parse_expression(rules_str);
     
+    const char* exp_to_trig_rules_str = "{ "
+        "E^((I) x_.) :> Cos[x] + I Sin[x], "
+        "E^((-I) x_.) :> Cos[x] - I Sin[x], "
+        "E^(-x_.) :> Cosh[x] - Sinh[x], "
+        "E^x_. :> Cosh[x] + Sinh[x], "
+        "Log[a_ + (I) x_] - Log[a_ - (I) x_] :> 2 I ArcTan[x/a], "
+        "Log[a_ - (I) x_] - Log[a_ + (I) x_] :> -2 I ArcTan[x/a], "
+        "Log[a_ + x_] - Log[a_ - x_] :> 2 ArcTanh[x/a], "
+        "Log[a_ - x_] - Log[a_ + x_] :> -2 ArcTanh[x/a], "
+        "Log[x_ + Sqrt[1 + x_^2]] :> ArcSinh[x], "
+        "Log[x_ + Sqrt[-1 + x_] Sqrt[1 + x_]] :> ArcCosh[x], "
+        "Log[(I) x_ + Sqrt[1 - x_^2]] :> (I) ArcSin[x], "
+        "Log[1/x_ + Sqrt[1 + 1/x_^2]] :> ArcCsch[x], "
+        "Log[1/x_ + Sqrt[-1 + 1/x_] Sqrt[1 + 1/x_]] :> ArcSech[x], "
+        "Log[(I)/x_ + Sqrt[1 - 1/x_^2]] :> (I) ArcCsc[x] "
+    "}";
+    
+    const char* exp_to_trig_simp_str = "{ "
+        "Sin[x_] * Cos[x_]^-1 :> Tan[x], "
+        "Cos[x_] * Sin[x_]^-1 :> Cot[x], "
+        "Sinh[x_] * Cosh[x_]^-1 :> Tanh[x], "
+        "Cosh[x_] * Sinh[x_]^-1 :> Coth[x], "
+        "Cos[x_]^-1 :> Sec[x], "
+        "Sin[x_]^-1 :> Csc[x], "
+        "Cosh[x_]^-1 :> Sech[x], "
+        "Sinh[x_]^-1 :> Csch[x] "
+    "}";
+
+    exp_to_trig_rules = parse_expression(exp_to_trig_rules_str);
+    exp_to_trig_simp = parse_expression(exp_to_trig_simp_str);
+    
+    symtab_add_builtin("ExpToTrig", builtin_exptotrig);
+    symtab_get_def("ExpToTrig")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
+
     symtab_add_builtin("TrigToExp", builtin_trigtoexp);
     symtab_get_def("TrigToExp")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
 }
