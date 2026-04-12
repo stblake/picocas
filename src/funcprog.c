@@ -534,3 +534,343 @@ Expr* builtin_distribute(Expr* res) {
     expr_free(final_res);
     return eval_res;
 }
+
+/* ------------------- Inner ------------------- */
+
+static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
+    size_t N = V->data.function.arg_count;
+    
+    bool b_is_matrix = false;
+    if (B->data.function.arg_count > 0 && B->data.function.args[0]->type == EXPR_FUNCTION &&
+        expr_eq(B->data.function.args[0]->data.function.head, head)) {
+        b_is_matrix = true;
+    }
+    
+    if (b_is_matrix) {
+        size_t M = B->data.function.args[0]->data.function.arg_count;
+        Expr** res_args = malloc(sizeof(Expr*) * M);
+        for (size_t j = 0; j < M; j++) {
+            Expr** col_args = malloc(sizeof(Expr*) * N);
+            for (size_t i = 0; i < N; i++) {
+                Expr* B_i = B->data.function.args[i];
+                if (B_i->type == EXPR_FUNCTION && j < B_i->data.function.arg_count) {
+                    col_args[i] = expr_copy(B_i->data.function.args[j]);
+                } else {
+                    col_args[i] = expr_new_symbol("Null");
+                }
+            }
+            Expr* B_col = expr_new_function(expr_copy(head), col_args, N);
+            res_args[j] = contract_V_B(f, V, B_col, g, head);
+            expr_free(B_col);
+        }
+        Expr* ret = expr_new_function(expr_copy(head), res_args, M);
+        free(res_args);
+        return ret;
+    } else {
+        size_t B_len = B->data.function.arg_count;
+        size_t min_len = N < B_len ? N : B_len;
+        Expr** g_args = malloc(sizeof(Expr*) * min_len);
+        for (size_t i = 0; i < min_len; i++) {
+            Expr* f_args[2] = { expr_copy(V->data.function.args[i]), expr_copy(B->data.function.args[i]) };
+            g_args[i] = expr_new_function(expr_copy(f), f_args, 2);
+        }
+        Expr* ret = expr_new_function(expr_copy(g), g_args, min_len);
+        free(g_args);
+        return ret;
+    }
+}
+
+static Expr* inner_A(Expr* f, Expr* A, Expr* B, Expr* g, Expr* head) {
+    bool a_is_matrix = false;
+    if (A->data.function.arg_count > 0 && A->data.function.args[0]->type == EXPR_FUNCTION &&
+        expr_eq(A->data.function.args[0]->data.function.head, head)) {
+        a_is_matrix = true;
+    }
+    
+    if (a_is_matrix) {
+        size_t N = A->data.function.arg_count;
+        Expr** res_args = malloc(sizeof(Expr*) * N);
+        for (size_t i = 0; i < N; i++) {
+            res_args[i] = inner_A(f, A->data.function.args[i], B, g, head);
+        }
+        Expr* ret = expr_new_function(expr_copy(head), res_args, N);
+        free(res_args);
+        return ret;
+    } else {
+        return contract_V_B(f, A, B, g, head);
+    }
+}
+
+Expr* builtin_inner(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 3) return NULL;
+    
+    Expr* f = res->data.function.args[0];
+    Expr* A = res->data.function.args[1];
+    Expr* B = res->data.function.args[2];
+    Expr* g = (res->data.function.arg_count >= 4) ? res->data.function.args[3] : expr_new_symbol("Plus");
+    
+    Expr* n_expr = (res->data.function.arg_count >= 5) ? res->data.function.args[4] : NULL;
+    
+    if (A->type != EXPR_FUNCTION || B->type != EXPR_FUNCTION) {
+        if (res->data.function.arg_count < 4) expr_free(g);
+        return NULL;
+    }
+    
+    Expr* head = A->data.function.head;
+    
+    Expr* A_used = expr_copy(A);
+    if (n_expr && n_expr->type == EXPR_INTEGER && n_expr->data.integer == 1) {
+        Expr* t_args[1] = { A_used };
+        Expr* t_expr = expr_new_function(expr_new_symbol("Transpose"), t_args, 1);
+        A_used = evaluate(t_expr);
+        expr_free(t_expr);
+    }
+    
+    Expr* inner_res = inner_A(f, A_used, B, g, head);
+    expr_free(A_used);
+    
+    if (res->data.function.arg_count < 4) expr_free(g);
+    
+    Expr* final_eval = evaluate(inner_res);
+    expr_free(inner_res);
+    return final_eval;
+}
+
+/* ------------------- Outer ------------------- */
+
+static Expr* outer_rec(Expr* f, Expr** orig_tensors, size_t num_tensors, int64_t* target_depths, 
+                size_t arg_idx, Expr* curr_subtensor, int64_t curr_depth, Expr** current_atoms, Expr* head) {
+    
+    bool treat_as_atom = false;
+    if (curr_depth >= target_depths[arg_idx]) {
+        treat_as_atom = true;
+    } else if (curr_subtensor->type != EXPR_FUNCTION || (head && !expr_eq(curr_subtensor->data.function.head, head))) {
+        treat_as_atom = true;
+    }
+    
+    if (treat_as_atom) {
+        current_atoms[arg_idx] = curr_subtensor;
+if (arg_idx + 1 == num_tensors) {
+            Expr** f_args = malloc(sizeof(Expr*) * num_tensors);
+            for(size_t i=0; i<num_tensors; i++) f_args[i] = expr_copy(current_atoms[i]);
+            Expr* ret = expr_new_function(expr_copy(f), f_args, num_tensors);
+            free(f_args);
+            return ret;
+        } else {
+            return outer_rec(f, orig_tensors, num_tensors, target_depths, 
+                             arg_idx + 1, orig_tensors[arg_idx + 1], 0, current_atoms, head);
+        }
+    }
+    
+    size_t count = curr_subtensor->data.function.arg_count;
+    Expr** new_args = malloc(sizeof(Expr*) * count);
+    for (size_t i = 0; i < count; i++) {
+        new_args[i] = outer_rec(f, orig_tensors, num_tensors, target_depths,
+                                arg_idx, curr_subtensor->data.function.args[i], curr_depth + 1, current_atoms, head);
+    }
+    Expr* ret = expr_new_function(expr_copy(head), new_args, count);
+    free(new_args);
+    return ret;
+}
+
+Expr* builtin_outer(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
+    
+    Expr* f = res->data.function.args[0];
+    
+    size_t num_depths = 0;
+    for (int64_t i = res->data.function.arg_count - 1; i >= 1; i--) {
+        Expr* a = res->data.function.args[i];
+        if (a->type == EXPR_INTEGER || (a->type == EXPR_SYMBOL && strcmp(a->data.symbol, "Infinity") == 0)) {
+            num_depths++;
+        } else {
+            break;
+        }
+    }
+    
+    size_t num_tensors = res->data.function.arg_count - 1 - num_depths;
+    if (num_tensors == 0) {
+        Expr* ret = expr_new_function(expr_copy(f), NULL, 0);
+        Expr* evaluated = evaluate(ret);
+        expr_free(ret);
+        return evaluated;
+    }
+    
+    Expr** tensors = &res->data.function.args[1];
+    
+    int64_t* target_depths = malloc(sizeof(int64_t) * num_tensors);
+    for (size_t i = 0; i < num_tensors; i++) target_depths[i] = INT64_MAX;
+
+    if (num_depths == 1) {
+        Expr* d = res->data.function.args[1 + num_tensors];
+        int64_t val = (d->type == EXPR_INTEGER) ? d->data.integer : INT64_MAX;
+        for (size_t i = 0; i < num_tensors; i++) target_depths[i] = val;
+    } else if (num_depths > 1) {
+        for (size_t i = 0; i < num_depths && i < num_tensors; i++) {
+            Expr* d = res->data.function.args[1 + num_tensors + i];
+            target_depths[i] = (d->type == EXPR_INTEGER) ? d->data.integer : INT64_MAX;
+        }
+    }
+    
+    Expr* head = NULL;
+    for (size_t i = 0; i < num_tensors; i++) {
+        if (tensors[i]->type == EXPR_FUNCTION) {
+            head = tensors[i]->data.function.head;
+            break;
+        }
+    }
+    
+    Expr** current_atoms = malloc(sizeof(Expr*) * num_tensors);
+    Expr* raw_res = outer_rec(f, tensors, num_tensors, target_depths, 0, tensors[0], 0, current_atoms, head);
+    
+    free(current_atoms);
+    free(target_depths);
+    
+    Expr* final_eval = evaluate(raw_res);
+    expr_free(raw_res);
+    return final_eval;
+}
+
+/* ------------------- Tuples ------------------- */
+
+static void tuples_rec(Expr** lists, size_t num_lists, size_t curr_list, Expr** current_tuple, Expr* head, Expr*** results, size_t* res_count, size_t* res_cap) {
+    if (curr_list == num_lists) {
+        Expr** t_args = malloc(sizeof(Expr*) * num_lists);
+        for(size_t i=0; i<num_lists; i++) t_args[i] = expr_copy(current_tuple[i]);
+        Expr* t = expr_new_function(expr_copy(head), t_args, num_lists);
+        if (*res_count >= *res_cap) {
+            *res_cap = (*res_cap == 0) ? 16 : (*res_cap * 2);
+            *results = realloc(*results, sizeof(Expr*) * (*res_cap));
+        }
+        (*results)[(*res_count)++] = t;
+        return;
+    }
+    
+    Expr* lst = lists[curr_list];
+    size_t count = lst->type == EXPR_FUNCTION ? lst->data.function.arg_count : 0;
+    if (count == 0) return;
+    
+    for (size_t i = 0; i < count; i++) {
+        current_tuple[curr_list] = lst->data.function.args[i];
+        tuples_rec(lists, num_lists, curr_list + 1, current_tuple, head, results, res_count, res_cap);
+    }
+}
+
+static Expr* reshape_rec(Expr** flat_args, size_t* offset, int64_t* dims, size_t dims_count, size_t current_dim, Expr* head) {
+    if (current_dim == dims_count - 1) {
+        size_t n = dims[current_dim];
+        Expr** args = malloc(sizeof(Expr*) * n);
+        for (size_t i = 0; i < n; i++) {
+            args[i] = expr_copy(flat_args[(*offset)++]);
+        }
+        Expr* ret = expr_new_function(expr_copy(head), args, n);
+        free(args);
+        return ret;
+    } else {
+        size_t n = dims[current_dim];
+        Expr** args = malloc(sizeof(Expr*) * n);
+        for (size_t i = 0; i < n; i++) {
+            args[i] = reshape_rec(flat_args, offset, dims, dims_count, current_dim + 1, head);
+        }
+        Expr* ret = expr_new_function(expr_copy(head), args, n);
+        free(args);
+        return ret;
+    }
+}
+
+Expr* builtin_tuples(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    if (res->data.function.arg_count == 1) {
+        Expr* arg = res->data.function.args[0];
+        if (arg->type != EXPR_FUNCTION) return expr_copy(res);
+        Expr* head = arg->data.function.head;
+        
+        size_t num_lists = arg->data.function.arg_count;
+        Expr** lists = arg->data.function.args;
+        
+        if (num_lists == 0) {
+            Expr* t = expr_new_function(expr_copy(head), NULL, 0);
+            Expr* final_res = expr_new_function(expr_copy(head), (Expr*[]){t}, 1);
+            return final_res;
+        }
+
+        Expr** results = NULL;
+        size_t res_count = 0, res_cap = 0;
+        Expr** current_tuple = malloc(sizeof(Expr*) * num_lists);
+        
+        tuples_rec(lists, num_lists, 0, current_tuple, head, &results, &res_count, &res_cap);
+        free(current_tuple);
+        
+        Expr* final_res = expr_new_function(expr_copy(head), results, res_count);
+        return final_res;
+    } else {
+        Expr* list = res->data.function.args[0];
+        Expr* n_expr = res->data.function.args[1];
+        if (list->type != EXPR_FUNCTION) return expr_copy(res);
+        Expr* head = list->data.function.head;
+        
+        if (n_expr->type == EXPR_INTEGER) {
+            int64_t n = n_expr->data.integer;
+            if (n < 0) n = 0;
+            if (n == 0) {
+                Expr* t = expr_new_function(expr_copy(head), NULL, 0);
+                Expr* final_res = expr_new_function(expr_copy(head), (Expr*[]){t}, 1);
+                return final_res;
+            }
+
+            Expr** lists = malloc(sizeof(Expr*) * n);
+            for (int64_t i = 0; i < n; i++) lists[i] = list;
+            
+            Expr** results = NULL;
+            size_t res_count = 0, res_cap = 0;
+            Expr** current_tuple = malloc(sizeof(Expr*) * n);
+            
+            tuples_rec(lists, n, 0, current_tuple, head, &results, &res_count, &res_cap);
+            free(current_tuple);
+            free(lists);
+            
+            return expr_new_function(expr_new_symbol("List"), results, res_count);
+        } else if (n_expr->type == EXPR_FUNCTION && expr_eq(n_expr->data.function.head, head)) {
+            size_t dims_count = n_expr->data.function.arg_count;
+            int64_t total_elements = 1;
+            int64_t* dims = malloc(sizeof(int64_t) * dims_count);
+            for (size_t i = 0; i < dims_count; i++) {
+                if (n_expr->data.function.args[i]->type != EXPR_INTEGER) {
+                    free(dims);
+                    return expr_copy(res);
+                }
+                dims[i] = n_expr->data.function.args[i]->data.integer;
+                if (dims[i] < 0) dims[i] = 0;
+                total_elements *= dims[i];
+            }
+            
+            if (total_elements == 0) {
+                free(dims);
+                return expr_new_function(expr_copy(head), NULL, 0);
+            }
+
+            Expr** lists = malloc(sizeof(Expr*) * total_elements);
+            for (int64_t i = 0; i < total_elements; i++) lists[i] = list;
+            
+            Expr** results = NULL;
+            size_t res_count = 0, res_cap = 0;
+            Expr** current_tuple = malloc(sizeof(Expr*) * total_elements);
+            
+            tuples_rec(lists, total_elements, 0, current_tuple, head, &results, &res_count, &res_cap);
+            free(current_tuple);
+            free(lists);
+            
+            for (size_t i = 0; i < res_count; i++) {
+                size_t offset = 0;
+                Expr* reshaped = reshape_rec(results[i]->data.function.args, &offset, dims, dims_count, 0, head);
+                expr_free(results[i]);
+                results[i] = reshaped;
+            }
+            
+            free(dims);
+            return expr_new_function(expr_new_symbol("List"), results, res_count);
+        }
+    }
+    return expr_copy(res);
+}

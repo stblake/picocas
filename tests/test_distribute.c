@@ -43,10 +43,49 @@ void test_distribute() {
     assert_eval_eq("Distribute[(-1 + x) (1 + x) (1 - x + x^2 - x^3 + x^4) (1 + x + x^2 + x^3 + x^4)]", "-1 + x^10", 0);
 }
 
+void test_inner() {
+    assert_eval_eq("Inner[f,{a,b},{x,y},g]", "g[f[a, x], f[b, y]]", 0);
+    assert_eval_eq("Inner[f,{{a,b},{c,d}},{x,y},g]", "{g[f[a, x], f[b, y]], g[f[c, x], f[d, y]]}", 0);
+    assert_eval_eq("Inner[Times,{a,b},{x,y},Plus]", "a x + b y", 0);
+    assert_eval_eq("Inner[Power,{a,b,c},{x,y,z},Times]", "a^x b^y c^z", 0);
+    assert_eval_eq("Inner[f,{{a,b},{c,d}},{{u,v},{w,x}},g]", "{{g[f[a, u], f[b, w]], g[f[a, v], f[b, x]]}, {g[f[c, u], f[d, w]], g[f[c, v], f[d, x]]}}", 0);
+    assert_eval_eq("Inner[f,{{a,b},{c,d}},{s,t},g]", "{g[f[a, s], f[b, t]], g[f[c, s], f[d, t]]}", 0);
+    assert_eval_eq("Inner[f,{x,y},{{a,b},{c,d}},g]", "{g[f[x, a], f[y, c]], g[f[x, b], f[y, d]]}", 0);
+    assert_eval_eq("Inner[f,{{a,b},{c,d}},{{u,v},{w,x}},g,1]", "{{g[f[a, u], f[c, w]], g[f[a, v], f[c, x]]}, {g[f[b, u], f[d, w]], g[f[b, v], f[d, x]]}}", 0);
+    assert_eval_eq("Inner[Times,{a1, a2, a3},{b1, b2, b3},Plus]", "a1 b1 + a2 b2 + a3 b3", 0);
+}
+
+void test_outer() {
+    assert_eval_eq("Outer[f,{a,b},{x,y,z}]", "{{f[a, x], f[a, y], f[a, z]}, {f[b, x], f[b, y], f[b, z]}}", 0);
+    assert_eval_eq("Outer[Times,{1,2,3,4},{a,b,c}]", "{{a, b, c}, {2 a, 2 b, 2 c}, {3 a, 3 b, 3 c}, {4 a, 4 b, 4 c}}", 0);
+    assert_eval_eq("Outer[Times,{{1,2},{3,4}},{{a,b},{c,d}}]", "{{{{a, b}, {c, d}}, {{2 a, 2 b}, {2 c, 2 d}}}, {{{3 a, 3 b}, {3 c, 3 d}}, {{4 a, 4 b}, {4 c, 4 d}}}}", 0);
+    assert_eval_eq("Outer[f,{a,b},{x,y,z},{u,v}]", "{{{f[a, x, u], f[a, x, v]}, {f[a, y, u], f[a, y, v]}, {f[a, z, u], f[a, z, v]}}, {{f[b, x, u], f[b, x, v]}, {f[b, y, u], f[b, y, v]}, {f[b, z, u], f[b, z, v]}}}", 0);
+    assert_eval_eq("Outer[f,{{1,2},{3,4}},{{a,b},{c,d}},1]", "{{f[{1, 2}, {a, b}], f[{1, 2}, {c, d}]}, {f[{3, 4}, {a, b}], f[{3, 4}, {c, d}]}}", 0);
+    assert_eval_eq("Outer[Times,{{1,2},{3,4}},{{a,b,c},{d,e}}]", "{{{{a, b, c}, {d, e}}, {{2 a, 2 b, 2 c}, {2 d, 2 e}}}, {{{3 a, 3 b, 3 c}, {3 d, 3 e}}, {{4 a, 4 b, 4 c}, {4 d, 4 e}}}}", 0);
+    assert_eval_eq("Outer[g,f[a,b],f[x,y,z]]", "f[f[g[a, x], g[a, y], g[a, z]], f[g[b, x], g[b, y], g[b, z]]]", 0);
+    assert_eval_eq("Outer[f]", "f[]", 0);
+    assert_eval_eq("Outer[List,{a,b,c},{x,y}]", "{{{a, x}, {a, y}}, {{b, x}, {b, y}}, {{c, x}, {c, y}}}", 0);
+}
+
+void test_tuples() {
+    assert_eval_eq("Tuples[{0,1},3]", "{{0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1}, {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}}", 0);
+    assert_eval_eq("Tuples[{1,0},3]", "{{1, 1, 1}, {1, 1, 0}, {1, 0, 1}, {1, 0, 0}, {0, 1, 1}, {0, 1, 0}, {0, 0, 1}, {0, 0, 0}}", 0);
+    assert_eval_eq("Tuples[{{a,b},{1,2,3,4},{x}}]", "{{a, 1, x}, {a, 2, x}, {a, 3, x}, {a, 4, x}, {b, 1, x}, {b, 2, x}, {b, 3, x}, {b, 4, x}}", 0);
+    assert_eval_eq("Tuples[{a,b},2]", "{{a, a}, {a, b}, {b, a}, {b, b}}", 0);
+    assert_eval_eq("Tuples[{a,a,b},2]", "{{a, a}, {a, a}, {a, b}, {a, a}, {a, a}, {a, b}, {b, a}, {b, a}, {b, b}}", 0);
+    assert_eval_eq("Tuples[{a,b},{2,2}]", "{{{a, a}, {a, a}}, {{a, a}, {a, b}}, {{a, a}, {b, a}}, {{a, a}, {b, b}}, {{a, b}, {a, a}}, {{a, b}, {a, b}}, {{a, b}, {b, a}}, {{a, b}, {b, b}}, {{b, a}, {a, a}}, {{b, a}, {a, b}}, {{b, a}, {b, a}}, {{b, a}, {b, b}}, {{b, b}, {a, a}}, {{b, b}, {a, b}}, {{b, b}, {b, a}}, {{b, b}, {b, b}}}", 0);
+    assert_eval_eq("Tuples[f[x,y,z],2]", "{f[x, x], f[x, y], f[x, z], f[y, x], f[y, y], f[y, z], f[z, x], f[z, y], f[z, z]}", 0);
+    assert_eval_eq("Tuples[{{a,b},{x,y,z}}]", "{{a, x}, {a, y}, {a, z}, {b, x}, {b, y}, {b, z}}", 0);
+    assert_eval_eq("Tuples[{{a,b},{x,y,z}},2]", "{{{a, b}, {a, b}}, {{a, b}, {x, y, z}}, {{x, y, z}, {a, b}}, {{x, y, z}, {x, y, z}}}", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
     test_distribute();
+    test_inner();
+    test_outer();
+    test_tuples();
     printf("All distribute tests passed!\\n");
     return 0;
 }

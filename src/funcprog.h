@@ -13,3 +13,7 @@ Expr* builtin_freeq(Expr* res);
 Expr* builtin_distribute(Expr* res);
 
 #endif
+
+Expr* builtin_inner(Expr* res);
+Expr* builtin_outer(Expr* res);
+Expr* builtin_tuples(Expr* res);

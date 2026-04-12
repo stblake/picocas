@@ -86,6 +86,12 @@ void core_init(void) {
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Inner", builtin_inner);
+    symtab_get_def("Inner")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Outer", builtin_outer);
+    symtab_get_def("Outer")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Tuples", builtin_tuples);
+    symtab_get_def("Tuples")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Select", builtin_select);
     symtab_add_builtin("FreeQ", builtin_freeq);
     symtab_add_builtin("Sort", builtin_sort);
