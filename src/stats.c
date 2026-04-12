@@ -103,7 +103,7 @@ Expr* builtin_mean(Expr* res) {
         if (has_real) {
             double sum_val = 0;
             for (size_t i = 0; i < n; i++) {
-                double v;
+                double v = 0.0;
                 is_numeric(data->data.function.args[i], &v, NULL);
                 sum_val += v;
             }
@@ -196,7 +196,7 @@ Expr* builtin_variance(Expr* res) {
             double m = 0;
             double s = 0;
             for (size_t i = 0; i < n; i++) {
-                double x;
+                double x = 0.0;
                 is_numeric(data->data.function.args[i], &x, NULL);
                 double old_m = m;
                 m += (x - m) / (double)(i + 1);

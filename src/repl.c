@@ -74,7 +74,7 @@ void repl_loop() {
         if (!in_multiline) {
             snprintf(prompt, sizeof(prompt), "In[%d]:= ", line_number);
         } else {
-            snprintf(prompt, sizeof(prompt), "");
+            prompt[0] = '\0';
         }
         
         char* line = readline(prompt);

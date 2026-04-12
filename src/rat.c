@@ -266,7 +266,7 @@ static Expr* together_recursive(Expr* e) {
                 extract_num_den(args[i], &nums[i], &dens[i]);
             }
             
-            Expr* lcm_den = expr_copy(dens[0]);
+            Expr* lcm_den = count > 0 ? expr_copy(dens[0]) : expr_new_integer(1);
             for (size_t i = 1; i < count; i++) {
                 Expr* call_lcm = expr_new_function(expr_new_symbol("PolynomialLCM"), (Expr*[]){expr_copy(lcm_den), expr_copy(dens[i])}, 2);
                 Expr* new_lcm = evaluate(call_lcm);
