@@ -27,4 +27,6 @@ Expr* builtin_matrixq(Expr* res);
 
 void list_init(void);
 
+Expr* builtin_join(Expr* res);
+
 #endif // LIST_H

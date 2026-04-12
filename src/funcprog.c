@@ -1,3 +1,4 @@
+#include "print.h"
 
 #include "funcprog.h"
 #include "eval.h"
@@ -423,4 +424,113 @@ Expr* builtin_freeq(Expr* res) {
     } else {
         return expr_new_symbol("False");
     }
+}
+
+/* ------------------- Distribute ------------------- */
+
+static void distribute_recursive(Expr*** components, size_t* component_counts, size_t n_args, size_t current_arg, Expr** current_tuple, Expr*** results, size_t* res_count, size_t* res_cap, Expr* fp_head) {
+    if (current_arg == n_args) {
+        Expr** tuple_copy = malloc(sizeof(Expr*) * n_args);
+        for (size_t i = 0; i < n_args; i++) tuple_copy[i] = expr_copy(current_tuple[i]);
+        Expr* term = expr_new_function(expr_copy(fp_head), tuple_copy, n_args);
+        free(tuple_copy);
+        
+        if (*res_count >= *res_cap) {
+            *res_cap = (*res_cap == 0) ? 16 : (*res_cap * 2);
+            *results = realloc(*results, sizeof(Expr*) * (*res_cap));
+        }
+        (*results)[(*res_count)++] = term;
+        return;
+    }
+    
+    for (size_t i = 0; i < component_counts[current_arg]; i++) {
+        current_tuple[current_arg] = components[current_arg][i];
+        distribute_recursive(components, component_counts, n_args, current_arg + 1, current_tuple, results, res_count, res_cap, fp_head);
+    }
+}
+
+Expr* builtin_distribute(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 5) {
+        return NULL;
+    }
+    
+    Expr* expr = res->data.function.args[0];
+    if (expr->type != EXPR_FUNCTION) return expr_copy(expr);
+
+    Expr* g = (res->data.function.arg_count >= 2) ? res->data.function.args[1] : expr_new_symbol("Plus");
+    Expr* f = (res->data.function.arg_count >= 3) ? res->data.function.args[2] : expr_copy(expr->data.function.head);
+    Expr* gp = (res->data.function.arg_count >= 4) ? res->data.function.args[3] : expr_copy(g);
+    Expr* fp = (res->data.function.arg_count >= 5) ? res->data.function.args[4] : expr_copy(f);
+
+    // If head(expr) != f, return expr
+    if (!expr_eq(expr->data.function.head, f)) {
+        if (res->data.function.arg_count < 2) expr_free(g);
+        if (res->data.function.arg_count < 3) expr_free(f);
+        if (res->data.function.arg_count < 4) expr_free(gp);
+        if (res->data.function.arg_count < 5) expr_free(fp);
+        return expr_copy(expr);
+    }
+
+    size_t n_args = expr->data.function.arg_count;
+    Expr*** components = malloc(sizeof(Expr**) * n_args);
+    size_t* component_counts = malloc(sizeof(size_t) * n_args);
+    bool any_g = false;
+
+    for (size_t i = 0; i < n_args; i++) {
+        Expr* arg = expr->data.function.args[i];
+        if (arg->type == EXPR_FUNCTION && expr_eq(arg->data.function.head, g)) {
+            components[i] = arg->data.function.args;
+            component_counts[i] = arg->data.function.arg_count;
+            any_g = true;
+        } else {
+            components[i] = &expr->data.function.args[i];
+            component_counts[i] = 1;
+        }
+    }
+
+    if (!any_g) {
+        // No distribution possible, but we still apply fp if it's different?
+        // Actually Distribute[f[x], g, f, gp, fp] -> gp[fp[x]] if no g is found?
+        // Let's re-read: "Distribute explicitly constructs the complete result of a distribution"
+        // If no g is found, it usually returns fp[args] wrapped in gp? No, wait.
+        // Distribute[f[a], g] -> f[a]
+        // Distribute[f[g[a]], g] -> g[f[a]]
+        
+        // Cleanup and return original if no g found
+        free(components);
+        free(component_counts);
+        if (res->data.function.arg_count < 2) expr_free(g);
+        if (res->data.function.arg_count < 3) expr_free(f);
+        if (res->data.function.arg_count < 4) expr_free(gp);
+        if (res->data.function.arg_count < 5) expr_free(fp);
+        return expr_copy(expr);
+    }
+
+    Expr** results = NULL;
+    size_t res_count = 0;
+    size_t res_cap = 0;
+    Expr** current_tuple = malloc(sizeof(Expr*) * n_args);
+
+    distribute_recursive(components, component_counts, n_args, 0, current_tuple, &results, &res_count, &res_cap, fp);
+
+    Expr* final_res = expr_new_function(expr_copy(gp), results, res_count);
+    if (results) free(results);
+    
+    // results array itself is consumed by expr_new_function, but only if we don't free it.
+    // wait, expr_new_function usually COPIES the array if we pass it, OR it takes ownership?
+    // In picocas, expr_new_function takes Expr** args.
+    // Let's check expr_new_function implementation.
+    
+    free(current_tuple);
+    free(components);
+    free(component_counts);
+    if (res->data.function.arg_count < 2) expr_free(g);
+    if (res->data.function.arg_count < 3) expr_free(f);
+    if (res->data.function.arg_count < 4) expr_free(gp);
+    if (res->data.function.arg_count < 5) expr_free(fp);
+    
+    // We need to evaluate the result because gp or fp might be builtins
+    Expr* eval_res = evaluate(final_res);
+    expr_free(final_res);
+    return eval_res;
 }

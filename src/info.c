@@ -211,4 +211,5 @@ void info_init(void) {
     symtab_set_docstring("EulerPhi", "EulerPhi[n] gives the Euler totient function phi(n).");
     symtab_set_docstring("PrimePi", "PrimePi[x] gives the number of primes less than or equal to x.");
     symtab_set_docstring("NextPrime", "NextPrime[x] gives the next prime after x.");
+    symtab_set_docstring("Distribute", "Distribute[f[x1, x2, ...]]\n\tdistributes f over Plus appearing in any of the xi.\nDistribute[expr, g]\n\tdistributes over g.\nDistribute[expr, g, f]\n\tperforms the distribution only if the head of expr is f.\nDistribute[expr, g, f, gp, fp]\n\tgives gp and fp in place of g and f respectively in the result of the distribution.");
 }

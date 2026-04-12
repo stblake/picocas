@@ -1160,6 +1160,8 @@ void list_init(void) {
     symtab_add_builtin("RotateLeft", builtin_rotateleft);
     symtab_add_builtin("RotateRight", builtin_rotateright);
     symtab_add_builtin("Reverse", builtin_reverse);
+    symtab_add_builtin("Join", builtin_join);
+    symtab_get_def("Join")->attributes |= ATTR_PROTECTED | ATTR_FLAT;
     symtab_add_builtin("Transpose", builtin_transpose);
     symtab_add_builtin("Tally", builtin_tally);
     symtab_add_builtin("Union", builtin_union);
@@ -1722,4 +1724,38 @@ L_fail_range:
     if (imax_e) expr_free(imax_e);
     if (di_e) expr_free(di_e);
     return NULL;
+}
+
+/* ------------------- Join ------------------- */
+
+Expr* builtin_join(Expr* res) {
+    
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
+    
+    size_t n_args = res->data.function.arg_count;
+    Expr* first = res->data.function.args[0];
+    if (first->type != EXPR_FUNCTION) return NULL;
+    
+    Expr* head = first->data.function.head;
+    size_t total_elems = 0;
+    for (size_t i = 0; i < n_args; i++) {
+        Expr* arg = res->data.function.args[i];
+        if (arg->type != EXPR_FUNCTION || !expr_eq(arg->data.function.head, head)) {
+            return NULL;
+        }
+        total_elems += arg->data.function.arg_count;
+    }
+    
+    Expr** new_args = malloc(sizeof(Expr*) * total_elems);
+    size_t curr = 0;
+    for (size_t i = 0; i < n_args; i++) {
+        Expr* arg = res->data.function.args[i];
+        for (size_t j = 0; j < arg->data.function.arg_count; j++) {
+            new_args[curr++] = expr_copy(arg->data.function.args[j]);
+        }
+    }
+    
+    Expr* result = expr_new_function(expr_copy(head), new_args, total_elems);
+    free(new_args);
+    return result;
 }

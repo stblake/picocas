@@ -10,5 +10,6 @@ Expr* builtin_map_all(Expr* res);
 Expr* builtin_select(Expr* res);
 Expr* builtin_through(Expr* res);
 Expr* builtin_freeq(Expr* res);
+Expr* builtin_distribute(Expr* res);
 
 #endif
