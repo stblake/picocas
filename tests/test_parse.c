@@ -3,6 +3,9 @@
 #include "print.h"
 #include "test_utils.h"
 #include <stdio.h>
+#include "symtab.h"
+#include "core.h"
+#include "eval.h"
 
 
 void test_parse_atomics() {
@@ -313,6 +316,39 @@ void test_parse_comments() {
     }
 }
 
+
+
+static void assert_parse_eq(const char* input, const char* expected) {
+    Expr* p = parse_expression(input);
+    if (!p) {
+        printf("FAIL: parsed %s as NULL\n", input);
+        return;
+    }
+    char* s = expr_to_string_fullform(p);
+    if (strcmp(s, expected) != 0) {
+        printf("FAIL: parsed %s\nExpected: %s\nActual:   %s\n", input, expected, s);
+    }
+    free(s);
+    expr_free(p);
+}
+
+void test_parse_dots() {
+    assert_parse_eq(".1", "0.1");
+    assert_parse_eq("-.1", "-0.1");
+    assert_parse_eq("+.1", "0.1");
+    assert_parse_eq("x /. .1 -> 2", "ReplaceAll[x, Rule[0.1, 2]]");
+    assert_parse_eq("x /.1", "ReplaceAll[x, 1]");
+    assert_parse_eq(".1 ..", "Repeated[0.1]");
+    assert_parse_eq(".1 ...", "RepeatedNull[0.1]");
+    assert_parse_eq("x / .1", "Times[x, Power[0.1, -1]]");
+    assert_parse_eq("x * .1", "Times[x, 0.1]");
+    assert_parse_eq("x + .1", "Plus[x, 0.1]");
+    assert_parse_eq("x - .1", "Plus[x, Times[-1, 0.1]]");
+    assert_parse_eq("x ^ .1", "Power[x, 0.1]");
+    assert_parse_eq("x .1", "Times[x, 0.1]");
+    // Let me check what `x .1` parses as in my code!
+}
+
 int main() {
     TEST(test_parse_atomics);
     TEST(test_negative_numbers);
@@ -328,6 +364,7 @@ int main() {
     TEST(test_parse_part);
     TEST(test_parse_precedence);
     TEST(test_parse_comments);
+    symtab_init(); core_init(); TEST(test_parse_dots);
 
     printf("\nAll parser tests passed!\n");
     return 0;

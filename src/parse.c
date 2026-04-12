@@ -343,7 +343,7 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_REPEATEDNULL; def.prec = 170; def.head_name = "RepeatedNull"; def.len = 3;
     } else if (strncmp(pos, "..", 2) == 0) {
         def.type = OP_REPEATED; def.prec = 170; def.head_name = "Repeated"; def.len = 2;
-    } else if (*pos == '.') {
+    } else if (*pos == '.' && !isdigit(pos[1])) {
         def.type = OP_DOT; def.prec = 490; def.head_name = "Dot"; def.len = 1;
     } else if (*pos == '^') {
         def.type = OP_POWER; def.prec = 590; def.right_assoc = 1; def.head_name = "Power"; def.len = 1;
@@ -471,7 +471,7 @@ static Expr* parse_primary(ParserState* s) {
                 return head;
 
             }
-            if (isdigit(*s->pos) || (*s->pos == '-' && isdigit(s->pos[1]))) {
+            if (isdigit(*s->pos) || ((*s->pos == '-' || *s->pos == '+') && (isdigit(s->pos[1]) || (s->pos[1] == '.' && isdigit(s->pos[2])))) || (*s->pos == '.' && isdigit(s->pos[1]))) {
                 return parse_number(s);
             }
             fprintf(stderr, "Unexpected character: '%c'\n", *s->pos);
@@ -480,7 +480,7 @@ static Expr* parse_primary(ParserState* s) {
 }
 
 static bool can_start_primary(char c) {
-    return isalpha(c) || isdigit(c) || c == '{' || c == '(' || c == '"' || c == '_' || c == '`' || c == '$' || c == '#' || c == '%';
+    return isalpha(c) || isdigit(c) || c == '.' || c == '{' || c == '(' || c == '"' || c == '_' || c == '`' || c == '$' || c == '#' || c == '%';
 }
 
 // Pratt parser for operator precedence
@@ -501,7 +501,7 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
 
     if (strncmp(s->pos, ";;", 2) == 0) {
         left = expr_new_integer(1);
-    } else if (*s->pos == '-' && !isdigit(s->pos[1])) {
+    } else if (*s->pos == '-' && !isdigit(s->pos[1]) && !(s->pos[1] == '.' && isdigit(s->pos[2]))) {
         s->pos++;
         // Use a precedence higher than Plus (310) and Times (400)
         Expr* right = parse_expression_prec(s, 480);
