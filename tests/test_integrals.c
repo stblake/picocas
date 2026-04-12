@@ -11,13 +11,13 @@ void test_integrals() {
     symtab_init();
     core_init();
     
-    Expr* load_cmd = parse_expression("Get[\"src/internal/integrals.m\"]");
+    Expr* load_cmd = parse_expression("Get[\"src/internal/CRCMathTablesIntegrals.m\"]");
     Expr* res = evaluate(load_cmd);
     
     if (res->type == EXPR_SYMBOL && strcmp(res->data.symbol, "$Failed") == 0) {
         expr_free(res);
         expr_free(load_cmd);
-        load_cmd = parse_expression("Get[\"../../src/internal/integrals.m\"]");
+        load_cmd = parse_expression("Get[\"../../src/internal/CRCMathTablesIntegrals.m\"]");
         res = evaluate(load_cmd);
     }
     

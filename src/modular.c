@@ -1,3 +1,6 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "modular.h"
 #include "symtab.h"
 #include "eval.h"

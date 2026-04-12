@@ -572,7 +572,7 @@ static Expr* heuristic_factor(Expr* P) {
         Expr* pp = exact_poly_div(P, cont, vars, v_count);
         Expr* f_cont = heuristic_factor(cont);
         Expr* f_pp = heuristic_factor(pp);
-        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
         expr_free(cont); expr_free(pp);
         return eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){f_cont, f_pp}, 2));
     }
@@ -580,29 +580,29 @@ static Expr* heuristic_factor(Expr* P) {
     
     Expr* d1 = factor_degree_one(P, vars, v_count);
     if (d1) { 
-        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
         return d1; 
     }
     
     if (v_count == 1) {
         Expr* bz_res = bz_factor_to_expr(P, vars[0]);
-        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
         return bz_res;
     }
     
     Expr* bn = factor_binomial(P);
     if (bn) { 
-        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
         return bn; 
     }
     
     Expr* rt = factor_roots(P, vars, v_count);
     if (rt) { 
-        for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+        { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
         return rt; 
     }
     
-    for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars);
+    { for(size_t i=0; i<v_count; i++) expr_free(vars[i]); free(vars); }
     return expr_copy(P);
 }
 
@@ -680,6 +680,8 @@ typedef struct {
 } UPoly;
 
 static UPoly* upoly_new(int deg) {
+    if (deg < 0) return NULL;
+    if (deg > 10000) return NULL; // Safety bound
     UPoly* p = malloc(sizeof(UPoly));
     p->deg = deg;
     p->c = calloc(deg + 1, sizeof(int64_t));

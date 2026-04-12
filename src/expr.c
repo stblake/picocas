@@ -1,3 +1,6 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "expr.h"
 #include "arithmetic.h"
 #include <stdbool.h>

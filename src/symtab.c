@@ -1,10 +1,13 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "symtab.h"
 #include "match.h"
 #include "print.h"
 #include <string.h>
 #include <stdlib.h>
 
-#define SYMTAB_SIZE 1024
+#define SYMTAB_SIZE 65535
 
 typedef struct SymEntry {
     SymbolDef* def;

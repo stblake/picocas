@@ -1,3 +1,6 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "match.h"
 #include <gmp.h>
 #include "part.h"
@@ -630,19 +633,19 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
                         if (existing) {
                             if (expr_eq(seq_val, existing)) {
                                 if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                                    expr_free(seq_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                    expr_free(seq_val); { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                                 }
                             }
                         } else {
                             env_set(env, p_sym->data.symbol, seq_val);
                             if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                                expr_free(seq_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                expr_free(seq_val); { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                             }
                         }
                         expr_free(seq_val);
                     } else {
                         if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                            if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                            { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                         }
                     }
                 }
@@ -665,18 +668,18 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
                             if (existing) {
                                 if (expr_eq(matched_val, existing)) {
                                     if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                                        expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                        expr_free(matched_val); { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                                     }
                                 }
                             } else {
                                 env_set(env, p_sym->data.symbol, matched_val);
                                 if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                                    expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                    expr_free(matched_val); { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                                 }
                             }
                         } else {
                             if (match_args_internal(remainder, n_exprs - k, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
-                                expr_free(matched_val); if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true;
+                                expr_free(matched_val); { if (subset) free(subset); if (remainder) free(remainder); if (comb) free(comb); return true; }
                             }
                         }
                     }
