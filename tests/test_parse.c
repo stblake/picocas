@@ -327,6 +327,7 @@ static void assert_parse_eq(const char* input, const char* expected) {
     char* s = expr_to_string_fullform(p);
     if (strcmp(s, expected) != 0) {
         printf("FAIL: parsed %s\nExpected: %s\nActual:   %s\n", input, expected, s);
+        assert(strcmp(s, expected) == 0);
     }
     free(s);
     expr_free(p);
@@ -337,7 +338,9 @@ void test_parse_dots() {
     assert_parse_eq("-.1", "-0.1");
     assert_parse_eq("+.1", "0.1");
     assert_parse_eq("x /. .1 -> 2", "ReplaceAll[x, Rule[0.1, 2]]");
-    assert_parse_eq("x /.1", "ReplaceAll[x, 1]");
+    assert_parse_eq("x /. 1", "ReplaceAll[x, 1]");
+    assert_parse_eq("x /.1", "Times[x, Power[0.1, -1]]");
+    assert_parse_eq("1/.1", "Power[0.1, -1]");
     assert_parse_eq(".1 ..", "Repeated[0.1]");
     assert_parse_eq(".1 ...", "RepeatedNull[0.1]");
     assert_parse_eq("x / .1", "Times[x, Power[0.1, -1]]");

@@ -281,13 +281,13 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_UNSAMEQ; def.prec = 290; def.head_name = "UnsameQ"; def.len = 3;
     } else if (strncmp(pos, "@@@", 3) == 0) {
         def.type = OP_APPLY1; def.prec = 620; def.right_assoc = 1; def.head_name = "Apply1"; def.len = 3;
-    } else if (strncmp(pos, "//.", 3) == 0) {
+    } else if (strncmp(pos, "//.", 3) == 0 && !isdigit(pos[3])) {
         def.type = OP_REPLACEREPEATED; def.prec = 110; def.right_assoc = 0; def.head_name = "ReplaceRepeated"; def.len = 3;
     } else if (strncmp(pos, "//@", 3) == 0) {
         def.type = OP_MAPALL; def.prec = 620; def.right_assoc = 1; def.head_name = "MapAll"; def.len = 3;
     } else if (strncmp(pos, "//", 2) == 0) {
         def.type = OP_POSTFIX; def.prec = 70; def.head_name = "Postfix"; def.len = 2;
-    } else if (strncmp(pos, "/.", 2) == 0) {
+    } else if (strncmp(pos, "/.", 2) == 0 && !isdigit(pos[2])) {
         def.type = OP_REPLACEALL; def.prec = 110; def.right_assoc = 0; def.head_name = "ReplaceAll"; def.len = 2;
     } else if (strncmp(pos, "@@", 2) == 0) {
         def.type = OP_APPLY; def.prec = 620; def.right_assoc = 1; def.head_name = "Apply"; def.len = 2;
