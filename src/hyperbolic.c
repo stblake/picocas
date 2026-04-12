@@ -31,7 +31,8 @@ void hyperbolic_init(void) {
     }
 }
 
-static bool get_approx(Expr* e, double complex* out) {
+static bool get_approx(Expr* e, double complex* out, bool* is_inexact) {
+    if (is_inexact) *is_inexact = true;
     if (e->type == EXPR_REAL) {
         *out = e->data.real + 0.0 * I;
         return true;
@@ -86,7 +87,8 @@ Expr* builtin_sinh(Expr* res) {
     }
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = csinh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -102,7 +104,8 @@ Expr* builtin_cosh(Expr* res) {
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_symbol("Infinity");
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ccosh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -119,7 +122,8 @@ Expr* builtin_tanh(Expr* res) {
     if (is_minus_infinity(arg)) return expr_new_integer(-1);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ctanh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -136,7 +140,8 @@ Expr* builtin_coth(Expr* res) {
     if (is_minus_infinity(arg)) return expr_new_integer(-1);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / ctanh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -152,7 +157,8 @@ Expr* builtin_sech(Expr* res) {
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / ccosh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -168,7 +174,8 @@ Expr* builtin_csch(Expr* res) {
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / csinh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -184,7 +191,8 @@ Expr* builtin_arcsinh(Expr* res) {
     if (is_infinity(arg)) return expr_new_symbol("Infinity");
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casinh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -200,7 +208,8 @@ Expr* builtin_arccosh(Expr* res) {
     if (is_infinity(arg)) return expr_new_symbol("Infinity");
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacosh(c);
         if (cimag(c) == 0.0 && creal(c) >= 1.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -215,7 +224,8 @@ Expr* builtin_arctanh(Expr* res) {
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = catanh(c);
         if (cimag(c) == 0.0 && creal(c) > -1.0 && creal(c) < 1.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -230,7 +240,8 @@ Expr* builtin_arccoth(Expr* res) {
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = catanh(1.0 / c);
         if (cimag(c) == 0.0 && (creal(c) > 1.0 || creal(c) < -1.0)) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -245,7 +256,8 @@ Expr* builtin_arcsech(Expr* res) {
     if (arg->type == EXPR_INTEGER && arg->data.integer == 1) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacosh(1.0 / c);
         if (cimag(c) == 0.0 && creal(c) > 0.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -260,7 +272,8 @@ Expr* builtin_arccsch(Expr* res) {
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casinh(1.0 / c);
         if (cimag(c) == 0.0 && creal(c) != 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));

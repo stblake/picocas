@@ -25,7 +25,8 @@ void logexp_init(void) {
  * Handles EXPR_REAL, EXPR_INTEGER, Rational[n, d], and Complex[re, im] formats.
  * Returns true if a valid numeric approximation could be extracted, storing it in *out.
  */
-static bool get_approx(Expr* e, double complex* out) {
+static bool get_approx(Expr* e, double complex* out, bool* is_inexact) {
+    if (is_inexact) *is_inexact = true;
     if (e->type == EXPR_REAL) {
         *out = e->data.real + 0.0 * I;
         return true;
@@ -123,7 +124,8 @@ Expr* builtin_log(Expr* res) {
 
         // Approximate numerical evaluation
         double complex c;
-        if (get_approx(z, &c)) {
+        bool inexact = false;
+    if (get_approx(z, &c, &inexact) && inexact) {
             double complex s = clog(c);
             // Return real result if output is purely real, otherwise return complex
             Expr* ret = NULL;
@@ -254,7 +256,8 @@ Expr* builtin_exp(Expr* res) {
 
     // Approximate numerical evaluation
     double complex c;
-    if (get_approx(z, &c)) {
+    bool inexact = false;
+    if (get_approx(z, &c, &inexact) && inexact) {
         double complex s = cexp(c);
         // Return real result if output is purely real, otherwise return complex
         Expr* ret = NULL;

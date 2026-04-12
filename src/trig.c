@@ -60,25 +60,30 @@ static bool extract_pi_multiplier(Expr* e, int64_t* n, int64_t* d) {
  * get_approx:
  * Tries to get a numeric complex approximation of the expression.
  */
-static bool get_approx(Expr* e, double complex* out) {
+static bool get_approx(Expr* e, double complex* out, bool* is_inexact) {
     if (e->type == EXPR_INTEGER) {
         *out = (double)e->data.integer + 0.0 * I;
+        if (is_inexact) *is_inexact = false;
         return true;
     }
     if (e->type == EXPR_REAL) {
         *out = e->data.real + 0.0 * I;
+        if (is_inexact) *is_inexact = true;
         return true;
     }
     int64_t n, d;
     if (is_rational(e, &n, &d)) {
         *out = (double)n / d + 0.0 * I;
+        if (is_inexact) *is_inexact = false;
         return true;
     }
     Expr *re, *im;
     if (is_complex(e, &re, &im)) {
         double complex r, i;
-        if (get_approx(re, &r) && get_approx(im, &i)) {
+        bool rex = false, imx = false;
+        if (get_approx(re, &r, &rex) && get_approx(im, &i, &imx)) {
             *out = creal(r) + creal(i) * I;
+            if (is_inexact) *is_inexact = (rex || imx);
             return true;
         }
     }
@@ -398,7 +403,8 @@ Expr* builtin_sin(Expr* res) {
     
     // Approximate numerical evaluation
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = csin(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -428,7 +434,8 @@ Expr* builtin_cos(Expr* res) {
     
     // Approximate numerical evaluation
     double complex c;
-    if (get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ccos(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -458,7 +465,8 @@ Expr* builtin_tan(Expr* res) {
     
     // Approximate numerical evaluation
     double complex cplx;
-    if (get_approx(arg, &cplx)) {
+    bool inexact = false;
+    if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = catan(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -488,7 +496,8 @@ Expr* builtin_cot(Expr* res) {
     
     // Approximate numerical evaluation
     double complex cplx;
-    if (get_approx(arg, &cplx)) {
+    bool inexact = false;
+    if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / ctan(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -518,7 +527,8 @@ Expr* builtin_sec(Expr* res) {
     
     // Approximate numerical evaluation
     double complex cplx;
-    if (get_approx(arg, &cplx)) {
+    bool inexact = false;
+    if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / ccos(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -548,7 +558,8 @@ Expr* builtin_csc(Expr* res) {
     
     // Approximate numerical evaluation
     double complex cplx;
-    if (get_approx(arg, &cplx)) {
+    bool inexact = false;
+    if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / csin(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -681,7 +692,8 @@ Expr* builtin_arcsin(Expr* res) {
     
     // Approximate numerical evaluation - only if input is already inexact
     double complex c;
-    if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casin(c);
         if (cimag(c) == 0.0 && creal(c) >= -1.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -705,7 +717,8 @@ Expr* builtin_arccos(Expr* res) {
     
     // Approximate numerical evaluation - only if input is already inexact
     double complex c;
-    if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacos(c);
         if (cimag(c) == 0.0 && creal(c) >= -1.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
         return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -733,7 +746,8 @@ Expr* builtin_arctan(Expr* res) {
         
         // Approximate numerical evaluation - only if input is already inexact
         double complex c;
-        if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+        bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
             double complex s = catan(c);
             if (cimag(c) == 0.0) return expr_new_real(creal(s));
             return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
@@ -769,7 +783,7 @@ Expr* builtin_arctan(Expr* res) {
         
         // Approximate numerical evaluation using atan2 for strictly real inputs
         double complex cx, cy;
-        if ((x->type == EXPR_REAL || y->type == EXPR_REAL) && get_approx(x, &cx) && get_approx(y, &cy)) {
+        if ((x->type == EXPR_REAL || y->type == EXPR_REAL) && get_approx(x, &cx, NULL) && get_approx(y, &cy, NULL)) {
             if (cimag(cx) == 0.0 && cimag(cy) == 0.0) {
                 return expr_new_real(atan2(creal(cy), creal(cx)));
             }
@@ -794,7 +808,8 @@ Expr* builtin_arccot(Expr* res) {
     
     // Approximate numerical evaluation
     double complex c;
-    if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         if (c == 0.0) return expr_new_real(M_PI / 2.0); // ArcCot[0] = Pi/2
         double complex s = catan(1.0 / c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -819,7 +834,8 @@ Expr* builtin_arcsec(Expr* res) {
     
     // Approximate numerical evaluation
     double complex c;
-    if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         if (c == 0.0) return expr_new_symbol("ComplexInfinity"); // ArcSec[0] = ComplexInfinity
         double complex s = cacos(1.0 / c);
         if (cimag(c) == 0.0 && (creal(c) <= -1.0 || creal(c) >= 1.0)) return expr_new_real(creal(s));
@@ -844,7 +860,8 @@ Expr* builtin_arccsc(Expr* res) {
     
     // Approximate numerical evaluation
     double complex c;
-    if ((arg->type == EXPR_REAL || is_complex(arg, NULL, NULL)) && get_approx(arg, &c)) {
+    bool inexact = false;
+    if (get_approx(arg, &c, &inexact) && inexact) {
         if (c == 0.0) return expr_new_symbol("ComplexInfinity"); // ArcCsc[0] = ComplexInfinity
         double complex s = casin(1.0 / c);
         if (cimag(c) == 0.0 && (creal(c) <= -1.0 || creal(c) >= 1.0)) return expr_new_real(creal(s));
