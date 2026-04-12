@@ -267,5 +267,5 @@ Expr* builtin_exp(Expr* res) {
     }
 
     // Remains unevaluated if it doesn't match above rules
-    return NULL;
+    return expr_new_function(expr_new_symbol("Power"), (Expr*[]){expr_new_symbol("E"), expr_copy(z)}, 2);
 }

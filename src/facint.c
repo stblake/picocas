@@ -192,7 +192,10 @@ Expr* builtin_primeq(Expr* res) {
     if (arg->type == EXPR_INTEGER || arg->type == EXPR_BIGINT) {
         mpz_t n;
         expr_to_mpz(arg, n);
-        int is_prime = mpz_probab_prime_p(n, 25);
+        int is_prime = 0;
+        if (mpz_sgn(n) > 0) {
+            is_prime = mpz_probab_prime_p(n, 25);
+        }
         mpz_clear(n);
         
         if (is_prime) {
