@@ -80,9 +80,22 @@ void test_standard_deviation() {
     }
 }
 
+
+void test_median() {
+    assert_eval_eq("Median[{1,2,3,4,5,6,7}]", "4", 0);
+    assert_eval_eq("Median[{1,2,3,4,5,6,7,8}]", "9/2", 0);
+    assert_eval_eq("Median[{1,2,3,4}]", "5/2", 0);
+    assert_eval_eq("Median[{Pi,E,2}]", "E", 0);
+    assert_eval_eq("Median[{1.,2.,3.,4.}]", "2.5", 0);
+    assert_eval_eq("Median[{{1,11,3},{4,6,7}}]", "{5/2, 17/2, 5}", 0);
+    assert_eval_eq("Median[{{{3,7},{2,1}},{{5,19},{12,4}}}]", "{{4, 13}, {7, 5/2}}", 0);
+    assert_eval_eq("Median[{a,b,c}]", "Median[{a, b, c}]", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
+    TEST(test_median);
     
     TEST(test_mean);
     TEST(test_variance);

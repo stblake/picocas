@@ -1,3 +1,4 @@
+#include "print.h"
 #include "stats.h"
 #include "list.h"
 #include "symtab.h"
@@ -338,8 +339,101 @@ Expr* builtin_standard_deviation(Expr* res) {
 }
 
 
+
+/* ------------------- Median ------------------- */
+
+static bool is_real_numeric(Expr* e) {
+    Expr* numq = expr_new_function(expr_new_symbol("NumericQ"), (Expr*[]){expr_copy(e)}, 1);
+    Expr* numq_eval = evaluate(numq);
+    expr_free(numq);
+    if (numq_eval->type != EXPR_SYMBOL || strcmp(numq_eval->data.symbol, "True") != 0) {
+        expr_free(numq_eval);
+        return false;
+    }
+    expr_free(numq_eval);
+    
+    Expr* freeq = expr_new_function(expr_new_symbol("FreeQ"), (Expr*[]){expr_copy(e), expr_new_symbol("I")}, 2);
+    Expr* freeq_eval = evaluate(freeq);
+    expr_free(freeq);
+    if (freeq_eval->type != EXPR_SYMBOL || strcmp(freeq_eval->data.symbol, "True") != 0) {
+        expr_free(freeq_eval);
+        return false;
+    }
+    expr_free(freeq_eval);
+    
+    return true;
+}
+
+Expr* builtin_median(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* data = res->data.function.args[0];
+
+    // Check if it's a vector or tensor. If it's empty or not a list, return NULL.
+    if (data->type != EXPR_FUNCTION || data->data.function.head->type != EXPR_SYMBOL || strcmp(data->data.function.head->data.symbol, "List") != 0) {
+        return expr_copy(res);
+    }
+
+    size_t n = data->data.function.arg_count;
+    if (n == 0) return expr_copy(res);
+
+    // Check if it's a matrix/tensor by checking if the first element is a List.
+    if (data->data.function.args[0]->type == EXPR_FUNCTION && 
+        data->data.function.args[0]->data.function.head->type == EXPR_SYMBOL && 
+        strcmp(data->data.function.args[0]->data.function.head->data.symbol, "List") == 0) {
+        // Apply columnwise via Transpose and Map
+        return apply_columnwise("Median", data);
+    }
+
+    // Now it's a 1D vector. Check if all elements are real numbers.
+    bool all_real = true;
+    for (size_t i = 0; i < n; i++) {
+        Expr* elem = data->data.function.args[i];
+        if (!is_real_numeric(elem)) {
+            all_real = false;
+            break;
+        }
+    }
+
+    if (!all_real) {
+        char* str = expr_to_string(res);
+        printf("Median::rectn: Rectangular array of real numbers is expected at position 1 in %s.\n", str);
+        free(str);
+        return expr_copy(res);
+    }
+
+    // Sort the list
+    Expr* sort_expr = expr_new_function(expr_new_symbol("Sort"), (Expr*[]){expr_copy(data)}, 1);
+    Expr* sorted = evaluate(sort_expr);
+    expr_free(sort_expr);
+
+    if (sorted->type != EXPR_FUNCTION || sorted->data.function.arg_count != n) {
+        expr_free(sorted);
+        return expr_copy(res);
+    }
+
+    Expr* result = NULL;
+    if (n % 2 == 1) {
+        result = expr_copy(sorted->data.function.args[n / 2]);
+    } else {
+        Expr* m1 = sorted->data.function.args[n / 2 - 1];
+        Expr* m2 = sorted->data.function.args[n / 2];
+        Expr* sum = expr_new_function(expr_new_symbol("Plus"), (Expr*[]){expr_copy(m1), expr_copy(m2)}, 2);
+        Expr* sum_eval = evaluate(sum);
+        expr_free(sum);
+        
+        Expr* div = expr_new_function(expr_new_symbol("Divide"), (Expr*[]){sum_eval, expr_new_integer(2)}, 2);
+        result = evaluate(div);
+        expr_free(div);
+    }
+
+    expr_free(sorted);
+    return result;
+}
+
 void stats_init(void) {
     symtab_add_builtin("Mean", builtin_mean);
+    symtab_add_builtin("Median", builtin_median);
+    symtab_get_def("Median")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Variance", builtin_variance);
     symtab_add_builtin("StandardDeviation", builtin_standard_deviation);
 

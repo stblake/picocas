@@ -217,4 +217,8 @@ void info_init(void) {
     symtab_set_docstring("Outer", "Outer[f,list1,list2,...]\n\tgives the generalized outer product of the listi, forming all possible combinations of the lowest-level elements in each of them, and feeding them as arguments to f.\nOuter[f,list1,list2,...,n]\n\ttreats as separate elements only sublists at level n in the listi.\nOuter[f,list1,list2,...,n1,n2,...]\n\ttreats as separate elements only sublists at level ni in the corresponding listi.");
     symtab_set_docstring("Tuples", "Tuples[list,n]\n\tgenerates a list of all possible n-tuples of elements from list.\nTuples[{list1,list2,...}]\n\tgenerates a list of all possible tuples whose ith element is from listi.\nTuples[list,{n1,n2,...}]\n\tgenerates a list of all possible n1 x n2 x ... arrays of elements in list.");
     symtab_set_docstring("Permutations", "Permutations[list]\n\tgenerates a list of all possible permutations of the elements in list.\nPermutations[list,n]\n\tgives all permutations containing at most n elements.\nPermutations[list,{n}]\n\tgives all permutations containing exactly n elements.");
+    symtab_set_docstring("Min", "Min[x1, x2, ...]\n\tyields the numerically smallest of the xi.\nMin[{x1, x2, ...}, {y1, ...}, ...]\n\tyields the smallest element of any of the lists.");
+    symtab_set_docstring("Max", "Max[x1, x2, ...]\n\tyields the numerically largest of the xi.\nMax[{x1, x2, ...}, {y1, ...}, ...]\n\tyields the largest element of any of the lists.");
+    symtab_set_docstring("Median", "Median[data]\n\tgives the median estimate of the elements in data.\nMedian[dist]\n\tgives the median of the distribution dist.");
+
 }
