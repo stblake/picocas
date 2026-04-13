@@ -1745,6 +1745,7 @@ Out[3]= {4, 25}
 - `"WilliamsP+1"`: Executes the Williams $P+1$ algorithm via the ECM library natively.
 - `"Fermat"`: Explores factors symmetrically close to the square root boundary natively on large integers.
 - `"CFRAC"`: Implements the continued fraction integer factorization method natively on GMP bignums.
+- `"ShanksSquareForms"`: Implements Shanks's Square Forms Factorization (SQUFOF) natively on large integers. Halts explicitly if factors are not discovered within the loop constraints.
 - `"ECM"`: Explicitly triggers Elliptic-Curve Method discovery natively.
 
 **Features**:

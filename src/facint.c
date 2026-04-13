@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <math.h>
 #define METHOD_AUTOMATIC 0
+#define METHOD_SQUFOF 10
 #define METHOD_RBD 9
 #define METHOD_DIXON 8
 #define METHOD_CFRAC 5
@@ -792,6 +793,120 @@ end_rbd:
     mpz_clears(a, b, diff, search_limit_z, tmp, Q, g, NULL);
 }
 
+static int squfof_single(mpz_t f, const mpz_t n, unsigned long k, unsigned long max_iters) {
+    mpz_t N, S, P, Q, Q_next, b, P_next, Q_next_next, r;
+    mpz_t b0, P2, Q2, Q2_next, b2, P2_next, Q2_next_next;
+    mpz_t temp;
+    int success = 0;
+    
+    mpz_inits(N, S, P, Q, Q_next, b, P_next, Q_next_next, r, NULL);
+    mpz_inits(b0, P2, Q2, Q2_next, b2, P2_next, Q2_next_next, temp, NULL);
+    
+    mpz_mul_ui(N, n, k);
+    mpz_sqrt(S, N);
+    
+    mpz_mul(temp, S, S);
+    if (mpz_cmp(temp, N) == 0) {
+        mpz_gcd(f, n, S);
+        if (mpz_cmp_ui(f, 1) != 0 && mpz_cmp(f, n) != 0) {
+            success = 1;
+        }
+        goto cleanup;
+    }
+    
+    mpz_set(P, S);
+    mpz_set_ui(Q, 1);
+    
+    mpz_mul(temp, P, P);
+    mpz_sub(Q_next, N, temp); // Q_next = N - P^2
+    
+    unsigned long i = 0;
+    while (i < max_iters) {
+        if (mpz_cmp_ui(Q_next, 0) == 0) goto cleanup;
+        
+        mpz_add(temp, S, P);
+        mpz_fdiv_q(b, temp, Q_next); // b = (S + P) / Q_next
+        
+        mpz_mul(temp, b, Q_next);
+        mpz_sub(P_next, temp, P); // P_next = b * Q_next - P
+        
+        mpz_sub(temp, P, P_next);
+        mpz_mul(temp, b, temp);
+        mpz_add(Q_next_next, Q, temp); // Q_next_next = Q + b * (P - P_next)
+        
+        mpz_set(Q, Q_next);
+        mpz_set(Q_next, Q_next_next);
+        mpz_set(P, P_next);
+        i++;
+        
+        if (i % 2 == 0) {
+            if (mpz_perfect_square_p(Q)) {
+                mpz_sqrt(r, Q);
+                
+                // Try Phase 2
+                mpz_sub(temp, S, P);
+                mpz_fdiv_q(b0, temp, r); // b0 = (S - P) / r
+                
+                mpz_mul(temp, b0, r);
+                mpz_add(P2, temp, P); // P2 = b0 * r + P
+                
+                mpz_set(Q2, r); // Q2 = r
+                
+                mpz_mul(temp, P2, P2);
+                mpz_sub(temp, N, temp);
+                if (mpz_cmp_ui(Q2, 0) == 0) continue;
+                mpz_fdiv_q(Q2_next, temp, Q2); // Q2_next = (N - P2^2) / Q2
+                
+                unsigned long j = 0;
+                while (j < max_iters) {
+                    if (mpz_cmp_ui(Q2_next, 0) == 0) { break; }
+                    
+                    mpz_add(temp, S, P2);
+                    mpz_fdiv_q(b2, temp, Q2_next);
+                    
+                    mpz_mul(temp, b2, Q2_next);
+                    mpz_sub(P2_next, temp, P2);
+                    
+                    if (mpz_cmp(P2, P2_next) == 0) {
+                        mpz_gcd(temp, n, P2);
+                        if (mpz_cmp_ui(temp, 1) != 0 && mpz_cmp(temp, n) != 0) {
+                            mpz_set(f, temp);
+                            success = 1;
+                            goto cleanup;
+                        }
+                        break;
+                    }
+                    
+                    mpz_sub(temp, P2, P2_next);
+                    mpz_mul(temp, b2, temp);
+                    mpz_add(Q2_next_next, Q2, temp);
+                    
+                    mpz_set(Q2, Q2_next);
+                    mpz_set(Q2_next, Q2_next_next);
+                    mpz_set(P2, P2_next);
+                    j++;
+                }
+            }
+        }
+    }
+    
+cleanup:
+    mpz_clears(N, S, P, Q, Q_next, b, P_next, Q_next_next, r, NULL);
+    mpz_clears(b0, P2, Q2, Q2_next, b2, P2_next, Q2_next_next, temp, NULL);
+    return success;
+}
+
+void squfof_factor_mpz(mpz_t f, const mpz_t n) {
+    mpz_set_ui(f, 0);
+    unsigned long multipliers[] = {1, 3, 5, 7, 11, 15, 21, 33, 35, 55, 77, 105, 1155};
+    int num_mults = sizeof(multipliers)/sizeof(multipliers[0]);
+    // The iterations are set to 2e6 which is roughly what would factor numbers up to 10^24 cleanly.
+    for (int i=0; i<num_mults; i++) {
+        if (squfof_single(f, n, multipliers[i], 200000)) {
+            return;
+        }
+    }
+}
 
 static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_limit, int method, Expr* method_opt) {
     if (mpz_cmp_ui(n, 1) <= 0) return;
@@ -802,6 +917,28 @@ static void factorize_mpz(mpz_t n, FactorMpz* factors, int* num_factors, int* k_
         return;
     }
 
+
+    if (method == METHOD_SQUFOF) {
+        mpz_t f;
+        mpz_init(f);
+        squfof_factor_mpz(f, n);
+        
+        if (mpz_cmp_ui(f, 0) > 0 && mpz_cmp_ui(f, 1) > 0 && mpz_cmp(f, n) < 0) {
+            mpz_t n_f;
+            mpz_init(n_f);
+            mpz_divexact(n_f, n, f);
+            
+            factorize_mpz(f, factors, num_factors, k_limit, method, method_opt);
+            factorize_mpz(n_f, factors, num_factors, k_limit, method, method_opt);
+            mpz_clear(n_f);
+            mpz_clear(f);
+            return;
+        }
+        
+        if (mpz_cmp_ui(n, 1) > 0) add_factor_mpz(factors, num_factors, n, 1);
+        mpz_clear(f);
+        return;
+    }
 
     if (method == METHOD_FERMAT) {
         mpz_t f;
@@ -1067,6 +1204,7 @@ Expr* builtin_factorinteger(Expr* res) {
                     else if (strcmp(rhs->data.string, "PollardP-1") == 0) method = METHOD_POLLARD_P1;
                     else if (strcmp(rhs->data.string, "WilliamsP+1") == 0) method = METHOD_WILLIAMS_P1;
                     else if (strcmp(rhs->data.string, "Dixon") == 0) method = METHOD_DIXON;
+                    else if (strcmp(rhs->data.string, "ShanksSquareForms") == 0) method = METHOD_SQUFOF;
                     else if (strcmp(rhs->data.string, "Automatic") == 0) method = METHOD_AUTOMATIC;
                 } else if (rhs->type == EXPR_SYMBOL && strcmp(rhs->data.symbol, "Automatic") == 0) {
                     method = METHOD_AUTOMATIC;

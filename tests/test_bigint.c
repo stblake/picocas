@@ -118,6 +118,14 @@ void test_abs_bigint(void) {
     assert_eval_eq("Abs[-99999999999999999999]", "99999999999999999999", 0);
 }
 
+void test_squfof(void) {
+    // Standard test cases for ShanksSquareForms
+    assert_eval_eq("FactorInteger[11111, Method -> \"ShanksSquareForms\"]", "{{41, 1}, {271, 1}}", 0);
+    assert_eval_eq("FactorInteger[11111111111, Method -> \"ShanksSquareForms\"]", "{{21649, 1}, {513239, 1}}", 0);
+    // Should still work if factors are small
+    assert_eval_eq("FactorInteger[15, Method -> \"ShanksSquareForms\"]", "{{3, 1}, {5, 1}}", 0);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -133,6 +141,7 @@ int main(void) {
     TEST(test_bigint_printing);
     TEST(test_power_large_exponent);
     TEST(test_abs_bigint);
+    TEST(test_squfof);
     
     // Additional GMP integration tests
     assert_eval_eq("Binomial[100, 50]", "100891344545564193334812497256", 0);
