@@ -92,9 +92,22 @@ void test_median() {
     assert_eval_eq("Median[{a,b,c}]", "Median[{a, b, c}]", 0);
 }
 
+
+void test_quartiles() {
+    assert_eval_eq("Quartiles[{1,3,4,2,5,6}]", "{2, 7/2, 5}", 0);
+    assert_eval_eq("Quartiles[{1,2,3,4}]", "{3/2, 5/2, 7/2}", 0);
+    assert_eval_eq("Quartiles[{1.,2.,3.,4.}]", "{1.5, 2.5, 3.5}", 0);
+    assert_eval_eq("Quartiles[{-1,5,10,4,25,2,1}]", "{5/4, 4, 35/4}", 0);
+    assert_eval_eq("Quartiles[{-1,5,10,4,25,2,1},{{0,0},{1,0}}]", "{1, 4, 10}", 0);
+    assert_eval_eq("Quartiles[{{1,11,3},{4,6,7}}]", "{{1, 5/2, 4}, {6, 17/2, 11}, {3, 5, 7}}", 0);
+    assert_eval_eq("Quartiles[{{{3,7},{2,1}},{{5,19},{12,4}}}]", "{{{3, 4, 5}, {7, 13, 19}}, {{2, 7, 12}, {1, 5/2, 4}}}", 0);
+    assert_eval_eq("Quartiles[{a,b,c}]", "Quartiles[{a, b, c}]", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
+    TEST(test_quartiles);
     TEST(test_median);
     
     TEST(test_mean);
