@@ -631,7 +631,10 @@ Expr* builtin_quartiles(Expr* res) {
     } 
     
     if (!a || !b || !c || !d) {
-        if (a) expr_free(a); if (b) expr_free(b); if (c) expr_free(c); if (d) expr_free(d);
+        if (a) expr_free(a);
+        if (b) expr_free(b);
+        if (c) expr_free(c);
+        if (d) expr_free(d);
         a = make_rational(1, 2);
         b = expr_new_integer(0);
         c = expr_new_integer(0);

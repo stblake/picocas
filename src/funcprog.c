@@ -538,6 +538,7 @@ Expr* builtin_distribute(Expr* res) {
 /* ------------------- Inner ------------------- */
 
 static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
+    if (V->type != EXPR_FUNCTION || B->type != EXPR_FUNCTION) return NULL;
     size_t N = V->data.function.arg_count;
     
     bool b_is_matrix = false;
@@ -552,16 +553,26 @@ static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
         for (size_t j = 0; j < M; j++) {
             Expr** col_args = malloc(sizeof(Expr*) * N);
             for (size_t i = 0; i < N; i++) {
-                Expr* B_i = B->data.function.args[i];
-                if (B_i->type == EXPR_FUNCTION && j < B_i->data.function.arg_count) {
-                    col_args[i] = expr_copy(B_i->data.function.args[j]);
+                if (i < B->data.function.arg_count) {
+                    Expr* B_i = B->data.function.args[i];
+                    if (B_i->type == EXPR_FUNCTION && j < B_i->data.function.arg_count) {
+                        col_args[i] = expr_copy(B_i->data.function.args[j]);
+                    } else {
+                        col_args[i] = expr_new_symbol("Null");
+                    }
                 } else {
                     col_args[i] = expr_new_symbol("Null");
                 }
             }
             Expr* B_col = expr_new_function(expr_copy(head), col_args, N);
-            res_args[j] = contract_V_B(f, V, B_col, g, head);
+            Expr* contracted = contract_V_B(f, V, B_col, g, head);
             expr_free(B_col);
+            if (!contracted) {
+                for (size_t k = 0; k < j; k++) expr_free(res_args[k]);
+                free(res_args);
+                return NULL;
+            }
+            res_args[j] = contracted;
         }
         Expr* ret = expr_new_function(expr_copy(head), res_args, M);
         free(res_args);
@@ -569,6 +580,9 @@ static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
     } else {
         size_t B_len = B->data.function.arg_count;
         size_t min_len = N < B_len ? N : B_len;
+        if (N != B_len) {
+            // Technically lengths should match. We'll evaluate up to the min_len.
+        }
         Expr** g_args = malloc(sizeof(Expr*) * min_len);
         for (size_t i = 0; i < min_len; i++) {
             Expr* f_args[2] = { expr_copy(V->data.function.args[i]), expr_copy(B->data.function.args[i]) };
@@ -581,6 +595,7 @@ static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
 }
 
 static Expr* inner_A(Expr* f, Expr* A, Expr* B, Expr* g, Expr* head) {
+    if (A->type != EXPR_FUNCTION) return NULL;
     bool a_is_matrix = false;
     if (A->data.function.arg_count > 0 && A->data.function.args[0]->type == EXPR_FUNCTION &&
         expr_eq(A->data.function.args[0]->data.function.head, head)) {
@@ -591,7 +606,13 @@ static Expr* inner_A(Expr* f, Expr* A, Expr* B, Expr* g, Expr* head) {
         size_t N = A->data.function.arg_count;
         Expr** res_args = malloc(sizeof(Expr*) * N);
         for (size_t i = 0; i < N; i++) {
-            res_args[i] = inner_A(f, A->data.function.args[i], B, g, head);
+            Expr* inner_res = inner_A(f, A->data.function.args[i], B, g, head);
+            if (!inner_res) {
+                for (size_t j = 0; j < i; j++) expr_free(res_args[j]);
+                free(res_args);
+                return NULL;
+            }
+            res_args[i] = inner_res;
         }
         Expr* ret = expr_new_function(expr_copy(head), res_args, N);
         free(res_args);
