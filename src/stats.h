@@ -4,6 +4,7 @@
 #include "expr.h"
 
 Expr* builtin_mean(Expr* res);
+Expr* builtin_rootmeansquare(Expr* res);
 Expr* builtin_variance(Expr* res);
 Expr* builtin_standard_deviation(Expr* res);
 

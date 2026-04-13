@@ -56,11 +56,13 @@ void info_init(void) {
     symtab_set_docstring("Array", "Array[f, n] generates a list of length n with elements f[1], f[2], ..., f[n].");
     symtab_set_docstring("Union", "Union[list] gives a sorted list of all distinct elements in list.");
     symtab_set_docstring("Tally", "Tally[list] counts the number of occurrences of each distinct element in list.");
+    symtab_set_docstring("Commonest", "Commonest[list] gives a list of the elements that are the most common in list.\nCommonest[list, n] gives a list of the n most common elements in list.");
     symtab_set_docstring("DeleteDuplicates", "DeleteDuplicates[list] removes duplicate elements from list.");
     symtab_set_docstring("Split", "Split[list] splits list into sublists of identical adjacent elements.");
 
     // Statistics
     symtab_set_docstring("Mean", "Mean[data] gives the mean estimate of the elements in data.");
+    symtab_set_docstring("RootMeanSquare", "RootMeanSquare[list] gives the root mean square of values in list.");
     symtab_set_docstring("Variance", "Variance[data] gives the unbiased variance estimate of the elements in data.");
     symtab_set_docstring("StandardDeviation", "StandardDeviation[data] gives the standard deviation estimate of the elements in data.");
 

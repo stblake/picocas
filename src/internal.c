@@ -19,6 +19,7 @@ extern Expr* builtin_union(Expr* res);
 extern Expr* builtin_deleteduplicates(Expr* res);
 extern Expr* builtin_split(Expr* res);
 extern Expr* builtin_total(Expr* res);
+extern Expr* builtin_commonest(Expr* res);
 extern Expr* builtin_min(Expr* res);
 extern Expr* builtin_max(Expr* res);
 extern Expr* builtin_listq(Expr* res);
@@ -85,6 +86,7 @@ extern Expr* builtin_abs(Expr* res);
 extern Expr* builtin_conjugate(Expr* res);
 extern Expr* builtin_arg(Expr* res);
 extern Expr* builtin_mean(Expr* res);
+extern Expr* builtin_rootmeansquare(Expr* res);
 extern Expr* builtin_variance(Expr* res);
 extern Expr* builtin_standard_deviation(Expr* res);
 extern Expr* builtin_slot(Expr* res);
@@ -210,6 +212,7 @@ Expr* internal_union(Expr** args, size_t count) { return internal_call_impl("Uni
 Expr* internal_deleteduplicates(Expr** args, size_t count) { return internal_call_impl("DeleteDuplicates", builtin_deleteduplicates, args, count); }
 Expr* internal_split(Expr** args, size_t count) { return internal_call_impl("Split", builtin_split, args, count); }
 Expr* internal_total(Expr** args, size_t count) { return internal_call_impl("Total", builtin_total, args, count); }
+Expr* internal_commonest(Expr** args, size_t count) { return internal_call_impl("Commonest", builtin_commonest, args, count); }
 Expr* internal_min(Expr** args, size_t count) { return internal_call_impl("Min", builtin_min, args, count); }
 Expr* internal_max(Expr** args, size_t count) { return internal_call_impl("Max", builtin_max, args, count); }
 Expr* internal_listq(Expr** args, size_t count) { return internal_call_impl("ListQ", builtin_listq, args, count); }
@@ -276,6 +279,7 @@ Expr* internal_abs(Expr** args, size_t count) { return internal_call_impl("Abs",
 Expr* internal_conjugate(Expr** args, size_t count) { return internal_call_impl("Conjugate", builtin_conjugate, args, count); }
 Expr* internal_arg(Expr** args, size_t count) { return internal_call_impl("Arg", builtin_arg, args, count); }
 Expr* internal_mean(Expr** args, size_t count) { return internal_call_impl("Mean", builtin_mean, args, count); }
+Expr* internal_rootmeansquare(Expr** args, size_t count) { return internal_call_impl("RootMeanSquare", builtin_rootmeansquare, args, count); }
 Expr* internal_variance(Expr** args, size_t count) { return internal_call_impl("Variance", builtin_variance, args, count); }
 Expr* internal_standard_deviation(Expr** args, size_t count) { return internal_call_impl("StandardDeviation", builtin_standard_deviation, args, count); }
 Expr* internal_slot(Expr** args, size_t count) { return internal_call_impl("Slot", builtin_slot, args, count); }

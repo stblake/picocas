@@ -343,6 +343,36 @@ In[1]:= Tally[{a, a, b, a, c, b, a}]
 Out[1]= {{a, 4}, {b, 2}, {c, 1}}
 ```
 
+#### Commonest
+Gives a list of the elements that are the most common in an expression.
+- `Commonest[list]`
+- `Commonest[list, n]`
+- `Commonest[list, UpTo[n]]`
+
+**Features**:
+- `Protected`.
+- When several elements occur with equal frequency, `Commonest` picks first the ones that occur first in `list`.
+- `Commonest[list, n]` returns the `n` commonest elements in the order they appear in `list`.
+- `Commonest[list, UpTo[n]]` returns the `n` commonest elements, or as many as are available.
+- A message `Commonest::dstlms` is generated if there are fewer distinct elements than requested by an integer `n`.
+
+```mathematica
+In[1]:= Commonest[{b, a, c, 2, a, b, 1, 2}]
+Out[1]= {b, a, 2}
+
+In[2]:= Commonest[{b, a, c, 2, a, b, 1, 2}, 4]
+Out[2]= {b, a, c, 2}
+
+In[3]:= Commonest[{b, a, c, 2, a, b, 1, 2}, UpTo[6]]
+Out[3]= {b, a, c, 2, 1}
+
+In[4]:= Commonest[{1, 2, 2, 3, 3, 3, 4}]
+Out[4]= {3}
+
+In[5]:= Commonest[{a, E, Sin[y], E, a, 7}]
+Out[5]= {a, E}
+```
+
 #### Min, Max
 Returns the numerically smallest or largest elements.
 - `Min[x1, x2, ...]`
@@ -1340,6 +1370,34 @@ Out[1]= 5/2
 
 In[2]:= Mean[{{a, u}, {b, v}, {c, w}}]
 Out[2]= {1/3 (a + b + c), 1/3 (u + v + w)}
+```
+
+#### RootMeanSquare
+Gives the root mean square of values in `list`.
+- `RootMeanSquare[list]`
+
+**Features**:
+- `Protected`.
+- Gives the square root of the second sample moment.
+- For a list `{x1, x2, ...}`, it computes `Sqrt[1/n Total[{x1^2, x2^2, ...}]]`.
+- Handles both numerical and symbolic data.
+- Works column-wise on matrices.
+
+```mathematica
+In[1]:= RootMeanSquare[{a, b, c, d}]
+Out[1]= 1/2 Sqrt[a^2 + b^2 + c^2 + d^2]
+
+In[2]:= RootMeanSquare[{{1, 2}, {5, 10}, {5, 2}, {4, 8}}]
+Out[2]= {1/2 Sqrt[67], Sqrt[43]}
+
+In[3]:= RootMeanSquare[{1, 2, 3, 4}]
+Out[3]= Sqrt[15/2]
+
+In[4]:= RootMeanSquare[{Pi, E, 2}]
+Out[4]= Sqrt[1/3 (4 + E^2 + Pi^2)]
+
+In[5]:= RootMeanSquare[{1., 2., 3., 4.}]
+Out[5]= 2.73861
 ```
 
 #### Variance

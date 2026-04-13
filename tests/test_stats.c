@@ -93,6 +93,14 @@ void test_median() {
 }
 
 
+void test_rootmeansquare() {
+    assert_eval_eq("RootMeanSquare[{a,b,c,d}]", "1/2 Sqrt[a^2 + b^2 + c^2 + d^2]", 0);
+    assert_eval_eq("RootMeanSquare[{{1,2},{5,10},{5,2},{4,8}}]", "{1/2 Sqrt[67], Sqrt[43]}", 0);
+    assert_eval_eq("RootMeanSquare[{1,2,3,4}]", "Sqrt[15/2]", 0);
+    assert_eval_eq("RootMeanSquare[{Pi,E,2}]", "Sqrt[1/3 (4 + E^2 + Pi^2)]", 0);
+    assert_eval_eq("RootMeanSquare[{1.,2.,3.,4.}]", "2.73861", 0);
+}
+
 void test_quartiles() {
     assert_eval_eq("Quartiles[{1,3,4,2,5,6}]", "{2, 7/2, 5}", 0);
     assert_eval_eq("Quartiles[{1,2,3,4}]", "{3/2, 5/2, 7/2}", 0);
@@ -111,6 +119,7 @@ int main() {
     TEST(test_median);
     
     TEST(test_mean);
+    TEST(test_rootmeansquare);
     TEST(test_variance);
     TEST(test_standard_deviation);
     

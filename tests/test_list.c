@@ -463,9 +463,39 @@ void test_total() {
     }
 }
 
+void test_commonest() {
+    struct {
+        const char* input;
+        const char* expected;
+    } tests[] = {
+        {"Commonest[{b, a, c, 2, a, b, 1, 2}]", "{b, a, 2}"},
+        {"Commonest[{b, a, c, 2, a, b, 1, 2}, 4]", "{b, a, c, 2}"},
+        {"Commonest[{b, a, c, 2, a, b, 1, 2}, UpTo[6]]", "{b, a, c, 2, 1}"},
+        {"Commonest[{1, 2, 2, 3, 3, 3, 4}]", "{3}"},
+        {"Commonest[{a, E, Sin[y], E, a, 7}]", "{a, E}"},
+        {"Commonest[{1., 2., 2., 3., 3., 3., 4.}]", "{3.0}"},
+        {"Commonest[{a, E, Sin[y], E, a, 1.5, 3}, 10]", "{a, E, Sin[y], 1.5, 3}"}
+    };
+
+    for (int i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {
+        Expr* e = parse_expression(tests[i].input);
+        Expr* res = evaluate(e);
+        char* res_str = expr_to_string(res);
+        if (strcmp(res_str, tests[i].expected) != 0) {
+            printf("Commonest test failed: %s expected %s, got %s\n", tests[i].input, tests[i].expected, res_str);
+            ASSERT(0);
+        }
+        free(res_str);
+        expr_free(e);
+        expr_free(res);
+    }
+}
+
 int main() {
     symtab_init();
     core_init();
+    extern void trig_init(void);
+    trig_init();
     
     TEST(test_min);
     TEST(test_max);
@@ -496,6 +526,7 @@ int main() {
     TEST(test_reverse);
     TEST(test_transpose);
     TEST(test_total);
+    TEST(test_commonest);
     
     printf("All list tests passed!\n");
     return 0;

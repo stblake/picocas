@@ -1149,6 +1149,122 @@ Expr* builtin_split(Expr* res) {
     return result;
 }
 
+typedef struct {
+    Expr* element;
+    int64_t count;
+    size_t first_index;
+} CommonestItem;
+
+static int compare_commonest_items_desc(const void* a, const void* b) {
+    const CommonestItem* item_a = (const CommonestItem*)a;
+    const CommonestItem* item_b = (const CommonestItem*)b;
+    if (item_a->count != item_b->count) {
+        return (item_b->count > item_a->count) ? 1 : -1;
+    }
+    return (item_a->first_index > item_b->first_index) ? 1 : -1;
+}
+
+static int compare_commonest_items_index(const void* a, const void* b) {
+    const CommonestItem* item_a = (const CommonestItem*)a;
+    const CommonestItem* item_b = (const CommonestItem*)b;
+    if (item_a->first_index == item_b->first_index) return 0;
+    return (item_a->first_index > item_b->first_index) ? 1 : -1;
+}
+
+Expr* builtin_commonest(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    if (list->type != EXPR_FUNCTION) return expr_new_function(expr_new_symbol("List"), NULL, 0);
+    
+    size_t count = list->data.function.arg_count;
+    if (count == 0) return expr_new_function(expr_new_symbol("List"), NULL, 0);
+
+    Expr* n_arg = (res->data.function.arg_count == 2) ? res->data.function.args[1] : NULL;
+    int64_t n = -1;
+    bool n_upto = false;
+    if (n_arg) {
+        if (n_arg->type == EXPR_INTEGER) {
+            n = n_arg->data.integer;
+        } else if (n_arg->type == EXPR_FUNCTION && n_arg->data.function.head->type == EXPR_SYMBOL && 
+                   strcmp(n_arg->data.function.head->data.symbol, "UpTo") == 0 && n_arg->data.function.arg_count == 1) {
+            if (n_arg->data.function.args[0]->type == EXPR_INTEGER) {
+                n = n_arg->data.function.args[0]->data.integer;
+                n_upto = true;
+            } else return NULL;
+        } else return NULL;
+    }
+
+    // Tally
+    Expr** unique_elems = malloc(sizeof(Expr*) * count);
+    int64_t* multiplicities = malloc(sizeof(int64_t) * count);
+    size_t unique_count = 0;
+
+    HashTable* ht = ht_create(count * 2 + 1);
+    for (size_t i = 0; i < count; i++) {
+        Expr* elem = list->data.function.args[i];
+        HashNode* node = ht_find(ht, elem);
+        if (node) {
+            multiplicities[node->index]++;
+        } else {
+            unique_elems[unique_count] = expr_copy(elem);
+            multiplicities[unique_count] = 1;
+            ht_insert(ht, unique_elems[unique_count], unique_count);
+            unique_count++;
+        }
+    }
+    ht_free(ht, false);
+
+    CommonestItem* items = malloc(sizeof(CommonestItem) * unique_count);
+    for (size_t i = 0; i < unique_count; i++) {
+        items[i].element = unique_elems[i];
+        items[i].count = multiplicities[i];
+        items[i].first_index = i;
+    }
+    free(multiplicities);
+    free(unique_elems);
+
+    // Sort by count DESC, first_index ASC
+    qsort(items, unique_count, sizeof(CommonestItem), compare_commonest_items_desc);
+
+    size_t target_n;
+    if (n == -1) {
+        // Just the most common ones (highest count)
+        int64_t max_count = items[0].count;
+        target_n = 0;
+        while (target_n < unique_count && items[target_n].count == max_count) {
+            target_n++;
+        }
+    } else {
+        if (n < 0) n = 0;
+        if ((size_t)n > unique_count) {
+            if (!n_upto) {
+                printf("Commonest::dstlms: The requested number of elements %lld is greater than the number of distinct elements %zu. Only %zu elements will be returned.\n", n, unique_count, unique_count);
+            }
+            target_n = unique_count;
+        } else {
+            target_n = (size_t)n;
+        }
+    }
+
+    // Sort target_n items by first_index ASC to preserve original order
+    if (target_n > 0) {
+        qsort(items, target_n, sizeof(CommonestItem), compare_commonest_items_index);
+    }
+
+    Expr** result_args = malloc(sizeof(Expr*) * target_n);
+    for (size_t i = 0; i < target_n; i++) {
+        result_args[i] = items[i].element;
+    }
+    // Free unused elements
+    for (size_t i = target_n; i < unique_count; i++) {
+        expr_free(items[i].element);
+    }
+    free(items);
+
+    return expr_new_function(expr_new_symbol("List"), result_args, target_n);
+}
+
 void list_init(void) {
     symtab_add_builtin("Table", builtin_table);
     symtab_add_builtin("Range", builtin_range);
@@ -1168,6 +1284,7 @@ void list_init(void) {
     symtab_add_builtin("DeleteDuplicates", builtin_deleteduplicates);
     symtab_add_builtin("Split", builtin_split);
     symtab_add_builtin("Total", builtin_total);
+    symtab_add_builtin("Commonest", builtin_commonest);
     symtab_add_builtin("Min", builtin_min);
     symtab_add_builtin("Max", builtin_max);
     symtab_add_builtin("ListQ", builtin_listq);
@@ -1190,6 +1307,7 @@ void list_init(void) {
     symtab_get_def("DeleteDuplicates")->attributes |= ATTR_PROTECTED;
     symtab_get_def("Split")->attributes |= ATTR_PROTECTED;
     symtab_get_def("Total")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("Commonest")->attributes |= ATTR_PROTECTED;
     symtab_get_def("Min")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
     symtab_get_def("Max")->attributes |= ATTR_FLAT | ATTR_NUMERICFUNCTION | ATTR_ONEIDENTITY | ATTR_ORDERLESS | ATTR_PROTECTED;
     symtab_get_def("ListQ")->attributes |= ATTR_PROTECTED;
