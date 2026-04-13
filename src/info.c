@@ -221,4 +221,5 @@ void info_init(void) {
     symtab_set_docstring("Max", "Max[x1, x2, ...]\n\tyields the numerically largest of the xi.\nMax[{x1, x2, ...}, {y1, ...}, ...]\n\tyields the largest element of any of the lists.");
     symtab_set_docstring("Median", "Median[data]\n\tgives the median estimate of the elements in data.\nMedian[dist]\n\tgives the median of the distribution dist.");
 
+    symtab_set_docstring("Quartiles", "Quartiles[data]\n\tgives the {q_1/4, q_2/4, q_3/4} quantile estimates of the elements in data.\nQuartiles[data,{{a,b},{c,d}}]\n\tuses the quantile definition specified by parameters a, b, c, d.\nQuartiles[dist]\n\tgives the {q_1/4, q_2/4, q_3/4} quantiles of the distribution dist.");
 }
