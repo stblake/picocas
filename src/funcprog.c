@@ -874,3 +874,127 @@ Expr* builtin_tuples(Expr* res) {
     }
     return expr_copy(res);
 }
+
+/* ------------------- Permutations ------------------- */
+
+typedef struct {
+    Expr* expr;
+    int count;
+} UniqueElement;
+
+static void permutations_rec(UniqueElement* elements, size_t num_unique, size_t target_len, size_t current_len, 
+                             Expr** current_perm, Expr* head, Expr*** results, size_t* res_count, size_t* res_cap) {
+    if (current_len == target_len) {
+        Expr** p_args = NULL;
+        if (target_len > 0) {
+            p_args = malloc(sizeof(Expr*) * target_len);
+            for (size_t i = 0; i < target_len; i++) p_args[i] = expr_copy(current_perm[i]);
+        }
+        Expr* p = expr_new_function(expr_copy(head), p_args, target_len);
+        if (p_args) free(p_args);
+        if (*res_count >= *res_cap) {
+            *res_cap = (*res_cap == 0) ? 16 : (*res_cap * 2);
+            *results = realloc(*results, sizeof(Expr*) * (*res_cap));
+        }
+        (*results)[(*res_count)++] = p;
+        return;
+    }
+    
+    for (size_t i = 0; i < num_unique; i++) {
+        if (elements[i].count > 0) {
+            elements[i].count--;
+            current_perm[current_len] = elements[i].expr;
+            permutations_rec(elements, num_unique, target_len, current_len + 1, current_perm, head, results, res_count, res_cap);
+            elements[i].count++;
+        }
+    }
+}
+
+Expr* builtin_permutations(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1 || res->data.function.arg_count > 2) return NULL;
+    
+    Expr* list = res->data.function.args[0];
+    if (list->type != EXPR_FUNCTION) return expr_copy(res); 
+    
+    Expr* head = list->data.function.head;
+    size_t len = list->data.function.arg_count;
+    
+    int64_t n_min = len;
+    int64_t n_max = len;
+    int64_t dn = 1;
+    
+    if (res->data.function.arg_count == 2) {
+        Expr* spec = res->data.function.args[1];
+        if (spec->type == EXPR_INTEGER) {
+            int64_t n = spec->data.integer;
+            if (n > (int64_t)len) n = len;
+            if (n < 0) n = 0;
+            n_min = n;
+            n_max = n;
+            dn = 1;
+        } else if (spec->type == EXPR_SYMBOL && strcmp(spec->data.symbol, "All") == 0) {
+            n_min = 0;
+            n_max = len;
+            dn = 1;
+        } else if (spec->type == EXPR_FUNCTION && strcmp(spec->data.function.head->data.symbol, "List") == 0) {
+            size_t s_len = spec->data.function.arg_count;
+            if (s_len == 1 && spec->data.function.args[0]->type == EXPR_INTEGER) {
+                n_min = n_max = spec->data.function.args[0]->data.integer;
+            } else if (s_len == 2 && spec->data.function.args[0]->type == EXPR_INTEGER && spec->data.function.args[1]->type == EXPR_INTEGER) {
+                n_min = spec->data.function.args[0]->data.integer;
+                n_max = spec->data.function.args[1]->data.integer;
+                dn = (n_min <= n_max) ? 1 : -1;
+            } else if (s_len == 3 && spec->data.function.args[0]->type == EXPR_INTEGER && spec->data.function.args[1]->type == EXPR_INTEGER && spec->data.function.args[2]->type == EXPR_INTEGER) {
+                n_min = spec->data.function.args[0]->data.integer;
+                n_max = spec->data.function.args[1]->data.integer;
+                dn = spec->data.function.args[2]->data.integer;
+            }
+        }
+    }
+    
+    UniqueElement* elements = malloc(sizeof(UniqueElement) * len);
+    size_t num_unique = 0;
+    for (size_t i = 0; i < len; i++) {
+        Expr* e = list->data.function.args[i];
+        bool found = false;
+        for (size_t j = 0; j < num_unique; j++) {
+            if (expr_eq(e, elements[j].expr)) {
+                elements[j].count++;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            elements[num_unique].expr = e;
+            elements[num_unique].count = 1;
+            num_unique++;
+        }
+    }
+    
+    Expr** results = NULL;
+    size_t res_count = 0, res_cap = 0;
+    Expr** current_perm = malloc(sizeof(Expr*) * (n_min > n_max ? n_min : n_max) + sizeof(Expr*) * len); 
+    
+    if (dn != 0) {
+        if (dn > 0) {
+            for (int64_t l = n_min; l <= n_max; l += dn) {
+                if (l >= 0 && l <= (int64_t)len) {
+                    permutations_rec(elements, num_unique, l, 0, current_perm, head, &results, &res_count, &res_cap);
+                }
+            }
+        } else {
+            for (int64_t l = n_min; l >= n_max; l += dn) {
+                if (l >= 0 && l <= (int64_t)len) {
+                    permutations_rec(elements, num_unique, l, 0, current_perm, head, &results, &res_count, &res_cap);
+                }
+            }
+        }
+    }
+    
+    free(current_perm);
+    free(elements);
+    
+    Expr* final_res = expr_new_function(expr_new_symbol("List"), results, res_count);
+    if (results) free(results);
+    return final_res;
+}

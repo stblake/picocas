@@ -79,6 +79,16 @@ void test_tuples() {
     assert_eval_eq("Tuples[{{a,b},{x,y,z}},2]", "{{{a, b}, {a, b}}, {{a, b}, {x, y, z}}, {{x, y, z}, {a, b}}, {{x, y, z}, {x, y, z}}}", 0);
 }
 
+void test_permutations() {
+    assert_eval_eq("Permutations[{a,b,c}]", "{{a, b, c}, {a, c, b}, {b, a, c}, {b, c, a}, {c, a, b}, {c, b, a}}", 0);
+    assert_eval_eq("Permutations[{a,b,c,d},{3}]", "{{a, b, c}, {a, b, d}, {a, c, b}, {a, c, d}, {a, d, b}, {a, d, c}, {b, a, c}, {b, a, d}, {b, c, a}, {b, c, d}, {b, d, a}, {b, d, c}, {c, a, b}, {c, a, d}, {c, b, a}, {c, b, d}, {c, d, a}, {c, d, b}, {d, a, b}, {d, a, c}, {d, b, a}, {d, b, c}, {d, c, a}, {d, c, b}}", 0);
+    assert_eval_eq("Permutations[{a,a,b}]", "{{a, a, b}, {a, b, a}, {b, a, a}}", 0);
+    assert_eval_eq("Permutations[{x,x^2,x+1}]", "{{x, x^2, 1 + x}, {x, 1 + x, x^2}, {x^2, x, 1 + x}, {x^2, 1 + x, x}, {1 + x, x, x^2}, {1 + x, x^2, x}}", 0);
+    assert_eval_eq("Permutations[Range[3],All]", "{{}, {1}, {2}, {3}, {1, 2}, {1, 3}, {2, 1}, {2, 3}, {3, 1}, {3, 2}, {1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}, {3, 1, 2}, {3, 2, 1}}", 0);
+    assert_eval_eq("Permutations[Range[4],{4,0,-2}]", "{{1, 2, 3, 4}, {1, 2, 4, 3}, {1, 3, 2, 4}, {1, 3, 4, 2}, {1, 4, 2, 3}, {1, 4, 3, 2}, {2, 1, 3, 4}, {2, 1, 4, 3}, {2, 3, 1, 4}, {2, 3, 4, 1}, {2, 4, 1, 3}, {2, 4, 3, 1}, {3, 1, 2, 4}, {3, 1, 4, 2}, {3, 2, 1, 4}, {3, 2, 4, 1}, {3, 4, 1, 2}, {3, 4, 2, 1}, {4, 1, 2, 3}, {4, 1, 3, 2}, {4, 2, 1, 3}, {4, 2, 3, 1}, {4, 3, 1, 2}, {4, 3, 2, 1}, {1, 2}, {1, 3}, {1, 4}, {2, 1}, {2, 3}, {2, 4}, {3, 1}, {3, 2}, {3, 4}, {4, 1}, {4, 2}, {4, 3}, {}}", 0);
+    assert_eval_eq("Permutations[f[a,b,c]]", "{f[a, b, c], f[a, c, b], f[b, a, c], f[b, c, a], f[c, a, b], f[c, b, a]}", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -86,6 +96,7 @@ int main() {
     test_inner();
     test_outer();
     test_tuples();
+    test_permutations();
     printf("All distribute tests passed!\\n");
     return 0;
 }

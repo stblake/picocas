@@ -92,6 +92,8 @@ void core_init(void) {
     symtab_get_def("Outer")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Tuples", builtin_tuples);
     symtab_get_def("Tuples")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Permutations", builtin_permutations);
+    symtab_get_def("Permutations")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Select", builtin_select);
     symtab_add_builtin("FreeQ", builtin_freeq);
     symtab_add_builtin("Sort", builtin_sort);
