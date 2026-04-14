@@ -241,4 +241,24 @@ void info_init(void) {
     symtab_set_docstring("SeedRandom",
         "SeedRandom[n]\n\tseeds the pseudorandom generator with the integer n.\n"
         "SeedRandom[]\n\treseeds the pseudorandom generator from system entropy.");
+    symtab_set_docstring("RandomComplex",
+        "RandomComplex[]\n\tgives a pseudorandom complex number with real and imaginary parts in the range 0 to 1.\n"
+        "RandomComplex[{zmin, zmax}]\n\tgives a pseudorandom complex number in the rectangle with corners given by the complex numbers zmin and zmax.\n"
+        "RandomComplex[zmax]\n\tgives a pseudorandom complex number in the rectangle whose corners are the origin and zmax.\n"
+        "RandomComplex[range, n]\n\tgives a list of n pseudorandom complex numbers.\n"
+        "RandomComplex[range, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of pseudorandom complex numbers.");
+    symtab_set_docstring("RandomChoice",
+        "RandomChoice[{e1, e2, ...}]\n\tgives a pseudorandom choice of one of the ei.\n"
+        "RandomChoice[list, n]\n\tgives a list of n pseudorandom choices.\n"
+        "RandomChoice[list, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of pseudorandom choices.\n"
+        "RandomChoice[{w1, w2, ...} -> {e1, e2, ...}]\n\tgives a pseudorandom choice weighted by the wi.\n"
+        "RandomChoice[wlist -> elist, n]\n\tgives a list of n weighted choices.\n"
+        "RandomChoice[wlist -> elist, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of weighted choices.");
+    symtab_set_docstring("RandomSample",
+        "RandomSample[{e1, e2, ...}, n]\n\tgives a pseudorandom sample of n of the ei, without replacement.\n"
+        "RandomSample[{w1, w2, ...} -> {e1, e2, ...}, n]\n\tgives a weighted pseudorandom sample of n of the ei.\n"
+        "RandomSample[{e1, e2, ...}]\n\tgives a pseudorandom permutation of the ei.\n"
+        "RandomSample[list, UpTo[n]]\n\tgives a sample of n of the ei, or as many as are available.\n"
+        "RandomSample never samples any element more than once.\n"
+        "Use SeedRandom to seed the pseudorandom generator for reproducible results.");
 }

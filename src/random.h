@@ -5,6 +5,9 @@
 
 Expr* builtin_randominteger(Expr* res);
 Expr* builtin_randomreal(Expr* res);
+Expr* builtin_randomcomplex(Expr* res);
+Expr* builtin_randomchoice(Expr* res);
+Expr* builtin_randomsample(Expr* res);
 Expr* builtin_seedrandom(Expr* res);
 
 void random_init(void);
