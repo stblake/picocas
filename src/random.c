@@ -1,11 +1,17 @@
 /*
- * random.c - RandomInteger and SeedRandom builtins for PicoCAS
+ * random.c - RandomInteger, RandomReal, and SeedRandom builtins for PicoCAS
  *
  * RandomInteger[{imin, imax}]  - pseudorandom integer in [imin, imax]
  * RandomInteger[imax]          - pseudorandom integer in [0, imax]
  * RandomInteger[]              - pseudorandomly gives 0 or 1
  * RandomInteger[range, n]      - list of n pseudorandom integers
  * RandomInteger[range, {n1, n2, ...}] - n1*n2*... array
+ *
+ * RandomReal[]                 - pseudorandom real in [0, 1)
+ * RandomReal[xmax]             - pseudorandom real in [0, xmax)
+ * RandomReal[{xmin, xmax}]    - pseudorandom real in [xmin, xmax)
+ * RandomReal[range, n]         - list of n pseudorandom reals
+ * RandomReal[range, {n1, n2, ...}] - n1*n2*... array
  *
  * SeedRandom[n]                - seeds the RNG with integer n
  * SeedRandom[]                 - reseeds from system entropy
@@ -14,12 +20,14 @@
  */
 
 #include "random.h"
+#include "arithmetic.h"
 #include "symtab.h"
 #include "eval.h"
 #include "attr.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #include <gmp.h>
 
 /* Global GMP random state */
@@ -255,6 +263,197 @@ Expr* builtin_randominteger(Expr* res) {
 }
 
 /*
+ * Convert a numeric expression to a double value.
+ * Supports EXPR_INTEGER, EXPR_REAL, EXPR_BIGINT, and Rational[n,d].
+ * Returns true on success, false if the expression is not numeric.
+ */
+static bool expr_to_real(Expr* e, double* out) {
+    if (e->type == EXPR_INTEGER) {
+        *out = (double)e->data.integer;
+        return true;
+    }
+    if (e->type == EXPR_REAL) {
+        *out = e->data.real;
+        return true;
+    }
+    if (e->type == EXPR_BIGINT) {
+        *out = mpz_get_d(e->data.bigint);
+        return true;
+    }
+    int64_t n, d;
+    if (is_rational(e, &n, &d)) {
+        *out = (double)n / (double)d;
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Generate a single uniform random real in [0, 1).
+ * Uses 53 bits of randomness from GMP for full double precision.
+ */
+static double random_uniform_01(void) {
+    ensure_rand_init();
+    mpz_t big;
+    mpz_init(big);
+    /* 2^53 = 9007199254740992 — enough bits for full double mantissa */
+    mpz_t modulus;
+    mpz_init(modulus);
+    mpz_ui_pow_ui(modulus, 2, 53);
+    mpz_urandomm(big, g_rand_state, modulus);
+    double val = mpz_get_d(big) / 9007199254740992.0;
+    mpz_clear(big);
+    mpz_clear(modulus);
+    return val;
+}
+
+/*
+ * Generate a single random real in [xmin, xmax).
+ */
+static Expr* random_real_range(double xmin, double xmax) {
+    double u = random_uniform_01();
+    double val = xmin + u * (xmax - xmin);
+    return expr_new_real(val);
+}
+
+/*
+ * Parse a real-valued range argument into xmin, xmax.
+ * Supports:
+ *   - Numeric atom: range is [0, val]
+ *   - List[xmin, xmax]: range is [xmin, xmax]
+ * Returns true on success, false if the argument doesn't match.
+ */
+static bool parse_real_range(Expr* arg, double* xmin, double* xmax) {
+    double val;
+    if (expr_to_real(arg, &val)) {
+        *xmin = 0.0;
+        *xmax = val;
+        return true;
+    }
+    /* Check for List[xmin, xmax] */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "List") == 0 &&
+        arg->data.function.arg_count == 2) {
+
+        Expr* lo = arg->data.function.args[0];
+        Expr* hi = arg->data.function.args[1];
+
+        if (!expr_to_real(lo, xmin) || !expr_to_real(hi, xmax))
+            return false;
+
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Build a multi-dimensional array of random reals.
+ * dims is a list expression {n1, n2, ...}, dim_idx is current dimension.
+ */
+static Expr* random_real_array(double xmin, double xmax,
+                               Expr* dims, size_t dim_idx) {
+    if (dim_idx >= dims->data.function.arg_count)
+        return NULL;
+
+    Expr* dim_expr = dims->data.function.args[dim_idx];
+    if (dim_expr->type != EXPR_INTEGER || dim_expr->data.integer < 0)
+        return NULL;
+
+    size_t n = (size_t)dim_expr->data.integer;
+    Expr** elems = malloc(sizeof(Expr*) * n);
+    if (!elems) return NULL;
+
+    bool is_last = (dim_idx == dims->data.function.arg_count - 1);
+
+    for (size_t i = 0; i < n; i++) {
+        if (is_last) {
+            elems[i] = random_real_range(xmin, xmax);
+        } else {
+            elems[i] = random_real_array(xmin, xmax, dims, dim_idx + 1);
+            if (!elems[i]) {
+                for (size_t j = 0; j < i; j++) expr_free(elems[j]);
+                free(elems);
+                return NULL;
+            }
+        }
+    }
+
+    Expr* list = expr_new_function(expr_new_symbol("List"), elems, n);
+    free(elems);
+    return list;
+}
+
+/*
+ * builtin_randomreal - implements RandomReal[...]
+ *
+ * Forms:
+ *   RandomReal[]                   -> random real in [0, 1)
+ *   RandomReal[xmax]              -> random real in [0, xmax)
+ *   RandomReal[{xmin, xmax}]     -> random real in [xmin, xmax)
+ *   RandomReal[range, n]          -> flat list of n values
+ *   RandomReal[range, {n1, n2, ...}] -> nested array
+ */
+Expr* builtin_randomreal(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+
+    /* RandomReal[] -> random real in [0, 1) */
+    if (argc == 0) {
+        return random_real_range(0.0, 1.0);
+    }
+
+    /* RandomReal[range] or RandomReal[range, dims] */
+    if (argc == 1 || argc == 2) {
+        Expr* range_arg = res->data.function.args[0];
+
+        double xmin, xmax;
+        if (!parse_real_range(range_arg, &xmin, &xmax)) {
+            return NULL; /* Can't evaluate: symbolic args etc. */
+        }
+
+        if (argc == 1) {
+            return random_real_range(xmin, xmax);
+        }
+
+        /* argc == 2: RandomReal[range, n] or RandomReal[range, {n1, n2, ...}] */
+        Expr* dim_arg = res->data.function.args[1];
+
+        if (dim_arg->type == EXPR_INTEGER && dim_arg->data.integer >= 0) {
+            /* Flat list of n values */
+            size_t n = (size_t)dim_arg->data.integer;
+            Expr** elems = malloc(sizeof(Expr*) * n);
+            if (!elems) return NULL;
+            for (size_t i = 0; i < n; i++) {
+                elems[i] = random_real_range(xmin, xmax);
+            }
+            Expr* list = expr_new_function(expr_new_symbol("List"), elems, n);
+            free(elems);
+            return list;
+        }
+
+        if (dim_arg->type == EXPR_FUNCTION &&
+            dim_arg->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(dim_arg->data.function.head->data.symbol, "List") == 0) {
+            /* Multi-dimensional array */
+            for (size_t i = 0; i < dim_arg->data.function.arg_count; i++) {
+                Expr* d = dim_arg->data.function.args[i];
+                if (d->type != EXPR_INTEGER || d->data.integer < 0) {
+                    return NULL;
+                }
+            }
+            Expr* result = random_real_array(xmin, xmax, dim_arg, 0);
+            if (!result) return NULL;
+            return result;
+        }
+
+        return NULL; /* Unrecognized second argument */
+    }
+
+    return NULL; /* Too many arguments */
+}
+
+/*
  * builtin_seedrandom - implements SeedRandom[n] and SeedRandom[]
  */
 Expr* builtin_seedrandom(Expr* res) {
@@ -289,6 +488,9 @@ Expr* builtin_seedrandom(Expr* res) {
 void random_init(void) {
     symtab_add_builtin("RandomInteger", builtin_randominteger);
     symtab_get_def("RandomInteger")->attributes |= ATTR_PROTECTED;
+
+    symtab_add_builtin("RandomReal", builtin_randomreal);
+    symtab_get_def("RandomReal")->attributes |= ATTR_PROTECTED;
 
     symtab_add_builtin("SeedRandom", builtin_seedrandom);
     symtab_get_def("SeedRandom")->attributes |= ATTR_PROTECTED;

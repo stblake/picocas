@@ -7,6 +7,19 @@
 #include "print.h"
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+
+/* Helper: parse, evaluate, return real value. Returns NAN on error. */
+static double eval_to_real(const char* input) {
+    Expr* e = parse_expression(input);
+    Expr* r = evaluate(e);
+    double val = NAN;
+    if (r->type == EXPR_REAL) val = r->data.real;
+    else if (r->type == EXPR_INTEGER) val = (double)r->data.integer;
+    expr_free(e);
+    expr_free(r);
+    return val;
+}
 
 /* Helper: parse, evaluate, return integer value. Returns -9999 on error. */
 static int64_t eval_to_int(const char* input) {
@@ -258,6 +271,192 @@ void test_randominteger_single_dim_list(void) {
     free(s);
 }
 
+/* ---- RandomReal[] ---- */
+void test_randomreal_no_args(void) {
+    /* RandomReal[] should return a real in [0, 1) */
+    for (int i = 0; i < 100; i++) {
+        double v = eval_to_real("RandomReal[]");
+        ASSERT_MSG(!isnan(v), "RandomReal[] did not return a number");
+        ASSERT_MSG(v >= 0.0 && v < 1.0,
+                   "RandomReal[] returned %g, expected in [0, 1)", v);
+    }
+}
+
+/* ---- RandomReal[xmax] ---- */
+void test_randomreal_single_arg(void) {
+    /* RandomReal[0] should always return 0.0 */
+    for (int i = 0; i < 20; i++) {
+        double v = eval_to_real("RandomReal[0]");
+        ASSERT_MSG(v == 0.0, "RandomReal[0] returned %g", v);
+    }
+
+    /* RandomReal[10] should return values in [0, 10) */
+    for (int i = 0; i < 200; i++) {
+        double v = eval_to_real("RandomReal[10]");
+        ASSERT_MSG(v >= 0.0 && v < 10.0,
+                   "RandomReal[10] returned %g", v);
+    }
+
+    /* RandomReal[1.5] should return values in [0, 1.5) */
+    for (int i = 0; i < 100; i++) {
+        double v = eval_to_real("RandomReal[1.5]");
+        ASSERT_MSG(v >= 0.0 && v < 1.5,
+                   "RandomReal[1.5] returned %g", v);
+    }
+}
+
+/* ---- RandomReal[{xmin, xmax}] ---- */
+void test_randomreal_range(void) {
+    /* RandomReal[{5.0, 5.0}] should always be 5.0 */
+    for (int i = 0; i < 20; i++) {
+        double v = eval_to_real("RandomReal[{5.0, 5.0}]");
+        ASSERT_MSG(v == 5.0, "RandomReal[{5.0,5.0}] returned %g", v);
+    }
+
+    /* RandomReal[{-3, 3}] should be in [-3, 3) */
+    for (int i = 0; i < 200; i++) {
+        double v = eval_to_real("RandomReal[{-3, 3}]");
+        ASSERT_MSG(v >= -3.0 && v < 3.0,
+                   "RandomReal[{-3,3}] returned %g", v);
+    }
+
+    /* RandomReal[{10, 20}] should be in [10, 20) */
+    for (int i = 0; i < 200; i++) {
+        double v = eval_to_real("RandomReal[{10, 20}]");
+        ASSERT_MSG(v >= 10.0 && v < 20.0,
+                   "RandomReal[{10,20}] returned %g", v);
+    }
+}
+
+/* ---- RandomReal with rational range ---- */
+void test_randomreal_rational_range(void) {
+    /* RandomReal[{1/4, 3/4}] should be in [0.25, 0.75) */
+    for (int i = 0; i < 100; i++) {
+        double v = eval_to_real("RandomReal[{1/4, 3/4}]");
+        ASSERT_MSG(v >= 0.25 && v < 0.75,
+                   "RandomReal[{1/4,3/4}] returned %g", v);
+    }
+}
+
+/* ---- RandomReal[range, n] - flat list ---- */
+void test_randomreal_flat_list(void) {
+    /* RandomReal[{0, 1}, 5] should give a list of 5 elements */
+    char* s = eval_to_str("Length[RandomReal[{0, 1}, 5]]");
+    ASSERT_STR_EQ(s, "5");
+    free(s);
+
+    /* RandomReal[5, 0] should give an empty list */
+    s = eval_to_str("RandomReal[5, 0]");
+    ASSERT_STR_EQ(s, "{}");
+    free(s);
+
+    /* All elements should be reals (Head == Real) */
+    s = eval_to_str("SeedRandom[99]; Head[RandomReal[{0, 1}, 3][[1]]]");
+    ASSERT_STR_EQ(s, "Real");
+    free(s);
+}
+
+/* ---- RandomReal[range, {n1, n2}] - multi-dimensional ---- */
+void test_randomreal_multidim(void) {
+    /* RandomReal[{0, 1}, {3, 4}] should give a 3x4 matrix */
+    char* s = eval_to_str("Dimensions[RandomReal[{0, 1}, {3, 4}]]");
+    ASSERT_STR_EQ(s, "{3, 4}");
+    free(s);
+
+    /* RandomReal[{0, 1}, {2, 3, 4}] should give a 2x3x4 tensor */
+    s = eval_to_str("Dimensions[RandomReal[{0, 1}, {2, 3, 4}]]");
+    ASSERT_STR_EQ(s, "{2, 3, 4}");
+    free(s);
+}
+
+/* ---- SeedRandom reproducibility with RandomReal ---- */
+void test_randomreal_seedrandom(void) {
+    /* SeedRandom[42] should make RandomReal deterministic */
+    assert_eval_eq("SeedRandom[42]", "Null", 0);
+
+    /* Generate a sequence */
+    double seq1[10];
+    for (int i = 0; i < 10; i++) {
+        seq1[i] = eval_to_real("RandomReal[]");
+    }
+
+    /* Re-seed with same value */
+    assert_eval_eq("SeedRandom[42]", "Null", 0);
+
+    /* Should get same sequence */
+    for (int i = 0; i < 10; i++) {
+        double v = eval_to_real("RandomReal[]");
+        ASSERT_MSG(v == seq1[i],
+                   "SeedRandom reproducibility failed at index %d: %g != %g",
+                   i, v, seq1[i]);
+    }
+}
+
+/* ---- Symbolic arguments remain unevaluated ---- */
+void test_randomreal_symbolic(void) {
+    assert_eval_eq("RandomReal[x]", "RandomReal[x]", 0);
+    assert_eval_eq("RandomReal[{a, b}]", "RandomReal[{a, b}]", 0);
+    assert_eval_eq("RandomReal[5, x]", "RandomReal[5, x]", 0);
+}
+
+/* ---- Attributes check ---- */
+void test_randomreal_attributes(void) {
+    char* s = eval_to_str("MemberQ[Attributes[RandomReal], Protected]");
+    ASSERT_STR_EQ(s, "True");
+    free(s);
+}
+
+/* ---- Information/docstring ---- */
+void test_randomreal_info(void) {
+    Expr* e = parse_expression("Information[RandomReal]");
+    Expr* r = evaluate(e);
+    ASSERT(r->type == EXPR_STRING);
+    expr_free(e);
+    expr_free(r);
+}
+
+/* ---- RandomReal[{xmin, xmax}] with negative range ---- */
+void test_randomreal_negative_range(void) {
+    for (int i = 0; i < 100; i++) {
+        double v = eval_to_real("RandomReal[{-10, -5}]");
+        ASSERT_MSG(v >= -10.0 && v < -5.0,
+                   "RandomReal[{-10,-5}] returned %g", v);
+    }
+}
+
+/* ---- Coverage: values spread across range ---- */
+void test_randomreal_coverage(void) {
+    /* With enough trials, RandomReal[{0,1}] should produce values
+       in both [0, 0.5) and [0.5, 1) */
+    int seen_low = 0, seen_high = 0;
+    for (int i = 0; i < 200; i++) {
+        double v = eval_to_real("RandomReal[]");
+        if (v < 0.5) seen_low = 1;
+        if (v >= 0.5) seen_high = 1;
+    }
+    ASSERT_MSG(seen_low && seen_high,
+               "RandomReal[] did not produce values in both halves of [0,1)");
+}
+
+/* ---- RandomReal[{xmin, xmax}] with single dim list ---- */
+void test_randomreal_single_dim_list(void) {
+    char* s = eval_to_str("Dimensions[RandomReal[{0, 1}, {5}]]");
+    ASSERT_STR_EQ(s, "{5}");
+    free(s);
+}
+
+/* ---- RandomReal always returns EXPR_REAL type ---- */
+void test_randomreal_type(void) {
+    /* Even with integer range args, result should be Real */
+    char* s = eval_to_str("Head[RandomReal[{0, 10}]]");
+    ASSERT_STR_EQ(s, "Real");
+    free(s);
+
+    s = eval_to_str("Head[RandomReal[]]");
+    ASSERT_STR_EQ(s, "Real");
+    free(s);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -277,6 +476,22 @@ int main(void) {
     TEST(test_randominteger_attributes);
     TEST(test_randominteger_info);
     TEST(test_randominteger_single_dim_list);
+
+    /* RandomReal tests */
+    TEST(test_randomreal_no_args);
+    TEST(test_randomreal_single_arg);
+    TEST(test_randomreal_range);
+    TEST(test_randomreal_rational_range);
+    TEST(test_randomreal_flat_list);
+    TEST(test_randomreal_multidim);
+    TEST(test_randomreal_seedrandom);
+    TEST(test_randomreal_symbolic);
+    TEST(test_randomreal_attributes);
+    TEST(test_randomreal_info);
+    TEST(test_randomreal_negative_range);
+    TEST(test_randomreal_coverage);
+    TEST(test_randomreal_single_dim_list);
+    TEST(test_randomreal_type);
 
     printf("All random tests passed!\n");
     return 0;

@@ -1471,6 +1471,44 @@ In[7]:= IntegerQ[RandomInteger[10^20]]
 Out[7]= True
 ```
 
+#### RandomReal
+Gives pseudorandom real numbers.
+- `RandomReal[]`: gives a pseudorandom real number in the range 0 to 1.
+- `RandomReal[{xmin, xmax}]`: gives a pseudorandom real number in the range xmin to xmax.
+- `RandomReal[xmax]`: gives a pseudorandom real number in the range 0 to xmax.
+- `RandomReal[range, n]`: gives a list of n pseudorandom reals.
+- `RandomReal[range, {n1, n2, ...}]`: gives an n1 x n2 x ... array of pseudorandom reals.
+
+**Features**:
+- `Protected`.
+- RandomReal[{xmin, xmax}] chooses reals with a uniform probability distribution in the range xmin to xmax.
+- RandomReal gives a different sequence of pseudorandom reals whenever you run PicoCAS. You can start with a particular seed using SeedRandom.
+- Uses 53 bits of randomness for full double-precision mantissa coverage.
+- Accepts integer, real, rational, and bigint range arguments.
+
+```mathematica
+In[1]:= SeedRandom[42]; RandomReal[]
+Out[1]= 0.376082
+
+In[2]:= SeedRandom[42]; RandomReal[10]
+Out[2]= 3.76082
+
+In[3]:= SeedRandom[42]; RandomReal[{-1, 1}]
+Out[3]= -0.247836
+
+In[4]:= SeedRandom[42]; Length[RandomReal[{0, 1}, 5]]
+Out[4]= 5
+
+In[5]:= SeedRandom[42]; Dimensions[RandomReal[{0, 1}, {3, 4}]]
+Out[5]= {3, 4}
+
+In[6]:= SeedRandom[42]; RandomReal[{0, 1}, 0]
+Out[6]= {}
+
+In[7]:= RandomReal[x]
+Out[7]= RandomReal[x]
+```
+
 #### SeedRandom
 Resets the pseudorandom generator.
 - `SeedRandom[n]`: seeds the generator with integer n.

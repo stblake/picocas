@@ -232,6 +232,12 @@ void info_init(void) {
         "RandomInteger[]\n\tpseudorandomly gives 0 or 1.\n"
         "RandomInteger[range, n]\n\tgives a list of n pseudorandom integers.\n"
         "RandomInteger[range, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of pseudorandom integers.");
+    symtab_set_docstring("RandomReal",
+        "RandomReal[]\n\tgives a pseudorandom real number in the range 0 to 1.\n"
+        "RandomReal[{xmin, xmax}]\n\tgives a pseudorandom real number in the range xmin to xmax.\n"
+        "RandomReal[xmax]\n\tgives a pseudorandom real number in the range 0 to xmax.\n"
+        "RandomReal[range, n]\n\tgives a list of n pseudorandom reals.\n"
+        "RandomReal[range, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of pseudorandom reals.");
     symtab_set_docstring("SeedRandom",
         "SeedRandom[n]\n\tseeds the pseudorandom generator with the integer n.\n"
         "SeedRandom[]\n\treseeds the pseudorandom generator from system entropy.");

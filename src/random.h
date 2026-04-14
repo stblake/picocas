@@ -4,6 +4,7 @@
 #include "expr.h"
 
 Expr* builtin_randominteger(Expr* res);
+Expr* builtin_randomreal(Expr* res);
 Expr* builtin_seedrandom(Expr* res);
 
 void random_init(void);
