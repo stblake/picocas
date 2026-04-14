@@ -204,6 +204,12 @@ target_include_directories(print_tests PRIVATE ../src)
 add_executable(random_tests test_random.c ${COMMON_SRC})
 target_include_directories(random_tests PRIVATE ../src)
 
+add_executable(evaluate_tests test_evaluate.c ${COMMON_SRC})
+target_include_directories(evaluate_tests PRIVATE ../src)
+
+add_executable(releasehold_tests test_releasehold.c ${COMMON_SRC})
+target_include_directories(releasehold_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -242,6 +248,8 @@ if(USE_ECM)
     add_dependencies(integrals_tests build_ecm)
     add_dependencies(print_tests build_ecm)
     add_dependencies(random_tests build_ecm)
+    add_dependencies(evaluate_tests build_ecm)
+    add_dependencies(releasehold_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

@@ -301,7 +301,17 @@ Expr* evaluate_step(Expr* e) {
                 if (i == 0 && (attrs & ATTR_HOLDFIRST)) hold = true;
                 if (i > 0 && (attrs & ATTR_HOLDREST)) hold = true;
 
-                if (hold) {                    new_args[i] = expr_copy(e->data.function.args[i]);
+                if (hold) {
+                    /* Check for Evaluate[expr] - overrides Hold attributes */
+                    Expr* arg = e->data.function.args[i];
+                    if (arg->type == EXPR_FUNCTION &&
+                        arg->data.function.head->type == EXPR_SYMBOL &&
+                        strcmp(arg->data.function.head->data.symbol, "Evaluate") == 0 &&
+                        arg->data.function.arg_count == 1) {
+                        new_args[i] = evaluate(arg->data.function.args[0]);
+                    } else {
+                        new_args[i] = expr_copy(e->data.function.args[i]);
+                    }
                 } else {
                     new_args[i] = evaluate(e->data.function.args[i]);
                 }

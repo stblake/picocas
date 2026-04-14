@@ -126,6 +126,8 @@ void info_init(void) {
     symtab_set_docstring("For", "For[start, test, incr, body] executes start, then repeatedly evaluates body and incr until test fails to give True.");
     symtab_set_docstring("If", "If[condition, t, f] gives t if condition evaluates to True, and f if it evaluates to False.\nIf[condition, t, f, u] gives u if condition evaluates to neither True nor False.");
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
+    symtab_set_docstring("Evaluate", "Evaluate[expr]\n\tcauses expr to be evaluated even if it appears as the argument of a function whose attributes specify that it should be held unevaluated.\nEvaluate only overrides HoldFirst, HoldRest, and HoldAll attributes when it appears directly as the head of the function argument that would otherwise be held.\nEvaluate does not override HoldAllComplete.");
+    symtab_set_docstring("ReleaseHold", "ReleaseHold[expr]\n\tremoves Hold, HoldForm, HoldPattern, and HoldComplete in expr.\nReleaseHold removes only one layer of Hold etc.; it does not remove inner occurrences in nested Hold etc. functions.");
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");
     symtab_set_docstring("SetDelayed", "lhs := rhs assigns rhs to lhs, evaluating it only when needed.");
     symtab_set_docstring("Default", "Default[f] gives the default value for arguments of the function f obtained with a _. pattern object.");

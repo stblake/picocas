@@ -955,6 +955,83 @@ Out[2]= Null
 In[1]:= HoldForm[1 + 1]
 Out[1]= 1 + 1
 ```
+#### Evaluate
+Causes `expr` to be evaluated even if it appears as the argument of a function whose attributes specify that it should be held unevaluated.
+- `Evaluate[expr]`
+
+**Features**:
+- `Protected`.
+- `Evaluate` only overrides `HoldFirst`, `HoldRest`, and `HoldAll` attributes when it appears directly as the head of the function argument that would otherwise be held.
+- `Evaluate` does not override `HoldAllComplete`.
+- `Evaluate` works only on the first level, directly inside a held function. It does not penetrate into deeper subexpressions.
+- Outside of held contexts, `Evaluate` acts as identity.
+
+```mathematica
+In[1]:= Evaluate[1+1]
+Out[1]= 2
+
+In[2]:= Hold[Evaluate[1+1], 2+2]
+Out[2]= Hold[2, 2 + 2]
+
+In[3]:= Hold[Evaluate[1+1], Evaluate[2+2], Evaluate[3+3]]
+Out[3]= Hold[2, 4, 6]
+
+In[4]:= Hold[f[Evaluate[1+2]]]
+Out[4]= Hold[f[Evaluate[1 + 2]]]
+
+In[5]:= Hold[Evaluate[Sin[Pi/6]]]
+Out[5]= Hold[1/2]
+
+In[6]:= Hold[Evaluate[2^10]]
+Out[6]= Hold[1024]
+
+In[7]:= HoldForm[Evaluate[1+1]]
+Out[7]= 2
+
+In[8]:= Hold[Evaluate[Length[{a,b,c}]]]
+Out[8]= Hold[3]
+
+In[9]:= Evaluate[Head[{1,2,3}]]
+Out[9]= List
+```
+
+#### ReleaseHold
+Removes `Hold`, `HoldForm`, `HoldPattern`, and `HoldComplete` in `expr`.
+- `ReleaseHold[expr]`
+
+**Features**:
+- `Protected`.
+- `ReleaseHold` removes only one layer of `Hold` etc.; it does not remove inner occurrences in nested `Hold` etc. functions.
+- `ReleaseHold` traverses into subexpressions of `expr` and strips any hold wrapper it finds, but does not recurse into the contents of the stripped wrapper.
+- When `expr` does not contain any hold wrappers, `ReleaseHold` acts as identity.
+- `ReleaseHold` removes all standard unevaluated containers: `Hold`, `HoldForm`, `HoldComplete`, and `HoldPattern`.
+
+```mathematica
+In[1]:= Hold[1+1]
+Out[1]= Hold[1 + 1]
+
+In[2]:= ReleaseHold[Hold[1+1]]
+Out[2]= 2
+
+In[3]:= ReleaseHold /@ {Hold[1+2], HoldForm[2+3], HoldComplete[3+4]}
+Out[3]= {3, 5, 7}
+
+In[4]:= ReleaseHold[f[Hold[1+2]]]
+Out[4]= f[3]
+
+In[5]:= ReleaseHold[f[Hold[1+g[Hold[2+3]]]]]
+Out[5]= f[1 + g[Hold[2 + 3]]]
+
+In[6]:= ReleaseHold[Hold[Hold[1+1]]]
+Out[6]= Hold[1 + 1]
+
+In[7]:= ReleaseHold[Hold[Sin[Pi/6]]]
+Out[7]= 1/2
+
+In[8]:= ReleaseHold[{f[Hold[1+2]], g[HoldForm[3+4]]}]
+Out[8]= {f[3], g[7]}
+```
+
 #### InputForm
 - `InputForm[expr]` causes `expr` to be printed in a form suitable for input (standard form in PicoCAS).
 

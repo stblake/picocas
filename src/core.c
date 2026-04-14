@@ -127,6 +127,10 @@ void core_init(void) {
     symtab_add_builtin("FullForm", builtin_fullform);
     symtab_add_builtin("InputForm", builtin_inputform);
     symtab_add_builtin("Information", builtin_information);
+    symtab_add_builtin("Evaluate", builtin_evaluate);
+    symtab_get_def("Evaluate")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("ReleaseHold", builtin_releasehold);
+    symtab_get_def("ReleaseHold")->attributes |= ATTR_PROTECTED;
 
     symtab_get_def("AtomQ")->attributes |= ATTR_PROTECTED;
     symtab_get_def("NumberQ")->attributes |= ATTR_PROTECTED;
@@ -281,6 +285,98 @@ Expr* builtin_dimensions(Expr* res) {
         }
     }
     return NULL;
+}
+
+/*
+ * is_hold_head:
+ * Returns true if the symbol name is one of the standard hold wrappers
+ * that ReleaseHold should strip.
+ */
+static bool is_hold_head(const char* name) {
+    return (strcmp(name, "Hold") == 0 ||
+            strcmp(name, "HoldForm") == 0 ||
+            strcmp(name, "HoldPattern") == 0 ||
+            strcmp(name, "HoldComplete") == 0);
+}
+
+/*
+ * release_hold_recursive:
+ * Traverses the expression tree and replaces any Hold/HoldForm/HoldPattern/
+ * HoldComplete wrapper with its contents. Does NOT recurse into the
+ * replacement contents (only removes one layer).
+ * Returns a new expression (caller owns it).
+ */
+static Expr* release_hold_recursive(Expr* e) {
+    if (!e) return NULL;
+
+    /* Check if e itself is a hold wrapper */
+    if (e->type == EXPR_FUNCTION &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        is_hold_head(e->data.function.head->data.symbol)) {
+        /* Strip the wrapper: for single arg, return the arg as-is (copy).
+         * For multiple args, wrap in Sequence. */
+        if (e->data.function.arg_count == 1) {
+            return expr_copy(e->data.function.args[0]);
+        } else {
+            /* Multiple args: wrap in Sequence */
+            Expr** args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                args[i] = expr_copy(e->data.function.args[i]);
+            }
+            Expr* seq = expr_new_function(expr_new_symbol("Sequence"), args, e->data.function.arg_count);
+            free(args);
+            return seq;
+        }
+    }
+
+    /* Not a hold wrapper: recurse into arguments (but not head) */
+    if (e->type == EXPR_FUNCTION) {
+        bool changed = false;
+        Expr** new_args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            new_args[i] = release_hold_recursive(e->data.function.args[i]);
+            if (!expr_eq(new_args[i], e->data.function.args[i])) {
+                changed = true;
+            }
+        }
+        if (changed) {
+            Expr* result = expr_new_function(expr_copy(e->data.function.head), new_args, e->data.function.arg_count);
+            free(new_args);
+            return result;
+        }
+        /* No changes: free copies and return original copy */
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            expr_free(new_args[i]);
+        }
+        free(new_args);
+        return expr_copy(e);
+    }
+
+    /* Atomic expression: return copy */
+    return expr_copy(e);
+}
+
+/*
+ * builtin_releasehold:
+ * ReleaseHold[expr] removes Hold, HoldForm, HoldPattern, and HoldComplete
+ * wrappers from expr. Only removes one layer; does not strip nested holds.
+ */
+Expr* builtin_releasehold(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+    return release_hold_recursive(arg);
+}
+
+/*
+ * builtin_evaluate:
+ * Evaluate[expr] causes expr to be evaluated even if it appears as the
+ * argument of a function whose attributes specify that it should be held
+ * unevaluated. When Evaluate appears outside a held context, it acts as
+ * identity since args are already evaluated by the standard pipeline.
+ */
+Expr* builtin_evaluate(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return expr_copy(res->data.function.args[0]);
 }
 
 Expr* builtin_append(Expr* res) {

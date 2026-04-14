@@ -29,6 +29,8 @@ Expr* builtin_depth(Expr* res);
 Expr* builtin_leafcount(Expr* res);
 Expr* builtin_bytecount(Expr* res);
 Expr* builtin_information(Expr* res);
+Expr* builtin_evaluate(Expr* res);
+Expr* builtin_releasehold(Expr* res);
 
 // Initialize core builtins
 void core_init(void);
