@@ -1,0 +1,295 @@
+/*
+ * random.c - RandomInteger and SeedRandom builtins for PicoCAS
+ *
+ * RandomInteger[{imin, imax}]  - pseudorandom integer in [imin, imax]
+ * RandomInteger[imax]          - pseudorandom integer in [0, imax]
+ * RandomInteger[]              - pseudorandomly gives 0 or 1
+ * RandomInteger[range, n]      - list of n pseudorandom integers
+ * RandomInteger[range, {n1, n2, ...}] - n1*n2*... array
+ *
+ * SeedRandom[n]                - seeds the RNG with integer n
+ * SeedRandom[]                 - reseeds from system entropy
+ *
+ * Uses GMP's random state (gmp_randstate_t) for bignum support.
+ */
+
+#include "random.h"
+#include "symtab.h"
+#include "eval.h"
+#include "attr.h"
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <gmp.h>
+
+/* Global GMP random state */
+static gmp_randstate_t g_rand_state;
+static int g_rand_initialized = 0;
+
+/* Ensure RNG is initialized */
+static void ensure_rand_init(void) {
+    if (!g_rand_initialized) {
+        gmp_randinit_mt(g_rand_state);
+        gmp_randseed_ui(g_rand_state, (unsigned long)time(NULL) ^ (unsigned long)clock());
+        g_rand_initialized = 1;
+    }
+}
+
+/*
+ * Generate a single random integer in [imin, imax] (inclusive).
+ * imin and imax are given as mpz_t values.
+ * Returns a new Expr* (EXPR_INTEGER or EXPR_BIGINT, normalized).
+ */
+static Expr* random_integer_range(const mpz_t imin, const mpz_t imax) {
+    ensure_rand_init();
+
+    /* range_size = imax - imin + 1 */
+    mpz_t range_size, result;
+    mpz_init(range_size);
+    mpz_init(result);
+
+    mpz_sub(range_size, imax, imin);
+    mpz_add_ui(range_size, range_size, 1);
+
+    /* If range_size <= 0, the range is empty or invalid */
+    if (mpz_sgn(range_size) <= 0) {
+        mpz_clear(range_size);
+        mpz_clear(result);
+        return NULL;
+    }
+
+    /* result = random in [0, range_size) */
+    mpz_urandomm(result, g_rand_state, range_size);
+
+    /* result = result + imin */
+    mpz_add(result, result, imin);
+
+    Expr* e = expr_bigint_normalize(expr_new_bigint_from_mpz(result));
+    mpz_clear(range_size);
+    mpz_clear(result);
+    return e;
+}
+
+/*
+ * Parse a range argument into imin, imax (as mpz_t).
+ * Supports:
+ *   - Integer or BigInt atom: range is [0, val]
+ *   - List[imin, imax]: range is [imin, imax]
+ * Returns true on success, false if the argument doesn't match.
+ */
+static bool parse_range(Expr* arg, mpz_t imin, mpz_t imax) {
+    if (arg->type == EXPR_INTEGER) {
+        mpz_set_si(imin, 0);
+        mpz_set_si(imax, arg->data.integer);
+        return true;
+    }
+    if (arg->type == EXPR_BIGINT) {
+        mpz_set_si(imin, 0);
+        mpz_set(imax, arg->data.bigint);
+        return true;
+    }
+    /* Check for List[imin, imax] */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "List") == 0 &&
+        arg->data.function.arg_count == 2) {
+
+        Expr* lo = arg->data.function.args[0];
+        Expr* hi = arg->data.function.args[1];
+
+        if (!expr_is_integer_like(lo) || !expr_is_integer_like(hi))
+            return false;
+
+        expr_to_mpz(lo, imin);
+        expr_to_mpz(hi, imax);
+        return true;
+    }
+    return false;
+}
+
+/*
+ * Build a multi-dimensional array of random integers.
+ * dims is a list expression {n1, n2, ...}, dim_idx is current dimension.
+ */
+static Expr* random_array(const mpz_t imin, const mpz_t imax,
+                          Expr* dims, size_t dim_idx) {
+    if (dim_idx >= dims->data.function.arg_count)
+        return NULL;
+
+    Expr* dim_expr = dims->data.function.args[dim_idx];
+    if (dim_expr->type != EXPR_INTEGER || dim_expr->data.integer < 0)
+        return NULL;
+
+    size_t n = (size_t)dim_expr->data.integer;
+    Expr** elems = malloc(sizeof(Expr*) * n);
+    if (!elems) return NULL;
+
+    bool is_last = (dim_idx == dims->data.function.arg_count - 1);
+
+    for (size_t i = 0; i < n; i++) {
+        if (is_last) {
+            elems[i] = random_integer_range(imin, imax);
+            if (!elems[i]) {
+                for (size_t j = 0; j < i; j++) expr_free(elems[j]);
+                free(elems);
+                return NULL;
+            }
+        } else {
+            elems[i] = random_array(imin, imax, dims, dim_idx + 1);
+            if (!elems[i]) {
+                for (size_t j = 0; j < i; j++) expr_free(elems[j]);
+                free(elems);
+                return NULL;
+            }
+        }
+    }
+
+    Expr* list = expr_new_function(expr_new_symbol("List"), elems, n);
+    free(elems);
+    return list;
+}
+
+/*
+ * builtin_randominteger - implements RandomInteger[...]
+ *
+ * Forms:
+ *   RandomInteger[]              -> 0 or 1
+ *   RandomInteger[imax]          -> random in [0, imax]
+ *   RandomInteger[{imin, imax}]  -> random in [imin, imax]
+ *   RandomInteger[range, n]      -> flat list of n values
+ *   RandomInteger[range, {n1, n2, ...}] -> nested array
+ */
+Expr* builtin_randominteger(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+
+    /* RandomInteger[] -> 0 or 1 */
+    if (argc == 0) {
+        mpz_t lo, hi;
+        mpz_init_set_si(lo, 0);
+        mpz_init_set_si(hi, 1);
+        Expr* result = random_integer_range(lo, hi);
+        mpz_clear(lo);
+        mpz_clear(hi);
+        return result;
+    }
+
+    /* RandomInteger[range] or RandomInteger[range, dims] */
+    if (argc == 1 || argc == 2) {
+        Expr* range_arg = res->data.function.args[0];
+
+        mpz_t imin, imax;
+        mpz_init(imin);
+        mpz_init(imax);
+
+        if (!parse_range(range_arg, imin, imax)) {
+            mpz_clear(imin);
+            mpz_clear(imax);
+            return NULL; /* Can't evaluate: symbolic args etc. */
+        }
+
+        if (argc == 1) {
+            /* Single random integer */
+            Expr* result = random_integer_range(imin, imax);
+            mpz_clear(imin);
+            mpz_clear(imax);
+            if (!result) return NULL;
+            return result;
+        }
+
+        /* argc == 2: RandomInteger[range, n] or RandomInteger[range, {n1, n2, ...}] */
+        Expr* dim_arg = res->data.function.args[1];
+
+        if (dim_arg->type == EXPR_INTEGER && dim_arg->data.integer >= 0) {
+            /* Flat list of n values */
+            size_t n = (size_t)dim_arg->data.integer;
+            Expr** elems = malloc(sizeof(Expr*) * n);
+            if (!elems) {
+                mpz_clear(imin);
+                mpz_clear(imax);
+                return NULL;
+            }
+            for (size_t i = 0; i < n; i++) {
+                elems[i] = random_integer_range(imin, imax);
+                if (!elems[i]) {
+                    for (size_t j = 0; j < i; j++) expr_free(elems[j]);
+                    free(elems);
+                    mpz_clear(imin);
+                    mpz_clear(imax);
+                    return NULL;
+                }
+            }
+            Expr* list = expr_new_function(expr_new_symbol("List"), elems, n);
+            free(elems);
+            mpz_clear(imin);
+            mpz_clear(imax);
+            return list;
+        }
+
+        if (dim_arg->type == EXPR_FUNCTION &&
+            dim_arg->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(dim_arg->data.function.head->data.symbol, "List") == 0) {
+            /* Multi-dimensional array */
+            /* Validate all dimensions are non-negative integers */
+            for (size_t i = 0; i < dim_arg->data.function.arg_count; i++) {
+                Expr* d = dim_arg->data.function.args[i];
+                if (d->type != EXPR_INTEGER || d->data.integer < 0) {
+                    mpz_clear(imin);
+                    mpz_clear(imax);
+                    return NULL;
+                }
+            }
+            Expr* result = random_array(imin, imax, dim_arg, 0);
+            mpz_clear(imin);
+            mpz_clear(imax);
+            if (!result) return NULL;
+            return result;
+        }
+
+        mpz_clear(imin);
+        mpz_clear(imax);
+        return NULL; /* Unrecognized second argument */
+    }
+
+    return NULL; /* Too many arguments */
+}
+
+/*
+ * builtin_seedrandom - implements SeedRandom[n] and SeedRandom[]
+ */
+Expr* builtin_seedrandom(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+
+    if (argc == 0) {
+        /* Re-seed from system entropy */
+        ensure_rand_init();
+        gmp_randseed_ui(g_rand_state, (unsigned long)time(NULL) ^ (unsigned long)clock());
+        return expr_new_symbol("Null");
+    }
+
+    if (argc == 1) {
+        Expr* arg = res->data.function.args[0];
+        if (arg->type == EXPR_INTEGER) {
+            ensure_rand_init();
+            gmp_randseed_ui(g_rand_state, (unsigned long)arg->data.integer);
+            return expr_new_symbol("Null");
+        }
+        if (arg->type == EXPR_BIGINT) {
+            ensure_rand_init();
+            gmp_randseed(g_rand_state, arg->data.bigint);
+            return expr_new_symbol("Null");
+        }
+        return NULL; /* Non-integer seed */
+    }
+
+    return NULL; /* Too many arguments */
+}
+
+void random_init(void) {
+    symtab_add_builtin("RandomInteger", builtin_randominteger);
+    symtab_get_def("RandomInteger")->attributes |= ATTR_PROTECTED;
+
+    symtab_add_builtin("SeedRandom", builtin_seedrandom);
+    symtab_get_def("SeedRandom")->attributes |= ATTR_PROTECTED;
+}

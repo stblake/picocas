@@ -42,6 +42,7 @@
 #include <gmp.h>
 #include "rat.h"
 #include "parfrac.h"
+#include "random.h"
 
 void core_init(void) {
     parfrac_init();
@@ -183,6 +184,7 @@ void core_init(void) {
     datetime_init();
     linalg_init();
     load_init();
+    random_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {

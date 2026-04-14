@@ -1431,6 +1431,64 @@ In[1]:= StandardDeviation[{1, 2, 3}]
 Out[1]= 1
 ```
 
+### Random Number Generation
+
+#### RandomInteger
+Gives pseudorandom integers.
+- `RandomInteger[{imin, imax}]`: gives a pseudorandom integer in the range {imin, ..., imax}.
+- `RandomInteger[imax]`: gives a pseudorandom integer in the range {0, ..., imax}.
+- `RandomInteger[]`: pseudorandomly gives 0 or 1.
+- `RandomInteger[range, n]`: gives a list of n pseudorandom integers.
+- `RandomInteger[range, {n1, n2, ...}]`: gives an n1 x n2 x ... array of pseudorandom integers.
+
+**Features**:
+- `Protected`.
+- RandomInteger[{imin, imax}] chooses integers in the range {imin, ..., imax} with equal probability.
+- RandomInteger[] gives 0 or 1 with probability 1/2.
+- RandomInteger gives a different sequence of pseudorandom integers whenever you run PicoCAS. You can start with a particular seed using SeedRandom.
+- Returns bignums when the range exceeds 64-bit integer limits.
+
+```mathematica
+In[1]:= SeedRandom[42]; RandomInteger[]
+Out[1]= 1
+
+In[2]:= SeedRandom[42]; RandomInteger[10]
+Out[2]= 6
+
+In[3]:= SeedRandom[42]; RandomInteger[{1, 6}]
+Out[3]= 4
+
+In[4]:= SeedRandom[42]; RandomInteger[{0, 9}, 5]
+Out[4]= {6, 9, 4, 1, 3}
+
+In[5]:= SeedRandom[42]; Dimensions[RandomInteger[{0, 1}, {3, 4}]]
+Out[5]= {3, 4}
+
+In[6]:= SeedRandom[42]; RandomInteger[{-10, -5}]
+Out[6]= -6
+
+In[7]:= IntegerQ[RandomInteger[10^20]]
+Out[7]= True
+```
+
+#### SeedRandom
+Resets the pseudorandom generator.
+- `SeedRandom[n]`: seeds the generator with integer n.
+- `SeedRandom[]`: reseeds from system entropy.
+
+**Features**:
+- `Protected`.
+- After `SeedRandom[n]`, the sequence of pseudorandom numbers generated will be the same each time.
+- Accepts bignums as seeds.
+
+```mathematica
+In[1]:= SeedRandom[42]; {RandomInteger[], RandomInteger[], RandomInteger[]}
+Out[1]= {1, 1, 0}
+
+In[2]:= SeedRandom[42]; {RandomInteger[], RandomInteger[], RandomInteger[]}
+Out[2]= {1, 1, 0}
+```
+
 ### Arithmetic and Algebra
 
 #### Plus (+)

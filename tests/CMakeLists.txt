@@ -75,6 +75,7 @@ set(COMMON_SRC
     ../src/iter.c
     ../src/cond.c
     ../src/default_helper.c
+    ../src/random.c
 )
 
 add_executable(expr_tests test_expr.c test_part.c ${COMMON_SRC})
@@ -200,6 +201,9 @@ endif()
 add_executable(print_tests test_print.c ${COMMON_SRC})
 target_include_directories(print_tests PRIVATE ../src)
 
+add_executable(random_tests test_random.c ${COMMON_SRC})
+target_include_directories(random_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -237,6 +241,7 @@ if(USE_ECM)
     add_dependencies(bigint_tests build_ecm)
     add_dependencies(integrals_tests build_ecm)
     add_dependencies(print_tests build_ecm)
+    add_dependencies(random_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

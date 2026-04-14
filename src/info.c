@@ -224,4 +224,15 @@ void info_init(void) {
     symtab_set_docstring("Median", "Median[data]\n\tgives the median estimate of the elements in data.\nMedian[dist]\n\tgives the median of the distribution dist.");
 
     symtab_set_docstring("Quartiles", "Quartiles[data]\n\tgives the {q_1/4, q_2/4, q_3/4} quantile estimates of the elements in data.\nQuartiles[data,{{a,b},{c,d}}]\n\tuses the quantile definition specified by parameters a, b, c, d.\nQuartiles[dist]\n\tgives the {q_1/4, q_2/4, q_3/4} quantiles of the distribution dist.");
+
+    // Random
+    symtab_set_docstring("RandomInteger",
+        "RandomInteger[{imin, imax}]\n\tgives a pseudorandom integer in the range {imin, ..., imax}.\n"
+        "RandomInteger[imax]\n\tgives a pseudorandom integer in the range {0, ..., imax}.\n"
+        "RandomInteger[]\n\tpseudorandomly gives 0 or 1.\n"
+        "RandomInteger[range, n]\n\tgives a list of n pseudorandom integers.\n"
+        "RandomInteger[range, {n1, n2, ...}]\n\tgives an n1 x n2 x ... array of pseudorandom integers.");
+    symtab_set_docstring("SeedRandom",
+        "SeedRandom[n]\n\tseeds the pseudorandom generator with the integer n.\n"
+        "SeedRandom[]\n\treseeds the pseudorandom generator from system entropy.");
 }
