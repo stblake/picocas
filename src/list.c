@@ -1,4 +1,5 @@
 #include "list.h"
+#include <inttypes.h>
 #include "symtab.h"
 #include "eval.h"
 #include "core.h"
@@ -1239,7 +1240,7 @@ Expr* builtin_commonest(Expr* res) {
         if (n < 0) n = 0;
         if ((size_t)n > unique_count) {
             if (!n_upto) {
-                printf("Commonest::dstlms: The requested number of elements %lld is greater than the number of distinct elements %zu. Only %zu elements will be returned.\n", n, unique_count, unique_count);
+                printf("Commonest::dstlms: The requested number of elements %" PRId64 " is greater than the number of distinct elements %zu. Only %zu elements will be returned.\n", n, unique_count, unique_count);
             }
             target_n = unique_count;
         } else {
