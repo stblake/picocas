@@ -664,6 +664,61 @@ void test_factor_methods() {
     assert_eval_eq("FactorInteger[8051, Method -> \"CFRAC\"]", "List[List[83, 1], List[97, 1]]", 1);
 }
 
+void test_clear_attributes(void) {
+    // ClearAttributes returns Null
+    assert_eval_eq("ClearAttributes[testClearF, Protected]", "Null", 0);
+
+    // Set multiple attributes, then clear one at a time
+    assert_eval_eq("SetAttributes[testClearF, {Flat, Orderless, OneIdentity}]", "Null", 0);
+    assert_eval_eq("Attributes[testClearF]", "{Flat, OneIdentity, Orderless}", 0);
+
+    // Clear a single attribute; remaining ones are retained
+    assert_eval_eq("ClearAttributes[testClearF, OneIdentity]", "Null", 0);
+    assert_eval_eq("Attributes[testClearF]", "{Flat, Orderless}", 0);
+
+    // Clear multiple attributes at once with a list
+    assert_eval_eq("ClearAttributes[testClearF, {Flat, Orderless}]", "Null", 0);
+    assert_eval_eq("Attributes[testClearF]", "{}", 0);
+
+    // Clearing an attribute that is not set is a no-op
+    assert_eval_eq("ClearAttributes[testClearF, Listable]", "Null", 0);
+    assert_eval_eq("Attributes[testClearF]", "{}", 0);
+
+    // Listable threading: set Listable, clear it, verify behavior
+    assert_eval_eq("SetAttributes[testClearG, Listable]", "Null", 0);
+    assert_eval_eq("Attributes[testClearG]", "{Listable}", 0);
+    assert_eval_eq("ClearAttributes[testClearG, Listable]", "Null", 0);
+    assert_eval_eq("Attributes[testClearG]", "{}", 0);
+
+    // Clear attributes using string symbol name
+    assert_eval_eq("SetAttributes[testClearH, {Flat, Protected}]", "Null", 0);
+    assert_eval_eq("ClearAttributes[\"testClearH\", Protected]", "Null", 0);
+    assert_eval_eq("Attributes[testClearH]", "{Flat}", 0);
+    assert_eval_eq("ClearAttributes[testClearH, Flat]", "Null", 0);
+
+    // Clear attributes from a list of symbols
+    assert_eval_eq("SetAttributes[testClearS1, {Flat, Orderless}]", "Null", 0);
+    assert_eval_eq("SetAttributes[testClearS2, {Flat, Orderless}]", "Null", 0);
+    assert_eval_eq("ClearAttributes[{testClearS1, testClearS2}, Flat]", "Null", 0);
+    assert_eval_eq("Attributes[testClearS1]", "{Orderless}", 0);
+    assert_eval_eq("Attributes[testClearS2]", "{Orderless}", 0);
+
+    // Clear list of attributes from list of symbols
+    assert_eval_eq("ClearAttributes[{testClearS1, testClearS2}, {Orderless}]", "Null", 0);
+    assert_eval_eq("Attributes[testClearS1]", "{}", 0);
+    assert_eval_eq("Attributes[testClearS2]", "{}", 0);
+
+    // ClearAttributes itself has HoldFirst and Protected
+    assert_eval_eq("Attributes[ClearAttributes]", "{HoldFirst, Protected}", 0);
+
+    // Clean up
+    assert_eval_eq("Clear[testClearF]", "Null", 0);
+    assert_eval_eq("Clear[testClearG]", "Null", 0);
+    assert_eval_eq("Clear[testClearH]", "Null", 0);
+    assert_eval_eq("Clear[testClearS1]", "Null", 0);
+    assert_eval_eq("Clear[testClearS2]", "Null", 0);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -693,6 +748,7 @@ int main(void) {
     TEST(test_leafcount);
     TEST(test_bytecount);
     TEST(test_information);
+    TEST(test_clear_attributes);
 
     printf("All core tests passed!\n");
     return 0;

@@ -909,6 +909,42 @@ In[1]:= Attributes[Plus]
 Out[1]= {Flat, Listable, NumericFunction, OneIdentity, Orderless}
 ```
 
+#### ClearAttributes
+Removes attributes from symbols.
+- `ClearAttributes[s, attr]`: Removes `attr` from the list of attributes of the symbol `s`.
+- `ClearAttributes["s", attr]`: Removes `attr` from the attributes of the symbol named `"s"` if it exists.
+- `ClearAttributes[s, {attr1, attr2, ...}]`: Removes several attributes at a time.
+- `ClearAttributes[{s1, s2, ...}, attrs]`: Removes attributes from several symbols at a time.
+
+**Features**:
+- `HoldFirst`, `Protected`.
+- `ClearAttributes` modifies `Attributes[s]`.
+- Cannot clear attributes of a `Locked` symbol.
+- Clearing an attribute that is not set is a no-op.
+
+```mathematica
+In[1]:= SetAttributes[f, Listable]
+In[2]:= f[{1, 2, 3}]
+Out[2]= {f[1], f[2], f[3]}
+In[3]:= ClearAttributes[f, Listable]
+In[4]:= f[{1, 2, 3}]
+Out[4]= f[{1, 2, 3}]
+
+In[5]:= SetAttributes[f, {Flat, Orderless, OneIdentity}]
+In[6]:= ClearAttributes[f, OneIdentity]
+In[7]:= Attributes[f]
+Out[7]= {Flat, Orderless}
+
+In[8]:= ClearAttributes[f, {Flat, Orderless}]
+In[9]:= Attributes[f]
+Out[9]= {}
+
+In[10]:= SetAttributes[{g, h}, Protected]
+In[11]:= ClearAttributes[{g, h}, Protected]
+In[12]:= Attributes[g]
+Out[12]= {}
+```
+
 #### AtomQ, NumberQ, IntegerQ
 Predicates for testing expression types.
 - `AtomQ[expr]`: `True` if the expression has no parts.

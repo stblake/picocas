@@ -148,6 +148,10 @@ void info_init(void) {
     symtab_set_docstring("DownValues", "DownValues[s] gives a list of down-value rules for s.");
     symtab_set_docstring("Attributes", "Attributes[s] gives the list of attributes for s.");
     symtab_set_docstring("SetAttributes", "SetAttributes[s, attr] sets the attributes for s.");
+    symtab_set_docstring("ClearAttributes",
+        "ClearAttributes[s, attr] removes attr from the list of attributes of s.\n"
+        "ClearAttributes[s, {attr1, attr2, ...}] removes several attributes at a time.\n"
+        "ClearAttributes[{s1, s2, ...}, attrs] removes attributes from several symbols at a time.");
     symtab_set_docstring("CompoundExpression", "expr1; expr2; ... evaluates its arguments in sequence, returning the last result.");
     symtab_set_docstring("Module", "Module[{x, y, ...}, expr] specifies that x, y, ... are local variables.");
     symtab_set_docstring("Block", "Block[{x, y, ...}, expr] evaluates expr with local values for x, y, ....");

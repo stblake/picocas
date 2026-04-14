@@ -29,6 +29,7 @@ static SymbolAttr builtin_attrs[] = {
     {"Rational", ATTR_PROTECTED},
     {"Attributes", ATTR_HOLDALL},
     {"SetAttributes", ATTR_HOLDFIRST | ATTR_PROTECTED},
+    {"ClearAttributes", ATTR_HOLDFIRST | ATTR_PROTECTED},
     {"OwnValues", ATTR_HOLDALL},
     {"DownValues", ATTR_HOLDALL},
     {"Out", ATTR_PROTECTED},
@@ -171,6 +172,19 @@ static uint32_t string_to_attribute(const char* name) {
     return ATTR_NONE;
 }
 
+static void remove_single_attribute(SymbolDef* def, Expr* attr_expr) {
+    const char* attr_name = NULL;
+    if (attr_expr->type == EXPR_SYMBOL) attr_name = attr_expr->data.symbol;
+    else if (attr_expr->type == EXPR_STRING) attr_name = attr_expr->data.string;
+
+    if (attr_name) {
+        uint32_t bit = string_to_attribute(attr_name);
+        if (bit != ATTR_NONE) {
+            def->attributes &= ~bit;
+        }
+    }
+}
+
 static void add_single_attribute(SymbolDef* def, Expr* attr_expr) {
     const char* attr_name = NULL;
     if (attr_expr->type == EXPR_SYMBOL) attr_name = attr_expr->data.symbol;
@@ -204,6 +218,48 @@ static void set_attributes_for_symbol(Expr* sym_expr, Expr* attr_spec) {
             add_single_attribute(def, attr_spec->data.function.args[i]);
         }
     }
+}
+
+static void clear_attributes_for_symbol(Expr* sym_expr, Expr* attr_spec) {
+    const char* sym_name = NULL;
+    if (sym_expr->type == EXPR_SYMBOL) sym_name = sym_expr->data.symbol;
+    else if (sym_expr->type == EXPR_STRING) sym_name = sym_expr->data.string;
+
+    if (!sym_name) return;
+
+    SymbolDef* def = symtab_get_def(sym_name);
+    if (!def || (def->attributes & ATTR_LOCKED)) return;
+
+    // Attribute spec can be a single attribute or a list of attributes
+    if (attr_spec->type == EXPR_SYMBOL || attr_spec->type == EXPR_STRING) {
+        remove_single_attribute(def, attr_spec);
+    } else if (attr_spec->type == EXPR_FUNCTION &&
+               attr_spec->data.function.head->type == EXPR_SYMBOL &&
+               strcmp(attr_spec->data.function.head->data.symbol, "List") == 0) {
+        for (size_t i = 0; i < attr_spec->data.function.arg_count; i++) {
+            remove_single_attribute(def, attr_spec->data.function.args[i]);
+        }
+    }
+}
+
+Expr* builtin_clear_attributes(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+
+    Expr* sym_spec = res->data.function.args[0];
+    Expr* attr_spec = res->data.function.args[1];
+
+    // Symbol spec can be a single symbol/string or a list of them
+    if (sym_spec->type == EXPR_SYMBOL || sym_spec->type == EXPR_STRING) {
+        clear_attributes_for_symbol(sym_spec, attr_spec);
+    } else if (sym_spec->type == EXPR_FUNCTION &&
+               sym_spec->data.function.head->type == EXPR_SYMBOL &&
+               strcmp(sym_spec->data.function.head->data.symbol, "List") == 0) {
+        for (size_t i = 0; i < sym_spec->data.function.arg_count; i++) {
+            clear_attributes_for_symbol(sym_spec->data.function.args[i], attr_spec);
+        }
+    }
+
+    return expr_new_symbol("Null");
 }
 
 Expr* builtin_set_attributes(Expr* res) {
@@ -283,6 +339,7 @@ Expr* builtin_attributes(Expr* res) {
 void attr_init(void) {
     symtab_add_builtin("Attributes", builtin_attributes);
     symtab_add_builtin("SetAttributes", builtin_set_attributes);
+    symtab_add_builtin("ClearAttributes", builtin_clear_attributes);
     
     // Initialize builtin attributes in symtab
     for (int i = 0; builtin_attrs[i].name != NULL; i++) {

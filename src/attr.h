@@ -31,6 +31,7 @@ void set_attributes(const char* symbol_name, uint32_t attrs);
 // Built-in functions
 Expr* builtin_attributes(Expr* res);
 Expr* builtin_set_attributes(Expr* res);
+Expr* builtin_clear_attributes(Expr* res);
 
 // Initialize attributes
 void attr_init(void);
