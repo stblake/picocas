@@ -537,6 +537,90 @@ Expr* builtin_distribute(Expr* res) {
 
 /* ------------------- Inner ------------------- */
 
+/* --- Inner with n=1: contract first index of A with first index of B --- */
+
+static Expr* inner_n1_B(Expr* f, Expr** A_leaves, Expr** B_slices, size_t L, Expr* g, Expr* head) {
+    Expr* first_b = B_slices[0];
+
+    if (first_b->type == EXPR_FUNCTION && expr_eq(first_b->data.function.head, head)) {
+        /* B has remaining structure — iterate over its sub-elements ("columns") */
+        size_t M = first_b->data.function.arg_count;
+        Expr** res_args = malloc(sizeof(Expr*) * M);
+        Expr** new_B = malloc(sizeof(Expr*) * L);
+        for (size_t j = 0; j < M; j++) {
+            for (size_t k = 0; k < L; k++) {
+                Expr* bk = B_slices[k];
+                if (bk->type == EXPR_FUNCTION && j < bk->data.function.arg_count) {
+                    new_B[k] = bk->data.function.args[j];
+                } else {
+                    new_B[k] = bk; /* fallback for ragged */
+                }
+            }
+            res_args[j] = inner_n1_B(f, A_leaves, new_B, L, g, head);
+        }
+        free(new_B);
+        Expr* ret = expr_new_function(expr_copy(head), res_args, M);
+        free(res_args);
+        return ret;
+    } else {
+        /* Base case: both A and B at leaf level — form g[f[a0,b0], f[a1,b1], ...] */
+        Expr** g_args = malloc(sizeof(Expr*) * L);
+        for (size_t k = 0; k < L; k++) {
+            Expr* f_args_arr[2];
+            f_args_arr[0] = expr_copy(A_leaves[k]);
+            f_args_arr[1] = expr_copy(B_slices[k]);
+            g_args[k] = expr_new_function(expr_copy(f), f_args_arr, 2);
+        }
+        Expr* ret = expr_new_function(expr_copy(g), g_args, L);
+        free(g_args);
+        return ret;
+    }
+}
+
+static Expr* inner_n1_A(Expr* f, Expr** A_slices, Expr** B_slices, size_t L, Expr* g, Expr* head) {
+    Expr* first_a = A_slices[0];
+
+    /* If first A slice is not a list, go to B-side */
+    if (first_a->type != EXPR_FUNCTION || !expr_eq(first_a->data.function.head, head)) {
+        return inner_n1_B(f, A_slices, B_slices, L, g, head);
+    }
+
+    /* Check if first A slice is a "matrix" (its elements are also lists) */
+    bool a_is_matrix = false;
+    if (first_a->data.function.arg_count > 0 &&
+        first_a->data.function.args[0]->type == EXPR_FUNCTION &&
+        expr_eq(first_a->data.function.args[0]->data.function.head, head)) {
+        a_is_matrix = true;
+    }
+
+    if (a_is_matrix) {
+        /* A has deeper remaining structure — descend one level */
+        size_t M = first_a->data.function.arg_count;
+        Expr** res_args = malloc(sizeof(Expr*) * M);
+        Expr** new_slices = malloc(sizeof(Expr*) * L);
+        for (size_t i = 0; i < M; i++) {
+            for (size_t k = 0; k < L; k++) {
+                Expr* ak = A_slices[k];
+                if (ak->type == EXPR_FUNCTION && i < ak->data.function.arg_count) {
+                    new_slices[k] = ak->data.function.args[i];
+                } else {
+                    new_slices[k] = ak; /* fallback for ragged */
+                }
+            }
+            res_args[i] = inner_n1_A(f, new_slices, B_slices, L, g, head);
+        }
+        free(new_slices);
+        Expr* ret = expr_new_function(expr_copy(head), res_args, M);
+        free(res_args);
+        return ret;
+    } else {
+        /* A slices are vectors or atoms — go to B-side */
+        return inner_n1_B(f, A_slices, B_slices, L, g, head);
+    }
+}
+
+/* --- Standard Inner: contract last index of A with first index of B --- */
+
 static Expr* contract_V_B(Expr* f, Expr* V, Expr* B, Expr* g, Expr* head) {
     if (V->type != EXPR_FUNCTION || B->type != EXPR_FUNCTION) return NULL;
     size_t N = V->data.function.arg_count;
@@ -638,20 +722,26 @@ Expr* builtin_inner(Expr* res) {
     }
     
     Expr* head = A->data.function.head;
-    
-    Expr* A_used = expr_copy(A);
+
+    Expr* inner_res;
     if (n_expr && n_expr->type == EXPR_INTEGER && n_expr->data.integer == 1) {
-        Expr* t_args[1] = { A_used };
-        Expr* t_expr = expr_new_function(expr_new_symbol("Transpose"), t_args, 1);
-        A_used = evaluate(t_expr);
-        expr_free(t_expr);
+        /* Contract first index of A with first index of B directly */
+        size_t L = A->data.function.arg_count;
+        if (L != B->data.function.arg_count) {
+            if (res->data.function.arg_count < 4) expr_free(g);
+            return NULL;
+        }
+        inner_res = inner_n1_A(f, A->data.function.args, B->data.function.args, L, g, head);
+    } else {
+        Expr* A_used = expr_copy(A);
+        inner_res = inner_A(f, A_used, B, g, head);
+        expr_free(A_used);
     }
-    
-    Expr* inner_res = inner_A(f, A_used, B, g, head);
-    expr_free(A_used);
-    
+
     if (res->data.function.arg_count < 4) expr_free(g);
-    
+
+    if (!inner_res) return NULL;
+
     Expr* final_eval = evaluate(inner_res);
     expr_free(inner_res);
     return final_eval;
