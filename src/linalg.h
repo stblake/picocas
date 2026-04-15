@@ -11,6 +11,8 @@ Expr* builtin_tr(Expr* res);
 Expr* builtin_rowreduce(Expr* res);
 Expr* builtin_identitymatrix(Expr* res);
 Expr* builtin_diagonalmatrix(Expr* res);
+Expr* builtin_inverse(Expr* res);
+Expr* builtin_matrixpower(Expr* res);
 void linalg_init(void);
 
 #endif // LINALG_H

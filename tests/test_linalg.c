@@ -116,6 +116,166 @@ void test_identitymatrix() {
     run_test("IdentityMatrix[a]", "IdentityMatrix[a]");
 }
 
+void test_inverse() {
+    /* 1x1 matrices */
+    run_test("Inverse[{{1}}]", "List[List[1]]");
+    run_test("Inverse[{{5}}]", "List[List[Rational[1, 5]]]");
+    run_test("Inverse[{{x}}]", "List[List[Power[x, -1]]]");
+
+    /* 2x2 exact integer matrix */
+    run_test("Inverse[{{2,3,2},{4,9,2},{7,2,4}}]",
+        "List[List[Rational[-8, 13], Rational[2, 13], Rational[3, 13]], "
+        "List[Rational[1, 26], Rational[3, 26], Rational[-1, 13]], "
+        "List[Rational[55, 52], Rational[-17, 52], Rational[-3, 26]]]");
+
+    /* 3x3 exact integer matrix */
+    run_test("Inverse[{{1,2,3},{4,2,2},{5,1,7}}]",
+        "List[List[Rational[-2, 7], Rational[11, 42], Rational[1, 21]], "
+        "List[Rational[3, 7], Rational[4, 21], Rational[-5, 21]], "
+        "List[Rational[1, 7], Rational[-3, 14], Rational[1, 7]]]");
+
+    /* 2x2 symbolic matrix */
+    run_test("Inverse[{{a,b},{c,d}}]",
+        "List[List[Times[d, Power[Plus[Times[-1, Times[b, c]], Times[a, d]], -1]], "
+        "Times[-1, b, Power[Plus[Times[-1, Times[b, c]], Times[a, d]], -1]]], "
+        "List[Times[-1, c, Power[Plus[Times[-1, Times[b, c]], Times[a, d]], -1]], "
+        "Times[a, Power[Plus[Times[-1, Times[b, c]], Times[a, d]], -1]]]]");
+
+    /* Symmetric symbolic matrix (use p,q to avoid polluted u,v from test_dot) */
+    run_test("Inverse[{{p,q},{q,p}}]",
+        "List[List[Times[p, Power[Plus[Power[p, 2], Times[-1, Power[q, 2]]], -1]], "
+        "Times[-1, q, Power[Plus[Power[p, 2], Times[-1, Power[q, 2]]], -1]]], "
+        "List[Times[-1, q, Power[Plus[Power[p, 2], Times[-1, Power[q, 2]]], -1]], "
+        "Times[p, Power[Plus[Power[p, 2], Times[-1, Power[q, 2]]], -1]]]]");
+
+    /* Floating-point 2x2 matrix */
+    run_test("Inverse[{{1.4,2},{3,-6.7}}]",
+        "List[List[0.435631, 0.130039], List[0.195059, -0.0910273]]");
+
+    /* Machine-precision 3x3 matrix */
+    run_test("Inverse[{{1.2,2.5,-3.2},{0.7,-9.4,5.8},{-0.2,0.3,6.4}}]",
+        "List[List[0.74546, 0.204249, 0.187629], "
+        "List[0.0679223, -0.0847825, 0.110795], "
+        "List[0.0201118, 0.010357, 0.15692]]");
+
+    /* Singular matrix: should remain unevaluated */
+    run_test("Inverse[{{1,2},{1,2}}]", "Inverse[List[List[1, 2], List[1, 2]]]");
+
+    /* Non-square matrix: should remain unevaluated */
+    run_test("Inverse[{{1,2},{3,4},{5,6}}]", "Inverse[List[List[1, 2], List[3, 4], List[5, 6]]]");
+
+    /* Identity relation: mat.Inverse[mat] == IdentityMatrix[n] */
+    run_test("CompoundExpression[Set[mat1, {{1,2},{3,4}}], Equal[Dot[mat1, Inverse[mat1]], IdentityMatrix[2]]]", "True");
+    run_test("CompoundExpression[Set[mat2, {{1,2},{3,4}}], Equal[Dot[Inverse[mat2], mat2], IdentityMatrix[2]]]", "True");
+
+    /* (aa.bb)^-1 == bb^-1.aa^-1 */
+    run_test("CompoundExpression["
+        "Set[aa, {{1,1,1},{6,9,7},{8,1,9}}], "
+        "Set[bb, {{0,3,9},{7,9,7},{4,4,1}}], "
+        "Equal[Inverse[Dot[aa, bb]], Dot[Inverse[bb], Inverse[aa]]]]", "True");
+
+    /* Identity matrix is its own inverse */
+    run_test("Inverse[{{1,0,0},{0,1,0},{0,0,1}}]", "List[List[1, 0, 0], List[0, 1, 0], List[0, 0, 1]]");
+
+    /* 4x4 exact inverse */
+    run_test("CompoundExpression["
+        "Set[mm, {{1,0,2,1},{3,1,0,1},{1,2,1,0},{0,1,3,2}}], "
+        "Equal[Dot[mm, Inverse[mm]], IdentityMatrix[4]]]", "True");
+
+    /* Diagonal matrix inverse */
+    run_test("Inverse[{{2,0,0},{0,3,0},{0,0,5}}]",
+        "List[List[Rational[1, 2], 0, 0], List[0, Rational[1, 3], 0], List[0, 0, Rational[1, 5]]]");
+
+    /* Singular 3x3 matrix */
+    run_test("Inverse[{{1,2,3},{4,5,6},{7,8,9}}]",
+        "Inverse[List[List[1, 2, 3], List[4, 5, 6], List[7, 8, 9]]]");
+
+    /* Non-function argument */
+    run_test("Inverse[5]", "Inverse[5]");
+
+    /* Zero determinant via zero row */
+    run_test("Inverse[{{0,0},{0,0}}]",
+        "Inverse[List[List[0, 0], List[0, 0]]]");
+}
+
+void test_matrixpower() {
+    /* Power 0: returns identity matrix */
+    run_test("MatrixPower[{{1,2},{3,4}},0]", "List[List[1, 0], List[0, 1]]");
+    run_test("MatrixPower[{{a,b},{c,d}},0]", "List[List[1, 0], List[0, 1]]");
+
+    /* Power 1: returns matrix itself */
+    run_test("MatrixPower[{{1,0},{0,1}},1]", "List[List[1, 0], List[0, 1]]");
+    run_test("MatrixPower[{{1,2},{3,4}},1]", "List[List[1, 2], List[3, 4]]");
+
+    /* Power 2 symbolic: m.m - verify via equality instead of exact string */
+    run_test("CompoundExpression[Set[mp0, {{a,b},{c,d}}], "
+        "Equal[MatrixPower[mp0, 2], Dot[mp0, mp0]]]", "True");
+
+    /* Power 10: Fibonacci-like matrix */
+    run_test("MatrixPower[{{1,1},{1,2}},10]", "List[List[4181, 6765], List[6765, 10946]]");
+
+    /* Large exact integer power */
+    run_test("MatrixPower[{{2,3,0},{4,9,0},{0,0,4}},14]",
+        "List[List[25881337259836, 54508871401413, 0], "
+        "List[72678495201884, 153068703863133, 0], "
+        "List[0, 0, 268435456]]");
+
+    /* Symbolic upper triangular matrix power */
+    run_test("MatrixPower[{{a,b},{0,c}},4]",
+        "List[List[Power[a, 4], Plus[Times[Power[a, 2], Plus[Times[a, b], Times[b, c]]], "
+        "Times[Power[c, 2], Plus[Times[a, b], Times[b, c]]]]], List[0, Power[c, 4]]]");
+
+    /* Negative power: m^-1 == Inverse[m] */
+    run_test("CompoundExpression[Set[mp2, {{1,2},{3,4}}], "
+        "Equal[MatrixPower[mp2, -1], Inverse[mp2]]]", "True");
+
+    /* Negative power -2: m^-2 == Inverse[m]^2 */
+    run_test("CompoundExpression[Set[mp3, {{a,b},{c,d}}], "
+        "Equal[MatrixPower[mp3, -2], Dot[Inverse[mp3], Inverse[mp3]]]]", "True");
+
+    /* Floating-point matrix power */
+    run_test("MatrixPower[{{1.2,2.5,-3.2},{0.7,-9.4,5.8},{-0.2,0.3,6.4}},5]",
+        "List[List[-1208.61, 19598.2, -12658.4], "
+        "List[5784.51, -83315.1, 35420.6], "
+        "List[-559.11, 1960.12, 11511.9]]");
+
+    /* Complex matrix power */
+    /* MatrixPower[{{1.+I,2,3-2 I},{0,4 Pi,5I},{E,0,6}},2] */
+    /* Skipping exact complex test due to symbolic Pi/E constants */
+
+    /* MatrixPower[m, n, v] - matrix power applied to vector */
+    run_test("MatrixPower[{{1,1},{1,2}},3,{1,0}]",
+        "List[5, 8]");
+
+    /* Power 0 with vector */
+    run_test("MatrixPower[{{1,2},{3,4}},0,{5,6}]",
+        "List[5, 6]");
+
+    /* Negative power with vector */
+    run_test("MatrixPower[{{1,2},{3,4}},-1,{1,0}]",
+        "List[-2, Rational[3, 2]]");
+
+    /* Fractional power: should warn and return unevaluated */
+    run_test("MatrixPower[{{1,2},{3,4}},1/2]",
+        "MatrixPower[List[List[1, 2], List[3, 4]], Rational[1, 2]]");
+
+    /* Non-square matrix: error */
+    run_test("MatrixPower[{{1,2,3},{4,5,6}},2]",
+        "MatrixPower[List[List[1, 2, 3], List[4, 5, 6]], 2]");
+
+    /* Symbolic exponent: unevaluated */
+    run_test("MatrixPower[{{1,2},{3,4}},n]",
+        "MatrixPower[List[List[1, 2], List[3, 4]], n]");
+
+    /* Singular matrix with negative power */
+    run_test("MatrixPower[{{1,2},{2,4}},-1]",
+        "MatrixPower[List[List[1, 2], List[2, 4]], -1]");
+
+    /* 1x1 matrix */
+    run_test("MatrixPower[{{5}},3]", "List[List[125]]");
+    run_test("MatrixPower[{{5}},-2]", "List[List[Rational[1, 25]]]");
+}
+
 void test_diagonalmatrix() {
     run_test("DiagonalMatrix[{a, b, c}]", "List[List[a, 0, 0], List[0, b, 0], List[0, 0, c]]");
     run_test("DiagonalMatrix[{a, b}, 1]", "List[List[0, a, 0], List[0, 0, b], List[0, 0, 0]]");
@@ -139,6 +299,8 @@ int main() {
     TEST(test_rowreduce);
     TEST(test_identitymatrix);
     TEST(test_diagonalmatrix);
+    TEST(test_inverse);
+    TEST(test_matrixpower);
     printf("All linalg tests passed!\n");
     symtab_clear();
     return 0;

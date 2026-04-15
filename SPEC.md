@@ -515,7 +515,7 @@ Each module follows the same pattern: a `.c`/`.h` pair, with a `*_init()` functi
 | **Rational Funcs** | `rat.c` | `Cancel`, `Together` |
 | **Partial Fractions** | `parfrac.c` | `Apart` |
 | **Modular** | `modular.c` | `PowerMod` (exponentiation, inverse, roots) |
-| **Linear Algebra** | `linalg.c` | `Dot`, `Inner`, `Outer`, `Det`, `Cross`, `Norm`, `Tr`, `RowReduce`, `IdentityMatrix`, `DiagonalMatrix`, `Transpose` |
+| **Linear Algebra** | `linalg.c` | `Dot`, `Inner`, `Outer`, `Det`, `Inverse`, `MatrixPower`, `Cross`, `Norm`, `Tr`, `RowReduce`, `IdentityMatrix`, `DiagonalMatrix`, `Transpose` |
 | **Statistics** | `stats.c` | `Mean`, `Median`, `Variance`, `StandardDeviation`, `RootMeanSquare`, `Quartiles` |
 | **Sorting** | `sort.c` | `Sort`, `OrderedQ` |
 | **Rules/Replace** | `replace.c` | `Replace`, `ReplaceAll`, `ReplaceRepeated`, `ReplacePart`, `ReplaceList` |

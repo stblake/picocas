@@ -762,6 +762,367 @@ Expr* builtin_diagonalmatrix(Expr* res) {
     return result;
 }
 
+Expr* builtin_inverse(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    int64_t dims[64];
+    int rank = get_tensor_dims(arg, dims);
+
+    if (rank != 2 || dims[0] != dims[1] || dims[0] == 0) {
+        char* arg_str = expr_to_string(arg);
+        fprintf(stderr, "Inverse::matsq: Argument %s at position 1 is not a non-empty square matrix.\n", arg_str);
+        free(arg_str);
+        return NULL;
+    }
+
+    int n = (int)dims[0];
+    int cols = 2 * n;
+
+    /* Build augmented matrix [A | I] */
+    Expr** matrix = malloc(sizeof(Expr*) * n * cols);
+    size_t idx = 0;
+    Expr** flat_a = malloc(sizeof(Expr*) * n * n);
+    flatten_tensor(arg, flat_a, &idx);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            matrix[i * cols + j] = flat_a[i * n + j]; /* take ownership */
+        }
+        for (int j = 0; j < n; j++) {
+            matrix[i * cols + n + j] = expr_new_integer(i == j ? 1 : 0);
+        }
+    }
+    free(flat_a); /* elements transferred to matrix */
+
+    /* Fraction-free Gauss-Jordan elimination (Bareiss-like, same as RowReduce) */
+    Expr* P = expr_new_integer(1);
+    int r = 0;
+
+    for (int c = 0; c < n && r < n; c++) {
+        /* Find pivot */
+        int pivot_row = -1;
+        for (int i = r; i < n; i++) {
+            if (!is_zero_poly(matrix[i * cols + c])) {
+                pivot_row = i;
+                break;
+            }
+        }
+        if (pivot_row == -1) {
+            /* Singular matrix */
+            char* arg_str = expr_to_string(arg);
+            fprintf(stderr, "Inverse::sing: Matrix %s is singular.\n", arg_str);
+            free(arg_str);
+            expr_free(P);
+            for (int i = 0; i < n * cols; i++) expr_free(matrix[i]);
+            free(matrix);
+            return NULL;
+        }
+
+        /* Swap rows if needed */
+        if (pivot_row != r) {
+            for (int j = 0; j < cols; j++) {
+                Expr* tmp = matrix[r * cols + j];
+                matrix[r * cols + j] = matrix[pivot_row * cols + j];
+                matrix[pivot_row * cols + j] = tmp;
+            }
+        }
+
+        Expr* pivot = matrix[r * cols + c];
+
+        /* Eliminate column c in all other rows */
+        for (int i = 0; i < n; i++) {
+            if (i == r) continue;
+            Expr* M_ic = matrix[i * cols + c];
+            if (is_zero_poly(M_ic)) {
+                for (int j = 0; j < cols; j++) {
+                    if (j == c) continue;
+                    Expr* num_eval = eval_and_free(expr_new_function(
+                        expr_new_symbol("Times"),
+                        (Expr*[]){expr_copy(pivot), expr_copy(matrix[i * cols + j])}, 2));
+                    Expr* new_val = exact_div_wrapper(num_eval, P);
+                    expr_free(num_eval);
+                    expr_free(matrix[i * cols + j]);
+                    matrix[i * cols + j] = new_val;
+                }
+            } else {
+                for (int j = 0; j < cols; j++) {
+                    if (j == c) continue;
+                    Expr* t1 = eval_and_free(expr_new_function(
+                        expr_new_symbol("Times"),
+                        (Expr*[]){expr_copy(pivot), expr_copy(matrix[i * cols + j])}, 2));
+                    Expr* t2 = eval_and_free(expr_new_function(
+                        expr_new_symbol("Times"),
+                        (Expr*[]){expr_copy(M_ic), expr_copy(matrix[r * cols + j])}, 2));
+                    Expr* t2_neg = eval_and_free(expr_new_function(
+                        expr_new_symbol("Times"),
+                        (Expr*[]){expr_new_integer(-1), t2}, 2));
+                    Expr* num_eval = eval_and_free(expr_new_function(
+                        expr_new_symbol("Plus"),
+                        (Expr*[]){t1, t2_neg}, 2));
+                    Expr* new_val = exact_div_wrapper(num_eval, P);
+                    expr_free(num_eval);
+                    expr_free(matrix[i * cols + j]);
+                    matrix[i * cols + j] = new_val;
+                }
+            }
+            expr_free(matrix[i * cols + c]);
+            matrix[i * cols + c] = expr_new_integer(0);
+        }
+
+        expr_free(P);
+        P = expr_copy(pivot);
+        r++;
+    }
+    expr_free(P);
+
+    /* If we didn't get n pivots, matrix is singular */
+    if (r < n) {
+        char* arg_str = expr_to_string(arg);
+        fprintf(stderr, "Inverse::sing: Matrix %s is singular.\n", arg_str);
+        free(arg_str);
+        for (int i = 0; i < n * cols; i++) expr_free(matrix[i]);
+        free(matrix);
+        return NULL;
+    }
+
+    /* Normalize: divide each row of the right half by its diagonal element */
+    for (int i = 0; i < n; i++) {
+        Expr* diag = matrix[i * cols + i];
+        for (int j = n; j < cols; j++) {
+            if (is_zero_poly(matrix[i * cols + j])) continue;
+
+            Expr* num_val = matrix[i * cols + j];
+            Expr* den_val = expr_copy(diag);
+
+            /* Cancel common factors via PolynomialGCD */
+            Expr* g = eval_and_free(expr_new_function(
+                expr_new_symbol("PolynomialGCD"),
+                (Expr*[]){expr_copy(num_val), expr_copy(den_val)}, 2));
+            Expr* new_num = exact_div_wrapper(num_val, g);
+            Expr* new_den = exact_div_wrapper(den_val, g);
+            expr_free(g);
+
+            /* Normalize sign so denominator is positive */
+            if (new_den->type == EXPR_INTEGER && new_den->data.integer < 0) {
+                Expr* t = eval_and_free(expr_new_function(
+                    expr_new_symbol("Times"),
+                    (Expr*[]){new_num, expr_new_integer(-1)}, 2));
+                new_num = expr_expand(t);
+                expr_free(t);
+                new_den->data.integer = -new_den->data.integer;
+            }
+
+            if (new_den->type == EXPR_INTEGER && new_den->data.integer == 1) {
+                expr_free(new_den);
+                matrix[i * cols + j] = new_num;
+            } else {
+                Expr* inv_den = eval_and_free(expr_new_function(
+                    expr_new_symbol("Power"),
+                    (Expr*[]){new_den, expr_new_integer(-1)}, 2));
+                Expr* final_val = eval_and_free(expr_new_function(
+                    expr_new_symbol("Times"),
+                    (Expr*[]){new_num, inv_den}, 2));
+                matrix[i * cols + j] = expr_expand(final_val);
+                expr_free(final_val);
+            }
+            expr_free(num_val);
+            expr_free(den_val);
+        }
+    }
+
+    /* Extract the right half [I | A^{-1}] -> A^{-1} */
+    Expr** rows = malloc(sizeof(Expr*) * n);
+    for (int i = 0; i < n; i++) {
+        Expr** row_elems = malloc(sizeof(Expr*) * n);
+        for (int j = 0; j < n; j++) {
+            row_elems[j] = matrix[i * cols + n + j]; /* take ownership */
+        }
+        rows[i] = expr_new_function(expr_new_symbol("List"), row_elems, n);
+        free(row_elems);
+    }
+    Expr* result = expr_new_function(expr_new_symbol("List"), rows, n);
+    free(rows);
+
+    /* Free the left half and the flat matrix array */
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            expr_free(matrix[i * cols + j]);
+        }
+        /* right half elements were transferred to result */
+    }
+    free(matrix);
+
+    return result;
+}
+
+/* Matrix multiplication helper: computes A.B for two square n x n matrices
+ * represented as List[List[...], ...] expressions. Returns a new Expr*. */
+static Expr* mat_dot(Expr* a, Expr* b) {
+    bool err = false;
+    return dot2(a, b, &err);
+}
+
+Expr* builtin_matrixpower(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2 || argc > 3) return NULL;
+
+    Expr* m = res->data.function.args[0];
+    Expr* exp_arg = res->data.function.args[1];
+
+    /* Validate matrix: must be rank 2, square, non-empty */
+    int64_t dims[64];
+    int rank = get_tensor_dims(m, dims);
+    if (rank != 2 || dims[0] != dims[1] || dims[0] == 0) {
+        if (rank >= 0) {
+            char* m_str = expr_to_string(m);
+            fprintf(stderr, "MatrixPower::matsq: Argument %s at position 1 is not a non-empty square matrix.\n", m_str);
+            free(m_str);
+        }
+        return NULL;
+    }
+    int n = (int)dims[0];
+
+    /* Validate exponent: must be an integer */
+    bool is_int = (exp_arg->type == EXPR_INTEGER);
+    bool is_bigint = (exp_arg->type == EXPR_BIGINT);
+    bool is_rational = false;
+    bool is_real = (exp_arg->type == EXPR_REAL);
+
+    if (exp_arg->type == EXPR_FUNCTION && exp_arg->data.function.head->type == EXPR_SYMBOL
+        && strcmp(exp_arg->data.function.head->data.symbol, "Rational") == 0) {
+        is_rational = true;
+    }
+
+    /* Fractional powers: warn and return unevaluated */
+    if (is_rational || is_real) {
+        char* exp_str = expr_to_string(exp_arg);
+        fprintf(stderr, "MatrixPower::fract: Fractional matrix powers are not currently supported. Exponent %s is not an integer.\n", exp_str);
+        free(exp_str);
+        return NULL;
+    }
+
+    /* Symbolic or non-numeric exponent: return unevaluated */
+    if (!is_int && !is_bigint) return NULL;
+
+    /* Get the exponent value; for bigint, check it fits in int64_t */
+    int64_t exp_val = 0;
+    if (is_int) {
+        exp_val = exp_arg->data.integer;
+    } else {
+        /* EXPR_BIGINT: check if it fits in int64_t range */
+        if (mpz_fits_slong_p(exp_arg->data.bigint)) {
+            exp_val = mpz_get_si(exp_arg->data.bigint);
+        } else {
+            /* Exponent too large to compute */
+            return NULL;
+        }
+    }
+
+    /* If argc == 3, validate vector argument */
+    Expr* vec = NULL;
+    if (argc == 3) {
+        vec = res->data.function.args[2];
+        int64_t vdims[64];
+        int vrank = get_tensor_dims(vec, vdims);
+        if (vrank != 1 || vdims[0] != n) {
+            char* v_str = expr_to_string(vec);
+            fprintf(stderr, "MatrixPower::vecsh: Vector %s has incompatible length for matrix of size %d.\n", v_str, n);
+            free(v_str);
+            return NULL;
+        }
+    }
+
+    /* For negative exponents, compute inverse first */
+    Expr* base = NULL;
+    int64_t abs_exp = exp_val;
+    if (exp_val < 0) {
+        abs_exp = -exp_val;
+        /* Compute Inverse[m] */
+        Expr* inv_call = expr_new_function(expr_new_symbol("Inverse"),
+            (Expr*[]){expr_copy(m)}, 1);
+        Expr* inv_result = evaluate(inv_call);
+        expr_free(inv_call);
+
+        /* Check if Inverse returned unevaluated (singular matrix) */
+        if (inv_result->type == EXPR_FUNCTION && inv_result->data.function.head->type == EXPR_SYMBOL
+            && strcmp(inv_result->data.function.head->data.symbol, "Inverse") == 0) {
+            expr_free(inv_result);
+            return NULL; /* Singular: Inverse already printed warning */
+        }
+        base = inv_result;
+    } else {
+        base = expr_copy(m);
+    }
+
+    /* Compute matrix power via binary exponentiation */
+    Expr* result = NULL;
+
+    if (abs_exp == 0) {
+        /* M^0 = IdentityMatrix[n] */
+        expr_free(base);
+        Expr* id_args[1];
+        id_args[0] = expr_new_integer(n);
+        Expr* id_call = expr_new_function(expr_new_symbol("IdentityMatrix"), id_args, 1);
+        result = evaluate(id_call);
+        expr_free(id_call);
+    } else {
+        /* Binary exponentiation: square-and-multiply */
+        result = NULL;
+        Expr* sq = base; /* current square, takes ownership of base */
+
+        int64_t e = abs_exp;
+        while (e > 0) {
+            if (e & 1) {
+                if (result == NULL) {
+                    result = expr_copy(sq);
+                } else {
+                    Expr* new_result = mat_dot(result, sq);
+                    if (!new_result) {
+                        /* Should not happen for valid square matrices */
+                        expr_free(result);
+                        expr_free(sq);
+                        return NULL;
+                    }
+                    Expr* evaluated = evaluate(new_result);
+                    expr_free(new_result);
+                    expr_free(result);
+                    result = evaluated;
+                }
+            }
+            e >>= 1;
+            if (e > 0) {
+                Expr* new_sq = mat_dot(sq, sq);
+                if (!new_sq) {
+                    if (result) expr_free(result);
+                    expr_free(sq);
+                    return NULL;
+                }
+                Expr* evaluated = evaluate(new_sq);
+                expr_free(new_sq);
+                expr_free(sq);
+                sq = evaluated;
+            }
+        }
+        expr_free(sq);
+    }
+
+    /* If vector argument provided, compute result . v */
+    if (vec && result) {
+        Expr* dotted = mat_dot(result, vec);
+        if (dotted) {
+            Expr* evaluated = evaluate(dotted);
+            expr_free(dotted);
+            expr_free(result);
+            result = evaluated;
+        }
+        /* If dot fails, just return matrix power without applying to vector */
+    }
+
+    /* Note: evaluator frees res after we return non-NULL */
+    return result;
+}
+
 void linalg_init(void) {
     symtab_add_builtin("Dot", builtin_dot);
     symtab_get_def("Dot")->attributes |= ATTR_FLAT | ATTR_ONEIDENTITY | ATTR_PROTECTED;
@@ -779,4 +1140,8 @@ void linalg_init(void) {
     symtab_get_def("IdentityMatrix")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("DiagonalMatrix", builtin_diagonalmatrix);
     symtab_get_def("DiagonalMatrix")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("Inverse", builtin_inverse);
+    symtab_get_def("Inverse")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("MatrixPower", builtin_matrixpower);
+    symtab_get_def("MatrixPower")->attributes |= ATTR_PROTECTED;
 }

@@ -1368,6 +1368,100 @@ In[4]:= Tr[{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, Plus, 1]
 Out[4]= {12, 15, 18}
 ```
 
+#### Inverse
+Gives the inverse of a square matrix.
+- `Inverse[m]`
+
+**Features**:
+- `Protected`.
+- Works on both symbolic and numerical matrices.
+- For matrices with approximate real or complex numbers, the inverse is generated to the maximum possible precision given the input.
+- Uses fraction-free Gauss-Jordan elimination on the augmented matrix `[A | I]` to compute the inverse exactly for integer, rational, and symbolic matrices.
+- Issues `Inverse::sing` warning and returns unevaluated if the matrix is singular.
+- Issues `Inverse::matsq` warning and returns unevaluated if the argument is not a non-empty square matrix.
+- Satisfies the relation `a . Inverse[a] == Inverse[a] . a == IdentityMatrix[n]`.
+- Satisfies the relation `Inverse[a . b] == Inverse[b] . Inverse[a]`.
+
+```mathematica
+In[1]:= Inverse[{{1.4,2},{3,-6.7}}]
+Out[1]= {{0.435631, 0.130039}, {0.195059, -0.0910273}}
+
+In[2]:= Inverse[{{1,2,3},{4,2,2},{5,1,7}}]
+Out[2]= {{-2/7, 11/42, 1/21}, {3/7, 4/21, -5/21}, {1/7, -3/14, 1/7}}
+
+In[3]:= Inverse[{{u,v},{v,u}}]
+Out[3]= {{u/(u^2 - v^2), -v/(u^2 - v^2)}, {-v/(u^2 - v^2), u/(u^2 - v^2)}}
+
+In[4]:= Inverse[{{1.2,2.5,-3.2},{0.7,-9.4,5.8},{-0.2,0.3,6.4}}]
+Out[4]= {{0.74546, 0.204249, 0.187629}, {0.0679223, -0.0847825, 0.110795}, {0.0201118, 0.010357, 0.15692}}
+
+In[5]:= Inverse[{{2,3,2},{4,9,2},{7,2,4}}]
+Out[5]= {{-8/13, 2/13, 3/13}, {1/26, 3/26, -1/13}, {55/52, -17/52, -3/26}}
+
+In[6]:= Inverse[{{a,b},{c,d}}]
+Out[6]= {{d/(-b c + a d), -b/(-b c + a d)}, {-c/(-b c + a d), a/(-b c + a d)}}
+
+In[7]:= Inverse[{{1,2},{1,2}}]
+Inverse::sing: Matrix {{1, 2}, {1, 2}} is singular.
+Out[7]= Inverse[{{1, 2}, {1, 2}}]
+
+In[8]:= a = {{1,2},{3,4}}; a . Inverse[a] == IdentityMatrix[2]
+Out[8]= True
+
+In[9]:= a = {{1,1,1},{6,9,7},{8,1,9}}; b = {{0,3,9},{7,9,7},{4,4,1}}; Inverse[a . b] == Inverse[b] . Inverse[a]
+Out[9]= True
+
+In[10]:= Inverse[{{1,2},{3,4},{5,6}}]
+Inverse::matsq: Argument {{1, 2}, {3, 4}, {5, 6}} at position 1 is not a non-empty square matrix.
+Out[10]= Inverse[{{1, 2}, {3, 4}, {5, 6}}]
+```
+
+#### MatrixPower
+Gives the matrix power of a square matrix.
+- `MatrixPower[m, n]`: gives the n-th matrix power of the matrix `m`.
+- `MatrixPower[m, n, v]`: gives the n-th matrix power of the matrix `m` applied to the vector `v`.
+
+**Features**:
+- `Protected`.
+- `MatrixPower[m, n]` effectively evaluates the product of a matrix with itself `n` times.
+- When `n` is negative, `MatrixPower` finds powers of the inverse of the matrix `m`.
+- `MatrixPower[m, 0]` returns `IdentityMatrix[Length[m]]`.
+- `MatrixPower` works only on square matrices.
+- Uses binary exponentiation (repeated squaring) for efficient computation.
+- Fractional matrix powers are not currently supported and generate a warning.
+
+```mathematica
+In[1]:= MatrixPower[{{a, b}, {c, d}}, 2]
+Out[1]= {{a^2 + b c, a b + b d}, {a c + c d, b c + d^2}}
+
+In[2]:= MatrixPower[{{a, b}, {c, d}}, 2] == {{a, b}, {c, d}} . {{a, b}, {c, d}}
+Out[2]= True
+
+In[3]:= MatrixPower[{{a, b}, {c, d}}, -2] == Inverse[{{a, b}, {c, d}}] . Inverse[{{a, b}, {c, d}}]
+Out[3]= True
+
+In[4]:= MatrixPower[{{1, 1}, {1, 2}}, 10]
+Out[4]= {{4181, 6765}, {6765, 10946}}
+
+In[5]:= MatrixPower[{{1.2, 2.5, -3.2}, {0.7, -9.4, 5.8}, {-0.2, 0.3, 6.4}}, 5]
+Out[5]= {{-1208.61, 19598.2, -12658.4}, {5784.51, -83315.1, 35420.6}, {-559.11, 1960.12, 11511.9}}
+
+In[6]:= MatrixPower[{{2, 3, 0}, {4, 9, 0}, {0, 0, 4}}, 14]
+Out[6]= {{25881337259836, 54508871401413, 0}, {72678495201884, 153068703863133, 0}, {0, 0, 268435456}}
+
+In[7]:= MatrixPower[{{a, b}, {0, c}}, 4]
+Out[7]= {{a^4, a^2 (a b + b c) + c^2 (a b + b c)}, {0, c^4}}
+
+In[8]:= MatrixPower[{{1, 1}, {1, 2}}, 3, {1, 0}]
+Out[8]= {5, 8}
+
+In[9]:= MatrixPower[{{1, 2}, {3, 4}}, 0]
+Out[9]= {{1, 0}, {0, 1}}
+
+In[10]:= MatrixPower[{{5}}, -2]
+Out[10]= {{1/25}}
+```
+
 #### RowReduce
 Gives the row-reduced form of the matrix `m`.
 - `RowReduce[m]`
