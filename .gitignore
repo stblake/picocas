@@ -53,3 +53,5 @@ dkms.conf
 
 # debug information files
 *.dwo
+# Added by code-review-graph
+.code-review-graph/

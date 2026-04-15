@@ -2028,6 +2028,34 @@ Out[5]= 0
 
 #### PrimeQ
 - `PrimeQ[n]`: Returns `True` if `n` is a prime number, `False` otherwise.
+- `PrimeQ[z]`: For a Gaussian integer `z = a + b I`, returns `True` if `z` is a Gaussian prime.
+
+**Features**:
+- `Listable`, `Protected`.
+- A Gaussian integer `a + b I` is a Gaussian prime if:
+  - Both `a` and `b` are nonzero and `a^2 + b^2` is an ordinary prime, or
+  - One of `a`, `b` is zero and the absolute value of the other is a prime congruent to 3 mod 4.
+- Returns `False` for non-integer complex numbers, rationals, reals, and strings.
+
+```mathematica
+In[1]:= PrimeQ[7]
+Out[1]= True
+
+In[2]:= PrimeQ[1 + I]
+Out[2]= True
+
+In[3]:= PrimeQ[1 + 2 I]
+Out[3]= True
+
+In[4]:= PrimeQ[3 I]
+Out[4]= True
+
+In[5]:= PrimeQ[5 I]
+Out[5]= False
+
+In[6]:= PrimeQ[2 + 2 I]
+Out[6]= False
+```
 
 #### PrimePi
 - `PrimePi[x]`: Returns the number of primes less than or equal to `x`.

@@ -212,8 +212,49 @@ Expr* builtin_primeq(Expr* res) {
     }
     if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL) {
         const char* head = arg->data.function.head->data.symbol;
-        if (strcmp(head, "Rational") == 0 || strcmp(head, "Complex") == 0) {
+        if (strcmp(head, "Rational") == 0) {
             return expr_new_symbol("False");
+        }
+        // Gaussian prime test for Complex[a, b] with integer parts
+        if (strcmp(head, "Complex") == 0 && arg->data.function.arg_count == 2) {
+            Expr* re_expr = arg->data.function.args[0];
+            Expr* im_expr = arg->data.function.args[1];
+            bool re_int = (re_expr->type == EXPR_INTEGER || re_expr->type == EXPR_BIGINT);
+            bool im_int = (im_expr->type == EXPR_INTEGER || im_expr->type == EXPR_BIGINT);
+            if (!re_int || !im_int) {
+                return expr_new_symbol("False");
+            }
+            mpz_t a, b;
+            expr_to_mpz(re_expr, a);
+            expr_to_mpz(im_expr, b);
+            mpz_abs(a, a);
+            mpz_abs(b, b);
+            int is_gprime = 0;
+            if (mpz_sgn(a) == 0 && mpz_sgn(b) == 0) {
+                // 0 + 0i is not prime
+                is_gprime = 0;
+            } else if (mpz_sgn(b) == 0) {
+                // Pure real: Gaussian prime iff |a| is prime and |a| ≡ 3 (mod 4)
+                if (mpz_probab_prime_p(a, 25) && mpz_fdiv_ui(a, 4) == 3) {
+                    is_gprime = 1;
+                }
+            } else if (mpz_sgn(a) == 0) {
+                // Pure imaginary: Gaussian prime iff |b| is prime and |b| ≡ 3 (mod 4)
+                if (mpz_probab_prime_p(b, 25) && mpz_fdiv_ui(b, 4) == 3) {
+                    is_gprime = 1;
+                }
+            } else {
+                // Both nonzero: Gaussian prime iff a^2 + b^2 is prime
+                mpz_t norm;
+                mpz_init(norm);
+                mpz_mul(norm, a, a);
+                mpz_addmul(norm, b, b);  // norm = a^2 + b^2
+                is_gprime = mpz_probab_prime_p(norm, 25);
+                mpz_clear(norm);
+            }
+            mpz_clear(a);
+            mpz_clear(b);
+            return expr_new_symbol(is_gprime ? "True" : "False");
         }
     }
 

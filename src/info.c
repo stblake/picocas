@@ -84,7 +84,7 @@ void info_init(void) {
     symtab_set_docstring("IntegerQ", "IntegerQ[expr] gives True if expr is an integer.");
     symtab_set_docstring("EvenQ", "EvenQ[n] gives True if n is an even integer.");
     symtab_set_docstring("OddQ", "OddQ[n] gives True if n is an odd integer.");
-    symtab_set_docstring("PrimeQ", "PrimeQ[n] gives True if n is a prime number.");
+    symtab_set_docstring("PrimeQ", "PrimeQ[n]\n\tgives True if n is a prime number.\nPrimeQ[z]\n\tfor a Gaussian integer z = a + b I, gives True if z is a Gaussian prime.");
     symtab_set_docstring("PolynomialQ", "PolynomialQ[expr, var] gives True if expr is a polynomial in var.");
     symtab_set_docstring("ListQ", "ListQ[expr] gives True if expr is a list.");
     symtab_set_docstring("VectorQ", "VectorQ[expr] gives True if expr is a vector.");

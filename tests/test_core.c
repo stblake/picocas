@@ -456,6 +456,23 @@ void test_primeq(void) {
     
     // Large prime (from user request)
     assert_eval_eq("PrimeQ[-59]", "True", 1);
+
+    // Gaussian primes: both parts nonzero, norm is prime
+    assert_eval_eq("PrimeQ[1 + I]", "True", 1);       // norm=2, prime
+    assert_eval_eq("PrimeQ[1 + 2 I]", "True", 1);     // norm=5, prime
+    assert_eval_eq("PrimeQ[2 + I]", "True", 1);        // norm=5, prime
+    assert_eval_eq("PrimeQ[4 + I]", "True", 1);        // norm=17, prime
+    assert_eval_eq("PrimeQ[2 + 2 I]", "False", 1);     // norm=8, not prime
+
+    // Gaussian primes: pure imaginary, |b| prime and b ≡ 3 mod 4
+    assert_eval_eq("PrimeQ[3 I]", "True", 1);
+    assert_eval_eq("PrimeQ[7 I]", "True", 1);
+    assert_eval_eq("PrimeQ[5 I]", "False", 1);         // 5 ≡ 1 mod 4
+    assert_eval_eq("PrimeQ[2 I]", "False", 1);          // 2 ≡ 2 mod 4
+
+    // Gaussian primes: negative imaginary
+    assert_eval_eq("PrimeQ[-3 I]", "True", 1);
+    assert_eval_eq("PrimeQ[1 - 2 I]", "True", 1);      // norm=5, prime
 }
 
 void test_factorinteger(void) {
