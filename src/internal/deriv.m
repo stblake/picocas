@@ -77,6 +77,6 @@ Dt[f_[g_]] := Derivative[1][f][g] * Dt[g];
 Dt[f_, x_] := D[f, x];
 Dt[f_, {x_, n_Integer}] := D[f, {x, n}];
 Dt[f_, x_, y__] := Dt[Dt[f, x], y];
-SetAttributes[D, {Protected, ReadProtected}];
-SetAttributes[Dt, {Protected, ReadProtected}];
+SetAttributes[D, {Listable, Protected, ReadProtected}];
+SetAttributes[Dt, {Listable, Protected, ReadProtected}];
 SetAttributes[Derivative, {Protected, ReadProtected}]
