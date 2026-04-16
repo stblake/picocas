@@ -491,6 +491,54 @@ void test_commonest() {
     }
 }
 
+void test_join_basic() {
+    /* Basic concatenation of lists */
+    assert_eval_eq("Join[{a, b, c}, {x, y}, {u, v, w}]",
+                   "{a, b, c, x, y, u, v, w}", 0);
+}
+
+void test_join_two_lists() {
+    assert_eval_eq("Join[{1, 2}, {3, 4}]", "{1, 2, 3, 4}", 0);
+}
+
+void test_join_single_list() {
+    assert_eval_eq("Join[{a, b}]", "{a, b}", 0);
+}
+
+void test_join_empty_lists() {
+    assert_eval_eq("Join[{}, {a, b}]", "{a, b}", 0);
+    assert_eval_eq("Join[{a, b}, {}]", "{a, b}", 0);
+    assert_eval_eq("Join[{}, {}]", "{}", 0);
+}
+
+void test_join_non_list_head() {
+    /* Join works on any head, not just List */
+    assert_eval_eq("Join[f[a, b], f[c, d]]", "f[a, b, c, d]", 0);
+}
+
+void test_join_mismatched_heads() {
+    /* Mismatched heads: should remain unevaluated */
+    assert_eval_eq("Join[{a, b}, f[c, d]]", "Join[{a, b}, f[c, d]]", 0);
+}
+
+void test_join_level2_matrices() {
+    /* Join columns of two matrices */
+    assert_eval_eq("Join[{{a, b}, {c, d}}, {{1, 2}, {3, 4}}, 2]",
+                   "{{a, b, 1, 2}, {c, d, 3, 4}}", 0);
+}
+
+void test_join_level2_ragged() {
+    /* Ragged arrays: successive elements at level 2 are concatenated */
+    assert_eval_eq("Join[{{1}, {5, 6}}, {{2, 3}, {7}}, {{4}, {8}}, 2]",
+                   "{{1, 2, 3, 4}, {5, 6, 7, 8}}", 0);
+}
+
+void test_join_level2_ragged_unequal_lengths() {
+    /* When one list has fewer rows, extra rows pass through */
+    assert_eval_eq("Join[{{x}}, {{1, 2}, {3, 4}}, 2]",
+                   "{{x, 1, 2}, {3, 4}}", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
@@ -527,7 +575,17 @@ int main() {
     TEST(test_transpose);
     TEST(test_total);
     TEST(test_commonest);
-    
+
+    TEST(test_join_basic);
+    TEST(test_join_two_lists);
+    TEST(test_join_single_list);
+    TEST(test_join_empty_lists);
+    TEST(test_join_non_list_head);
+    TEST(test_join_mismatched_heads);
+    TEST(test_join_level2_matrices);
+    TEST(test_join_level2_ragged);
+    TEST(test_join_level2_ragged_unequal_lengths);
+
     printf("All list tests passed!\n");
     return 0;
 }

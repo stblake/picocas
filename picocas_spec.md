@@ -197,6 +197,37 @@ Flattens out nested lists.
 - `Flatten[list, n]`: Flattens up to level `n`.
 - `Flatten[list, n, h]`: Flattens subexpressions with head `h`.
 
+#### Join
+Concatenates lists or other expressions that share the same head.
+- `Join[list1, list2, ...]`: Concatenates the elements of all lists into a single expression.
+- `Join[list1, list2, ..., n]`: Joins the objects at level `n` in each of the lists.
+
+**Features**:
+- `Protected`.
+- All arguments must share the same head; returns unevaluated if heads differ.
+- Works on any head, not just `List` (e.g., `Join[f[a], f[b]]` gives `f[a, b]`).
+- `Join[list1, list2, ..., n]` handles ragged arrays by concatenating successive elements at level `n`.
+
+```mathematica
+In[1]:= Join[{a, b, c}, {x, y}, {u, v, w}]
+Out[1]= {a, b, c, x, y, u, v, w}
+
+In[2]:= Join[{1, 2}, {3, 4}]
+Out[2]= {1, 2, 3, 4}
+
+In[3]:= Join[f[a, b], f[c, d]]
+Out[3]= f[a, b, c, d]
+
+In[4]:= Join[{{a, b}, {c, d}}, {{1, 2}, {3, 4}}, 2]
+Out[4]= {{a, b, 1, 2}, {c, d, 3, 4}}
+
+In[5]:= Join[{{1}, {5, 6}}, {{2, 3}, {7}}, {{4}, {8}}, 2]
+Out[5]= {{1, 2, 3, 4}, {5, 6, 7, 8}}
+
+In[6]:= Join[{{x}}, {{1, 2}, {3, 4}}, 2]
+Out[6]= {{x, 1, 2}, {3, 4}}
+```
+
 #### Partition
 Partitions a list into sublists.
 - `Partition[list, n]`: Non-overlapping sublists of length `n`.
