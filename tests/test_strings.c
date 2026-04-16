@@ -237,6 +237,300 @@ void test_infix_stringjoin_spaces() {
     assert_eval_eq("\"hello\"  <>  \"world\"", "\"helloworld\"", 0);
 }
 
+/* ===== StringPart tests ===== */
+
+/* Single index */
+void test_stringpart_single_index() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", 6]", "\"f\"", 0);
+}
+
+void test_stringpart_first_char() {
+    assert_eval_eq("StringPart[\"abcdef\", 1]", "\"a\"", 0);
+}
+
+void test_stringpart_last_char() {
+    assert_eval_eq("StringPart[\"abcdef\", 6]", "\"f\"", 0);
+}
+
+/* Negative index */
+void test_stringpart_negative_index() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", -4]", "\"j\"", 0);
+}
+
+void test_stringpart_negative_one() {
+    assert_eval_eq("StringPart[\"abcdef\", -1]", "\"f\"", 0);
+}
+
+void test_stringpart_negative_full() {
+    assert_eval_eq("StringPart[\"abcdef\", -6]", "\"a\"", 0);
+}
+
+/* List of indices */
+void test_stringpart_list_indices() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", {1, 3, 5}]", "{\"a\", \"c\", \"e\"}", 0);
+}
+
+void test_stringpart_list_single() {
+    assert_eval_eq("StringPart[\"abcdef\", {3}]", "{\"c\"}", 0);
+}
+
+void test_stringpart_list_with_negative() {
+    assert_eval_eq("StringPart[\"abcdef\", {1, -1}]", "{\"a\", \"f\"}", 0);
+}
+
+/* Span: m;;n */
+void test_stringpart_span_basic() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", 1;;6]",
+                   "{\"a\", \"b\", \"c\", \"d\", \"e\", \"f\"}", 0);
+}
+
+void test_stringpart_span_middle() {
+    assert_eval_eq("StringPart[\"abcdef\", 2;;4]",
+                   "{\"b\", \"c\", \"d\"}", 0);
+}
+
+/* Span: m;;n;;s */
+void test_stringpart_span_step() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", 1;;-1;;2]",
+                   "{\"a\", \"c\", \"e\", \"g\", \"i\", \"k\", \"m\"}", 0);
+}
+
+void test_stringpart_span_negative_step() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", -1;;1;;-2]",
+                   "{\"m\", \"k\", \"i\", \"g\", \"e\", \"c\", \"a\"}", 0);
+}
+
+void test_stringpart_span_step_3() {
+    assert_eval_eq("StringPart[\"abcdefghijklm\", 1;;-1;;3]",
+                   "{\"a\", \"d\", \"g\", \"j\", \"m\"}", 0);
+}
+
+/* List of strings */
+void test_stringpart_list_strings_single_index() {
+    assert_eval_eq("StringPart[{\"abcd\", \"efgh\", \"ijklm\"}, 1]",
+                   "{\"a\", \"e\", \"i\"}", 0);
+}
+
+void test_stringpart_list_strings_list_indices() {
+    assert_eval_eq("StringPart[{\"abcd\", \"efgh\", \"ijklm\"}, {1, -1}]",
+                   "{{\"a\", \"d\"}, {\"e\", \"h\"}, {\"i\", \"m\"}}", 0);
+}
+
+/* Edge cases */
+void test_stringpart_unevaluated_no_args() {
+    assert_eval_eq("StringPart[]", "StringPart[]", 0);
+}
+
+void test_stringpart_unevaluated_one_arg() {
+    assert_eval_eq("StringPart[\"abc\"]", "StringPart[\"abc\"]", 0);
+}
+
+void test_stringpart_unevaluated_three_args() {
+    assert_eval_eq("StringPart[\"abc\", 1, 2]", "StringPart[\"abc\", 1, 2]", 0);
+}
+
+void test_stringpart_unevaluated_symbolic() {
+    assert_eval_eq("StringPart[x, 1]", "StringPart[x, 1]", 0);
+}
+
+void test_stringpart_unevaluated_symbolic_index() {
+    assert_eval_eq("StringPart[\"abc\", x]", "StringPart[\"abc\", x]", 0);
+}
+
+void test_stringpart_out_of_bounds() {
+    /* Out of bounds should remain unevaluated */
+    assert_eval_eq("StringPart[\"abc\", 4]", "StringPart[\"abc\", 4]", 0);
+}
+
+void test_stringpart_out_of_bounds_negative() {
+    assert_eval_eq("StringPart[\"abc\", -4]", "StringPart[\"abc\", -4]", 0);
+}
+
+void test_stringpart_zero_index() {
+    /* 0 is not a valid index */
+    assert_eval_eq("StringPart[\"abc\", 0]", "StringPart[\"abc\", 0]", 0);
+}
+
+void test_stringpart_span_all() {
+    assert_eval_eq("StringPart[\"abc\", 1;;3]",
+                   "{\"a\", \"b\", \"c\"}", 0);
+}
+
+void test_stringpart_span_reverse() {
+    assert_eval_eq("StringPart[\"abcde\", 5;;1;;-1]",
+                   "{\"e\", \"d\", \"c\", \"b\", \"a\"}", 0);
+}
+
+void test_stringpart_span_single_element() {
+    assert_eval_eq("StringPart[\"abcdef\", 3;;3]", "{\"c\"}", 0);
+}
+
+void test_stringpart_span_negative_endpoints() {
+    assert_eval_eq("StringPart[\"abcdef\", -3;;-1]",
+                   "{\"d\", \"e\", \"f\"}", 0);
+}
+
+/* ===== StringTake tests ===== */
+
+/* StringTake["string", n] - first n characters */
+void test_stringtake_first_n() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", 6]", "\"abcdef\"", 0);
+}
+
+void test_stringtake_first_1() {
+    assert_eval_eq("StringTake[\"abcdef\", 1]", "\"a\"", 0);
+}
+
+void test_stringtake_first_all() {
+    assert_eval_eq("StringTake[\"abc\", 3]", "\"abc\"", 0);
+}
+
+void test_stringtake_zero() {
+    assert_eval_eq("StringTake[\"abc\", 0]", "\"\"", 0);
+}
+
+/* StringTake["string", -n] - last n characters */
+void test_stringtake_last_n() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", -4]", "\"jklm\"", 0);
+}
+
+void test_stringtake_last_1() {
+    assert_eval_eq("StringTake[\"abcdef\", -1]", "\"f\"", 0);
+}
+
+void test_stringtake_last_all() {
+    assert_eval_eq("StringTake[\"abc\", -3]", "\"abc\"", 0);
+}
+
+/* StringTake["string", {n}] - nth character */
+void test_stringtake_single_char() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", {6}]", "\"f\"", 0);
+}
+
+void test_stringtake_single_first() {
+    assert_eval_eq("StringTake[\"abcdef\", {1}]", "\"a\"", 0);
+}
+
+void test_stringtake_single_last() {
+    assert_eval_eq("StringTake[\"abcdef\", {-1}]", "\"f\"", 0);
+}
+
+void test_stringtake_single_negative() {
+    assert_eval_eq("StringTake[\"abcdef\", {-3}]", "\"d\"", 0);
+}
+
+/* StringTake["string", {m, n}] - characters m through n */
+void test_stringtake_range() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", {5, 10}]", "\"efghij\"", 0);
+}
+
+void test_stringtake_range_from_start() {
+    assert_eval_eq("StringTake[\"abcdef\", {1, 3}]", "\"abc\"", 0);
+}
+
+void test_stringtake_range_to_end() {
+    assert_eval_eq("StringTake[\"abcdef\", {4, 6}]", "\"def\"", 0);
+}
+
+void test_stringtake_range_single() {
+    assert_eval_eq("StringTake[\"abcdef\", {3, 3}]", "\"c\"", 0);
+}
+
+void test_stringtake_range_negative() {
+    assert_eval_eq("StringTake[\"abcdef\", {-3, -1}]", "\"def\"", 0);
+}
+
+/* StringTake["string", {m, n, s}] - range with step */
+void test_stringtake_step() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", {1, -1, 2}]", "\"acegikm\"", 0);
+}
+
+void test_stringtake_step_3() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", {1, -1, 3}]", "\"adgjm\"", 0);
+}
+
+void test_stringtake_step_negative() {
+    assert_eval_eq("StringTake[\"abcde\", {5, 1, -1}]", "\"edcba\"", 0);
+}
+
+void test_stringtake_step_neg2() {
+    assert_eval_eq("StringTake[\"abcdefghijklm\", {-1, 1, -2}]", "\"mkigeca\"", 0);
+}
+
+/* StringTake["string", UpTo[n]] */
+void test_stringtake_upto_enough() {
+    assert_eval_eq("StringTake[\"abcdef\", UpTo[4]]", "\"abcd\"", 0);
+}
+
+void test_stringtake_upto_more_than_available() {
+    assert_eval_eq("StringTake[\"abc\", UpTo[4]]", "\"abc\"", 0);
+}
+
+void test_stringtake_upto_exact() {
+    assert_eval_eq("StringTake[\"abc\", UpTo[3]]", "\"abc\"", 0);
+}
+
+void test_stringtake_upto_one() {
+    assert_eval_eq("StringTake[\"abc\", UpTo[1]]", "\"a\"", 0);
+}
+
+void test_stringtake_upto_large() {
+    assert_eval_eq("StringTake[\"abc\", UpTo[100]]", "\"abc\"", 0);
+}
+
+/* StringTake[{s1, s2, ...}, spec] - list of strings */
+void test_stringtake_list_strings() {
+    assert_eval_eq("StringTake[{\"abcdef\", \"stuv\", \"xyzw\"}, -2]",
+                   "{\"ef\", \"uv\", \"zw\"}", 0);
+}
+
+void test_stringtake_list_strings_first() {
+    assert_eval_eq("StringTake[{\"abcdef\", \"xyz\"}, 2]",
+                   "{\"ab\", \"xy\"}", 0);
+}
+
+void test_stringtake_list_strings_range() {
+    assert_eval_eq("StringTake[{\"abcdef\", \"ghijkl\"}, {2, 4}]",
+                   "{\"bcd\", \"hij\"}", 0);
+}
+
+/* Edge cases - unevaluated */
+void test_stringtake_unevaluated_no_args() {
+    assert_eval_eq("StringTake[]", "StringTake[]", 0);
+}
+
+void test_stringtake_unevaluated_one_arg() {
+    assert_eval_eq("StringTake[\"abc\"]", "StringTake[\"abc\"]", 0);
+}
+
+void test_stringtake_unevaluated_three_args() {
+    assert_eval_eq("StringTake[\"abc\", 1, 2]", "StringTake[\"abc\", 1, 2]", 0);
+}
+
+void test_stringtake_unevaluated_symbolic() {
+    assert_eval_eq("StringTake[x, 1]", "StringTake[x, 1]", 0);
+}
+
+void test_stringtake_unevaluated_symbolic_spec() {
+    assert_eval_eq("StringTake[\"abc\", x]", "StringTake[\"abc\", x]", 0);
+}
+
+void test_stringtake_out_of_bounds() {
+    assert_eval_eq("StringTake[\"abc\", 4]", "StringTake[\"abc\", 4]", 0);
+}
+
+void test_stringtake_out_of_bounds_negative() {
+    assert_eval_eq("StringTake[\"abc\", -4]", "StringTake[\"abc\", -4]", 0);
+}
+
+void test_stringtake_empty_string_zero() {
+    assert_eval_eq("StringTake[\"\", 0]", "\"\"", 0);
+}
+
+void test_stringtake_empty_upto() {
+    assert_eval_eq("StringTake[\"\", UpTo[5]]", "\"\"", 0);
+}
+
 /* ===== Combined / integration tests ===== */
 
 void test_stringjoin_with_characters() {
@@ -320,6 +614,75 @@ int main() {
     TEST(test_infix_stringjoin_three_fullform);
     TEST(test_infix_stringjoin_with_parens);
     TEST(test_infix_stringjoin_spaces);
+
+    /* StringPart tests */
+    TEST(test_stringpart_single_index);
+    TEST(test_stringpart_first_char);
+    TEST(test_stringpart_last_char);
+    TEST(test_stringpart_negative_index);
+    TEST(test_stringpart_negative_one);
+    TEST(test_stringpart_negative_full);
+    TEST(test_stringpart_list_indices);
+    TEST(test_stringpart_list_single);
+    TEST(test_stringpart_list_with_negative);
+    TEST(test_stringpart_span_basic);
+    TEST(test_stringpart_span_middle);
+    TEST(test_stringpart_span_step);
+    TEST(test_stringpart_span_negative_step);
+    TEST(test_stringpart_span_step_3);
+    TEST(test_stringpart_list_strings_single_index);
+    TEST(test_stringpart_list_strings_list_indices);
+    TEST(test_stringpart_unevaluated_no_args);
+    TEST(test_stringpart_unevaluated_one_arg);
+    TEST(test_stringpart_unevaluated_three_args);
+    TEST(test_stringpart_unevaluated_symbolic);
+    TEST(test_stringpart_unevaluated_symbolic_index);
+    TEST(test_stringpart_out_of_bounds);
+    TEST(test_stringpart_out_of_bounds_negative);
+    TEST(test_stringpart_zero_index);
+    TEST(test_stringpart_span_all);
+    TEST(test_stringpart_span_reverse);
+    TEST(test_stringpart_span_single_element);
+    TEST(test_stringpart_span_negative_endpoints);
+
+    /* StringTake tests */
+    TEST(test_stringtake_first_n);
+    TEST(test_stringtake_first_1);
+    TEST(test_stringtake_first_all);
+    TEST(test_stringtake_zero);
+    TEST(test_stringtake_last_n);
+    TEST(test_stringtake_last_1);
+    TEST(test_stringtake_last_all);
+    TEST(test_stringtake_single_char);
+    TEST(test_stringtake_single_first);
+    TEST(test_stringtake_single_last);
+    TEST(test_stringtake_single_negative);
+    TEST(test_stringtake_range);
+    TEST(test_stringtake_range_from_start);
+    TEST(test_stringtake_range_to_end);
+    TEST(test_stringtake_range_single);
+    TEST(test_stringtake_range_negative);
+    TEST(test_stringtake_step);
+    TEST(test_stringtake_step_3);
+    TEST(test_stringtake_step_negative);
+    TEST(test_stringtake_step_neg2);
+    TEST(test_stringtake_upto_enough);
+    TEST(test_stringtake_upto_more_than_available);
+    TEST(test_stringtake_upto_exact);
+    TEST(test_stringtake_upto_one);
+    TEST(test_stringtake_upto_large);
+    TEST(test_stringtake_list_strings);
+    TEST(test_stringtake_list_strings_first);
+    TEST(test_stringtake_list_strings_range);
+    TEST(test_stringtake_unevaluated_no_args);
+    TEST(test_stringtake_unevaluated_one_arg);
+    TEST(test_stringtake_unevaluated_three_args);
+    TEST(test_stringtake_unevaluated_symbolic);
+    TEST(test_stringtake_unevaluated_symbolic_spec);
+    TEST(test_stringtake_out_of_bounds);
+    TEST(test_stringtake_out_of_bounds_negative);
+    TEST(test_stringtake_empty_string_zero);
+    TEST(test_stringtake_empty_upto);
 
     /* Combined tests */
     TEST(test_stringjoin_with_characters);
