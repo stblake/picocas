@@ -261,7 +261,8 @@ typedef enum {
     OP_INFORMATION,
     OP_FACTORIAL,
     OP_REPEATED,
-    OP_REPEATEDNULL
+    OP_REPEATEDNULL,
+    OP_STRINGJOIN
 } OperatorType;
 
 typedef struct {
@@ -315,6 +316,8 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_FUNCTION; def.prec = 90; def.head_name = "Function"; def.len = 1;
     } else if (strncmp(pos, "!=", 2) == 0) {
         def.type = OP_UNEQUAL; def.prec = 290; def.head_name = "Unequal"; def.len = 2;
+    } else if (strncmp(pos, "<>", 2) == 0) {
+        def.type = OP_STRINGJOIN; def.prec = 600; def.head_name = "StringJoin"; def.len = 2;
     } else if (strncmp(pos, "<=", 2) == 0) {
         def.type = OP_LESSEQUAL; def.prec = 290; def.head_name = "LessEqual"; def.len = 2;
     } else if (strncmp(pos, ">=", 2) == 0) {

@@ -1851,6 +1851,90 @@ In[10]:= RandomSample[x]
 Out[10]= RandomSample[x]
 ```
 
+### String Operations
+
+#### StringLength
+
+Gives the number of characters in a string.
+
+- `StringLength["string"]`: Returns the number of characters as an integer.
+- Returns unevaluated for non-string arguments.
+- **Attributes**: `Listable`, `Protected`.
+
+```mathematica
+In[1]:= StringLength["tiger"]
+Out[1]= 5
+
+In[2]:= StringLength[""]
+Out[2]= 0
+
+In[3]:= StringLength["hello world"]
+Out[3]= 11
+
+In[4]:= StringLength[{\"ABC\", \"DE\", \"F\"}]
+Out[4]= {3, 2, 1}
+
+In[5]:= StringLength[x]
+Out[5]= StringLength[x]
+```
+
+#### Characters
+
+Gives a list of the characters in a string.
+
+- `Characters["string"]`: Returns a `List` of single-character strings.
+- Each character is given as a length-1 string.
+- Returns unevaluated for non-string arguments.
+- **Attributes**: `Listable`, `Protected`.
+
+```mathematica
+In[1]:= Characters["ABC"]
+Out[1]= {"A", "B", "C"}
+
+In[2]:= Characters["A string."]
+Out[2]= {"A", " ", "s", "t", "r", "i", "n", "g", "."}
+
+In[3]:= Characters[""]
+Out[3]= {}
+
+In[4]:= Characters[{"ABC", "DEF", "XYZ"}]
+Out[4]= {{"A", "B", "C"}, {"D", "E", "F"}, {"X", "Y", "Z"}}
+
+In[5]:= Characters[x]
+Out[5]= Characters[x]
+```
+
+#### StringJoin
+
+Concatenates strings together.
+
+- `StringJoin["s1", "s2", ...]`: Joins all string arguments into a single string.
+- `StringJoin[{"s1", "s2", ...}]`: Flattens all lists recursively and joins enclosed strings.
+- `StringJoin[]`: Returns the empty string `""`.
+- The infix form is `"s1" <> "s2" <> ...`.
+- Returns unevaluated if any non-string, non-list leaf is encountered.
+- **Attributes**: `Flat`, `OneIdentity`, `Protected`.
+
+```mathematica
+In[1]:= StringJoin["abcd", "ABCD", "xyz"]
+Out[1]= "abcdABCDxyz"
+
+In[2]:= "abcd" <> "ABCD" <> "xyz"
+Out[2]= "abcdABCDxyz"
+
+In[3]:= StringJoin[{{"AB", "CD"}, "XY"}]
+Out[3]= "ABCDXY"
+
+In[4]:= StringJoin[]
+Out[4]= ""
+
+In[5]:= StringJoin["a", x]
+Out[5]= StringJoin["a", x]
+
+In[6]:= StringJoin[Characters["hello"]]
+Out[6]= "hello"
+```
+
 ### Arithmetic and Algebra
 
 #### Plus (+)
@@ -2805,6 +2889,7 @@ Gives the number of elements or subexpressions that match a pattern.
 | `&`      | `Function`| 90 | Left |
 | `@@`     | `Apply` | 620 | Right |
 | `/@`     | `Map`   | 620 | Right |
+| `<>`     | `StringJoin` | 600 | Left |
 | `^`      | `Power` | 590 | Right |
 | `*`      | `Times` | 400 | Left |
 | `/`      | `Divide`| 470 | Left |

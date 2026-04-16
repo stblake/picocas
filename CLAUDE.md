@@ -15,7 +15,7 @@ The goal of this project is to use Gemini cli to create a small (pico) computer 
 
 -- Efficient and careful memory management is important. The system should track memory usage and leaks with valgrind. 
 
-A summary of the existing functionality is given in @./picocas_spec.md After any change or improvement to the system is made, a summary of the features should be given in @./picocas_spec.md under an appropriate heading/section etc. 
+After any change or improvement to the system is made, a summary of the features should be given in picocas_spec.md under an appropriate heading/section etc. 
 
 -- Every builtin function should have an Information string that gives a concise, but complete description of the function (via symtab_set_docstring)
 

@@ -43,6 +43,7 @@
 #include "rat.h"
 #include "parfrac.h"
 #include "random.h"
+#include "strings.h"
 
 void core_init(void) {
     parfrac_init();
@@ -189,6 +190,7 @@ void core_init(void) {
     linalg_init();
     load_init();
     random_init();
+    strings_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {
