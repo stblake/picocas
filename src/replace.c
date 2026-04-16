@@ -56,28 +56,73 @@ typedef struct {
     int64_t neg_index;
 } PathElement;
 
-static bool check_match(RawRule* rules, size_t num_rules, PathElement* path, size_t depth, 
+/*
+ * normalize_pos_spec:
+ * Convert negative integer indices in a rule's position spec to their positive
+ * equivalents using the known path lengths. Returns a new expression that must
+ * be freed, or NULL if no normalization was needed.
+ */
+static Expr* normalize_pos_spec(Expr* pos_spec, PathElement* path, size_t depth) {
+    if (pos_spec->type != EXPR_FUNCTION || depth == 0) return NULL;
+    if (pos_spec->data.function.arg_count != depth) return NULL;
+
+    bool needs_norm = false;
+    for (size_t d = 0; d < depth; d++) {
+        Expr* elem = pos_spec->data.function.args[d];
+        if (elem->type == EXPR_INTEGER && elem->data.integer < 0) {
+            needs_norm = true;
+            break;
+        }
+    }
+    if (!needs_norm) return NULL;
+
+    Expr** new_args = malloc(sizeof(Expr*) * depth);
+    for (size_t d = 0; d < depth; d++) {
+        Expr* elem = pos_spec->data.function.args[d];
+        if (elem->type == EXPR_INTEGER && elem->data.integer < 0) {
+            /* Recover length from pos_index and neg_index:
+             * neg_index = pos_index - length - 1, so length = pos_index - neg_index - 1 */
+            int64_t length = path[d].pos_index - path[d].neg_index - 1;
+            int64_t positive = elem->data.integer + length + 1;
+            new_args[d] = expr_new_integer(positive);
+        } else {
+            new_args[d] = expr_copy(elem);
+        }
+    }
+    Expr* result = expr_new_function(expr_copy(pos_spec->data.function.head), new_args, depth);
+    free(new_args);
+    return result;
+}
+
+static bool check_match(RawRule* rules, size_t num_rules, PathElement* path, size_t depth,
                         Expr** out_replacement, bool* out_delayed, MatchEnv** out_env) {
     for (int64_t r = (int64_t)num_rules - 1; r >= 0; r--) {
+        /* Build the current position as a List of positive indices */
         Expr** alias_args = NULL;
         if (depth > 0) alias_args = malloc(sizeof(Expr*) * depth);
         for (size_t d = 0; d < depth; d++) {
             alias_args[d] = expr_new_integer(path[d].pos_index);
         }
         Expr* alias_expr = expr_new_function(expr_new_symbol("List"), alias_args, depth);
-        
+
+        /* Normalize any negative indices in the rule's pos_spec to positive */
+        Expr* norm_spec = normalize_pos_spec(rules[r].pos_spec, path, depth);
+        Expr* spec_to_match = norm_spec ? norm_spec : rules[r].pos_spec;
+
         MatchEnv* env = env_new();
-        if (match(alias_expr, rules[r].pos_spec, env)) {
+        if (match(alias_expr, spec_to_match, env)) {
             *out_replacement = rules[r].replacement;
             *out_delayed = rules[r].delayed;
             *out_env = env;
             expr_free(alias_expr);
             if (alias_args) free(alias_args);
+            if (norm_spec) expr_free(norm_spec);
             return true;
         }
         env_free(env);
         expr_free(alias_expr);
         if (alias_args) free(alias_args);
+        if (norm_spec) expr_free(norm_spec);
     }
     return false;
 }
@@ -102,14 +147,32 @@ static Expr* replace_part_rec(Expr* expr, RawRule* rules, size_t num_rules, Path
         size_t len = expr->data.function.arg_count;
         Expr** new_args = NULL;
         if (len > 0) new_args = malloc(sizeof(Expr*) * len);
-        
+
         PathElement* next_path = malloc(sizeof(PathElement) * (depth + 1));
         if (depth > 0) memcpy(next_path, current_path, sizeof(PathElement) * depth);
-        
-        // Check head (index 0)
+
+        /* Check head (index 0) -- only replace if a rule explicitly targets index 0
+         * with a literal integer. Default Heads -> False means patterns like _ or
+         * Except[...] should not match the head position. */
         next_path[depth].pos_index = 0;
         next_path[depth].neg_index = 0;
-        Expr* new_head = replace_part_rec(expr->data.function.head, rules, num_rules, next_path, depth + 1);
+        Expr* new_head = NULL;
+        bool head_replaced = false;
+        for (size_t r = num_rules; r > 0; r--) {
+            Expr* spec = rules[r - 1].pos_spec;
+            /* Only consider this rule for the head if it has a literal 0 at this depth */
+            if (spec->type == EXPR_FUNCTION && spec->data.function.arg_count == depth + 1) {
+                Expr* idx = spec->data.function.args[depth];
+                if (idx->type == EXPR_INTEGER && idx->data.integer == 0) {
+                    new_head = replace_part_rec(expr->data.function.head, rules, num_rules, next_path, depth + 1);
+                    head_replaced = true;
+                    break;
+                }
+            }
+        }
+        if (!head_replaced) {
+            new_head = expr_copy(expr->data.function.head);
+        }
 
         for (size_t i = 0; i < len; i++) {
             next_path[depth].pos_index = i + 1;

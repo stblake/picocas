@@ -2635,6 +2635,34 @@ In[4]:= Replace[1 + x^2, x^2 -> a + b, {1}]
 Out[4]= 1 + a + b
 ```
 
+#### ReplacePart
+Replaces parts of an expression at specified positions.
+- `ReplacePart[expr, i -> new]`: Replaces the part at position `i`.
+- `ReplacePart[expr, {i, j, ...} -> new]`: Replaces the part at a nested position.
+- `ReplacePart[expr, {{i1, ...} -> new1, {i2, ...} -> new2, ...}]`: Multiple replacements.
+- `ReplacePart[expr, pattern -> new]`: Replaces parts at all positions matching `pattern` (e.g., `_`, `Except[...]`).
+
+**Features**:
+- `Protected`.
+- Supports negative indices: `-1` is the last element, `-2` is second-to-last, etc.
+- Supports mixed positive/negative indices in nested position specs (e.g., `{2, -1}`).
+- Default `Heads -> False`: pattern-based position specs do not match the head (index 0). Use an explicit `0 -> new` rule to replace the head.
+- Supports `Rule` (`->`) and `RuleDelayed` (`:>`).
+
+```mathematica
+In[1]:= ReplacePart[{a, b, c, d}, 2 -> x]
+Out[1]= {a, x, c, d}
+
+In[2]:= ReplacePart[{a, b, c, d, e, f, g}, -3 -> xxx]
+Out[2]= {a, b, c, d, xxx, f, g}
+
+In[3]:= ReplacePart[{a, b, c, d, e, f, g}, Except[1 | 3 | 5] -> xxx]
+Out[3]= {a, xxx, c, xxx, e, xxx, xxx}
+
+In[4]:= ReplacePart[f[x], 0 -> g]
+Out[4]= g[x]
+```
+
 #### ReplaceAll (/.)
 Applies a rule or list of rules to transform each subpart of an expression.
 - `expr /. lhs -> rhs` or `expr /. {rules}`
