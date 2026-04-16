@@ -155,6 +155,27 @@ void test_regression_clear() {
     expr_free(e8); expr_free(res8);
 }
 
+void test_regression_condition_rhs_setdelayed() {
+    symtab_init();
+    core_init();
+
+    /* Condition on the RHS of SetDelayed should be moved to the LHS pattern.
+     * f[x_] := body /; test  is equivalent to  f[x_] /; test := body */
+    assert_eval_eq("f[x_] := ppp[x] /; x > 0", "Null", 0);
+    assert_eval_eq("f[1]", "ppp[1]", 0);
+    assert_eval_eq("f[-1]", "f[-1]", 0);
+
+    /* Multi-argument case */
+    assert_eval_eq("h[x_, y_] := x + y /; x > y", "Null", 0);
+    assert_eval_eq("h[5, 3]", "8", 0);
+    assert_eval_eq("h[2, 7]", "h[2, 7]", 0);
+
+    /* Condition on the LHS should still work */
+    assert_eval_eq("g[x_] /; x > 0 := x^2", "Null", 0);
+    assert_eval_eq("g[3]", "9", 0);
+    assert_eval_eq("g[-2]", "g[-2]", 0);
+}
+
 int main() {
     printf("Running extensive regression tests...\n");
     TEST(test_regression_flat_orderless_eval);
@@ -162,6 +183,7 @@ int main() {
     TEST(test_regression_infinite_eval);
     TEST(test_regression_nested_replace);
     TEST(test_regression_clear);
+    TEST(test_regression_condition_rhs_setdelayed);
     printf("All regression tests passed!\n");
     return 0;
 }

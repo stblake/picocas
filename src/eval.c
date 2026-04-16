@@ -194,15 +194,37 @@ static bool apply_assignment(Expr* lhs, Expr* rhs, bool is_delayed) {
             /* Pattern-based assignment (DownValues) */
             /* We use the entire lhs as the pattern, and its head as the key */
             const char* symbol_name = lhs->data.function.head->data.symbol;
-            if (strcmp(symbol_name, "Condition") == 0 && lhs->data.function.arg_count == 2) {
-                Expr* actual_lhs = lhs->data.function.args[0];
-                if (actual_lhs->type == EXPR_FUNCTION && actual_lhs->data.function.head->type == EXPR_SYMBOL) {
-                    symbol_name = actual_lhs->data.function.head->data.symbol;
-                } else if (actual_lhs->type == EXPR_SYMBOL) {
-                    symbol_name = actual_lhs->data.symbol;
+
+            Expr* actual_pattern = lhs;
+            Expr* actual_rhs = rhs;
+
+            /* If the RHS is Condition[body, test], move the condition to the LHS.
+             * This makes f[x_] := body /; test equivalent to f[x_] /; test := body.
+             * This is standard Mathematica semantics. */
+            if (is_delayed && rhs->type == EXPR_FUNCTION &&
+                rhs->data.function.head->type == EXPR_SYMBOL &&
+                strcmp(rhs->data.function.head->data.symbol, "Condition") == 0 &&
+                rhs->data.function.arg_count == 2) {
+                /* Build Condition[lhs, test] as the new pattern */
+                Expr** cond_args = malloc(sizeof(Expr*) * 2);
+                cond_args[0] = expr_copy(lhs);
+                cond_args[1] = expr_copy(rhs->data.function.args[1]);
+                actual_pattern = expr_new_function(expr_new_symbol("Condition"), cond_args, 2);
+                free(cond_args);
+                /* The actual replacement is just the body */
+                actual_rhs = rhs->data.function.args[0];
+            }
+
+            if (strcmp(symbol_name, "Condition") == 0 && actual_pattern->data.function.arg_count == 2) {
+                Expr* inner_lhs = actual_pattern->data.function.args[0];
+                if (inner_lhs->type == EXPR_FUNCTION && inner_lhs->data.function.head->type == EXPR_SYMBOL) {
+                    symbol_name = inner_lhs->data.function.head->data.symbol;
+                } else if (inner_lhs->type == EXPR_SYMBOL) {
+                    symbol_name = inner_lhs->data.symbol;
                 }
             }
-            symtab_add_down_value(symbol_name, lhs, rhs);
+            symtab_add_down_value(symbol_name, actual_pattern, actual_rhs);
+            if (actual_pattern != lhs) expr_free(actual_pattern);
             return true;
         }
     }

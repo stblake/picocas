@@ -2604,6 +2604,7 @@ Tests whether an expression evaluates explicitly to `True`.
 #### Set (=), SetDelayed (:=)
 - `lhs = rhs`: `Set`. Immediate evaluation of `rhs`.
 - `lhs := rhs`: `SetDelayed`. Delayed evaluation of `rhs`.
+- `lhs := rhs /; condition`: When the RHS of `SetDelayed` is a `Condition`, it is automatically moved to the LHS pattern. This makes `f[x_] := body /; test` equivalent to `f[x_] /; test := body`.
 
 #### Replace
 Applies a rule or list of rules to transform an expression.
