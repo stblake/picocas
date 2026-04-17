@@ -152,6 +152,9 @@ target_include_directories(mapat_tests PRIVATE ../src)
 add_executable(replaceat_tests test_replaceat.c ${COMMON_SRC})
 target_include_directories(replaceat_tests PRIVATE ../src)
 
+add_executable(nest_tests test_nest.c ${COMMON_SRC})
+target_include_directories(nest_tests PRIVATE ../src)
+
 add_executable(split_tests test_split.c ${COMMON_SRC})
 target_include_directories(split_tests PRIVATE ../src)
 
@@ -244,6 +247,7 @@ if(USE_ECM)
     add_dependencies(funcprog_through_tests build_ecm)
     add_dependencies(mapat_tests build_ecm)
     add_dependencies(replaceat_tests build_ecm)
+    add_dependencies(nest_tests build_ecm)
     add_dependencies(split_tests build_ecm)
     add_dependencies(sort_tests build_ecm)
     add_dependencies(backtrack_tests build_ecm)

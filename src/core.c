@@ -97,6 +97,15 @@ void core_init(void) {
         "\n"
         "Positions may contain All or Span specifications. MapAt[f, expr, 0]\n"
         "applies f to the head of expr. Repeated positions apply f repeatedly.");
+    symtab_add_builtin("Nest", builtin_nest);
+    symtab_get_def("Nest")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("Nest",
+        "Nest[f, expr, n]\n"
+        "\tgives an expression with f applied n times to expr.\n"
+        "\n"
+        "n must be a non-negative integer. Nest[f, expr, 0] returns expr. The\n"
+        "function f may be a symbol or a pure function. Each iteration evaluates\n"
+        "f applied to the current value before proceeding.");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

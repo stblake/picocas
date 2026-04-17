@@ -1284,3 +1284,39 @@ Expr* builtin_permutations(Expr* res) {
     if (results) free(results);
     return final_res;
 }
+
+/* ------------------- Nest ------------------- */
+
+/*
+ * Nest[f, expr, n] returns the result of applying f to expr n times.
+ *
+ * n must be a non-negative integer. If n is 0, a copy of expr is returned.
+ * Each iteration constructs f[current] and evaluates it, taking the result
+ * as the new current value.
+ *
+ * Returns NULL (leaving Nest unevaluated) for:
+ *   - wrong arg count
+ *   - n that is not an integer
+ *   - n < 0
+ */
+Expr* builtin_nest(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+    Expr* n_expr = res->data.function.args[2];
+
+    if (n_expr->type != EXPR_INTEGER) return NULL;
+    int64_t n = n_expr->data.integer;
+    if (n < 0) return NULL;
+
+    Expr* current = expr_copy(expr);
+    for (int64_t i = 0; i < n; i++) {
+        Expr* arg_copy = expr_copy(current);
+        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+        Expr* next = eval_and_free(call);
+        expr_free(current);
+        current = next;
+    }
+    return current;
+}
