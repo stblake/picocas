@@ -1285,619 +1285,239 @@ Expr* builtin_permutations(Expr* res) {
     return final_res;
 }
 
-/* ------------------- Nest ------------------- */
-
-/*
- * Nest[f, expr, n] returns the result of applying f to expr n times.
+/* ================================================================= *
+ * Shared iteration machinery for Nest/NestList, Fold/FoldList,
+ * NestWhile/NestWhileList, and FixedPoint/FixedPointList.
  *
- * n must be a non-negative integer. If n is 0, a copy of expr is returned.
- * Each iteration constructs f[current] and evaluates it, taking the result
- * as the new current value.
- *
- * Returns NULL (leaving Nest unevaluated) for:
- *   - wrong arg count
- *   - n that is not an integer
- *   - n < 0
- */
-Expr* builtin_nest(Expr* res) {
-    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+ * Each of those builtin pairs is a thin wrapper around a single
+ * implementation function that takes a boolean "as_list" flag. The
+ * implementations differ only in argument parsing, the per-iteration
+ * step callback, and any post-processing of the history buffer. The
+ * generic runner iter_run() and the finalization helper ebuf_finalize()
+ * handle the common concerns: history growth, safety capping, early
+ * return, and packaging the result as either a full list of iterates
+ * (the *List variant) or just the last one (the scalar variant).
+ * ================================================================= */
 
-    Expr* f = res->data.function.args[0];
-    Expr* expr = res->data.function.args[1];
-    Expr* n_expr = res->data.function.args[2];
+/* --- Dynamic buffer of Expr* used as iteration history. --- */
 
-    if (n_expr->type != EXPR_INTEGER) return NULL;
-    int64_t n = n_expr->data.integer;
-    if (n < 0) return NULL;
+typedef struct {
+    Expr** items;
+    size_t count;
+    size_t capacity;
+} ExprBuf;
 
-    Expr* current = expr_copy(expr);
-    for (int64_t i = 0; i < n; i++) {
-        Expr* arg_copy = expr_copy(current);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        Expr* next = eval_and_free(call);
-        expr_free(current);
-        current = next;
-    }
-    return current;
+static void ebuf_init(ExprBuf* b) {
+    b->capacity = 16;
+    b->count = 0;
+    b->items = malloc(sizeof(Expr*) * b->capacity);
 }
 
-/* ------------------- NestList ------------------- */
-
-/*
- * NestList[f, expr, n] returns a list of length n+1 containing expr and the
- * results of applying f to expr 1, 2, ..., n times.
- *
- * Returns NULL (leaving NestList unevaluated) for:
- *   - wrong arg count
- *   - n that is not an integer
- *   - n < 0
- */
-Expr* builtin_nestlist(Expr* res) {
-    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
-
-    Expr* f = res->data.function.args[0];
-    Expr* expr = res->data.function.args[1];
-    Expr* n_expr = res->data.function.args[2];
-
-    if (n_expr->type != EXPR_INTEGER) return NULL;
-    int64_t n = n_expr->data.integer;
-    if (n < 0) return NULL;
-
-    size_t count = (size_t)n + 1;
-    Expr** items = malloc(sizeof(Expr*) * count);
-    items[0] = expr_copy(expr);
-    for (int64_t i = 0; i < n; i++) {
-        Expr* arg_copy = expr_copy(items[i]);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        items[i + 1] = eval_and_free(call);
+static void ebuf_push(ExprBuf* b, Expr* e) {
+    if (b->count >= b->capacity) {
+        b->capacity *= 2;
+        b->items = realloc(b->items, sizeof(Expr*) * b->capacity);
     }
-    Expr* list = expr_new_function(expr_new_symbol("List"), items, count);
-    free(items);
-    return list;
+    b->items[b->count++] = e;
 }
 
-/* ------------------- NestWhile ------------------- */
-
-/*
- * NestWhile[f, expr, test]                    -- apply f while test yields True
- * NestWhile[f, expr, test, m]                 -- pass last m results to test (m = All means all)
- * NestWhile[f, expr, test, {mmin, mmax}]      -- start testing once mmin results exist, pass up to mmax
- * NestWhile[f, expr, test, m, max]            -- cap the number of f-applications at max
- * NestWhile[f, expr, test, m, max, n]         -- apply f n extra times after the loop ends
- * NestWhile[f, expr, test, m, max, -n]        -- return the result n applications before the end
- *
- * Returns NULL (leaving NestWhile unevaluated) for malformed argument specs.
- */
-
-static bool nw_is_true(Expr* e) {
-    return e && e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "True") == 0;
+/* Free every stored expression and the backing array, leaving buf empty. */
+static void ebuf_free_all(ExprBuf* b) {
+    for (size_t i = 0; i < b->count; i++) expr_free(b->items[i]);
+    free(b->items);
+    b->items = NULL;
+    b->count = b->capacity = 0;
 }
 
-Expr* builtin_nestwhile(Expr* res) {
-    if (res->type != EXPR_FUNCTION) return NULL;
-    size_t argc = res->data.function.arg_count;
-    if (argc < 3 || argc > 6) return NULL;
+/* Drop the last `drop` items (freeing them). Safe if drop >= count. */
+static void ebuf_truncate(ExprBuf* b, size_t drop) {
+    if (drop >= b->count) drop = b->count;
+    for (size_t i = b->count - drop; i < b->count; i++) expr_free(b->items[i]);
+    b->count -= drop;
+}
 
-    Expr* f = res->data.function.args[0];
-    Expr* expr = res->data.function.args[1];
-    Expr* test = res->data.function.args[2];
-
-    /* Parse m: positive integer, All, or {mmin, mmax|Infinity} */
-    int64_t m_min = 1, m_max = 1;
-    bool m_max_inf = false;
-    if (argc >= 4) {
-        Expr* m_arg = res->data.function.args[3];
-        if (m_arg->type == EXPR_INTEGER) {
-            if (m_arg->data.integer < 1) return NULL;
-            m_min = m_max = m_arg->data.integer;
-        } else if (m_arg->type == EXPR_SYMBOL && strcmp(m_arg->data.symbol, "All") == 0) {
-            m_min = 1;
-            m_max_inf = true;
-        } else if (m_arg->type == EXPR_FUNCTION &&
-                   m_arg->data.function.head->type == EXPR_SYMBOL &&
-                   strcmp(m_arg->data.function.head->data.symbol, "List") == 0 &&
-                   m_arg->data.function.arg_count == 2) {
-            Expr* a0 = m_arg->data.function.args[0];
-            Expr* a1 = m_arg->data.function.args[1];
-            if (a0->type != EXPR_INTEGER || a0->data.integer < 1) return NULL;
-            m_min = a0->data.integer;
-            if (a1->type == EXPR_INTEGER) {
-                if (a1->data.integer < m_min) return NULL;
-                m_max = a1->data.integer;
-            } else if (a1->type == EXPR_SYMBOL && strcmp(a1->data.symbol, "Infinity") == 0) {
-                m_max_inf = true;
-            } else {
-                return NULL;
-            }
-        } else {
+/*
+ * Convert an iteration history into a result expression.
+ *   as_list=true  -> returns out_head[items...], taking ownership of out_head
+ *                    and of every Expr* in buf.
+ *   as_list=false -> returns the last element of buf, freeing the others and
+ *                    freeing out_head (which is unused in this form).
+ * In either case the backing array is freed. If buf is empty in the scalar
+ * form, out_head is freed and NULL is returned.
+ */
+static Expr* ebuf_finalize(ExprBuf* b, bool as_list, Expr* out_head) {
+    Expr* result;
+    if (as_list) {
+        result = expr_new_function(out_head, b->items, b->count);
+        free(b->items);
+    } else {
+        expr_free(out_head);
+        if (b->count == 0) {
+            free(b->items);
             return NULL;
         }
+        result = b->items[b->count - 1];
+        for (size_t i = 0; i + 1 < b->count; i++) expr_free(b->items[i]);
+        free(b->items);
     }
-
-    /* Parse max: non-negative integer or Infinity */
-    int64_t max_apps = 0;
-    bool max_inf = true;
-    if (argc >= 5) {
-        Expr* max_arg = res->data.function.args[4];
-        if (max_arg->type == EXPR_INTEGER) {
-            if (max_arg->data.integer < 0) return NULL;
-            max_apps = max_arg->data.integer;
-            max_inf = false;
-        } else if (max_arg->type == EXPR_SYMBOL && strcmp(max_arg->data.symbol, "Infinity") == 0) {
-            max_inf = true;
-        } else {
-            return NULL;
-        }
-    }
-
-    /* Parse n_extra: any integer */
-    int64_t n_extra = 0;
-    if (argc >= 6) {
-        Expr* n_arg = res->data.function.args[5];
-        if (n_arg->type != EXPR_INTEGER) return NULL;
-        n_extra = n_arg->data.integer;
-    }
-
-    /* Safety cap for effectively-infinite iteration */
-    const int64_t SAFETY_CAP = 1000000;
-
-    size_t cap = 16;
-    size_t count = 0;
-    Expr** items = malloc(sizeof(Expr*) * cap);
-    items[count++] = expr_copy(expr);
-
-    int64_t apps = 0;
-    while (1) {
-        if (!max_inf && apps >= max_apps) break;
-        if (max_inf && apps >= SAFETY_CAP) {
-            for (size_t i = 0; i < count; i++) expr_free(items[i]);
-            free(items);
-            return NULL;
-        }
-
-        if ((int64_t)count >= m_min) {
-            int64_t k = m_max_inf ? (int64_t)count
-                                  : ((int64_t)count < m_max ? (int64_t)count : m_max);
-            Expr** test_args = malloc(sizeof(Expr*) * (size_t)k);
-            for (int64_t i = 0; i < k; i++) {
-                test_args[i] = expr_copy(items[count - (size_t)k + (size_t)i]);
-            }
-            Expr* test_call = expr_new_function(expr_copy(test), test_args, (size_t)k);
-            free(test_args);
-            Expr* test_result = eval_and_free(test_call);
-            bool is_true = nw_is_true(test_result);
-            expr_free(test_result);
-            if (!is_true) break;
-        }
-
-        Expr* arg_copy = expr_copy(items[count - 1]);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        Expr* next = eval_and_free(call);
-        if (count >= cap) {
-            cap *= 2;
-            items = realloc(items, sizeof(Expr*) * cap);
-        }
-        items[count++] = next;
-        apps++;
-    }
-
-    /* Positive n_extra: apply f n_extra more times */
-    if (n_extra > 0) {
-        for (int64_t i = 0; i < n_extra; i++) {
-            Expr* arg_copy = expr_copy(items[count - 1]);
-            Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-            Expr* next = eval_and_free(call);
-            if (count >= cap) {
-                cap *= 2;
-                items = realloc(items, sizeof(Expr*) * cap);
-            }
-            items[count++] = next;
-        }
-    }
-
-    /* Determine return index: Part[NestWhileList, -n_extra-1] when n_extra < 0 */
-    int64_t ret_idx = (n_extra >= 0) ? (int64_t)count - 1
-                                     : (int64_t)count - 1 + n_extra;
-    if (ret_idx < 0 || ret_idx >= (int64_t)count) {
-        for (size_t i = 0; i < count; i++) expr_free(items[i]);
-        free(items);
-        return NULL;
-    }
-
-    Expr* result = items[ret_idx];
-    items[ret_idx] = NULL;
-    for (size_t i = 0; i < count; i++) {
-        if (items[i]) expr_free(items[i]);
-    }
-    free(items);
+    b->items = NULL;
+    b->count = b->capacity = 0;
     return result;
 }
 
-/* ------------------- NestWhileList ------------------- */
+/* --- Small helpers for building and evaluating calls. --- */
+
+static inline Expr* apply_unary(Expr* f, Expr* arg) {
+    Expr* a = expr_copy(arg);
+    Expr* call = expr_new_function(expr_copy(f), &a, 1);
+    return eval_and_free(call);
+}
+
+static inline Expr* apply_binary(Expr* f, Expr* a, Expr* b) {
+    Expr* args[2] = { expr_copy(a), expr_copy(b) };
+    Expr* call = expr_new_function(expr_copy(f), args, 2);
+    return eval_and_free(call);
+}
+
+static inline bool sym_is_true(Expr* e) {
+    return e && e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "True") == 0;
+}
+
+/* --- Generic iteration runner. --- */
+
+typedef enum {
+    ITER_STEP_CONT,       /* push *out and keep going */
+    ITER_STEP_HALT,       /* stop; *out is ignored */
+    ITER_STEP_HALT_ADD,   /* push *out and stop */
+    ITER_STEP_RETURN      /* free history and hand *out to the caller */
+} IterStep;
+
+typedef IterStep (*IterStepFn)(ExprBuf* hist, void* ctx, Expr** out_next);
+
+typedef enum {
+    ITER_RUN_OK,       /* normal completion; buf contains the history */
+    ITER_RUN_EARLY,    /* early return from step; buf freed, value in *out_early */
+    ITER_RUN_SAFETY    /* hit safety cap; buf freed */
+} IterRunResult;
+
+/* Hard cap for "infinite" runs so a runaway iteration can't consume all memory. */
+#define ITER_SAFETY_CAP ((int64_t)1000000)
 
 /*
- * NestWhileList[f, expr, test]                    -- list results while test yields True
- * NestWhileList[f, expr, test, m]                 -- pass last m results to test
- * NestWhileList[f, expr, test, {mmin, mmax}]      -- start testing once mmin exist, pass up to mmax
- * NestWhileList[f, expr, test, m, max]            -- cap f-applications at max
- * NestWhileList[f, expr, test, m, max, n]         -- append n extra applications
- * NestWhileList[f, expr, test, m, max, -n]        -- drop last n elements
+ * Iterate until step_fn halts or `limit` applications have been performed.
  *
- * Returns NULL (leaving unevaluated) for malformed argument specs.
+ * limit_is_safety=false  -> `limit` is a user-facing bound (the iteration
+ *                           simply stops on reaching it; whatever is in buf
+ *                           is the result).
+ * limit_is_safety=true   -> `limit` is a safety cap for an otherwise unbounded
+ *                           run; reaching it is treated as failure (buf is
+ *                           freed and ITER_RUN_SAFETY is returned).
  */
-Expr* builtin_nestwhilelist(Expr* res) {
-    if (res->type != EXPR_FUNCTION) return NULL;
-    size_t argc = res->data.function.arg_count;
-    if (argc < 3 || argc > 6) return NULL;
-
-    Expr* f = res->data.function.args[0];
-    Expr* expr = res->data.function.args[1];
-    Expr* test = res->data.function.args[2];
-
-    /* Parse m: positive integer, All, or {mmin, mmax|Infinity} */
-    int64_t m_min = 1, m_max = 1;
-    bool m_max_inf = false;
-    if (argc >= 4) {
-        Expr* m_arg = res->data.function.args[3];
-        if (m_arg->type == EXPR_INTEGER) {
-            if (m_arg->data.integer < 1) return NULL;
-            m_min = m_max = m_arg->data.integer;
-        } else if (m_arg->type == EXPR_SYMBOL && strcmp(m_arg->data.symbol, "All") == 0) {
-            m_min = 1;
-            m_max_inf = true;
-        } else if (m_arg->type == EXPR_FUNCTION &&
-                   m_arg->data.function.head->type == EXPR_SYMBOL &&
-                   strcmp(m_arg->data.function.head->data.symbol, "List") == 0 &&
-                   m_arg->data.function.arg_count == 2) {
-            Expr* a0 = m_arg->data.function.args[0];
-            Expr* a1 = m_arg->data.function.args[1];
-            if (a0->type != EXPR_INTEGER || a0->data.integer < 1) return NULL;
-            m_min = a0->data.integer;
-            if (a1->type == EXPR_INTEGER) {
-                if (a1->data.integer < m_min) return NULL;
-                m_max = a1->data.integer;
-            } else if (a1->type == EXPR_SYMBOL && strcmp(a1->data.symbol, "Infinity") == 0) {
-                m_max_inf = true;
-            } else {
-                return NULL;
-            }
-        } else {
-            return NULL;
-        }
-    }
-
-    /* Parse max: non-negative integer or Infinity */
-    int64_t max_apps = 0;
-    bool max_inf = true;
-    if (argc >= 5) {
-        Expr* max_arg = res->data.function.args[4];
-        if (max_arg->type == EXPR_INTEGER) {
-            if (max_arg->data.integer < 0) return NULL;
-            max_apps = max_arg->data.integer;
-            max_inf = false;
-        } else if (max_arg->type == EXPR_SYMBOL && strcmp(max_arg->data.symbol, "Infinity") == 0) {
-            max_inf = true;
-        } else {
-            return NULL;
-        }
-    }
-
-    /* Parse n_extra: any integer */
-    int64_t n_extra = 0;
-    if (argc >= 6) {
-        Expr* n_arg = res->data.function.args[5];
-        if (n_arg->type != EXPR_INTEGER) return NULL;
-        n_extra = n_arg->data.integer;
-    }
-
-    const int64_t SAFETY_CAP = 1000000;
-
-    size_t cap = 16;
-    size_t count = 0;
-    Expr** items = malloc(sizeof(Expr*) * cap);
-    items[count++] = expr_copy(expr);
-
+static IterRunResult iter_run(ExprBuf* buf, IterStepFn step_fn, void* ctx,
+                              int64_t limit, bool limit_is_safety,
+                              Expr** out_early) {
+    *out_early = NULL;
     int64_t apps = 0;
     while (1) {
-        if (!max_inf && apps >= max_apps) break;
-        if (max_inf && apps >= SAFETY_CAP) {
-            for (size_t i = 0; i < count; i++) expr_free(items[i]);
-            free(items);
-            return NULL;
-        }
-
-        if ((int64_t)count >= m_min) {
-            int64_t k = m_max_inf ? (int64_t)count
-                                  : ((int64_t)count < m_max ? (int64_t)count : m_max);
-            Expr** test_args = malloc(sizeof(Expr*) * (size_t)k);
-            for (int64_t i = 0; i < k; i++) {
-                test_args[i] = expr_copy(items[count - (size_t)k + (size_t)i]);
+        if (apps >= limit) {
+            if (limit_is_safety) {
+                ebuf_free_all(buf);
+                return ITER_RUN_SAFETY;
             }
-            Expr* test_call = expr_new_function(expr_copy(test), test_args, (size_t)k);
-            free(test_args);
-            Expr* test_result = eval_and_free(test_call);
-            bool is_true = nw_is_true(test_result);
-            expr_free(test_result);
-            if (!is_true) break;
+            return ITER_RUN_OK;
         }
-
-        Expr* arg_copy = expr_copy(items[count - 1]);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        Expr* next = eval_and_free(call);
-        if (count >= cap) {
-            cap *= 2;
-            items = realloc(items, sizeof(Expr*) * cap);
-        }
-        items[count++] = next;
-        apps++;
-    }
-
-    /* Positive n_extra: apply f n_extra more times, appending */
-    if (n_extra > 0) {
-        for (int64_t i = 0; i < n_extra; i++) {
-            Expr* arg_copy = expr_copy(items[count - 1]);
-            Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-            Expr* next = eval_and_free(call);
-            if (count >= cap) {
-                cap *= 2;
-                items = realloc(items, sizeof(Expr*) * cap);
-            }
-            items[count++] = next;
+        Expr* next = NULL;
+        IterStep s = step_fn(buf, ctx, &next);
+        if (s == ITER_STEP_CONT) {
+            ebuf_push(buf, next);
+            apps++;
+        } else if (s == ITER_STEP_HALT_ADD) {
+            ebuf_push(buf, next);
+            return ITER_RUN_OK;
+        } else if (s == ITER_STEP_RETURN) {
+            ebuf_free_all(buf);
+            *out_early = next;
+            return ITER_RUN_EARLY;
+        } else { /* ITER_STEP_HALT */
+            return ITER_RUN_OK;
         }
     }
-
-    /* Negative n_extra: drop last |n_extra| elements */
-    size_t final_count = count;
-    if (n_extra < 0) {
-        int64_t drop = -n_extra;
-        if (drop >= (int64_t)count) {
-            final_count = 0;
-        } else {
-            final_count = count - (size_t)drop;
-        }
-        for (size_t i = final_count; i < count; i++) {
-            expr_free(items[i]);
-            items[i] = NULL;
-        }
-    }
-
-    /* Build the List result */
-    Expr** list_args = malloc(sizeof(Expr*) * (final_count > 0 ? final_count : 1));
-    for (size_t i = 0; i < final_count; i++) {
-        list_args[i] = items[i];
-    }
-    Expr* list = expr_new_function(expr_new_symbol("List"), list_args, final_count);
-    free(list_args);
-    free(items);
-    return list;
 }
 
-/* ------------------- FixedPointList ------------------- */
+/* ------------------- Nest / NestList ------------------- */
 
 /*
- * FixedPointList[f, expr]                     -- list expr, f[expr], f[f[expr]], ...
- *                                                until two successive results are SameQ.
- *                                                The fixed point appears as the last two elements.
- * FixedPointList[f, expr, n]                  -- stop after at most n applications of f.
- *                                                If n applications occur without convergence,
- *                                                the last two elements may not be equal.
- * FixedPointList[f, expr, SameTest -> s]      -- use s instead of SameQ to compare pairs.
- * FixedPointList[f, expr, n, SameTest -> s]   -- combine bounded iteration and custom test.
+ * Nest[f, expr, n]       -- apply f to expr n times and return the final value.
+ * NestList[f, expr, n]   -- return the list {expr, f[expr], ..., f^n[expr]}.
  *
- * Returns NULL (leaving FixedPointList unevaluated) for malformed argument specs.
+ * n must be a non-negative integer. Returns NULL (unevaluated) otherwise.
  */
-Expr* builtin_fixedpointlist(Expr* res) {
-    if (res->type != EXPR_FUNCTION) return NULL;
-    size_t argc = res->data.function.arg_count;
-    if (argc < 2) return NULL;
+
+typedef struct { Expr* f; } NestCtx;
+
+static IterStep nest_step(ExprBuf* hist, void* vctx, Expr** out) {
+    NestCtx* c = (NestCtx*)vctx;
+    *out = apply_unary(c->f, hist->items[hist->count - 1]);
+    return ITER_STEP_CONT;
+}
+
+static Expr* nest_impl(Expr* res, bool as_list) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
 
     Expr* f = res->data.function.args[0];
     Expr* expr = res->data.function.args[1];
+    Expr* n_expr = res->data.function.args[2];
+    if (n_expr->type != EXPR_INTEGER) return NULL;
+    int64_t n = n_expr->data.integer;
+    if (n < 0) return NULL;
 
-    /* Parse remaining args: optional n (integer/Infinity), optional SameTest -> s */
-    Expr* same_test = NULL;
-    bool has_max = false;
-    int64_t max_apps = 0;
-    bool max_inf = true;
+    ExprBuf buf;
+    ebuf_init(&buf);
+    ebuf_push(&buf, expr_copy(expr));
 
-    for (size_t i = 2; i < argc; i++) {
-        Expr* a = res->data.function.args[i];
-        if (a->type == EXPR_FUNCTION &&
-            a->data.function.head->type == EXPR_SYMBOL &&
-            (strcmp(a->data.function.head->data.symbol, "Rule") == 0 ||
-             strcmp(a->data.function.head->data.symbol, "RuleDelayed") == 0) &&
-            a->data.function.arg_count == 2 &&
-            a->data.function.args[0]->type == EXPR_SYMBOL &&
-            strcmp(a->data.function.args[0]->data.symbol, "SameTest") == 0) {
-            if (same_test != NULL) return NULL;
-            same_test = a->data.function.args[1];
-        } else if (!has_max && a->type == EXPR_INTEGER) {
-            if (a->data.integer < 0) return NULL;
-            max_apps = a->data.integer;
-            max_inf = false;
-            has_max = true;
-        } else if (!has_max && a->type == EXPR_SYMBOL &&
-                   strcmp(a->data.symbol, "Infinity") == 0) {
-            has_max = true;
-            max_inf = true;
-        } else {
-            return NULL;
-        }
-    }
-
-    const int64_t SAFETY_CAP = 1000000;
-
-    size_t cap = 16;
-    size_t count = 0;
-    Expr** items = malloc(sizeof(Expr*) * cap);
-    items[count++] = expr_copy(expr);
-
-    int64_t apps = 0;
-    while (1) {
-        if (!max_inf && apps >= max_apps) break;
-        if (max_inf && apps >= SAFETY_CAP) {
-            for (size_t i = 0; i < count; i++) expr_free(items[i]);
-            free(items);
-            return NULL;
-        }
-
-        Expr* arg_copy = expr_copy(items[count - 1]);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        Expr* next = eval_and_free(call);
-
-        if (count >= cap) {
-            cap *= 2;
-            items = realloc(items, sizeof(Expr*) * cap);
-        }
-        items[count++] = next;
-        apps++;
-
-        bool same;
-        if (same_test == NULL) {
-            same = expr_eq(items[count - 2], items[count - 1]);
-        } else {
-            Expr* test_args[2];
-            test_args[0] = expr_copy(items[count - 2]);
-            test_args[1] = expr_copy(items[count - 1]);
-            Expr* test_call = expr_new_function(expr_copy(same_test), test_args, 2);
-            Expr* test_result = eval_and_free(test_call);
-            same = (test_result && test_result->type == EXPR_SYMBOL &&
-                    strcmp(test_result->data.symbol, "True") == 0);
-            expr_free(test_result);
-        }
-        if (same) break;
-    }
-
-    Expr** list_args = malloc(sizeof(Expr*) * (count > 0 ? count : 1));
-    for (size_t i = 0; i < count; i++) {
-        list_args[i] = items[i];
-    }
-    Expr* list = expr_new_function(expr_new_symbol("List"), list_args, count);
-    free(list_args);
-    free(items);
-    return list;
+    NestCtx ctx = { .f = f };
+    Expr* early = NULL;
+    IterRunResult r = iter_run(&buf, nest_step, &ctx, n, false, &early);
+    if (r == ITER_RUN_SAFETY) return NULL;
+    if (r == ITER_RUN_EARLY) return early;
+    return ebuf_finalize(&buf, as_list, expr_new_symbol("List"));
 }
 
-Expr* builtin_fixedpoint(Expr* res) {
-    if (res->type != EXPR_FUNCTION) return NULL;
-    size_t argc = res->data.function.arg_count;
-    if (argc < 2) return NULL;
+Expr* builtin_nest(Expr* res)     { return nest_impl(res, false); }
+Expr* builtin_nestlist(Expr* res) { return nest_impl(res, true); }
 
-    Expr* f = res->data.function.args[0];
-    Expr* expr = res->data.function.args[1];
-
-    Expr* same_test = NULL;
-    bool has_max = false;
-    int64_t max_apps = 0;
-    bool max_inf = true;
-
-    for (size_t i = 2; i < argc; i++) {
-        Expr* a = res->data.function.args[i];
-        if (a->type == EXPR_FUNCTION &&
-            a->data.function.head->type == EXPR_SYMBOL &&
-            (strcmp(a->data.function.head->data.symbol, "Rule") == 0 ||
-             strcmp(a->data.function.head->data.symbol, "RuleDelayed") == 0) &&
-            a->data.function.arg_count == 2 &&
-            a->data.function.args[0]->type == EXPR_SYMBOL &&
-            strcmp(a->data.function.args[0]->data.symbol, "SameTest") == 0) {
-            if (same_test != NULL) return NULL;
-            same_test = a->data.function.args[1];
-        } else if (!has_max && a->type == EXPR_INTEGER) {
-            if (a->data.integer < 0) return NULL;
-            max_apps = a->data.integer;
-            max_inf = false;
-            has_max = true;
-        } else if (!has_max && a->type == EXPR_SYMBOL &&
-                   strcmp(a->data.symbol, "Infinity") == 0) {
-            has_max = true;
-            max_inf = true;
-        } else {
-            return NULL;
-        }
-    }
-
-    const int64_t SAFETY_CAP = 1000000;
-
-    Expr* prev = expr_copy(expr);
-    int64_t apps = 0;
-    while (1) {
-        if (!max_inf && apps >= max_apps) break;
-        if (max_inf && apps >= SAFETY_CAP) {
-            expr_free(prev);
-            return NULL;
-        }
-
-        Expr* arg_copy = expr_copy(prev);
-        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
-        Expr* next = eval_and_free(call);
-        apps++;
-
-        if (next && next->type == EXPR_FUNCTION &&
-            next->data.function.head->type == EXPR_SYMBOL) {
-            const char* h = next->data.function.head->data.symbol;
-            if (strcmp(h, "Throw") == 0 || strcmp(h, "Abort") == 0 ||
-                strcmp(h, "Quit") == 0 || strcmp(h, "Return") == 0) {
-                expr_free(prev);
-                return next;
-            }
-        }
-
-        bool same;
-        if (same_test == NULL) {
-            same = expr_eq(prev, next);
-        } else {
-            Expr* test_args[2];
-            test_args[0] = expr_copy(prev);
-            test_args[1] = expr_copy(next);
-            Expr* test_call = expr_new_function(expr_copy(same_test), test_args, 2);
-            Expr* test_result = eval_and_free(test_call);
-            same = (test_result && test_result->type == EXPR_SYMBOL &&
-                    strcmp(test_result->data.symbol, "True") == 0);
-            expr_free(test_result);
-        }
-
-        expr_free(prev);
-        prev = next;
-        if (same) break;
-    }
-
-    return prev;
-}
 /* ------------------- Fold / FoldList ------------------- */
 
 /*
- * Shared core for Fold and FoldList.
+ * Fold[f, x, list]       -- last element of FoldList[f, x, list]
+ * Fold[f, list]          -- Fold[f, First[list], Rest[list]]
+ * FoldList[f, x, list]   -- {x, f[x, list[[1]]], f[f[x, list[[1]]], list[[2]]], ...}
+ * FoldList[f, list]      -- {list[[1]], f[list[[1]], list[[2]]], ...}
  *
- * Forms accepted on the input expression `res`:
- *   H[f, list]        -- seed is taken as the first element of list
- *   H[f, x, list]     -- seed is x; list supplies elements to fold over
- *
- * list must be a compound expression (EXPR_FUNCTION). Its head is preserved
- * in the FoldList output (e.g. FoldList[f, x, p[a,b]] -> p[x, f[x,a], f[f[x,a],b]]).
- *
- * If as_list is true, the return is a compound expression with the list's head
- * containing the seed and all intermediate results. If false, only the last
- * result (the ordinary Fold value) is returned.
- *
- * Special empty-list behaviour:
- *   FoldList[f, {}]   -> {}        (empty list with the input head)
- *   Fold[f, {}]       -> unevaluated (returns NULL)
- *
- * Returns NULL (leaving the expression unevaluated) for:
- *   - wrong argument count
- *   - the list argument having a non-compound type
- *   - Fold[f, list] with an empty list
- *
- * Ownership: this function never frees res; the evaluator takes care of
- * freeing the input expression after a non-NULL return.
+ * The head of list is preserved in the FoldList output. Empty-list
+ * behaviour: FoldList[f, {}] -> {}, Fold[f, {}] is unevaluated.
  */
-static Expr* fold_core(Expr* res, bool as_list) {
+
+typedef struct {
+    Expr* f;
+    Expr** elems;    /* borrowed; elements to consume */
+    size_t total;
+    size_t idx;
+} FoldCtx;
+
+static IterStep fold_step(ExprBuf* hist, void* vctx, Expr** out) {
+    FoldCtx* c = (FoldCtx*)vctx;
+    *out = apply_binary(c->f, hist->items[hist->count - 1], c->elems[c->idx++]);
+    return ITER_STEP_CONT;
+}
+
+static Expr* fold_impl(Expr* res, bool as_list) {
     if (res->type != EXPR_FUNCTION) return NULL;
     size_t argc = res->data.function.arg_count;
     if (argc != 2 && argc != 3) return NULL;
 
     Expr* f = res->data.function.args[0];
-    Expr* seed_src;          /* borrowed pointer into res -- never freed here */
+    Expr* seed_src;
     Expr* list;
     bool seed_from_list;
 
@@ -1913,49 +1533,308 @@ static Expr* fold_core(Expr* res, bool as_list) {
 
     if (list->type != EXPR_FUNCTION) return NULL;
 
-    Expr* out_head = list->data.function.head;
+    Expr* list_head = list->data.function.head;
     Expr** elems = list->data.function.args;
     size_t n = list->data.function.arg_count;
     size_t start = 0;
 
     if (seed_from_list) {
         if (n == 0) {
-            if (!as_list) return NULL;  /* Fold[f, {}] -- leave unevaluated */
-            /* FoldList[f, {}] -> {} (empty, preserving head) */
-            return expr_new_function(expr_copy(out_head), NULL, 0);
+            if (!as_list) return NULL;   /* Fold[f, {}] stays unevaluated */
+            return expr_new_function(expr_copy(list_head), NULL, 0);
         }
         seed_src = elems[0];
         start = 1;
     }
 
-    size_t m = n - start;   /* number of f-applications to perform */
+    size_t m = n - start;
 
-    if (as_list) {
-        size_t count = m + 1;
-        Expr** items = malloc(sizeof(Expr*) * count);
-        items[0] = expr_copy(seed_src);
-        for (size_t i = 0; i < m; i++) {
-            Expr* call_args[2];
-            call_args[0] = expr_copy(items[i]);
-            call_args[1] = expr_copy(elems[start + i]);
-            Expr* call = expr_new_function(expr_copy(f), call_args, 2);
-            items[i + 1] = eval_and_free(call);
-        }
-        Expr* result = expr_new_function(expr_copy(out_head), items, count);
-        free(items);
-        return result;
-    } else {
-        Expr* current = expr_copy(seed_src);
-        for (size_t i = 0; i < m; i++) {
-            Expr* call_args[2];
-            call_args[0] = current;                  /* transfer ownership */
-            call_args[1] = expr_copy(elems[start + i]);
-            Expr* call = expr_new_function(expr_copy(f), call_args, 2);
-            current = eval_and_free(call);
-        }
-        return current;
-    }
+    ExprBuf buf;
+    ebuf_init(&buf);
+    ebuf_push(&buf, expr_copy(seed_src));
+
+    FoldCtx ctx = { .f = f, .elems = elems + start, .total = m, .idx = 0 };
+    Expr* early = NULL;
+    IterRunResult r = iter_run(&buf, fold_step, &ctx, (int64_t)m, false, &early);
+    if (r == ITER_RUN_SAFETY) return NULL;
+    if (r == ITER_RUN_EARLY) return early;
+    return ebuf_finalize(&buf, as_list, expr_copy(list_head));
 }
 
-Expr* builtin_fold(Expr* res) { return fold_core(res, false); }
-Expr* builtin_foldlist(Expr* res) { return fold_core(res, true); }
+Expr* builtin_fold(Expr* res)     { return fold_impl(res, false); }
+Expr* builtin_foldlist(Expr* res) { return fold_impl(res, true); }
+
+/* ------------------- NestWhile / NestWhileList ------------------- */
+
+/*
+ * NestWhile / NestWhileList accept up to six arguments:
+ *   (f, expr, test[, m[, max[, n]]])
+ *
+ * m    : positive integer, All, or {mmin, mmax|Infinity} -- how many recent
+ *        results to pass to test (default 1).
+ * max  : non-negative integer or Infinity -- cap on f-applications.
+ * n    : integer -- positive means apply f n extra times after the while
+ *        loop ends; negative means drop the last |n| iterates.
+ *
+ * Returns NULL (unevaluated) on malformed argument specs.
+ */
+
+typedef struct {
+    Expr* f;
+    Expr* test;
+    int64_t m_min, m_max;
+    bool m_max_inf;
+} NestWhileCtx;
+
+/*
+ * Mathematica-style NestWhile semantics: test is called with the most recent
+ * min(count, m_max) history entries, starting only once we have at least
+ * m_min entries. A False result halts before applying f again.
+ */
+static IterStep nestwhile_step(ExprBuf* hist, void* vctx, Expr** out) {
+    NestWhileCtx* c = (NestWhileCtx*)vctx;
+
+    if ((int64_t)hist->count >= c->m_min) {
+        int64_t k = c->m_max_inf ? (int64_t)hist->count
+                                 : ((int64_t)hist->count < c->m_max
+                                        ? (int64_t)hist->count : c->m_max);
+        Expr** ta = malloc(sizeof(Expr*) * (size_t)k);
+        for (int64_t i = 0; i < k; i++) {
+            ta[i] = expr_copy(hist->items[hist->count - (size_t)k + (size_t)i]);
+        }
+        Expr* test_call = expr_new_function(expr_copy(c->test), ta, (size_t)k);
+        free(ta);
+        Expr* tr = eval_and_free(test_call);
+        bool keep = sym_is_true(tr);
+        expr_free(tr);
+        if (!keep) return ITER_STEP_HALT;
+    }
+
+    *out = apply_unary(c->f, hist->items[hist->count - 1]);
+    return ITER_STEP_CONT;
+}
+
+static Expr* nestwhile_impl(Expr* res, bool as_list) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 3 || argc > 6) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+    Expr* test = res->data.function.args[2];
+
+    /* Parse optional m. */
+    int64_t m_min = 1, m_max = 1;
+    bool m_max_inf = false;
+    if (argc >= 4) {
+        Expr* m_arg = res->data.function.args[3];
+        if (m_arg->type == EXPR_INTEGER) {
+            if (m_arg->data.integer < 1) return NULL;
+            m_min = m_max = m_arg->data.integer;
+        } else if (m_arg->type == EXPR_SYMBOL && strcmp(m_arg->data.symbol, "All") == 0) {
+            m_min = 1;
+            m_max_inf = true;
+        } else if (m_arg->type == EXPR_FUNCTION &&
+                   m_arg->data.function.head->type == EXPR_SYMBOL &&
+                   strcmp(m_arg->data.function.head->data.symbol, "List") == 0 &&
+                   m_arg->data.function.arg_count == 2) {
+            Expr* a0 = m_arg->data.function.args[0];
+            Expr* a1 = m_arg->data.function.args[1];
+            if (a0->type != EXPR_INTEGER || a0->data.integer < 1) return NULL;
+            m_min = a0->data.integer;
+            if (a1->type == EXPR_INTEGER) {
+                if (a1->data.integer < m_min) return NULL;
+                m_max = a1->data.integer;
+            } else if (a1->type == EXPR_SYMBOL && strcmp(a1->data.symbol, "Infinity") == 0) {
+                m_max_inf = true;
+            } else {
+                return NULL;
+            }
+        } else {
+            return NULL;
+        }
+    }
+
+    /* Parse optional max. */
+    int64_t max_apps = 0;
+    bool max_inf = true;
+    if (argc >= 5) {
+        Expr* max_arg = res->data.function.args[4];
+        if (max_arg->type == EXPR_INTEGER) {
+            if (max_arg->data.integer < 0) return NULL;
+            max_apps = max_arg->data.integer;
+            max_inf = false;
+        } else if (max_arg->type == EXPR_SYMBOL && strcmp(max_arg->data.symbol, "Infinity") == 0) {
+            max_inf = true;
+        } else {
+            return NULL;
+        }
+    }
+
+    /* Parse optional n_extra. */
+    int64_t n_extra = 0;
+    if (argc >= 6) {
+        Expr* n_arg = res->data.function.args[5];
+        if (n_arg->type != EXPR_INTEGER) return NULL;
+        n_extra = n_arg->data.integer;
+    }
+
+    ExprBuf buf;
+    ebuf_init(&buf);
+    ebuf_push(&buf, expr_copy(expr));
+
+    NestWhileCtx ctx = { .f = f, .test = test,
+                         .m_min = m_min, .m_max = m_max, .m_max_inf = m_max_inf };
+    Expr* early = NULL;
+    int64_t limit = max_inf ? ITER_SAFETY_CAP : max_apps;
+    IterRunResult r = iter_run(&buf, nestwhile_step, &ctx, limit, max_inf, &early);
+    if (r == ITER_RUN_SAFETY) return NULL;
+    if (r == ITER_RUN_EARLY) return early;
+
+    /* Post-processing: positive n_extra appends more applications;
+     * negative n_extra trims iterates from the end. */
+    if (n_extra > 0) {
+        NestCtx nctx = { .f = f };
+        r = iter_run(&buf, nest_step, &nctx, n_extra, false, &early);
+        if (r == ITER_RUN_SAFETY) return NULL;
+        if (r == ITER_RUN_EARLY) return early;
+    } else if (n_extra < 0) {
+        ebuf_truncate(&buf, (size_t)(-n_extra));
+    }
+
+    return ebuf_finalize(&buf, as_list, expr_new_symbol("List"));
+}
+
+Expr* builtin_nestwhile(Expr* res)     { return nestwhile_impl(res, false); }
+Expr* builtin_nestwhilelist(Expr* res) { return nestwhile_impl(res, true); }
+
+/* ------------------- FixedPoint / FixedPointList ------------------- */
+
+/*
+ * FixedPoint / FixedPointList iterate f starting from expr until two
+ * successive results are SameQ (or, when given SameTest -> s, until s
+ * yields True on the consecutive pair). The result list always begins
+ * with expr and ends with the fixed point; in the *List* form the fixed
+ * point appears as the last two elements.
+ *
+ * Inside FixedPoint, a Throw/Abort/Quit/Return emitted by f propagates
+ * as the result (mirrors Mathematica behaviour). The *List* form does
+ * not intercept control-flow heads and will include them in the history
+ * as ordinary values.
+ *
+ * Supported argument shapes (after f, expr):
+ *     -- nothing (iterate until fixed point / safety cap)
+ *     -- n                                (bound on applications)
+ *     -- SameTest -> s
+ *     -- n, SameTest -> s
+ */
+
+typedef struct {
+    Expr* f;
+    Expr* same_test;       /* NULL => use SameQ (expr_eq) */
+    bool propagate_throw;  /* FixedPoint only */
+} FixedPointCtx;
+
+static IterStep fixedpoint_step(ExprBuf* hist, void* vctx, Expr** out) {
+    FixedPointCtx* c = (FixedPointCtx*)vctx;
+    Expr* last = hist->items[hist->count - 1];
+    Expr* next = apply_unary(c->f, last);
+
+    if (c->propagate_throw && next && next->type == EXPR_FUNCTION &&
+        next->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = next->data.function.head->data.symbol;
+        if (strcmp(h, "Throw") == 0 || strcmp(h, "Abort") == 0 ||
+            strcmp(h, "Quit") == 0 || strcmp(h, "Return") == 0) {
+            *out = next;
+            return ITER_STEP_RETURN;
+        }
+    }
+
+    bool same;
+    if (c->same_test == NULL) {
+        same = expr_eq(last, next);
+    } else {
+        Expr* tr = apply_binary(c->same_test, last, next);
+        same = sym_is_true(tr);
+        expr_free(tr);
+    }
+
+    *out = next;
+    return same ? ITER_STEP_HALT_ADD : ITER_STEP_CONT;
+}
+
+/*
+ * Parse optional n + SameTest -> s arguments, starting at index `start`.
+ * Returns true on success, false (leaving the builtin unevaluated) on
+ * malformed or duplicated specs.
+ */
+static bool parse_fp_opts(Expr* res, size_t start,
+                          Expr** out_same_test,
+                          int64_t* out_max, bool* out_max_inf) {
+    Expr* same_test = NULL;
+    bool has_max = false;
+    int64_t max_apps = 0;
+    bool max_inf = true;
+    size_t argc = res->data.function.arg_count;
+
+    for (size_t i = start; i < argc; i++) {
+        Expr* a = res->data.function.args[i];
+        if (a->type == EXPR_FUNCTION &&
+            a->data.function.head->type == EXPR_SYMBOL &&
+            (strcmp(a->data.function.head->data.symbol, "Rule") == 0 ||
+             strcmp(a->data.function.head->data.symbol, "RuleDelayed") == 0) &&
+            a->data.function.arg_count == 2 &&
+            a->data.function.args[0]->type == EXPR_SYMBOL &&
+            strcmp(a->data.function.args[0]->data.symbol, "SameTest") == 0) {
+            if (same_test != NULL) return false;
+            same_test = a->data.function.args[1];
+        } else if (!has_max && a->type == EXPR_INTEGER) {
+            if (a->data.integer < 0) return false;
+            max_apps = a->data.integer;
+            max_inf = false;
+            has_max = true;
+        } else if (!has_max && a->type == EXPR_SYMBOL &&
+                   strcmp(a->data.symbol, "Infinity") == 0) {
+            has_max = true;
+            max_inf = true;
+        } else {
+            return false;
+        }
+    }
+
+    *out_same_test = same_test;
+    *out_max = max_apps;
+    *out_max_inf = max_inf;
+    return true;
+}
+
+static Expr* fixedpoint_impl(Expr* res, bool as_list) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+
+    Expr* same_test = NULL;
+    int64_t max_apps = 0;
+    bool max_inf = true;
+    if (!parse_fp_opts(res, 2, &same_test, &max_apps, &max_inf)) return NULL;
+
+    ExprBuf buf;
+    ebuf_init(&buf);
+    ebuf_push(&buf, expr_copy(expr));
+
+    FixedPointCtx ctx = { .f = f, .same_test = same_test,
+                          .propagate_throw = !as_list };
+    Expr* early = NULL;
+    int64_t limit = max_inf ? ITER_SAFETY_CAP : max_apps;
+    IterRunResult r = iter_run(&buf, fixedpoint_step, &ctx, limit, max_inf, &early);
+    if (r == ITER_RUN_SAFETY) return NULL;
+    if (r == ITER_RUN_EARLY) return early;
+
+    return ebuf_finalize(&buf, as_list, expr_new_symbol("List"));
+}
+
+Expr* builtin_fixedpoint(Expr* res)     { return fixedpoint_impl(res, false); }
+Expr* builtin_fixedpointlist(Expr* res) { return fixedpoint_impl(res, true); }
