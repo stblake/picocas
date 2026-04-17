@@ -8,6 +8,7 @@ Expr* builtin_replace(Expr* res);
 Expr* builtin_replace_all(Expr* res);
 Expr* builtin_replace_repeated(Expr* res);
 Expr* builtin_replacelist(Expr* res);
+Expr* builtin_replace_at(Expr* res);
 
 void replace_init(void);
 
