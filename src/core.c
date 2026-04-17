@@ -158,6 +158,22 @@ void core_init(void) {
         "NestWhileList[f, expr, UnsameQ, 2] is equivalent to FixedPointList[f, expr].\n"
         "NestWhileList[f, expr, test, All] is equivalent to\n"
         "NestWhileList[f, expr, test, {1, Infinity}].");
+    symtab_add_builtin("FixedPointList", builtin_fixedpointlist);
+    symtab_get_def("FixedPointList")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("FixedPointList",
+        "FixedPointList[f, expr]\n"
+        "\tgenerates the list {expr, f[expr], f[f[expr]], ...} of successive\n"
+        "\tapplications of f, stopping when two consecutive results are SameQ.\n"
+        "\tThe last two elements of the result are always the same.\n"
+        "FixedPointList[f, expr, n]\n"
+        "\tstops after at most n applications of f. If n is reached before\n"
+        "\tconvergence, the last two elements may not be equal.\n"
+        "FixedPointList[f, expr, SameTest -> s]\n"
+        "FixedPointList[f, expr, n, SameTest -> s]\n"
+        "\tuses the binary predicate s instead of SameQ to test successive pairs.\n"
+        "\n"
+        "FixedPointList[f, expr] is equivalent to\n"
+        "NestWhileList[f, expr, UnsameQ, 2].");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

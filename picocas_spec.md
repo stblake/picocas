@@ -2975,6 +2975,41 @@ In[11]:= NestWhileList[If[EvenQ[#], #/2, (3 # + 1)/2] &, 400, Unequal, All, Infi
 Out[11]= {400, 200, 100, 50, 25, 38, 19, 29, 44, 22, 11, 17, 26, 13, 20, 10, 5, 8, 4, 2, 1}
 ```
 
+#### FixedPointList
+Generates the list of successive iterates of a function until a fixed point is reached.
+- `FixedPointList[f, expr]`: Generates `{expr, f[expr], f[f[expr]], ...}`, continuing until two consecutive results are `SameQ`. The returned list always begins with `expr`, and its last two elements are always equal (the fixed point appears twice).
+- `FixedPointList[f, expr, n]`: Stops after at most `n` applications of `f`. If `n` is reached before convergence, the last two elements need not be equal.
+- `FixedPointList[f, expr, SameTest -> s]`: Uses the binary predicate `s` instead of `SameQ` to test successive pairs of results. Iteration stops when `s[prev, current]` evaluates to `True`.
+- `FixedPointList[f, expr, n, SameTest -> s]`: Combines a bounded iteration count with a custom equivalence test.
+
+**Features**:
+- `Protected`.
+- `FixedPointList[f, expr]` is equivalent to `NestWhileList[f, expr, UnsameQ, 2]`.
+- `n` (when given) must be a non-negative integer or `Infinity`. Malformed argument specs leave `FixedPointList` unevaluated.
+
+```mathematica
+In[1]:= FixedPointList[1 + Floor[#/2] &, 1000]
+Out[1]= {1000, 501, 251, 126, 64, 33, 17, 9, 5, 3, 2, 2}
+
+In[2]:= 1 + Floor[Last[%]/2]
+Out[2]= 2
+
+In[3]:= FixedPointList[# /. {a_, b_} /; b != 0 -> {b, Mod[a, b]} &, {28, 21}]
+Out[3]= {{28, 21}, {21, 7}, {7, 0}, {7, 0}}
+
+In[4]:= GCD[28, 21]
+Out[4]= 7
+
+In[5]:= FixedPointList[1 + Floor[#/2] &, 1000, 5]
+Out[5]= {1000, 501, 251, 126, 64, 33}
+
+In[6]:= FixedPointList[(# + 2/#)/2 &, 1.0]
+Out[6]= {1.0, 1.5, 1.41667, 1.41422, 1.41421, 1.41421, 1.41421}
+
+In[7]:= FixedPointList[(# + 2/#)/2 &, 1.0, SameTest -> (Abs[#1 - #2] < 0.01 &)]
+Out[7]= {1.0, 1.5, 1.41667, 1.41422}
+```
+
 #### Through
 Distributes operators that appear inside the heads of expressions.
 - `Through[expr]`: Distributes the top-level head.

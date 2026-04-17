@@ -1671,3 +1671,109 @@ Expr* builtin_nestwhilelist(Expr* res) {
     free(items);
     return list;
 }
+
+/* ------------------- FixedPointList ------------------- */
+
+/*
+ * FixedPointList[f, expr]                     -- list expr, f[expr], f[f[expr]], ...
+ *                                                until two successive results are SameQ.
+ *                                                The fixed point appears as the last two elements.
+ * FixedPointList[f, expr, n]                  -- stop after at most n applications of f.
+ *                                                If n applications occur without convergence,
+ *                                                the last two elements may not be equal.
+ * FixedPointList[f, expr, SameTest -> s]      -- use s instead of SameQ to compare pairs.
+ * FixedPointList[f, expr, n, SameTest -> s]   -- combine bounded iteration and custom test.
+ *
+ * Returns NULL (leaving FixedPointList unevaluated) for malformed argument specs.
+ */
+Expr* builtin_fixedpointlist(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+
+    /* Parse remaining args: optional n (integer/Infinity), optional SameTest -> s */
+    Expr* same_test = NULL;
+    bool has_max = false;
+    int64_t max_apps = 0;
+    bool max_inf = true;
+
+    for (size_t i = 2; i < argc; i++) {
+        Expr* a = res->data.function.args[i];
+        if (a->type == EXPR_FUNCTION &&
+            a->data.function.head->type == EXPR_SYMBOL &&
+            (strcmp(a->data.function.head->data.symbol, "Rule") == 0 ||
+             strcmp(a->data.function.head->data.symbol, "RuleDelayed") == 0) &&
+            a->data.function.arg_count == 2 &&
+            a->data.function.args[0]->type == EXPR_SYMBOL &&
+            strcmp(a->data.function.args[0]->data.symbol, "SameTest") == 0) {
+            if (same_test != NULL) return NULL;
+            same_test = a->data.function.args[1];
+        } else if (!has_max && a->type == EXPR_INTEGER) {
+            if (a->data.integer < 0) return NULL;
+            max_apps = a->data.integer;
+            max_inf = false;
+            has_max = true;
+        } else if (!has_max && a->type == EXPR_SYMBOL &&
+                   strcmp(a->data.symbol, "Infinity") == 0) {
+            has_max = true;
+            max_inf = true;
+        } else {
+            return NULL;
+        }
+    }
+
+    const int64_t SAFETY_CAP = 1000000;
+
+    size_t cap = 16;
+    size_t count = 0;
+    Expr** items = malloc(sizeof(Expr*) * cap);
+    items[count++] = expr_copy(expr);
+
+    int64_t apps = 0;
+    while (1) {
+        if (!max_inf && apps >= max_apps) break;
+        if (max_inf && apps >= SAFETY_CAP) {
+            for (size_t i = 0; i < count; i++) expr_free(items[i]);
+            free(items);
+            return NULL;
+        }
+
+        Expr* arg_copy = expr_copy(items[count - 1]);
+        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+        Expr* next = eval_and_free(call);
+
+        if (count >= cap) {
+            cap *= 2;
+            items = realloc(items, sizeof(Expr*) * cap);
+        }
+        items[count++] = next;
+        apps++;
+
+        bool same;
+        if (same_test == NULL) {
+            same = expr_eq(items[count - 2], items[count - 1]);
+        } else {
+            Expr* test_args[2];
+            test_args[0] = expr_copy(items[count - 2]);
+            test_args[1] = expr_copy(items[count - 1]);
+            Expr* test_call = expr_new_function(expr_copy(same_test), test_args, 2);
+            Expr* test_result = eval_and_free(test_call);
+            same = (test_result && test_result->type == EXPR_SYMBOL &&
+                    strcmp(test_result->data.symbol, "True") == 0);
+            expr_free(test_result);
+        }
+        if (same) break;
+    }
+
+    Expr** list_args = malloc(sizeof(Expr*) * (count > 0 ? count : 1));
+    for (size_t i = 0; i < count; i++) {
+        list_args[i] = items[i];
+    }
+    Expr* list = expr_new_function(expr_new_symbol("List"), list_args, count);
+    free(list_args);
+    free(items);
+    return list;
+}
