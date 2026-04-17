@@ -174,6 +174,21 @@ void core_init(void) {
         "\n"
         "FixedPointList[f, expr] is equivalent to\n"
         "NestWhileList[f, expr, UnsameQ, 2].");
+    symtab_add_builtin("FixedPoint", builtin_fixedpoint);
+    symtab_get_def("FixedPoint")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("FixedPoint",
+        "FixedPoint[f, expr]\n"
+        "\tstarts with expr and applies f repeatedly until the result no longer\n"
+        "\tchanges, returning the final value.\n"
+        "FixedPoint[f, expr, n]\n"
+        "\tstops after at most n applications of f, returning the last value\n"
+        "\tobtained even if a fixed point has not been reached.\n"
+        "FixedPoint[f, expr, SameTest -> s]\n"
+        "FixedPoint[f, expr, n, SameTest -> s]\n"
+        "\tuses the binary predicate s instead of SameQ to test successive pairs.\n"
+        "\n"
+        "FixedPoint[f, expr] gives the last element of FixedPointList[f, expr].\n"
+        "Throw can be used inside f to exit early.");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

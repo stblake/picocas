@@ -167,6 +167,9 @@ target_include_directories(nestwhilelist_tests PRIVATE ../src)
 add_executable(fixedpointlist_tests test_fixedpointlist.c ${COMMON_SRC})
 target_include_directories(fixedpointlist_tests PRIVATE ../src)
 
+add_executable(fixedpoint_tests test_fixedpoint.c ${COMMON_SRC})
+target_include_directories(fixedpoint_tests PRIVATE ../src)
+
 add_executable(split_tests test_split.c ${COMMON_SRC})
 target_include_directories(split_tests PRIVATE ../src)
 
@@ -264,6 +267,7 @@ if(USE_ECM)
     add_dependencies(nestwhile_tests build_ecm)
     add_dependencies(nestwhilelist_tests build_ecm)
     add_dependencies(fixedpointlist_tests build_ecm)
+    add_dependencies(fixedpoint_tests build_ecm)
     add_dependencies(split_tests build_ecm)
     add_dependencies(sort_tests build_ecm)
     add_dependencies(backtrack_tests build_ecm)

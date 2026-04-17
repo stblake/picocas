@@ -13,6 +13,7 @@ Expr* builtin_nestlist(Expr* res);
 Expr* builtin_nestwhile(Expr* res);
 Expr* builtin_nestwhilelist(Expr* res);
 Expr* builtin_fixedpointlist(Expr* res);
+Expr* builtin_fixedpoint(Expr* res);
 Expr* builtin_select(Expr* res);
 Expr* builtin_through(Expr* res);
 Expr* builtin_freeq(Expr* res);

@@ -1777,3 +1777,89 @@ Expr* builtin_fixedpointlist(Expr* res) {
     free(items);
     return list;
 }
+
+Expr* builtin_fixedpoint(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+
+    Expr* same_test = NULL;
+    bool has_max = false;
+    int64_t max_apps = 0;
+    bool max_inf = true;
+
+    for (size_t i = 2; i < argc; i++) {
+        Expr* a = res->data.function.args[i];
+        if (a->type == EXPR_FUNCTION &&
+            a->data.function.head->type == EXPR_SYMBOL &&
+            (strcmp(a->data.function.head->data.symbol, "Rule") == 0 ||
+             strcmp(a->data.function.head->data.symbol, "RuleDelayed") == 0) &&
+            a->data.function.arg_count == 2 &&
+            a->data.function.args[0]->type == EXPR_SYMBOL &&
+            strcmp(a->data.function.args[0]->data.symbol, "SameTest") == 0) {
+            if (same_test != NULL) return NULL;
+            same_test = a->data.function.args[1];
+        } else if (!has_max && a->type == EXPR_INTEGER) {
+            if (a->data.integer < 0) return NULL;
+            max_apps = a->data.integer;
+            max_inf = false;
+            has_max = true;
+        } else if (!has_max && a->type == EXPR_SYMBOL &&
+                   strcmp(a->data.symbol, "Infinity") == 0) {
+            has_max = true;
+            max_inf = true;
+        } else {
+            return NULL;
+        }
+    }
+
+    const int64_t SAFETY_CAP = 1000000;
+
+    Expr* prev = expr_copy(expr);
+    int64_t apps = 0;
+    while (1) {
+        if (!max_inf && apps >= max_apps) break;
+        if (max_inf && apps >= SAFETY_CAP) {
+            expr_free(prev);
+            return NULL;
+        }
+
+        Expr* arg_copy = expr_copy(prev);
+        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+        Expr* next = eval_and_free(call);
+        apps++;
+
+        if (next && next->type == EXPR_FUNCTION &&
+            next->data.function.head->type == EXPR_SYMBOL) {
+            const char* h = next->data.function.head->data.symbol;
+            if (strcmp(h, "Throw") == 0 || strcmp(h, "Abort") == 0 ||
+                strcmp(h, "Quit") == 0 || strcmp(h, "Return") == 0) {
+                expr_free(prev);
+                return next;
+            }
+        }
+
+        bool same;
+        if (same_test == NULL) {
+            same = expr_eq(prev, next);
+        } else {
+            Expr* test_args[2];
+            test_args[0] = expr_copy(prev);
+            test_args[1] = expr_copy(next);
+            Expr* test_call = expr_new_function(expr_copy(same_test), test_args, 2);
+            Expr* test_result = eval_and_free(test_call);
+            same = (test_result && test_result->type == EXPR_SYMBOL &&
+                    strcmp(test_result->data.symbol, "True") == 0);
+            expr_free(test_result);
+        }
+
+        expr_free(prev);
+        prev = next;
+        if (same) break;
+    }
+
+    return prev;
+}
