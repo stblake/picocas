@@ -136,6 +136,28 @@ void core_init(void) {
         "\n"
         "If test[expr] does not yield True initially, NestWhile returns expr.\n"
         "NestWhile[f, expr, UnsameQ, 2] is equivalent to FixedPoint[f, expr].");
+    symtab_add_builtin("NestWhileList", builtin_nestwhilelist);
+    symtab_get_def("NestWhileList")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("NestWhileList",
+        "NestWhileList[f, expr, test]\n"
+        "\tgenerates the list {expr, f[expr], f[f[expr]], ...} continuing while\n"
+        "\ttest applied to the most recent result yields True.\n"
+        "NestWhileList[f, expr, test, m]\n"
+        "\tsupplies the most recent m results as arguments to test.\n"
+        "NestWhileList[f, expr, test, All]\n"
+        "\tsupplies all results so far as arguments to test.\n"
+        "NestWhileList[f, expr, test, {mmin, mmax}]\n"
+        "\tdelays testing until at least mmin results exist, then passes up to mmax.\n"
+        "NestWhileList[f, expr, test, m, max]\n"
+        "\tapplies f at most max times.\n"
+        "NestWhileList[f, expr, test, m, max, n]\n"
+        "\tappends n additional applications of f to the list.\n"
+        "NestWhileList[f, expr, test, m, max, -n]\n"
+        "\tdrops the last n elements from the list.\n"
+        "\n"
+        "NestWhileList[f, expr, UnsameQ, 2] is equivalent to FixedPointList[f, expr].\n"
+        "NestWhileList[f, expr, test, All] is equivalent to\n"
+        "NestWhileList[f, expr, test, {1, Infinity}].");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;
