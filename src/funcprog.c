@@ -1320,3 +1320,38 @@ Expr* builtin_nest(Expr* res) {
     }
     return current;
 }
+
+/* ------------------- NestList ------------------- */
+
+/*
+ * NestList[f, expr, n] returns a list of length n+1 containing expr and the
+ * results of applying f to expr 1, 2, ..., n times.
+ *
+ * Returns NULL (leaving NestList unevaluated) for:
+ *   - wrong arg count
+ *   - n that is not an integer
+ *   - n < 0
+ */
+Expr* builtin_nestlist(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+    Expr* n_expr = res->data.function.args[2];
+
+    if (n_expr->type != EXPR_INTEGER) return NULL;
+    int64_t n = n_expr->data.integer;
+    if (n < 0) return NULL;
+
+    size_t count = (size_t)n + 1;
+    Expr** items = malloc(sizeof(Expr*) * count);
+    items[0] = expr_copy(expr);
+    for (int64_t i = 0; i < n; i++) {
+        Expr* arg_copy = expr_copy(items[i]);
+        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+        items[i + 1] = eval_and_free(call);
+    }
+    Expr* list = expr_new_function(expr_new_symbol("List"), items, count);
+    free(items);
+    return list;
+}

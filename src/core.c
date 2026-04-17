@@ -106,6 +106,16 @@ void core_init(void) {
         "n must be a non-negative integer. Nest[f, expr, 0] returns expr. The\n"
         "function f may be a symbol or a pure function. Each iteration evaluates\n"
         "f applied to the current value before proceeding.");
+    symtab_add_builtin("NestList", builtin_nestlist);
+    symtab_get_def("NestList")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("NestList",
+        "NestList[f, expr, n]\n"
+        "\tgives a list of the results of applying f to expr 0 through n times.\n"
+        "\n"
+        "The result is a list of length n+1 whose first element is expr and\n"
+        "whose (k+1)-th element is f applied k times to expr. n must be a\n"
+        "non-negative integer. f may be a symbol or a pure function; each\n"
+        "intermediate application is evaluated before the next one.");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

@@ -9,6 +9,7 @@ Expr* builtin_map(Expr* res);
 Expr* builtin_map_all(Expr* res);
 Expr* builtin_map_at(Expr* res);
 Expr* builtin_nest(Expr* res);
+Expr* builtin_nestlist(Expr* res);
 Expr* builtin_select(Expr* res);
 Expr* builtin_through(Expr* res);
 Expr* builtin_freeq(Expr* res);

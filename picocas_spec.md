@@ -2815,6 +2815,55 @@ In[9]:= Nest[{{1, 1}, {1, 0}} . # &, {0, 1}, 10]
 Out[9]= {55, 34}
 ```
 
+#### NestList
+Applies a function repeatedly, collecting every intermediate result.
+- `NestList[f, expr, n]`: gives a list of the results of applying `f` to `expr` 0 through `n` times.
+
+**Features**:
+- `Protected`.
+- Returns a list of length `n + 1` whose first element is `expr` and whose `(k+1)`-th element is `f` applied `k` times to `expr`.
+- `n` must be a non-negative integer; `NestList[f, expr, 0]` returns `{expr}`.
+- The function `f` may be a symbol, a built-in, or a pure function (`... &`).
+- Each iteration evaluates `f[current]` before proceeding, so numeric computations collapse immediately.
+- Returns unevaluated if `n` is not a non-negative integer or the argument count is wrong.
+- `Last[NestList[f, expr, n]]` is equivalent to `Nest[f, expr, n]`.
+
+**Examples**:
+```
+In[1]:= NestList[f, x, 4]
+Out[1]= {x, f[x], f[f[x]], f[f[f[x]]], f[f[f[f[x]]]]}
+
+In[2]:= NestList[Cos, 1.0, 10]
+Out[2]= {1., 0.540302, 0.857553, 0.65429, 0.79348, 0.701369, 0.76396, 0.722102, 0.750418, 0.731404, 0.744237}
+
+In[3]:= NestList[(1 + #)^2 &, x, 3]
+Out[3]= {x, (1 + x)^2, (1 + (1 + x)^2)^2, (1 + (1 + (1 + x)^2)^2)^2}
+
+In[4]:= NestList[Sqrt, 100.0, 4]
+Out[4]= {100., 10., 3.16228, 1.77828, 1.33352}
+
+In[5]:= NestList[2 # &, 1, 10]
+Out[5]= {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024}
+
+In[6]:= NestList[# + 1 &, 0, 10]
+Out[6]= {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+In[7]:= NestList[#^2 &, 2, 6]
+Out[7]= {2, 4, 16, 256, 65536, 4294967296, 18446744073709551616}
+
+In[8]:= NestList[#(1 + 0.05) &, 1000, 10]
+Out[8]= {1000, 1050., 1102.5, 1157.63, 1215.51, 1276.28, 1340.1, 1407.1, 1477.46, 1551.33, 1628.89}
+
+In[9]:= NestList[(# + 2/#)/2 &, 1.0, 5]
+Out[9]= {1., 1.5, 1.41667, 1.41422, 1.41421, 1.41421}
+
+In[10]:= NestList[If[EvenQ[#], #/2, (3 # + 1)/2] &, 100, 20]
+Out[10]= {100, 50, 25, 38, 19, 29, 44, 22, 11, 17, 26, 13, 20, 10, 5, 8, 4, 2, 1, 2, 1}
+
+In[11]:= NestList[Mod[59 #, 101] &, 1, 15]
+Out[11]= {1, 59, 47, 46, 88, 41, 96, 8, 68, 73, 65, 98, 25, 61, 64, 39}
+```
+
 #### Through
 Distributes operators that appear inside the heads of expressions.
 - `Through[expr]`: Distributes the top-level head.
