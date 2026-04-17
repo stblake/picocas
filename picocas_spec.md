@@ -2723,6 +2723,57 @@ Out[3]= f[X, a, b, c, Y, a, b, c]
 #### MapAll (//@)
 - `f //@ expr`: Recursive map.
 
+#### MapAt
+Applies a function to selected parts of an expression, identified by position specifications of the same form as those returned by `Position`.
+
+- `MapAt[f, expr, n]`: applies `f` to the element at position `n` in `expr`. If `n` is negative, the position is counted from the end. `n = 0` targets the head of `expr`.
+- `MapAt[f, expr, {i, j, ...}]`: applies `f` to the part of `expr` at position `{i, j, ...}` (equivalently `expr[[i, j, ...]]`).
+- `MapAt[f, expr, {{i1, j1, ...}, {i2, j2, ...}, ...}]`: applies `f` to each of the listed parts of `expr`. If the same position appears more than once, `f` is applied repeatedly to that part.
+
+**Features**:
+- `Protected`.
+- Path components may be integers (positive or negative), `All` (selects every child at that level), or `Span` expressions such as `i ;; j` or `i ;; j ;; k`.
+- Works on expressions with any head (not just `List`); after substitution the evaluator re-applies canonical ordering for `Orderless` heads such as `Plus` and `Times`.
+- `MapAt[f, expr, {}]` applies `f` to the entire expression itself.
+
+```mathematica
+In[1]:= MapAt[f, {a, b, c, d}, 2]
+Out[1]= {a, f[b], c, d}
+
+In[2]:= MapAt[f, {a, b, c, d}, {{1}, {4}}]
+Out[2]= {f[a], b, c, f[d]}
+
+In[3]:= MapAt[f, {{a, b, c}, {d, e}}, {2, 1}]
+Out[3]= {{a, b, c}, {f[d], e}}
+
+In[4]:= MapAt[f, {{a, b, c}, {d, e}}, {All, 2}]
+Out[4]= {{a, f[b], c}, {d, f[e]}}
+
+In[5]:= MapAt[h, {{a, b, c}, {d, e}, f, g}, -3]
+Out[5]= {{a, b, c}, h[{d, e}], f, g}
+
+In[6]:= MapAt[h, {{a, b, c}, {d, e}, f, g}, {2, 1}]
+Out[6]= {{a, b, c}, {h[d], e}, f, g}
+
+In[7]:= MapAt[h, {{a, b, c}, {d, e}, f, g}, {{2}, {1}}]
+Out[7]= {h[{a, b, c}], h[{d, e}], f, g}
+
+In[8]:= MapAt[h, {{a, b, c}, {d, e}, f, g}, {{1, 1}, {2, 2}, {3}}]
+Out[8]= {{h[a], b, c}, {d, h[e]}, h[f], g}
+
+In[9]:= MapAt[f, {1, 2, 3, 4, 5, 6}, 3 ;; 4]
+Out[9]= {1, 2, f[3], f[4], 5, 6}
+
+In[10]:= MapAt[f, a + b + c + d, 2]
+Out[10]= a + c + d + f[b]
+
+In[11]:= MapAt[f, x^2 + y^2, {{1, 1}, {2, 1}}]
+Out[11]= f[x]^2 + f[y]^2
+
+In[12]:= MapAt[f, {a, b, c}, 0]
+Out[12]= f[List][a, b, c]
+```
+
 #### Through
 Distributes operators that appear inside the heads of expressions.
 - `Through[expr]`: Distributes the top-level head.

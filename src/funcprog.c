@@ -178,6 +178,181 @@ Expr* builtin_map(Expr* res) {
     return map_at_level(f, expr, 0, spec);
 }
 
+/* ------------------- MapAt ------------------- */
+
+/* Build evaluate(f[arg]) returning a new owned Expr*. */
+static Expr* mapat_apply_f(Expr* f, Expr* arg) {
+    Expr* arg_copy = expr_copy(arg);
+    Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+    Expr* result = evaluate(call);
+    expr_free(call);
+    return result;
+}
+
+/*
+ * mapat_at_path: apply f at the given position path in expr.
+ *
+ * Arguments:
+ *   f     : function/symbol to apply (borrowed)
+ *   expr  : source expression (borrowed)
+ *   path  : array of position indices (each index is an Expr*, borrowed)
+ *   plen  : number of elements in path
+ *
+ * Returns a freshly-allocated expression (caller owns).
+ *
+ * A path element may be:
+ *   - integer k (>0 counts from start, <0 counts from end, 0 targets head)
+ *   - the symbol All (apply at all children at this level)
+ *   - Span[a, b] or Span[a, b, step] (apply to the spanned range)
+ *
+ * If the path runs past a non-compound sub-expression the remaining path
+ * is ignored and the leaf is returned unchanged.  Out-of-range integers
+ * are silently ignored, matching Mathematica's permissive behaviour.
+ */
+static Expr* mapat_at_path(Expr* f, Expr* expr, Expr** path, size_t plen) {
+    if (plen == 0) {
+        return mapat_apply_f(f, expr);
+    }
+    if (expr->type != EXPR_FUNCTION) {
+        return expr_copy(expr);
+    }
+
+    Expr* idx = path[0];
+    size_t len = expr->data.function.arg_count;
+
+    Expr** new_args = NULL;
+    if (len > 0) {
+        new_args = malloc(sizeof(Expr*) * len);
+        for (size_t i = 0; i < len; i++) {
+            new_args[i] = expr_copy(expr->data.function.args[i]);
+        }
+    }
+    Expr* new_head = expr_copy(expr->data.function.head);
+
+    if (idx->type == EXPR_INTEGER) {
+        int64_t k = idx->data.integer;
+        if (k == 0) {
+            Expr* r = mapat_at_path(f, expr->data.function.head, path + 1, plen - 1);
+            expr_free(new_head);
+            new_head = r;
+        } else {
+            if (k < 0) k = (int64_t)len + k + 1;
+            if (k >= 1 && k <= (int64_t)len) {
+                Expr* r = mapat_at_path(f, expr->data.function.args[k - 1], path + 1, plen - 1);
+                expr_free(new_args[k - 1]);
+                new_args[k - 1] = r;
+            }
+        }
+    } else if (idx->type == EXPR_SYMBOL && strcmp(idx->data.symbol, "All") == 0) {
+        for (size_t i = 0; i < len; i++) {
+            Expr* r = mapat_at_path(f, expr->data.function.args[i], path + 1, plen - 1);
+            expr_free(new_args[i]);
+            new_args[i] = r;
+        }
+    } else if (idx->type == EXPR_FUNCTION &&
+               idx->data.function.head->type == EXPR_SYMBOL &&
+               strcmp(idx->data.function.head->data.symbol, "Span") == 0) {
+        int64_t start = 1, end = (int64_t)len, step = 1;
+        size_t span_argc = idx->data.function.arg_count;
+        if (span_argc >= 1) {
+            Expr* a1 = idx->data.function.args[0];
+            if (a1->type == EXPR_INTEGER) {
+                start = a1->data.integer;
+                if (start < 0) start = (int64_t)len + start + 1;
+            } else if (a1->type == EXPR_SYMBOL && strcmp(a1->data.symbol, "All") == 0) {
+                start = 1;
+            }
+        }
+        if (span_argc >= 2) {
+            Expr* a2 = idx->data.function.args[1];
+            if (a2->type == EXPR_INTEGER) {
+                end = a2->data.integer;
+                if (end < 0) end = (int64_t)len + end + 1;
+            } else if (a2->type == EXPR_SYMBOL && strcmp(a2->data.symbol, "All") == 0) {
+                end = (int64_t)len;
+            }
+        }
+        if (span_argc >= 3) {
+            Expr* a3 = idx->data.function.args[2];
+            if (a3->type == EXPR_INTEGER) step = a3->data.integer;
+        }
+
+        if (step > 0) {
+            for (int64_t i = start; i <= end && i >= 1 && i <= (int64_t)len; i += step) {
+                Expr* r = mapat_at_path(f, expr->data.function.args[i - 1], path + 1, plen - 1);
+                expr_free(new_args[i - 1]);
+                new_args[i - 1] = r;
+            }
+        } else if (step < 0) {
+            for (int64_t i = start; i >= end && i >= 1 && i <= (int64_t)len; i += step) {
+                Expr* r = mapat_at_path(f, expr->data.function.args[i - 1], path + 1, plen - 1);
+                expr_free(new_args[i - 1]);
+                new_args[i - 1] = r;
+            }
+        }
+    }
+
+    Expr* result = expr_new_function(new_head, new_args, len);
+    if (new_args) free(new_args);
+    return result;
+}
+
+/* True iff e is a List expression. */
+static bool mapat_is_list(Expr* e) {
+    return e->type == EXPR_FUNCTION &&
+           e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, "List") == 0;
+}
+
+Expr* builtin_map_at(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 3) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+    Expr* pos = res->data.function.args[2];
+
+    /* Disambiguate single-path vs. multiple-paths:
+     *   - multiple-paths iff pos is a non-empty List whose first element is itself a List
+     *   - otherwise, single path (possibly wrapped in a List of indices) */
+    bool multi = false;
+    if (mapat_is_list(pos) && pos->data.function.arg_count > 0 &&
+        mapat_is_list(pos->data.function.args[0])) {
+        multi = true;
+    }
+
+    if (!multi) {
+        Expr** path;
+        size_t plen;
+        if (mapat_is_list(pos)) {
+            plen = pos->data.function.arg_count;
+            path = pos->data.function.args;
+        } else {
+            plen = 1;
+            path = &pos;
+        }
+        return mapat_at_path(f, expr, path, plen);
+    }
+
+    /* Multiple positions: apply sequentially. Repeated positions apply f repeatedly. */
+    Expr* current = expr_copy(expr);
+    for (size_t i = 0; i < pos->data.function.arg_count; i++) {
+        Expr* sub = pos->data.function.args[i];
+        Expr** path;
+        size_t plen;
+        if (mapat_is_list(sub)) {
+            plen = sub->data.function.arg_count;
+            path = sub->data.function.args;
+        } else {
+            plen = 1;
+            path = &sub;
+        }
+        Expr* next = mapat_at_path(f, current, path, plen);
+        expr_free(current);
+        current = next;
+    }
+    return current;
+}
+
 /* ------------------- MapAll ------------------- */
 
 Expr* builtin_map_all(Expr* res) {

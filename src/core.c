@@ -85,6 +85,18 @@ void core_init(void) {
     symtab_add_builtin("Apply", builtin_apply);
     symtab_add_builtin("Map", builtin_map);
     symtab_add_builtin("MapAll", builtin_map_all);
+    symtab_add_builtin("MapAt", builtin_map_at);
+    symtab_get_def("MapAt")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("MapAt",
+        "MapAt[f, expr, n]\n"
+        "\tapplies f to the element at position n in expr. Negative n counts from the end.\n"
+        "MapAt[f, expr, {i, j, ...}]\n"
+        "\tapplies f to the part of expr at position {i, j, ...}.\n"
+        "MapAt[f, expr, {{i1, j1, ...}, {i2, j2, ...}, ...}]\n"
+        "\tapplies f to the parts of expr at each of the listed positions.\n"
+        "\n"
+        "Positions may contain All or Span specifications. MapAt[f, expr, 0]\n"
+        "applies f to the head of expr. Repeated positions apply f repeatedly.");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;
