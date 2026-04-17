@@ -116,6 +116,26 @@ void core_init(void) {
         "whose (k+1)-th element is f applied k times to expr. n must be a\n"
         "non-negative integer. f may be a symbol or a pure function; each\n"
         "intermediate application is evaluated before the next one.");
+    symtab_add_builtin("NestWhile", builtin_nestwhile);
+    symtab_get_def("NestWhile")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("NestWhile",
+        "NestWhile[f, expr, test]\n"
+        "\tstarts with expr and repeatedly applies f while test still yields True.\n"
+        "NestWhile[f, expr, test, m]\n"
+        "\tsupplies the most recent m results as arguments to test.\n"
+        "NestWhile[f, expr, test, All]\n"
+        "\tsupplies all results so far as arguments to test.\n"
+        "NestWhile[f, expr, test, {mmin, mmax}]\n"
+        "\tdelays testing until at least mmin results exist, then passes up to mmax.\n"
+        "NestWhile[f, expr, test, m, max]\n"
+        "\tapplies f at most max times.\n"
+        "NestWhile[f, expr, test, m, max, n]\n"
+        "\tapplies f an additional n times after the loop terminates.\n"
+        "NestWhile[f, expr, test, m, max, -n]\n"
+        "\treturns the result found when f had been applied n fewer times.\n"
+        "\n"
+        "If test[expr] does not yield True initially, NestWhile returns expr.\n"
+        "NestWhile[f, expr, UnsameQ, 2] is equivalent to FixedPoint[f, expr].");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

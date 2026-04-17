@@ -1355,3 +1355,160 @@ Expr* builtin_nestlist(Expr* res) {
     free(items);
     return list;
 }
+
+/* ------------------- NestWhile ------------------- */
+
+/*
+ * NestWhile[f, expr, test]                    -- apply f while test yields True
+ * NestWhile[f, expr, test, m]                 -- pass last m results to test (m = All means all)
+ * NestWhile[f, expr, test, {mmin, mmax}]      -- start testing once mmin results exist, pass up to mmax
+ * NestWhile[f, expr, test, m, max]            -- cap the number of f-applications at max
+ * NestWhile[f, expr, test, m, max, n]         -- apply f n extra times after the loop ends
+ * NestWhile[f, expr, test, m, max, -n]        -- return the result n applications before the end
+ *
+ * Returns NULL (leaving NestWhile unevaluated) for malformed argument specs.
+ */
+
+static bool nw_is_true(Expr* e) {
+    return e && e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "True") == 0;
+}
+
+Expr* builtin_nestwhile(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 3 || argc > 6) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* expr = res->data.function.args[1];
+    Expr* test = res->data.function.args[2];
+
+    /* Parse m: positive integer, All, or {mmin, mmax|Infinity} */
+    int64_t m_min = 1, m_max = 1;
+    bool m_max_inf = false;
+    if (argc >= 4) {
+        Expr* m_arg = res->data.function.args[3];
+        if (m_arg->type == EXPR_INTEGER) {
+            if (m_arg->data.integer < 1) return NULL;
+            m_min = m_max = m_arg->data.integer;
+        } else if (m_arg->type == EXPR_SYMBOL && strcmp(m_arg->data.symbol, "All") == 0) {
+            m_min = 1;
+            m_max_inf = true;
+        } else if (m_arg->type == EXPR_FUNCTION &&
+                   m_arg->data.function.head->type == EXPR_SYMBOL &&
+                   strcmp(m_arg->data.function.head->data.symbol, "List") == 0 &&
+                   m_arg->data.function.arg_count == 2) {
+            Expr* a0 = m_arg->data.function.args[0];
+            Expr* a1 = m_arg->data.function.args[1];
+            if (a0->type != EXPR_INTEGER || a0->data.integer < 1) return NULL;
+            m_min = a0->data.integer;
+            if (a1->type == EXPR_INTEGER) {
+                if (a1->data.integer < m_min) return NULL;
+                m_max = a1->data.integer;
+            } else if (a1->type == EXPR_SYMBOL && strcmp(a1->data.symbol, "Infinity") == 0) {
+                m_max_inf = true;
+            } else {
+                return NULL;
+            }
+        } else {
+            return NULL;
+        }
+    }
+
+    /* Parse max: non-negative integer or Infinity */
+    int64_t max_apps = 0;
+    bool max_inf = true;
+    if (argc >= 5) {
+        Expr* max_arg = res->data.function.args[4];
+        if (max_arg->type == EXPR_INTEGER) {
+            if (max_arg->data.integer < 0) return NULL;
+            max_apps = max_arg->data.integer;
+            max_inf = false;
+        } else if (max_arg->type == EXPR_SYMBOL && strcmp(max_arg->data.symbol, "Infinity") == 0) {
+            max_inf = true;
+        } else {
+            return NULL;
+        }
+    }
+
+    /* Parse n_extra: any integer */
+    int64_t n_extra = 0;
+    if (argc >= 6) {
+        Expr* n_arg = res->data.function.args[5];
+        if (n_arg->type != EXPR_INTEGER) return NULL;
+        n_extra = n_arg->data.integer;
+    }
+
+    /* Safety cap for effectively-infinite iteration */
+    const int64_t SAFETY_CAP = 1000000;
+
+    size_t cap = 16;
+    size_t count = 0;
+    Expr** items = malloc(sizeof(Expr*) * cap);
+    items[count++] = expr_copy(expr);
+
+    int64_t apps = 0;
+    while (1) {
+        if (!max_inf && apps >= max_apps) break;
+        if (max_inf && apps >= SAFETY_CAP) {
+            for (size_t i = 0; i < count; i++) expr_free(items[i]);
+            free(items);
+            return NULL;
+        }
+
+        if ((int64_t)count >= m_min) {
+            int64_t k = m_max_inf ? (int64_t)count
+                                  : ((int64_t)count < m_max ? (int64_t)count : m_max);
+            Expr** test_args = malloc(sizeof(Expr*) * (size_t)k);
+            for (int64_t i = 0; i < k; i++) {
+                test_args[i] = expr_copy(items[count - (size_t)k + (size_t)i]);
+            }
+            Expr* test_call = expr_new_function(expr_copy(test), test_args, (size_t)k);
+            free(test_args);
+            Expr* test_result = eval_and_free(test_call);
+            bool is_true = nw_is_true(test_result);
+            expr_free(test_result);
+            if (!is_true) break;
+        }
+
+        Expr* arg_copy = expr_copy(items[count - 1]);
+        Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+        Expr* next = eval_and_free(call);
+        if (count >= cap) {
+            cap *= 2;
+            items = realloc(items, sizeof(Expr*) * cap);
+        }
+        items[count++] = next;
+        apps++;
+    }
+
+    /* Positive n_extra: apply f n_extra more times */
+    if (n_extra > 0) {
+        for (int64_t i = 0; i < n_extra; i++) {
+            Expr* arg_copy = expr_copy(items[count - 1]);
+            Expr* call = expr_new_function(expr_copy(f), &arg_copy, 1);
+            Expr* next = eval_and_free(call);
+            if (count >= cap) {
+                cap *= 2;
+                items = realloc(items, sizeof(Expr*) * cap);
+            }
+            items[count++] = next;
+        }
+    }
+
+    /* Determine return index: Part[NestWhileList, -n_extra-1] when n_extra < 0 */
+    int64_t ret_idx = (n_extra >= 0) ? (int64_t)count - 1
+                                     : (int64_t)count - 1 + n_extra;
+    if (ret_idx < 0 || ret_idx >= (int64_t)count) {
+        for (size_t i = 0; i < count; i++) expr_free(items[i]);
+        free(items);
+        return NULL;
+    }
+
+    Expr* result = items[ret_idx];
+    items[ret_idx] = NULL;
+    for (size_t i = 0; i < count; i++) {
+        if (items[i]) expr_free(items[i]);
+    }
+    free(items);
+    return result;
+}

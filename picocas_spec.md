@@ -2864,6 +2864,61 @@ In[11]:= NestList[Mod[59 #, 101] &, 1, 15]
 Out[11]= {1, 59, 47, 46, 88, 41, 96, 8, 68, 73, 65, 98, 25, 61, 64, 39}
 ```
 
+#### NestWhile
+Iteratively applies a function while a predicate continues to yield `True`.
+- `NestWhile[f, expr, test]`: Starts with `expr` and keeps applying `f` until `test` no longer yields `True`.
+- `NestWhile[f, expr, test, m]`: Supplies the most recent `m` results (not wrapped in a list) as arguments to `test`.
+- `NestWhile[f, expr, test, All]`: Supplies every result so far as arguments to `test`.
+- `NestWhile[f, expr, test, {mmin, mmax}]`: Defers the first test until `mmin` results exist, then supplies up to `mmax` most-recent results.
+- `NestWhile[f, expr, test, m, max]`: Caps the number of `f` applications at `max` (may be `Infinity`).
+- `NestWhile[f, expr, test, m, max, n]`: After the loop terminates, applies `f` an additional `n` times.
+- `NestWhile[f, expr, test, m, max, -n]`: Returns the result produced `n` applications before the loop ended (i.e. `Part[NestWhileList[...], -n-1]`).
+
+**Features**:
+- `Protected`.
+- If `test[expr]` does not yield `True` initially, the unchanged `expr` is returned.
+- Results passed to `test` are in generation order with the most recent last, so e.g. `# > 1 &` inspects the oldest when more than one result is supplied.
+- `NestWhile[f, expr, UnsameQ, 2]` is equivalent to `FixedPoint[f, expr]`.
+- `NestWhile[f, expr, UnsameQ, All]` continues until any prior value reappears.
+- `m` must be a positive integer, `All`, or a 2-element list `{mmin, mmax}` with `1 <= mmin <= mmax` (or `mmax = Infinity`); `max` must be a non-negative integer or `Infinity`; `n` must be an integer. Malformed specs leave `NestWhile` unevaluated.
+- Pure functions (`... &`) are supported for both `f` and `test`.
+
+**Examples**:
+```
+In[1]:= NestWhile[#/2 &, 123456, EvenQ]
+Out[1]= 1929
+
+In[2]:= NestWhile[Log, 100., # > 0 &]
+Out[2]= -0.859384
+
+In[3]:= NestWhile[Floor[#/2] &, 10, UnsameQ, 2]
+Out[3]= 0
+
+In[4]:= NestWhile[#/2 &, 123456, EvenQ, 1, 4]
+Out[4]= 7716
+
+In[5]:= NestWhile[Floor[#/2] &, 20, # > 1 &, 1, Infinity]
+Out[5]= 1
+
+In[6]:= NestWhile[Floor[#/2] &, 20, # > 1 &, 1, Infinity, 1]
+Out[6]= 0
+
+In[7]:= NestWhile[Floor[#/2] &, 20, # > 1 &, 1, Infinity, -1]
+Out[7]= 2
+
+In[8]:= NestWhile[# + 1 &, 888, !PrimeQ[#] &]
+Out[8]= 907
+
+In[9]:= NestWhile[# + 1 &, 888, !PrimeQ[#1] || !PrimeQ[#3] &, 3]
+Out[9]= 1021
+
+In[10]:= NestWhile[Mod[# + 3, 7] &, 0, UnsameQ, All]
+Out[10]= 0
+
+In[11]:= NestWhile[If[EvenQ[#], #/2, 3 # + 1] &, 27, # != 1 &]
+Out[11]= 1
+```
+
 #### Through
 Distributes operators that appear inside the heads of expressions.
 - `Through[expr]`: Distributes the top-level head.
