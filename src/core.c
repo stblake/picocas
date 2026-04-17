@@ -189,6 +189,33 @@ void core_init(void) {
         "\n"
         "FixedPoint[f, expr] gives the last element of FixedPointList[f, expr].\n"
         "Throw can be used inside f to exit early.");
+    symtab_add_builtin("Fold", builtin_fold);
+    symtab_get_def("Fold")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("Fold",
+        "Fold[f, x, list]\n"
+        "\tgives the last element of FoldList[f, x, list]:\n"
+        "\tf[...f[f[f[x, list[[1]]], list[[2]]], list[[3]]]..., list[[n]]].\n"
+        "Fold[f, list]\n"
+        "\tis equivalent to Fold[f, First[list], Rest[list]].\n"
+        "\n"
+        "The head of list need not be List. Fold[f, x, {}] returns x, and\n"
+        "Fold[f, {a}] returns a. Fold[f, {}] remains unevaluated. f may be a\n"
+        "symbol or a pure function; each intermediate application is evaluated\n"
+        "before the next one.");
+    symtab_add_builtin("FoldList", builtin_foldlist);
+    symtab_get_def("FoldList")->attributes |= ATTR_PROTECTED;
+    symtab_set_docstring("FoldList",
+        "FoldList[f, x, list]\n"
+        "\tgives {x, f[x, list[[1]]], f[f[x, list[[1]]], list[[2]]], ...}.\n"
+        "FoldList[f, list]\n"
+        "\tgives {list[[1]], f[list[[1]], list[[2]]], ...}.\n"
+        "\n"
+        "For a length-n list, FoldList generates a list of length n+1. The\n"
+        "head of list is preserved in the output:\n"
+        "\tFoldList[f, x, p[a, b]] -> p[x, f[x, a], f[f[x, a], b]].\n"
+        "FoldList[f, {}] returns an empty list {}. f may be a symbol or a\n"
+        "pure function; each intermediate application is evaluated before the\n"
+        "next one.");
     symtab_add_builtin("Through", builtin_through);
     symtab_add_builtin("Distribute", builtin_distribute);
     symtab_get_def("Distribute")->attributes |= ATTR_PROTECTED;

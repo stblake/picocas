@@ -1863,3 +1863,99 @@ Expr* builtin_fixedpoint(Expr* res) {
 
     return prev;
 }
+/* ------------------- Fold / FoldList ------------------- */
+
+/*
+ * Shared core for Fold and FoldList.
+ *
+ * Forms accepted on the input expression `res`:
+ *   H[f, list]        -- seed is taken as the first element of list
+ *   H[f, x, list]     -- seed is x; list supplies elements to fold over
+ *
+ * list must be a compound expression (EXPR_FUNCTION). Its head is preserved
+ * in the FoldList output (e.g. FoldList[f, x, p[a,b]] -> p[x, f[x,a], f[f[x,a],b]]).
+ *
+ * If as_list is true, the return is a compound expression with the list's head
+ * containing the seed and all intermediate results. If false, only the last
+ * result (the ordinary Fold value) is returned.
+ *
+ * Special empty-list behaviour:
+ *   FoldList[f, {}]   -> {}        (empty list with the input head)
+ *   Fold[f, {}]       -> unevaluated (returns NULL)
+ *
+ * Returns NULL (leaving the expression unevaluated) for:
+ *   - wrong argument count
+ *   - the list argument having a non-compound type
+ *   - Fold[f, list] with an empty list
+ *
+ * Ownership: this function never frees res; the evaluator takes care of
+ * freeing the input expression after a non-NULL return.
+ */
+static Expr* fold_core(Expr* res, bool as_list) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc != 2 && argc != 3) return NULL;
+
+    Expr* f = res->data.function.args[0];
+    Expr* seed_src;          /* borrowed pointer into res -- never freed here */
+    Expr* list;
+    bool seed_from_list;
+
+    if (argc == 3) {
+        seed_src = res->data.function.args[1];
+        list = res->data.function.args[2];
+        seed_from_list = false;
+    } else {
+        seed_src = NULL;
+        list = res->data.function.args[1];
+        seed_from_list = true;
+    }
+
+    if (list->type != EXPR_FUNCTION) return NULL;
+
+    Expr* out_head = list->data.function.head;
+    Expr** elems = list->data.function.args;
+    size_t n = list->data.function.arg_count;
+    size_t start = 0;
+
+    if (seed_from_list) {
+        if (n == 0) {
+            if (!as_list) return NULL;  /* Fold[f, {}] -- leave unevaluated */
+            /* FoldList[f, {}] -> {} (empty, preserving head) */
+            return expr_new_function(expr_copy(out_head), NULL, 0);
+        }
+        seed_src = elems[0];
+        start = 1;
+    }
+
+    size_t m = n - start;   /* number of f-applications to perform */
+
+    if (as_list) {
+        size_t count = m + 1;
+        Expr** items = malloc(sizeof(Expr*) * count);
+        items[0] = expr_copy(seed_src);
+        for (size_t i = 0; i < m; i++) {
+            Expr* call_args[2];
+            call_args[0] = expr_copy(items[i]);
+            call_args[1] = expr_copy(elems[start + i]);
+            Expr* call = expr_new_function(expr_copy(f), call_args, 2);
+            items[i + 1] = eval_and_free(call);
+        }
+        Expr* result = expr_new_function(expr_copy(out_head), items, count);
+        free(items);
+        return result;
+    } else {
+        Expr* current = expr_copy(seed_src);
+        for (size_t i = 0; i < m; i++) {
+            Expr* call_args[2];
+            call_args[0] = current;                  /* transfer ownership */
+            call_args[1] = expr_copy(elems[start + i]);
+            Expr* call = expr_new_function(expr_copy(f), call_args, 2);
+            current = eval_and_free(call);
+        }
+        return current;
+    }
+}
+
+Expr* builtin_fold(Expr* res) { return fold_core(res, false); }
+Expr* builtin_foldlist(Expr* res) { return fold_core(res, true); }

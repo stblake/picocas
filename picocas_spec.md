@@ -3010,6 +3010,126 @@ In[7]:= FixedPointList[(# + 2/#)/2 &, 1.0, SameTest -> (Abs[#1 - #2] < 0.01 &)]
 Out[7]= {1.0, 1.5, 1.41667, 1.41422}
 ```
 
+#### Fold
+Successively applies a binary function to an accumulating seed and the elements of a list.
+- `Fold[f, x, list]`: Returns the last element of `FoldList[f, x, list]`, namely `f[...f[f[f[x, list[[1]]], list[[2]]], list[[3]]]..., list[[n]]]`.
+- `Fold[f, list]`: Equivalent to `Fold[f, First[list], Rest[list]]`.
+
+**Features**:
+- `Protected`.
+- The head of the third argument need not be `List` (any compound expression is accepted).
+- `Fold[f, x, {}]` returns `x` (the function is never applied); `Fold[f, {a}]` returns `a`.
+- `Fold[f, {}]` remains unevaluated (no seed, no elements).
+- Each intermediate application is evaluated before the next one.
+
+```mathematica
+In[1]:= Fold[f, x, {a, b, c, d}]
+Out[1]= f[f[f[f[x, a], b], c], d]
+
+In[2]:= Fold[List, x, {a, b, c, d}]
+Out[2]= {{{{x, a}, b}, c}, d}
+
+In[3]:= Fold[Times, 1, {a, b, c, d}]
+Out[3]= a b c d
+
+In[4]:= Fold[f, {a, b, c, d}]
+Out[4]= f[f[f[a, b], c], d]
+
+In[5]:= Fold[{2 #1, 3 #2} &, x, {a, b, c, d}]
+Out[5]= {{{{16 x, 24 a}, 12 b}, 6 c}, 3 d}
+
+In[6]:= Fold[f, x, p[a, b, c, d]]
+Out[6]= f[f[f[f[x, a], b], c], d]
+
+(* Horner-form evaluation: 2^3 + 2 + 1 at x = 2 *)
+In[7]:= Fold[2 #1 + #2 &, 0, {1, 0, 1, 1}]
+Out[7]= 11
+
+(* Form a number from digits *)
+In[8]:= Fold[10 #1 + #2 &, 0, {4, 5, 1, 6, 7, 8}]
+Out[8]= 451678
+
+(* Form a continued fraction *)
+In[9]:= Fold[1/(#2 + #1) &, x, Reverse[{a, b, c, d}]]
+Out[9]= 1/(a + 1/(b + 1/(c + 1/(d + x))))
+
+(* Factorial via Times *)
+In[10]:= Fold[Times, 1, Range[5]]
+Out[10]= 120
+
+(* When the pure function ignores its second argument, Fold coincides with Nest *)
+In[11]:= Fold[f[#1] &, x, Range[5]]
+Out[11]= f[f[f[f[f[x]]]]]
+
+(* Edge cases *)
+In[12]:= Fold[f, x, {}]
+Out[12]= x
+
+In[13]:= Fold[f, {a}]
+Out[13]= a
+
+In[14]:= Fold[f, {}]
+Out[14]= Fold[f, {}]
+```
+
+#### FoldList
+Produces the list of intermediate fold values.
+- `FoldList[f, x, list]`: Gives `{x, f[x, list[[1]]], f[f[x, list[[1]]], list[[2]]], ...}`.
+- `FoldList[f, list]`: Gives `{list[[1]], f[list[[1]], list[[2]]], ...}`.
+
+**Features**:
+- `Protected`.
+- With a length-`n` list, `FoldList` returns a list of length `n + 1` (or `n` in the no-seed form).
+- The head of the third argument is preserved in the output: `FoldList[f, x, p[a, b]]` gives `p[x, f[x, a], f[f[x, a], b]]`.
+- `FoldList[f, {}]` returns `{}` (an empty list with the input head); `FoldList[f, x, {}]` returns `{x}`.
+- `Fold[f, x, list]` is equivalent to `Last[FoldList[f, x, list]]`.
+
+```mathematica
+In[1]:= FoldList[f, x, {a, b, c, d}]
+Out[1]= {x, f[x, a], f[f[x, a], b], f[f[f[x, a], b], c], f[f[f[f[x, a], b], c], d]}
+
+In[2]:= FoldList[f, {a, b, c, d}]
+Out[2]= {a, f[a, b], f[f[a, b], c], f[f[f[a, b], c], d]}
+
+(* Cumulative sums *)
+In[3]:= FoldList[Plus, 0, Range[5]]
+Out[3]= {0, 1, 3, 6, 10, 15}
+
+(* Head preservation *)
+In[4]:= FoldList[f, x, p[a, b, c, d]]
+Out[4]= p[x, f[x, a], f[f[x, a], b], f[f[f[x, a], b], c], f[f[f[f[x, a], b], c], d]]
+
+(* Fold to the right *)
+In[5]:= FoldList[g[#2, #1] &, x, {a, b, c, d}]
+Out[5]= {x, g[a, x], g[b, g[a, x]], g[c, g[b, g[a, x]]], g[d, g[c, g[b, g[a, x]]]]}
+
+(* Successive factorials *)
+In[6]:= FoldList[Times, 1, Range[10]]
+Out[6]= {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800}
+
+(* Build up a continued fraction *)
+In[7]:= FoldList[1/(#2 + #1) &, x, Reverse[{a, b, c}]]
+Out[7]= {x, 1/(c + x), 1/(b + 1/(c + x)), 1/(a + 1/(b + 1/(c + x)))}
+
+(* Build up a number from digits *)
+In[8]:= FoldList[10 #1 + #2 &, 0, {4, 5, 1, 6, 7, 8}]
+Out[8]= {0, 4, 45, 451, 4516, 45167, 451678}
+
+(* Horner-form polynomial evaluation at x = 2, coefficients {1, 0, 1, 1} *)
+In[9]:= FoldList[2 #1 + #2 &, 0, {1, 0, 1, 1}]
+Out[9]= {0, 1, 2, 5, 11}
+
+(* Edge cases *)
+In[10]:= FoldList[f, x, {}]
+Out[10]= {x}
+
+In[11]:= FoldList[f, {}]
+Out[11]= {}
+
+In[12]:= FoldList[f, p[]]
+Out[12]= p[]
+```
+
 #### Through
 Distributes operators that appear inside the heads of expressions.
 - `Through[expr]`: Distributes the top-level head.
