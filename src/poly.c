@@ -1,3 +1,42 @@
+/* ====================================================================
+ * poly.c -- Polynomial algebra primitives.
+ *
+ * This module implements PicoCAS's symbolic polynomial layer:
+ *
+ *   PolynomialQ        -- structural polynomial test
+ *   Variables          -- collect free variables of an expression
+ *   Coefficient        -- pattern-matching coefficient extraction
+ *   CoefficientList    -- multi-variable coefficient table
+ *   PolynomialGCD/LCM  -- multivariate gcd/lcm via subresultant PRS
+ *   PolynomialQuotient -- (Euclidean) division quotient
+ *   PolynomialRemainder-- (Euclidean) division remainder
+ *   PolynomialMod      -- reduction mod a polynomial / integer / list
+ *   PolynomialExtendedGCD -- extended Euclidean algorithm
+ *   Collect            -- group terms by powers of a variable
+ *   Decompose          -- functional decomposition of univariate poly
+ *   HornerForm         -- nested Horner representation
+ *   Resultant          -- Sylvester-matrix resultant
+ *   Discriminant       -- (-1)^(n(n-1)/2)/a_n * Res(p, p')
+ *
+ * The file is organised top-down:
+ *   1. Base/exponent decomposition helpers (BPList) used by Coefficient
+ *      and Collect to break terms apart.
+ *   2. Fast coefficient extraction helpers used internally to avoid
+ *      the full evaluator pipeline (the hottest path in this file).
+ *   3. The general Coefficient[] builtin (slow path with full pattern
+ *      matching) and Variables/PolynomialQ.
+ *   4. Polynomial division and content/primitive-part computations.
+ *   5. Multivariate GCD/LCM driven by the recursive subresultant PRS.
+ *   6. Collect, CoefficientList, Decompose, HornerForm, Resultant,
+ *      Discriminant, PolynomialMod, PolynomialExtendedGCD.
+ *
+ * Memory convention (matches the rest of PicoCAS):
+ *   Every helper that returns Expr* hands fresh ownership to the
+ *   caller. Built-in entry points (`builtin_*`) leave the input `res`
+ *   alive -- the evaluator (or `internal_call_impl`) frees it after a
+ *   non-NULL return.
+ * ==================================================================== */
+
 #include "internal.h"
 #include "poly.h"
 #include "expand.h"
@@ -11,10 +50,20 @@
 #include "match.h"
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 bool contains_any_symbol_from(Expr* expr, Expr* var);
 
-/* BasePower logic */
+/* ------------------------------------------------------------------ */
+/* BasePower decomposition                                            */
+/*                                                                    */
+/* A `BPList` represents a product as a flat list of (base, exponent) */
+/* pairs. e.g. 3 * x^2 * y^a becomes                                   */
+/*    {(3,1), (x,2), (y,a)}                                            */
+/* This is the canonical form used by Coefficient[] and Collect[] to  */
+/* identify which factors are "the variable's powers" versus the      */
+/* numeric/symbolic coefficient.                                      */
+/* ------------------------------------------------------------------ */
 
 typedef struct {
     Expr* base;
@@ -112,8 +161,219 @@ static Expr* rebuild_from_bp(BPList* l) {
     return res;
 }
 
-/* Coefficient logic */
+/* ------------------------------------------------------------------ */
+/* Fast coefficient extraction                                        */
+/*                                                                    */
+/* The general Coefficient[expr, var, n] builtin (`builtin_coefficient`*/
+/* below) decomposes every term into a base/power list and uses       */
+/* `get_k` to support compound monomial targets such as `x*y` or      */
+/* `Sin[x]^2`. That generality is overkill for the polynomial code,   */
+/* which always asks for the coefficient of an atomic variable raised */
+/* to a non-negative integer power -- and which usually already has   */
+/* the input fully expanded.                                          */
+/*                                                                    */
+/* `get_coeff_expanded` walks an already-expanded polynomial once,    */
+/* computing the coefficient of var^n directly. This avoids three     */
+/* layers of overhead per call:                                       */
+/*   1. The evaluator pipeline (head/attr/listable/...) invoked by    */
+/*      `evaluate(Coefficient[...])`.                                 */
+/*   2. A redundant `expr_expand` call inside `builtin_coefficient`.  */
+/*   3. The base/power bookkeeping in `decompose_to_bp` / `get_k`.    */
+/*                                                                    */
+/* Because polynomial division / GCD / coefficient list / resultant   */
+/* repeatedly query coefficients of the same expanded polynomial,     */
+/* this is one of the largest hot spots in the file.                  */
+/* ------------------------------------------------------------------ */
 
+/* True when `var` is a building block the fast path knows how to     */
+/* recognise as a factor: any leaf, or a function call whose head is  */
+/* not Plus/Times/Power. Compound monomials like `x*y` or `x^2` need  */
+/* the slow path's pattern-matching logic.                             */
+static bool var_is_atomic(Expr* var) {
+    if (!var) return false;
+    if (var->type == EXPR_SYMBOL || var->type == EXPR_INTEGER ||
+        var->type == EXPR_REAL   || var->type == EXPR_BIGINT ||
+        var->type == EXPR_STRING) return true;
+    if (var->type == EXPR_FUNCTION && var->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = var->data.function.head->data.symbol;
+        return strcmp(h, "Plus") != 0 && strcmp(h, "Times") != 0 && strcmp(h, "Power") != 0;
+    }
+    return false;
+}
+
+/* For a single multiplicand `f` and an atomic `var`, return the      */
+/* exponent of var contributed by `f`:                                 */
+/*    f == var               -> 1                                      */
+/*    f == Power[var, k]     -> k       (k a non-negative integer)     */
+/*    otherwise              -> 0       (f is treated as constant      */
+/*                                       w.r.t. var)                   */
+/* Returns -1 to signal "factor involves var with a non-integer or     */
+/* negative exponent" -- the term is not polynomial in var, and the    */
+/* caller should drop it from the coefficient sum.                     */
+static int factor_var_exp(Expr* f, Expr* var) {
+    if (expr_eq(f, var)) return 1;
+    if (f->type == EXPR_FUNCTION && f->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(f->data.function.head->data.symbol, "Power") == 0 &&
+        f->data.function.arg_count == 2 &&
+        expr_eq(f->data.function.args[0], var)) {
+        Expr* exp = f->data.function.args[1];
+        if (exp->type == EXPR_INTEGER) {
+            int64_t e = exp->data.integer;
+            if (e < 0 || e > INT_MAX) return -1;
+            return (int)e;
+        }
+        return -1;
+    }
+    return 0;
+}
+
+/* Walk `term` to compute its var-degree and accumulate every factor   */
+/* that does not involve var into `*kept` (a growable array of fresh   */
+/* copies). Recurses into nested Times nodes -- expanded expressions   */
+/* sometimes carry Times[const, Times[...]] structure when expansion   */
+/* finishes before the FLAT attribute has been re-applied. Returns     */
+/* the accumulated var-degree, or -1 if `term` contains a non-integer  */
+/* or negative power of var (i.e. is not polynomial in var).           */
+static int collect_term_factors(Expr* term, Expr* var,
+                                Expr*** kept, size_t* kept_count, size_t* kept_cap) {
+    if (term->type == EXPR_FUNCTION && term->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(term->data.function.head->data.symbol, "Times") == 0) {
+        int total_deg = 0;
+        for (size_t j = 0; j < term->data.function.arg_count; j++) {
+            int sub = collect_term_factors(term->data.function.args[j], var,
+                                           kept, kept_count, kept_cap);
+            if (sub < 0) return -1;
+            total_deg += sub;
+        }
+        return total_deg;
+    }
+    int e = factor_var_exp(term, var);
+    if (e < 0) return -1;
+    if (e == 0) {
+        if (*kept_count == *kept_cap) {
+            *kept_cap = *kept_cap ? *kept_cap * 2 : 4;
+            *kept = realloc(*kept, sizeof(Expr*) * (*kept_cap));
+        }
+        (*kept)[(*kept_count)++] = expr_copy(term);
+    }
+    return e;
+}
+
+/* Compute the contribution of a single expanded-polynomial term to    */
+/* the coefficient of var^n. Returns NULL if the term contributes      */
+/* nothing (its var-degree is not n, or it contains a non-polynomial   */
+/* power of var). Otherwise returns a fresh Expr* the caller owns.     */
+static Expr* term_coeff_or_null(Expr* term, Expr* var, int n) {
+    Expr** kept = NULL;
+    size_t kept_count = 0, kept_cap = 0;
+    int deg = collect_term_factors(term, var, &kept, &kept_count, &kept_cap);
+    if (deg < 0 || deg != n) {
+        for (size_t k = 0; k < kept_count; k++) expr_free(kept[k]);
+        free(kept);
+        return NULL;
+    }
+    Expr* coeff;
+    if (kept_count == 0)      coeff = expr_new_integer(1);
+    else if (kept_count == 1) coeff = kept[0];
+    else                       coeff = internal_times(kept, kept_count);
+    free(kept);
+    return coeff;
+}
+
+/* Return the coefficient of var^n in `expanded`, where `expanded` is  */
+/* the result of a prior `expr_expand` call. `var` must be atomic      */
+/* (caller's responsibility -- typically a symbol).                    */
+static Expr* get_coeff_expanded(Expr* expanded, Expr* var, int n) {
+    if (!expanded) return expr_new_integer(0);
+
+    bool is_plus = (expanded->type == EXPR_FUNCTION &&
+                    expanded->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(expanded->data.function.head->data.symbol, "Plus") == 0);
+    Expr** terms = is_plus ? expanded->data.function.args : &expanded;
+    size_t term_count = is_plus ? expanded->data.function.arg_count : 1;
+
+    Expr** matches = malloc(sizeof(Expr*) * term_count);
+    size_t match_count = 0;
+    for (size_t i = 0; i < term_count; i++) {
+        Expr* c = term_coeff_or_null(terms[i], var, n);
+        if (c) matches[match_count++] = c;
+    }
+
+    Expr* result;
+    if (match_count == 0)      result = expr_new_integer(0);
+    else if (match_count == 1) result = matches[0];
+    else                        result = internal_plus(matches, match_count);
+    free(matches);
+    return result;
+}
+
+/* Bulk-extract every coefficient of `expanded` in var, for indices    */
+/* 0..max_deg. Single pass over the terms (O(terms) tree walks) versus */
+/* the (max_deg+1) walks performed by repeatedly calling               */
+/* `get_coeff_expanded`. Each output slot is a freshly-allocated Expr* */
+/* the caller must free; missing degrees are filled with Integer 0.    */
+/* Returns false if `var` is not atomic.                                */
+static bool get_all_coeffs_expanded(Expr* expanded, Expr* var, int max_deg,
+                                    Expr*** out_coeffs) {
+    if (!var_is_atomic(var) || max_deg < 0) return false;
+
+    bool is_plus = (expanded && expanded->type == EXPR_FUNCTION &&
+                    expanded->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(expanded->data.function.head->data.symbol, "Plus") == 0);
+    Expr** terms = is_plus ? expanded->data.function.args : &expanded;
+    size_t term_count = expanded ? (is_plus ? expanded->data.function.arg_count : 1) : 0;
+
+    /* Per-degree growable bucket of contributions. */
+    Expr*** buckets = calloc((size_t)(max_deg + 1), sizeof(Expr**));
+    size_t* bucket_count = calloc((size_t)(max_deg + 1), sizeof(size_t));
+    size_t* bucket_cap   = calloc((size_t)(max_deg + 1), sizeof(size_t));
+
+    for (size_t i = 0; i < term_count; i++) {
+        Expr** kept = NULL;
+        size_t kept_count = 0, kept_cap = 0;
+        int deg = collect_term_factors(terms[i], var, &kept, &kept_count, &kept_cap);
+        if (deg < 0 || deg > max_deg) {
+            for (size_t k = 0; k < kept_count; k++) expr_free(kept[k]);
+            free(kept);
+            continue;
+        }
+        Expr* coeff;
+        if (kept_count == 0)      coeff = expr_new_integer(1);
+        else if (kept_count == 1) coeff = kept[0];
+        else                       coeff = internal_times(kept, kept_count);
+        free(kept);
+
+        if (bucket_count[deg] == bucket_cap[deg]) {
+            bucket_cap[deg] = bucket_cap[deg] ? bucket_cap[deg] * 2 : 4;
+            buckets[deg] = realloc(buckets[deg], sizeof(Expr*) * bucket_cap[deg]);
+        }
+        buckets[deg][bucket_count[deg]++] = coeff;
+    }
+
+    Expr** out = malloc(sizeof(Expr*) * (size_t)(max_deg + 1));
+    for (int d = 0; d <= max_deg; d++) {
+        size_t bc = bucket_count[d];
+        if (bc == 0)      out[d] = expr_new_integer(0);
+        else if (bc == 1) out[d] = buckets[d][0];
+        else              out[d] = internal_plus(buckets[d], bc);
+        free(buckets[d]);
+    }
+    free(buckets);
+    free(bucket_count);
+    free(bucket_cap);
+
+    *out_coeffs = out;
+    return true;
+}
+
+/* ------------------------------------------------------------------ */
+/* Slow-path Coefficient[] (full pattern-matching support)            */
+/* ------------------------------------------------------------------ */
+
+/* For a target monomial decomposed into its base/power list, count    */
+/* how many copies (k) the term contains. Returns 0 when the term has  */
+/* no coefficient contribution (target factors missing or matched a    */
+/* fractional/negative number of times).                               */
 static int64_t get_k(BPList* term_bp, BPList* target_bp) {
     if (target_bp->count == 0) return 0;
     int64_t k_val = -1;
@@ -145,6 +405,17 @@ static int64_t get_k(BPList* term_bp, BPList* target_bp) {
     return k_val == -1 ? 0 : k_val;
 }
 
+/* Coefficient[expr, form, n=1]                                        */
+/*                                                                     */
+/* Mathematica-compatible coefficient extraction supporting compound   */
+/* monomial forms (e.g. `Coefficient[expr, x*y]` or                    */
+/* `Coefficient[expr, Sin[x]^2]`). Algorithm: expand once, decompose   */
+/* the target into a base/power list, then for each summand check that */
+/* every target factor appears with the same multiplier `k`. The       */
+/* matching multiplier `k` is computed by `get_k`.                     */
+/*                                                                     */
+/* For the much more common atomic-variable case, internal callers     */
+/* should use `get_coeff_expanded` directly to skip the BP machinery.  */
 Expr* builtin_coefficient(Expr* res) {
     if (res->type != EXPR_FUNCTION || (res->data.function.arg_count < 2 || res->data.function.arg_count > 3)) return NULL;
     Expr* original_expr = res->data.function.args[0];
@@ -220,7 +491,13 @@ Expr* builtin_coefficient(Expr* res) {
     return final_res;
 }
 
-/* Constants & Predicates */
+/* ------------------------------------------------------------------ */
+/* Constants & Predicates                                             */
+/*                                                                    */
+/* These helpers classify an expression as "constant w.r.t. some set  */
+/* of variables", which drives both Variables[] (collect free atoms)  */
+/* and PolynomialQ[] (structural polynomial test).                    */
+/* ------------------------------------------------------------------ */
 
 static bool contains_symbol(Expr* expr, const char* sym) {
     if (!expr) return false;
@@ -355,8 +632,33 @@ Expr* builtin_polynomialq(Expr* res) {
     return expr_new_symbol(poly ? "True" : "False");
 }
 
-/* GCD Logic */
+/* ------------------------------------------------------------------ */
+/* Polynomial GCD machinery                                           */
+/*                                                                    */
+/* The multivariate GCD is built bottom-up via the recursive          */
+/* "subresultant PRS" algorithm:                                      */
+/*                                                                    */
+/*   poly_gcd_internal(A, B, vars, k) computes gcd(A, B) over the     */
+/*   ring K[vars[0..k-1]], treating vars[k-1] as the main variable.   */
+/*   Coefficient gcds in K[vars[0..k-2]] are computed by recursive    */
+/*   calls. Eventually k==0 reduces to integer gcd.                   */
+/*                                                                    */
+/* Each level                                                         */
+/*    1. Splits A and B into content (gcd of coefficients) and        */
+/*       primitive part (poly / content).                             */
+/*    2. Reduces the primitive parts with `pseudo_rem` until the      */
+/*       remainder is zero.                                           */
+/*    3. Multiplies the resulting gcd by the recursive content gcd.   */
+/*                                                                    */
+/* Pseudo-remainder is used (rather than the field-division remainder */
+/* used by `poly_div_rem`) because it stays inside the coefficient    */
+/* ring -- no rationals appear, even when the leading coefficient is  */
+/* a complicated polynomial in the remaining variables.               */
+/* ------------------------------------------------------------------ */
 
+/* True if `e` is structurally / arithmetically the zero polynomial.   */
+/* Cheap path covers literal 0; expanded path handles `(x-x)`-style    */
+/* cancellations; deep path falls back to coefficient-list inspection. */
 bool is_zero_poly(Expr* e) {
     if (!e) return true;
     if (e->type == EXPR_INTEGER && e->data.integer == 0) return true;
@@ -438,6 +740,9 @@ static Expr* my_number_gcd(Expr* a, Expr* b) {
     return expr_new_integer(g);
 }
 
+/* Degree of `e` as a polynomial in `var`. Walks the expression tree   */
+/* once; returns 0 for constants, max-of-summands for Plus, sum-of-    */
+/* factors for Times, and the integer exponent for `var^k`.            */
 int get_degree_poly(Expr* e, Expr* var) {
     if (!e) return 0;
     if (expr_eq(e, var)) return 1;
@@ -467,13 +772,32 @@ int get_degree_poly(Expr* e, Expr* var) {
     return 0;
 }
 
+/* Public coefficient extractor used across the polynomial code and    */
+/* by external modules (facpoly.c, parfrac.c, simp.c, ...). The fast   */
+/* path expands once and walks the result; the slow path defers to     */
+/* the full Coefficient[] builtin via evaluate() so that compound      */
+/* monomial targets (`x*y`, `Sin[x]^2`, ...) keep working.             */
 Expr* get_coeff(Expr* e, Expr* var, int d) {
-    Expr* call = expr_new_function(expr_new_symbol("Coefficient"), (Expr*[]){expr_copy(e), expr_copy(var), expr_new_integer(d)}, 3);
+    if (var_is_atomic(var)) {
+        Expr* expanded = expr_expand(e);
+        if (expanded) {
+            Expr* result = get_coeff_expanded(expanded, var, d);
+            expr_free(expanded);
+            return result;
+        }
+    }
+    Expr* call = expr_new_function(expr_new_symbol("Coefficient"),
+                                   (Expr*[]){expr_copy(e), expr_copy(var), expr_new_integer(d)}, 3);
     Expr* res = evaluate(call);
     expr_free(call);
     return res;
 }
 
+/* Returns Q such that A = B * Q exactly (in K[vars]); otherwise NULL. */
+/* Used by `poly_gcd_internal` to extract primitive parts and to stage */
+/* GCD candidate division. The base case (var_count == 0) reduces to   */
+/* exact integer / rational division -- everything else recurses on    */
+/* the leading-coefficient ring.                                       */
 Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     if (expr_eq(A, B)) return expr_new_integer(1);
     if (var_count == 0) {
@@ -512,35 +836,48 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     
     Expr* Q = expr_new_integer(0);
     Expr* R = expandedA;
-    Expr* lcB = get_coeff(expandedB, x, degB);
-    
+    /* expandedA / expandedB are already expanded; skip the redundant      */
+    /* expr_expand inside get_coeff by calling the direct helper.          */
+    Expr* lcB = get_coeff_expanded(expandedB, x, degB);
+
     while (true) {
         int degR = get_degree_poly(R, x);
-        
+
         if (degR < degB || is_zero_poly(R)) break;
-        
-        Expr* lcR = get_coeff(R, x, degR);
+
+        Expr* lcR = get_coeff_expanded(R, x, degR);
         int d = degR - degB;
-        
+
         Expr* q_coeff = exact_poly_div(lcR, lcB, vars, var_count - 1);
-        if (!q_coeff) { 
-            expr_free(lcR); break; 
+        if (!q_coeff) {
+            expr_free(lcR); break;
         }
-        
+        /* If the quotient coefficient is a pure integer/bigint, the      */
+        /* subtraction below cannot introduce new fractions and we can    */
+        /* skip the costly together()+cancel() unification.                */
+        bool q_coeff_pure = (q_coeff->type == EXPR_INTEGER || q_coeff->type == EXPR_BIGINT);
+
         Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
         Expr* term = internal_times((Expr*[]){q_coeff, x_pow}, 2);
-        
+
         Expr* new_Q = internal_plus((Expr*[]){expr_copy(Q), expr_copy(term)}, 2);
         expr_free(Q);
         Q = new_Q;
-        
+
         Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
         Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
-        Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
-        Expr* together = internal_together((Expr*[]){evaluated_plus}, 1); evaluated_plus = internal_cancel((Expr*[]){together}, 1);
-        Expr* new_R = expr_expand(evaluated_plus);
-        expr_free(evaluated_plus);
-        
+        Expr* diff = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
+        Expr* new_R;
+        if (q_coeff_pure) {
+            new_R = expr_expand(diff);
+            expr_free(diff);
+        } else {
+            Expr* together = internal_together((Expr*[]){diff}, 1);
+            Expr* cancelled = internal_cancel((Expr*[]){together}, 1);
+            new_R = expr_expand(cancelled);
+            expr_free(cancelled);
+        }
+
         expr_free(R);
         R = new_R;
         expr_free(lcR);
@@ -555,18 +892,24 @@ Expr* exact_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     return Q;
 }
 
+/* Subresultant-style pseudo-remainder used by the multivariate GCD     */
+/* loop. Computes lc(B)^k * A mod B in the polynomial ring without     */
+/* needing leading-coefficient division, so it stays inside the        */
+/* coefficient ring (no rationals introduced) and works over symbolic  */
+/* coefficients.                                                       */
 static Expr* pseudo_rem(Expr* A, Expr* B, Expr* x) {
     Expr* R = expr_expand(A);
     Expr* expandedB = expr_expand(B);
     int degB = get_degree_poly(expandedB, x);
-    Expr* lcB = get_coeff(expandedB, x, degB);
-    
+    /* expandedB is already expanded -- direct fast path is safe. */
+    Expr* lcB = get_coeff_expanded(expandedB, x, degB);
+
     while (true) {
         int degR = get_degree_poly(R, x);
-        
+
         if (degR < degB || is_zero_poly(R)) break;
-        
-        Expr* lcR = get_coeff(R, x, degR);
+
+        Expr* lcR = get_coeff_expanded(R, x, degR);
         int d = degR - degB;
         
         Expr* t1 = internal_times((Expr*[]){expr_copy(lcB), R}, 2);
@@ -583,6 +926,11 @@ static Expr* pseudo_rem(Expr* A, Expr* B, Expr* x) {
     return R;
 }
 
+/* Univariate polynomial long division of `p` by `q` in K[x] (K is the */
+/* field generated by the symbolic coefficients). Writes the quotient  */
+/* and remainder via the out parameters; both are NULL on failure      */
+/* (e.g. divisor is zero). Used as the building block for both         */
+/* PolynomialQuotient[] and PolynomialRemainder[].                     */
 static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) {
     Expr* expandedA = expr_expand(p);
     Expr* expandedB = expr_expand(q);
@@ -607,18 +955,27 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
 
     Expr* Q = expr_new_integer(0);
     Expr* R = expandedA;
-    Expr* lcB = get_coeff(expandedB, x, degB);
+    /* Fast path: expandedB is already expanded -- skip the duplicate    */
+    /* expr_expand inside get_coeff.                                     */
+    Expr* lcB = get_coeff_expanded(expandedB, x, degB);
 
     while (true) {
         int degR = get_degree_poly(R, x);
         if (degR < degB || is_zero_poly(R)) break;
-        
-        Expr* lcR = get_coeff(R, x, degR);
+
+        Expr* lcR = get_coeff_expanded(R, x, degR);
         int d = degR - degB;
 
+        /* Compute the next quotient coefficient = lcR / lcB.             */
+        /* `q_coeff_pure` tracks whether the coefficient is a pure        */
+        /* integer / bigint -- in that case the subtraction step cannot   */
+        /* introduce new fractions and we can skip the expensive          */
+        /* together()+cancel() unification of denominators.                */
         Expr* q_coeff;
+        bool q_coeff_pure = false;
         if (expr_eq(lcR, lcB)) {
             q_coeff = expr_new_integer(1);
+            q_coeff_pure = true;
         } else if (lcR->type == EXPR_BIGINT && lcB->type == EXPR_BIGINT) {
             mpz_t a, b, r, rem;
             expr_to_mpz(lcR, a);
@@ -631,6 +988,7 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
             if (exact) {
                 q_coeff = expr_bigint_normalize(expr_new_bigint_from_mpz(r));
                 mpz_clear(r);
+                q_coeff_pure = true;
             } else {
                 mpz_clear(r);
                 Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
@@ -640,7 +998,7 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
             Expr* lcB_inv = internal_power((Expr*[]){expr_copy(lcB), expr_new_integer(-1)}, 2);
             q_coeff = internal_times((Expr*[]){expr_copy(lcR), lcB_inv}, 2);
         }
-        
+
         Expr* x_pow = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
         Expr* term = internal_times((Expr*[]){q_coeff, x_pow}, 2);
 
@@ -650,10 +1008,21 @@ static void poly_div_rem(Expr* p, Expr* q, Expr* x, Expr** out_Q, Expr** out_R) 
 
         Expr* term_B = internal_times((Expr*[]){term, expr_copy(expandedB)}, 2);
         Expr* neg_term_B = internal_times((Expr*[]){expr_new_integer(-1), term_B}, 2);
-        Expr* evaluated_plus = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
-        Expr* together = internal_together((Expr*[]){evaluated_plus}, 1); evaluated_plus = internal_cancel((Expr*[]){together}, 1);
-        Expr* new_R = expr_expand(evaluated_plus);
-        expr_free(evaluated_plus);
+        Expr* diff = internal_plus((Expr*[]){expr_copy(R), neg_term_B}, 2);
+        Expr* new_R;
+        if (q_coeff_pure) {
+            /* No new rational structure introduced; expand alone is      */
+            /* enough to combine like terms.                              */
+            new_R = expr_expand(diff);
+            expr_free(diff);
+        } else {
+            /* Symbolic / rational q_coeff -- run together()+cancel()      */
+            /* to unify denominators introduced by Power[lcB,-1].          */
+            Expr* together = internal_together((Expr*[]){diff}, 1);
+            Expr* cancelled = internal_cancel((Expr*[]){together}, 1);
+            new_R = expr_expand(cancelled);
+            expr_free(cancelled);
+        }
 
         expr_free(R);
         R = new_R;
@@ -695,14 +1064,23 @@ Expr* builtin_polynomialremainder(Expr* res) {
 
 Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count);
 
+/* The polynomial content -- the GCD of A's coefficients with respect  */
+/* to the highest-indexed variable in `vars`. Bulk-extracts every       */
+/* coefficient in a single pass over the expanded terms (much faster    */
+/* than asking get_coeff for each degree, which would re-walk the       */
+/* whole polynomial each time).                                         */
 Expr* poly_content(Expr* A, Expr** vars, size_t var_count) {
     if (var_count == 0) return expr_copy(A);
     Expr* x = vars[var_count - 1];
     Expr* expandedA = expr_expand(A);
     int degA = get_degree_poly(expandedA, x);
+
+    Expr** coeffs = NULL;
+    bool bulk = (degA >= 0) && get_all_coeffs_expanded(expandedA, x, degA, &coeffs);
+
     Expr* g = expr_new_integer(0);
     for (int i = 0; i <= degA; i++) {
-        Expr* c = get_coeff(expandedA, x, i);
+        Expr* c = bulk ? coeffs[i] : get_coeff_expanded(expandedA, x, i);
         if (!is_zero_poly(c)) {
             if (is_zero_poly(g)) {
                 expr_free(g);
@@ -717,6 +1095,7 @@ Expr* poly_content(Expr* A, Expr** vars, size_t var_count) {
             expr_free(c);
         }
     }
+    free(coeffs);
     expr_free(expandedA);
     if (is_zero_poly(g)) {
         expr_free(g); return expr_new_integer(0);
@@ -724,6 +1103,16 @@ Expr* poly_content(Expr* A, Expr** vars, size_t var_count) {
     return g;
 }
 
+/* Recursive multivariate gcd(A, B). `vars[k-1]` is the main variable; */
+/* coefficient gcds in K[vars[0..k-2]] are obtained by recursive       */
+/* descent. Outline:                                                   */
+/*    A = cont(A) * pp(A)                                              */
+/*    B = cont(B) * pp(B)                                              */
+/*    g_cont = gcd(cont(A), cont(B))           (one variable smaller)  */
+/*    g_pp   = result of pseudo-remainder reduction on pp(A), pp(B)    */
+/*    return g_cont * g_pp                                             */
+/* The leading coefficient is then sign-normalised so the result has   */
+/* a positive lead.                                                    */
 Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     if (is_zero_poly(A)) return expr_expand(B);
     if (is_zero_poly(B)) return expr_expand(A);
@@ -785,9 +1174,17 @@ Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     return expanded_res;
 }
 
+/* PolynomialGCD[p1, p2, ...]                                          */
+/*                                                                     */
+/* Pre-processes the inputs by extracting:                              */
+/*   - the integer content (numeric gcd of all literal coefficients);   */
+/*   - any factors that appear with positive integer exponent in every  */
+/*     argument (handles `Sqrt[x]`-style irrational generators);        */
+/* Then defers to `poly_gcd_internal` for the symbolic remainder.       */
+/* The final result is `numG * common_factors * symbolic_gcd`.          */
 Expr* builtin_polynomialgcd(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
-    
+
     size_t count = res->data.function.arg_count;
     BPList* bps = malloc(sizeof(BPList) * count);
     for (size_t i = 0; i < count; i++) {
@@ -941,6 +1338,14 @@ static Expr* my_number_lcm(Expr* a, Expr* b) {
     return expr_new_integer(l);
 }
 
+/* PolynomialLCM[p1, p2, ...]                                          */
+/*                                                                     */
+/* Same flavour as PolynomialGCD: split off integer LCM and the        */
+/* maximum-exponent symbolic factors that appear across all inputs,    */
+/* then combine the polynomial parts via lcm(a,b) = a*b / gcd(a,b).    */
+/* The final result also folds in the largest negative exponents of    */
+/* any denominator generators, matching Mathematica's handling of      */
+/* rational expressions.                                                */
 Expr* builtin_polynomiallcm(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
     
@@ -1337,21 +1742,29 @@ Expr* builtin_collect(Expr* res) {
     return collect_internal(expr, vars, num_vars, 0, h);
 }
 
+/* Recursive worker for CoefficientList[expr, {v1, v2, ...}]. Builds a  */
+/* nested list whose shape mirrors the variable order. Uses the bulk    */
+/* coefficient-extraction helper so each level walks `expanded` once    */
+/* instead of (degree+1) times.                                         */
 static Expr* coeff_list_rec(Expr* expr, Expr** vars, int* max_degrees, size_t num_vars, size_t var_idx) {
     if (var_idx == num_vars) return expr_copy(expr);
     Expr* var = vars[var_idx];
     int d = max_degrees[var_idx];
     Expr* expanded = expr_expand(expr);
     if (!expanded) return expr_copy(expr);
-    
+
+    Expr** coeffs = NULL;
+    bool bulk = get_all_coeffs_expanded(expanded, var, d, &coeffs);
+
     Expr** args = malloc(sizeof(Expr*) * (d + 1));
     for (int i = 0; i <= d; i++) {
-        Expr* c = get_coeff(expanded, var, i);
+        Expr* c = bulk ? coeffs[i] : get_coeff_expanded(expanded, var, i);
         args[i] = coeff_list_rec(c, vars, max_degrees, num_vars, var_idx + 1);
         expr_free(c);
     }
+    free(coeffs);
     expr_free(expanded);
-    
+
     Expr* list = expr_new_function(expr_new_symbol("List"), args, d + 1);
     free(args);
     return list;
@@ -1390,6 +1803,15 @@ Expr* builtin_coefficientlist(Expr* res) {
     return result;
 }
 
+/* Functional decomposition of a univariate polynomial:                */
+/* given f(x), find polynomials g, h with f = g(h(x)) and deg(h) >= 2. */
+/* The recursive driver applies two reductions:                        */
+/*   - Common-degree shortcut: if every nonzero monomial has degree    */
+/*     divisible by `d`, substitute y = x^d.                            */
+/*   - Trial composition: for each divisor s of n=deg(f), build the    */
+/*     candidate inner polynomial of degree s using the expansion of   */
+/*     a_n * (x^s)^r and check whether the outer polynomial divides    */
+/*     evenly (matches the standard "Kozen-Landau" decomposition).     */
 static Expr* decompose_recursive(Expr* f, Expr* x) {
     Expr* expanded = expr_expand(f);
     int n = get_degree_poly(expanded, x);
@@ -1399,9 +1821,15 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
         return res;
     }
 
+    /* Compute the gcd `d` of all i for which the i-th coefficient is     */
+    /* non-zero. If d > 1, every term has degree divisible by d and we    */
+    /* can substitute y = x^d to obtain a smaller polynomial.             */
+    Expr** all_coeffs = NULL;
+    bool have_bulk = get_all_coeffs_expanded(expanded, x, n, &all_coeffs);
+
     int d = 0;
     for (int i = 1; i <= n; i++) {
-        Expr* c = get_coeff(expanded, x, i);
+        Expr* c = have_bulk ? all_coeffs[i] : get_coeff_expanded(expanded, x, i);
         if (!is_zero_poly(c)) {
             if (d == 0) d = i;
             else {
@@ -1409,16 +1837,16 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
                 d = (int)tmp_d;
             }
         }
-        expr_free(c);
+        if (!have_bulk) expr_free(c);
     }
 
     if (d > 1) {
         Expr* H = internal_power((Expr*[]){expr_copy(x), expr_new_integer(d)}, 2);
-        
+
         Expr** g_args = malloc(sizeof(Expr*) * (n/d + 1));
         int g_count = 0;
         for (int i = 0; i <= n; i += d) {
-            Expr* c = get_coeff(expanded, x, i);
+            Expr* c = have_bulk ? expr_copy(all_coeffs[i]) : get_coeff_expanded(expanded, x, i);
             if (!is_zero_poly(c)) {
                 if (i == 0) {
                     g_args[g_count++] = c;
@@ -1440,6 +1868,10 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
         else g = internal_plus(g_args, g_count);
         free(g_args);
 
+        if (have_bulk) {
+            for (int i = 0; i <= n; i++) expr_free(all_coeffs[i]);
+            free(all_coeffs);
+        }
         expr_free(expanded);
 
         if (expr_eq(g, x)) {
@@ -1461,7 +1893,13 @@ static Expr* decompose_recursive(Expr* f, Expr* x) {
         return res;
     }
 
-    Expr* a_n = get_coeff(expanded, x, n);
+    Expr* a_n = have_bulk ? expr_copy(all_coeffs[n]) : get_coeff_expanded(expanded, x, n);
+    if (have_bulk) {
+        for (int i = 0; i <= n; i++) expr_free(all_coeffs[i]);
+        free(all_coeffs);
+        all_coeffs = NULL;
+        have_bulk = false;
+    }
     for (int s = 2; s < n; s++) {
         if (n % s != 0) continue;
         int r = n / s;
@@ -1616,6 +2054,11 @@ Expr* builtin_decompose(Expr* res) {
     return decompose_recursive(poly, x);
 }
 
+/* Recursive Horner-form construction:                                  */
+/*   p(x) = c_0 + c_1 x + ... + c_n x^n                                 */
+/*       => c_0 + x (c_1 + x (c_2 + ... + x c_n))                      */
+/* For multivariate inputs, recurses into each coefficient using the   */
+/* tail of the variable list.                                          */
 static Expr* horner_form_rec(Expr* expr, Expr** vars, size_t num_vars) {
     if (num_vars == 0) return expr_copy(expr);
     Expr* v = vars[0];
@@ -1821,6 +2264,12 @@ Expr* builtin_hornerform(Expr* res) {
     return result;
 }
 
+/* Resultant of P, Q in `var`. We exploit two algebraic identities for */
+/* a fast path before falling back to the Sylvester matrix:            */
+/*   Res(P1*P2, Q) = Res(P1,Q) * Res(P2,Q)                              */
+/*   Res(P^k, Q)   = Res(P,Q)^k                                         */
+/* The general case builds the (n+m)x(n+m) Sylvester matrix and        */
+/* takes its determinant (delegated to the linalg module).             */
 static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
     if (P->type == EXPR_FUNCTION && P->data.function.head->type == EXPR_SYMBOL) {
         if (strcmp(P->data.function.head->data.symbol, "Times") == 0) {
@@ -1874,11 +2323,26 @@ static Expr* resultant_internal(Expr* P, Expr* Q, Expr* var) {
         return r;
     }
     
+    /* Both inputs are already expanded -- one bulk pass per polynomial   */
+    /* gives us all coefficients in O(terms), instead of O(deg * terms)   */
+    /* across (deg+1) separate get_coeff queries.                          */
+    Expr** p_all = NULL;
     Expr** p_coeffs = malloc(sizeof(Expr*) * (n + 1));
-    for (int i = 0; i <= n; i++) p_coeffs[i] = get_coeff(exp_P, var, n - i);
-    
+    if (get_all_coeffs_expanded(exp_P, var, n, &p_all)) {
+        for (int i = 0; i <= n; i++) p_coeffs[i] = p_all[n - i];
+        free(p_all);
+    } else {
+        for (int i = 0; i <= n; i++) p_coeffs[i] = get_coeff_expanded(exp_P, var, n - i);
+    }
+
+    Expr** q_all = NULL;
     Expr** q_coeffs = malloc(sizeof(Expr*) * (m + 1));
-    for (int i = 0; i <= m; i++) q_coeffs[i] = get_coeff(exp_Q, var, m - i);
+    if (get_all_coeffs_expanded(exp_Q, var, m, &q_all)) {
+        for (int i = 0; i <= m; i++) q_coeffs[i] = q_all[m - i];
+        free(q_all);
+    } else {
+        for (int i = 0; i <= m; i++) q_coeffs[i] = get_coeff_expanded(exp_Q, var, m - i);
+    }
     
     int dim = n + m;
     Expr** rows = malloc(sizeof(Expr*) * dim);
@@ -1943,13 +2407,20 @@ Expr* builtin_resultant(Expr* res) {
     return resultant_internal(p1, p2, var);
 }
 
+/* d/dvar of a univariate polynomial in already-expanded form. The     */
+/* coefficient ring is left untouched -- we just multiply each c_i by  */
+/* its exponent. Used by the discriminant routine.                     */
 static Expr* poly_derivative(Expr* exp_p, Expr* var) {
     int n = get_degree_poly(exp_p, var);
     if (n <= 0) return expr_new_integer(0);
+
+    Expr** coeffs = NULL;
+    bool bulk = get_all_coeffs_expanded(exp_p, var, n, &coeffs);
+
     Expr** args = malloc(sizeof(Expr*) * n);
     int count = 0;
     for (int i = 1; i <= n; i++) {
-        Expr* c = get_coeff(exp_p, var, i);
+        Expr* c = bulk ? coeffs[i] : get_coeff_expanded(exp_p, var, i);
         if (!is_zero_poly(c)) {
             Expr* t1 = internal_times((Expr*[]){expr_new_integer(i), c}, 2);
             if (i == 1) {
@@ -1980,6 +2451,8 @@ static Expr* poly_derivative(Expr* exp_p, Expr* var) {
     }
 }
 
+/* Discriminant[p, x] = (-1)^(n*(n-1)/2) / a_n * Resultant(p, p', x).   */
+/* The sign and 1/a_n factor are applied after the resultant call.     */
 Expr* builtin_discriminant(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
     
@@ -2075,6 +2548,12 @@ static Expr* integer_poly_div(Expr* A, Expr* B, Expr** vars, size_t var_count) {
     return NULL;
 }
 
+/* Reduce `poly` modulo a single divisor `m`. If `m` is an integer,    */
+/* every numeric coefficient is reduced into [0, |m|). Otherwise `m`   */
+/* is treated as a polynomial in its highest-indexed variable; we      */
+/* repeatedly subtract scaled copies of `m` to kill any term whose     */
+/* main-variable degree is at least deg(m) -- the polynomial analogue  */
+/* of integer modular reduction.                                       */
 static Expr* polynomial_mod_single(Expr* poly, Expr* m, bool use_integer_div) {
     if (m->type == EXPR_INTEGER) {
         int64_t m_val = m->data.integer;
@@ -2303,6 +2782,14 @@ static int64_t mod_inverse_int_poly(int64_t a, int64_t m) {
     return x1;
 }
 
+/* PolynomialExtendedGCD[a, b, x] (optionally Modulus -> p)            */
+/*                                                                     */
+/* Standard extended Euclidean iteration:                               */
+/*   r_{i+1} = r_{i-1} - q_i * r_i                                      */
+/*   s_{i+1} = s_{i-1} - q_i * s_i                                      */
+/*   t_{i+1} = t_{i-1} - q_i * t_i                                      */
+/* On exit, r_0 is the gcd and (s_0, t_0) are the Bezout coefficients. */
+/* The result is finally normalised so the gcd is monic in `x`.        */
 Expr* builtin_polynomialextendedgcd(Expr* res) {
     if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 3 && res->data.function.arg_count != 4)) return NULL;
     Expr* A = res->data.function.args[0];
@@ -2456,6 +2943,4 @@ void poly_init(void) {
     symtab_get_def("PolynomialExtendedGCD")->attributes |= ATTR_PROTECTED;
     symtab_add_builtin("Discriminant", builtin_discriminant);
     symtab_get_def("Discriminant")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
-    symtab_add_builtin("PolynomialQ", builtin_polynomialq);
-    symtab_get_def("PolynomialQ")->attributes |= ATTR_PROTECTED;
 }

@@ -3826,3 +3826,49 @@ Implements structural pattern matching (`MatchQ`).
 Implements expression transformations via rules (`Rule` `->` and `RuleDelayed` `:>`).
 *   `ReplaceAll` (`/.`): Traverses the tree top-down, applying rules to sub-expressions.
 *   Uses `match.c` to determine if a rule's LHS matches the current expression, and if so, substitutes bindings into the RHS.
+
+## 6. Performance Notes
+
+### 6.1. Polynomial Algebra (`poly.c`)
+
+The polynomial subsystem -- `Coefficient`, `CoefficientList`, `PolynomialGCD`,
+`PolynomialQuotient`, `PolynomialRemainder`, `Resultant`, `HornerForm`,
+`Discriminant`, `Decompose`, `Collect`, etc. -- shares a small set of inner
+loops. Two optimisations dominate:
+
+1. **Direct coefficient extraction.** The internal helper
+   `get_coeff_expanded(expanded, var, n)` walks an already-expanded
+   polynomial once per query, summing the contributions of each summand
+   directly. This avoids the full evaluator pipeline (which would
+   construct `Coefficient[expanded, var, n]`, look up its symbol,
+   apply `Listable`/`Flat`/`Orderless`, then re-expand inside
+   `builtin_coefficient`). A bulk variant `get_all_coeffs_expanded`
+   produces every coefficient in a single pass and is used by
+   `poly_content`, `coeff_list_rec`, `poly_derivative` and the
+   resultant routine.
+
+2. **Skipping `Together` + `Cancel` in pure-integer division.** The
+   univariate division loops in `exact_poly_div` and `poly_div_rem`
+   used to call `internal_together` and `internal_cancel` on every
+   iteration to unify denominators introduced by symbolic leading
+   coefficients. We now track whether the quotient coefficient was
+   produced by an exact integer / bigint division (in which case no
+   new fractions can appear) and only invoke the heavy unification
+   path for the genuinely symbolic case.
+
+Combined effect on the test bench (compiled at `-O3`):
+
+| Test                             | Before | After  | Speedup |
+|----------------------------------|-------:|-------:|--------:|
+| `tests/poly_tests`               | 1.86s  | 0.53s  |   3.5x  |
+| `tests/facpoly_tests`            | 4.24s  | 1.60s  |   2.7x  |
+| `PolynomialGCD` (50 large iter.) | 10.07s | 2.40s  |   4.2x  |
+| `CoefficientList` (30 iter.)     | 3.81s  | 0.92s  |   4.1x  |
+| `HornerForm` (200 iter.)         | 16.76s | 5.13s  |   3.3x  |
+| `PolynomialQuotient` (500 iter.) | 2.55s  | 1.15s  |   2.2x  |
+
+A small clean-up was made alongside the perf work:
+* `poly.h` had stray declarations after `#endif`; they are now inside
+  the include guard.
+* `PolynomialQ` was registered twice in `poly_init`; the duplicate
+  registration has been removed.
