@@ -2879,13 +2879,16 @@ Out[5]= {{}, {c}, {b}, {b, c}, {a}, {a, c}, {a, b}, {a, b, c}}
 #### Pure Functions (Function, &)
 `Function` is a pure (or "anonymous") function, analogous to $\lambda$ in LISP.
 - `Function[body]` or `body &`: A pure function where formal parameters are `#` (or `#1`), `#2`, etc.
-- `Function[{u, v, ...}, body]`: A pure function with named local formal parameters.
-- `Function[params, body, attrs]`: A pure function treated as having specific evaluation `attrs`.
+- `Function[x, body]` or `Function[{x1, x2, ...}, body]`: A pure function with named local formal parameters.
+- `Function[params, body, attrs]`: A pure function treated as having the evaluation attributes `attrs`.
+- `Function[Null, body, attrs]`: Slot form (`#`, `##`, etc.) with evaluation attributes.
 - `Slot` (`#`): Represents the first argument. `#n` represents the $n$-th argument.
 - `SlotSequence` (`##`): Represents all arguments sequence. `##n` represents all arguments starting from the $n$-th.
 
 **Features**:
-- Has attribute `HoldAll`, evaluating its body only after arguments are substituted.
+- **Lexical parameter binding**: named parameters are substituted into the body before evaluation (not bound via the global symbol table). This means held references to a parameter (for example `Unevaluated[x]` inside the body) see the substituted expression rather than the raw symbol.
+- **No Hold by default**: the default `Function` has no hold attributes, so its arguments are evaluated before substitution, matching Mathematica. `(Hold[#]&)[1+2]` gives `Hold[3]`, not `Hold[1 + 2]`.
+- **3-argument form attributes**: `Function[params, body, attrs]` can assign any of the standard evaluator attributes. Recognised attributes include `HoldFirst`, `HoldRest`, `HoldAll`, `HoldAllComplete`, `Listable`, `Flat`, `Orderless`, `OneIdentity`, `NumericFunction`, `SequenceHold`, `NHoldRest`. `attrs` may be a single attribute symbol or a list.
 - `Slot` parameters are positionally mapped to arguments provided. Remaining arguments are ignored.
 - Pure functions can be assigned to variables (e.g., `f = #^2 &`) and applied over lists (e.g., `f /@ {1, 2, 3}`).
 - Properly scopes nested `Function` expressions: named inner variables shadow outer ones, and unnamed inner functions establish a new scope for `#` slots.
@@ -2899,6 +2902,18 @@ Out[2]= x^2 + y^4
 
 In[3]:= f[X, ##, Y, ##]&[a, b, c]
 Out[3]= f[X, a, b, c, Y, a, b, c]
+
+In[4]:= Function[{x}, Length[Unevaluated[x]], {HoldAll}][1+1+1]
+Out[4]= 3
+
+In[5]:= Function[{x}, Length[Unevaluated[x]]][1+1+1]
+Out[5]= 0
+
+In[6]:= (Hold[#]&)[1+2]
+Out[6]= Hold[3]
+
+In[7]:= Function[{a, b}, {Length[Unevaluated[a]], Length[Unevaluated[b]]}, HoldFirst][1+2+3, 4+5+6]
+Out[7]= {3, 0}
 ```
 
 #### Map (/@)

@@ -15,7 +15,13 @@ static uint32_t parse_pure_attr(Expr* attr_expr) {
         if (strcmp(name, "Orderless") == 0) return ATTR_ORDERLESS;
         if (strcmp(name, "NumericFunction") == 0) return ATTR_NUMERICFUNCTION;
         if (strcmp(name, "OneIdentity") == 0) return ATTR_ONEIDENTITY;
+        if (strcmp(name, "HoldFirst") == 0) return ATTR_HOLDFIRST;
+        if (strcmp(name, "HoldRest") == 0) return ATTR_HOLDREST;
         if (strcmp(name, "HoldAll") == 0) return ATTR_HOLDALL;
+        if (strcmp(name, "HoldAllComplete") == 0) return ATTR_HOLDALLCOMPLETE;
+        if (strcmp(name, "SequenceHold") == 0) return ATTR_SEQUENCEHOLD;
+        if (strcmp(name, "NHoldRest") == 0) return ATTR_NHOLDREST;
+        if (strcmp(name, "Protected") == 0) return ATTR_PROTECTED;
     }
     return ATTR_NONE;
 }
@@ -23,13 +29,19 @@ static uint32_t parse_pure_attr(Expr* attr_expr) {
 uint32_t pure_function_attributes(Expr* func) {
     if (func->type == EXPR_FUNCTION && func->data.function.head->type == EXPR_SYMBOL &&
         strcmp(func->data.function.head->data.symbol, "Function") == 0) {
-        
-        uint32_t attrs = ATTR_HOLDALL;
+        /* Mathematica default: Function[params, body] has no Hold attributes,
+         * so its arguments are evaluated normally before being substituted
+         * into body. The 3-arg form Function[params, body, attrs] can opt in
+         * to HoldAll / HoldFirst / HoldRest / HoldAllComplete and a handful
+         * of structural attributes. */
+        uint32_t attrs = ATTR_NONE;
         if (func->data.function.arg_count >= 3) {
             Expr* attr_spec = func->data.function.args[2];
             if (attr_spec->type == EXPR_SYMBOL) {
                 attrs |= parse_pure_attr(attr_spec);
-            } else if (attr_spec->type == EXPR_FUNCTION && strcmp(attr_spec->data.function.head->data.symbol, "List") == 0) {
+            } else if (attr_spec->type == EXPR_FUNCTION &&
+                       attr_spec->data.function.head->type == EXPR_SYMBOL &&
+                       strcmp(attr_spec->data.function.head->data.symbol, "List") == 0) {
                 for (size_t i = 0; i < attr_spec->data.function.arg_count; i++) {
                     attrs |= parse_pure_attr(attr_spec->data.function.args[i]);
                 }
@@ -117,81 +129,136 @@ static Expr* substitute_slots(Expr* e, Expr** args, size_t arg_count) {
     return expr_copy(e);
 }
 
+/*
+ * substitute_names:
+ * Walks `e` and replaces free occurrences of any parameter symbol in
+ * `names` with the corresponding expression in `vals`. The substitution is
+ * lexical (no evaluation) and does not recurse into nested Function
+ * expressions -- those shadow the names in their own right, so the outer
+ * Function's parameters must not leak into them.
+ * The returned expression is freshly allocated; the caller owns it and
+ * `vals` is not consumed (copies are made as needed).
+ */
+static Expr* substitute_names(Expr* e, char** names, Expr** vals, size_t count) {
+    if (!e) return NULL;
+
+    if (e->type == EXPR_SYMBOL) {
+        for (size_t i = 0; i < count; i++) {
+            if (names[i] && strcmp(e->data.symbol, names[i]) == 0) {
+                return expr_copy(vals[i]);
+            }
+        }
+        return expr_copy(e);
+    }
+
+    if (e->type == EXPR_FUNCTION) {
+        /* Do not descend into a nested Function -- its body scopes new
+         * parameters and the outer parameters may be shadowed. We copy
+         * the whole nested Function as-is. */
+        if (e->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(e->data.function.head->data.symbol, "Function") == 0) {
+            return expr_copy(e);
+        }
+
+        Expr** new_args = malloc(sizeof(Expr*) * e->data.function.arg_count);
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            new_args[i] = substitute_names(e->data.function.args[i], names, vals, count);
+        }
+        Expr* new_head = substitute_names(e->data.function.head, names, vals, count);
+        Expr* res = expr_new_function(new_head, new_args, e->data.function.arg_count);
+        free(new_args);
+        return res;
+    }
+
+    return expr_copy(e);
+}
+
+/*
+ * apply_pure_function:
+ * Applies a Function[...] expression to the given arguments.
+ *
+ * Four input shapes are supported:
+ *   Function[body]                    -- body uses # / ## slots
+ *   Function[Null, body, attrs]       -- slot form with attributes
+ *   Function[x, body]                 -- single named parameter
+ *   Function[{x1, ...}, body]         -- list of named parameters
+ *   Function[{x1, ...}, body, attrs]  -- named parameters with attributes
+ *
+ * Parameter binding is performed by lexical substitution (not by mutating
+ * the global symbol table) so that references wrapped in Unevaluated still
+ * see the substituted expression. Nested Function expressions are treated
+ * as opaque to avoid capture.
+ */
 Expr* apply_pure_function(Expr* head, Expr** args, size_t arg_count) {
     if (head->type != EXPR_FUNCTION) return NULL;
-    
-    // Function[body]
-    if (head->data.function.arg_count == 1) {
+
+    size_t head_argc = head->data.function.arg_count;
+
+    /* Function[body] -- slot form with 1 argument */
+    if (head_argc == 1) {
         Expr* body = head->data.function.args[0];
         Expr* substituted = substitute_slots(body, args, arg_count);
         Expr* result = evaluate(substituted);
         expr_free(substituted);
         return result;
     }
-    
-    // Function[{x, y, ...}, body]
-    if (head->data.function.arg_count >= 2) {
-        Expr* vars = head->data.function.args[0];
-        Expr* body = head->data.function.args[1];
-        
-        if (vars->type == EXPR_FUNCTION && strcmp(vars->data.function.head->data.symbol, "List") == 0) {
-            size_t var_count = vars->data.function.arg_count;
-            
-            // Temporary bind variables
-            Rule* old_rules = malloc(sizeof(Rule) * var_count);
-            for (size_t i = 0; i < var_count; i++) {
-                Expr* var = vars->data.function.args[i];
-                if (var->type == EXPR_SYMBOL) {
-                    SymbolDef* def = symtab_get_def(var->data.symbol);
-                    old_rules[i].next = def->own_values;
-                    def->own_values = NULL; // Simple shadowing
-                    if (i < arg_count) {
-                        symtab_add_own_value(var->data.symbol, var, args[i]);
-                    }
-                }
-            }
-            
+
+    if (head_argc < 2) return NULL;
+
+    Expr* params = head->data.function.args[0];
+    Expr* body = head->data.function.args[1];
+
+    /* Function[Null, body, ...] -- slot form with attributes.
+     * (Null indicates "use slots" rather than named parameters.) */
+    if (params->type == EXPR_SYMBOL && strcmp(params->data.symbol, "Null") == 0) {
+        Expr* substituted = substitute_slots(body, args, arg_count);
+        Expr* result = evaluate(substituted);
+        expr_free(substituted);
+        return result;
+    }
+
+    /* Function[x, body] -- single named parameter */
+    if (params->type == EXPR_SYMBOL) {
+        char* name = params->data.symbol;
+        Expr* val = (arg_count >= 1) ? args[0] : params;
+        Expr* substituted = substitute_names(body, &name, &val, 1);
+        Expr* result = evaluate(substituted);
+        expr_free(substituted);
+        return result;
+    }
+
+    /* Function[{x1, x2, ...}, body] -- list of named parameters */
+    if (params->type == EXPR_FUNCTION &&
+        params->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(params->data.function.head->data.symbol, "List") == 0) {
+        size_t var_count = params->data.function.arg_count;
+        if (var_count == 0) {
             Expr* result = evaluate(body);
-            
-            // Restore variables
-            for (size_t i = 0; i < var_count; i++) {
-                Expr* var = vars->data.function.args[i];
-                if (var->type == EXPR_SYMBOL) {
-                    SymbolDef* def = symtab_get_def(var->data.symbol);
-                    // Free the temporary own value
-                    if (def->own_values) {
-                        Rule* r = def->own_values;
-                        expr_free(r->pattern);
-                        expr_free(r->replacement);
-                        free(r);
-                    }
-                    def->own_values = old_rules[i].next;
-                }
-            }
-            free(old_rules);
-            return result;
-        } else if (vars->type == EXPR_SYMBOL) {
-            // Function[x, body]
-            SymbolDef* def = symtab_get_def(vars->data.symbol);
-            Rule* old_own = def->own_values;
-            def->own_values = NULL;
-            if (arg_count >= 1) {
-                symtab_add_own_value(vars->data.symbol, vars, args[0]);
-            }
-            
-            Expr* result = evaluate(body);
-            
-            if (def->own_values) {
-                Rule* r = def->own_values;
-                expr_free(r->pattern);
-                expr_free(r->replacement);
-                free(r);
-            }
-            def->attributes &= ~ATTR_HOLDALL; // should not be here but for safety
-            def->own_values = old_own;
             return result;
         }
+
+        char** names = malloc(sizeof(char*) * var_count);
+        Expr** vals = malloc(sizeof(Expr*) * var_count);
+        for (size_t i = 0; i < var_count; i++) {
+            Expr* var = params->data.function.args[i];
+            if (var->type == EXPR_SYMBOL) {
+                names[i] = var->data.symbol;
+                /* Missing arguments leave the parameter symbolic, which is
+                 * the same behaviour as unbound slots. */
+                vals[i] = (i < arg_count) ? args[i] : var;
+            } else {
+                names[i] = NULL;
+                vals[i] = var;
+            }
+        }
+
+        Expr* substituted = substitute_names(body, names, vals, var_count);
+        Expr* result = evaluate(substituted);
+        expr_free(substituted);
+        free(names);
+        free(vals);
+        return result;
     }
-    
+
     return NULL;
 }

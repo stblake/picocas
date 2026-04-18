@@ -55,11 +55,47 @@ void test_purefunc_basic() {
     }
 }
 
+/* Function[params, body, attrs]: attributes are respected during the
+ * argument-evaluation phase, and lexical substitution means held references
+ * to a parameter (e.g. Unevaluated[x]) see the substituted expression. */
+void test_purefunc_attributes() {
+    /* HoldAll holds the argument, so x is bound to Plus[1,1,1] unevaluated.
+     * Length[Unevaluated[Plus[1,1,1]]] gives 3. */
+    assert_eval_eq("Function[{x}, Length[Unevaluated[x]], {HoldAll}][1+1+1]", "3", 0);
+    /* Single attribute (not wrapped in List) is also accepted. */
+    assert_eval_eq("Function[{x}, Length[Unevaluated[x]], HoldAll][1+1+1]", "3", 0);
+
+    /* No Hold attribute: the argument is evaluated first (1+1+1 -> 3) before
+     * substitution, so Length[Unevaluated[3]] = Length[3] = 0. */
+    assert_eval_eq("Function[{x}, Length[Unevaluated[x]]][1+1+1]", "0", 0);
+
+    /* Default Function has no Hold attribute, matching Mathematica:
+     * (Hold[#]&)[1+2] evaluates the arg to 3 before substitution, so the
+     * result is Hold[3] (not Hold[1+2]). */
+    assert_eval_eq("(Hold[#]&)[1+2]", "Hold[3]", 0);
+
+    /* HoldFirst holds arg 1 but evaluates arg 2. */
+    assert_eval_eq("Function[{a, b}, {Length[Unevaluated[a]], Length[Unevaluated[b]]}, HoldFirst][1+2+3, 4+5+6]",
+                   "{3, 0}", 0);
+
+    /* Listable threads the pure function over a list argument. */
+    assert_eval_eq("Function[{u}, g[u], Listable][{a, b, c}]",
+                   "{g[a], g[b], g[c]}", 0);
+}
+
+/* Lexical shadowing: the inner Function's parameter shadows the outer. */
+void test_purefunc_shadowing() {
+    assert_eval_eq("Function[{x}, x + Function[{x}, x][10]][1]", "11", 0);
+    assert_eval_eq("Function[{x}, x + (# &)[99]][7]", "106", 0);
+}
+
 int main() {
     symtab_init();
     core_init();
-    
+
     TEST(test_purefunc_basic);
-    
+    TEST(test_purefunc_attributes);
+    TEST(test_purefunc_shadowing);
+
     return 0;
 }

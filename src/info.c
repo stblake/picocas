@@ -75,7 +75,19 @@ void info_init(void) {
     symtab_set_docstring("Through", "Through[p[f, g][x]] gives p[f[x], g[x]].");
     symtab_set_docstring("Select", "Select[list, crit] selects elements of list that satisfy crit.");
     symtab_set_docstring("FreeQ", "FreeQ[expr, form] yields True if no subexpression in expr matches form, and yields False otherwise.");
-    symtab_set_docstring("Function", "body & or Function[body] represents a pure function.");
+    symtab_set_docstring("Function",
+        "body & or Function[body]\n"
+        "\trepresents a pure function with formal parameters #, #1, #2, ... and ##, ##1, ##2, ... for sequences of arguments.\n"
+        "Function[x, body] or Function[{x1, x2, ...}, body]\n"
+        "\trepresents a pure function with named formal parameters x or x1, x2, ....\n"
+        "Function[params, body, attrs]\n"
+        "\tis a pure function that is treated as having attributes attrs for purposes of evaluation.\n"
+        "\tattrs can be a single attribute or a list of attributes; recognised attributes include HoldFirst, HoldRest, HoldAll, HoldAllComplete, Listable, Flat, Orderless, OneIdentity, NumericFunction, SequenceHold, and NHoldRest.\n"
+        "Function[Null, body, attrs]\n"
+        "\trepresents a function in which the parameters in body are given using # etc.\n"
+        "\n"
+        "Parameter binding is lexical: named parameters are substituted into the body before evaluation. Nested Function expressions shadow their own parameters.\n"
+        "By default Function has no Hold attributes; the arguments are evaluated before substitution. Adding HoldAll (or HoldFirst / HoldRest / HoldAllComplete) in the 3-arg form holds arguments in the chosen positions.");
     symtab_set_docstring("Slot", "# or Slot[n] represents the n-th argument of a pure function.");
     symtab_set_docstring("SlotSequence", "## or SlotSequence[n] represents arguments from the n-th onward.");
 
