@@ -17,6 +17,27 @@ typedef struct {
 static Expr* parse_expression_state(ParserState* s);
 static void skip_whitespace(ParserState* s);
 
+/* If `left` is an n-ary call whose head is the symbol `head_name`, append
+ * `right` as a new argument in-place (taking ownership of `right`) and return
+ * true. Otherwise return false. Used during parsing so that repeated
+ * left-associative uses of Flat operators (Plus, Times) produce an n-ary
+ * call (Plus[a, b, c]) instead of a nested binary tree (Plus[Plus[a, b], c]).
+ * This matters for held expressions: without this, Length[Hold[a+b+c]] would
+ * misleadingly report 2. */
+static bool extend_flat_head(Expr* left, const char* head_name, Expr* right) {
+    if (left == NULL || left->type != EXPR_FUNCTION) return false;
+    if (left->data.function.head->type != EXPR_SYMBOL) return false;
+    if (strcmp(left->data.function.head->data.symbol, head_name) != 0) return false;
+
+    size_t old_count = left->data.function.arg_count;
+    Expr** new_args = realloc(left->data.function.args, sizeof(Expr*) * (old_count + 1));
+    if (!new_args) return false;
+    new_args[old_count] = right;
+    left->data.function.args = new_args;
+    left->data.function.arg_count = old_count + 1;
+    return true;
+}
+
 /* ------------------- Basic Token Parsers ------------------- */
 
 // Skips whitespace and comments
@@ -637,8 +658,12 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
             Expr* minus_one = expr_new_integer(-1);
             Expr* args_times[2] = { minus_one, right };
             Expr* neg_right = expr_new_function(expr_new_symbol("Times"), args_times, 2);
-            Expr* args_plus[2] = { left, neg_right };
-            left = expr_new_function(expr_new_symbol("Plus"), args_plus, 2);
+            if (extend_flat_head(left, "Plus", neg_right)) {
+                /* left is now the extended Plus; keep it */
+            } else {
+                Expr* args_plus[2] = { left, neg_right };
+                left = expr_new_function(expr_new_symbol("Plus"), args_plus, 2);
+            }
         } else if (op_def.type == OP_DIVIDE) {
             if (left->type == EXPR_INTEGER && right->type == EXPR_INTEGER) {
                 Expr* rat_args[2] = { left, right };
@@ -697,11 +722,20 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
                 left = expr_new_function(expr_new_symbol("Optional"), args, 2);
             }
         } else {
-            Expr* args[2] = { left, right };
-            left = expr_new_function(expr_new_symbol(op_def.head_name), args, 2);
+            /* Flatten repeated Plus/Times at parse time so that held
+             * expressions reflect the n-ary form (a+b+c -> Plus[a,b,c]). */
+            if (op_def.head_name &&
+                (strcmp(op_def.head_name, "Plus") == 0 ||
+                 strcmp(op_def.head_name, "Times") == 0) &&
+                extend_flat_head(left, op_def.head_name, right)) {
+                /* left was extended in place */
+            } else {
+                Expr* args[2] = { left, right };
+                left = expr_new_function(expr_new_symbol(op_def.head_name), args, 2);
+            }
         }
     }
-    
+
     return left;
 }
 

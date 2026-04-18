@@ -1099,6 +1099,79 @@ In[8]:= ReleaseHold[{f[Hold[1+2]], g[HoldForm[3+4]]}]
 Out[8]= {f[3], g[7]}
 ```
 
+#### Unevaluated
+Represents the unevaluated form of `expr` when it appears as the argument to a function.
+- `Unevaluated[expr]`
+
+**Features**:
+- Attributes: `{HoldAllComplete, Protected}`.
+- `f[Unevaluated[expr]]` passes `expr` to `f` as if `f` temporarily held that single argument; the `Unevaluated` wrapper is then stripped before `f`'s body runs, effectively yielding `f[expr]` with `expr` unevaluated.
+- The wrapper is **not** stripped when the enclosing function holds the argument (e.g. `f` has `HoldAll`, or `HoldFirst`/`HoldRest` applies to that position).
+- The wrapper is **not** stripped when the enclosing function has `HoldAllComplete`.
+- Stripping happens **after** `Sequence` flattening, so a `Sequence` directly inside `Unevaluated` survives into the argument slot (`Length[Unevaluated[Sequence[a, b]]]` gives `2`).
+- Nested `Unevaluated` wrappers are stripped one layer per evaluation step.
+- As a top-level expression, `Unevaluated[expr]` evaluates to itself (because of `HoldAllComplete`).
+
+```mathematica
+In[1]:= Length[Unevaluated[Plus[5, 6, 7, 8]]]
+Out[1]= 4
+
+In[2]:= Length[Unevaluated[Sequence[a, b]]]
+Out[2]= 2
+
+In[3]:= Hold[Evaluate[Unevaluated[1+2]]]
+Out[3]= Hold[Unevaluated[1 + 2]]
+
+In[4]:= SetAttributes[f, HoldAll]; f[Unevaluated[1+2]]
+Out[4]= f[Unevaluated[1 + 2]]
+
+In[5]:= HoldComplete[Unevaluated[1+2]]
+Out[5]= HoldComplete[Unevaluated[1 + 2]]
+
+In[6]:= Attributes[Unevaluated]
+Out[6]= {HoldAllComplete, Protected}
+```
+
+#### HoldComplete
+Shields `expr` completely from the standard evaluation process.
+- `HoldComplete[expr1, expr2, ...]`
+
+**Features**:
+- Attributes: `{HoldAllComplete, Protected}`.
+- `HoldComplete` prevents argument evaluation, `Sequence` flattening inside its own arguments, `Unevaluated` wrapper stripping, and `Evaluate` from firing. `Evaluate` cannot override `HoldAllComplete`.
+- Structural substitution (via `ReplaceAll`, `Replace`, `ReplacePart`, etc.) still descends into `HoldComplete` because substitution is not part of evaluation.
+- `HoldComplete` is removed by one layer of `ReleaseHold`.
+- `HoldComplete` is a milder form of `Unevaluated` at top level: `HoldComplete` always keeps the wrapper, while `Unevaluated` is typically stripped by the enclosing function.
+
+```mathematica
+In[1]:= Attributes[HoldComplete]
+Out[1]= {HoldAllComplete, Protected}
+
+In[2]:= HoldComplete[1+1, Evaluate[1+2], Sequence[3, 4]]
+Out[2]= HoldComplete[1 + 1, Evaluate[1 + 2], Sequence[3, 4]]
+
+In[3]:= HoldComplete[Sequence[a, b]]
+Out[3]= HoldComplete[Sequence[a, b]]
+
+In[4]:= HoldComplete[f[1+2]] /. f[x_] :> g[x]
+Out[4]= HoldComplete[g[1 + 2]]
+
+In[5]:= ReleaseHold[HoldComplete[Sequence[1, 2]]]
+Out[5]= Sequence[1, 2]
+```
+
+#### HoldAllComplete (attribute)
+An attribute that specifies that **all** arguments to a function are not to be modified or looked at in any way during evaluation. It is stricter than `HoldAll`.
+
+A function with `HoldAllComplete`:
+- does not evaluate any argument,
+- does not flatten `Sequence[...]` that appears inside an argument,
+- does not strip `Unevaluated[...]` wrappers inside its arguments,
+- is not overridden by `Evaluate[...]` wrappers inside its arguments,
+- does not apply any up-values associated with its arguments.
+
+`HoldComplete` and `Unevaluated` are the two standard built-in heads that carry `HoldAllComplete`.
+
 #### InputForm
 - `InputForm[expr]` causes `expr` to be printed in a form suitable for input (standard form in PicoCAS).
 

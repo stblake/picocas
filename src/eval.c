@@ -390,13 +390,39 @@ Expr* evaluate_step(Expr* e) {
             free(new_args);
             
     /* 2.5 Flatten Sequences - must happen before attributes */
-    if (head->type == EXPR_SYMBOL && 
+    if (head->type == EXPR_SYMBOL &&
         (strcmp(head->data.symbol, "Set") == 0 || strcmp(head->data.symbol, "SetDelayed") == 0 ||
          strcmp(head->data.symbol, "Rule") == 0 || strcmp(head->data.symbol, "RuleDelayed") == 0)) {
         // Do not flatten sequences in assignments or rules
     } else {
         flatten_sequences(res);
     }
+
+            /* 2.6 Strip Unevaluated wrappers in non-held positions.
+             * f[Unevaluated[expr]] passes expr (unevaluated) to f, with the
+             * wrapper removed. This runs AFTER flatten_sequences so that any
+             * Sequence[...] directly inside Unevaluated is preserved (e.g.
+             * Length[Unevaluated[Sequence[a,b]]] gives 2 because Sequence is
+             * not flattened into Length's argument list).
+             * The wrapper is kept in held positions (so Hold[Unevaluated[1+2]]
+             * stays as Hold[Unevaluated[1+2]]) and for HoldAllComplete heads
+             * (already handled by the early return above). */
+            for (size_t i = 0; i < res->data.function.arg_count; i++) {
+                bool held = false;
+                if (i == 0 && (attrs & ATTR_HOLDFIRST)) held = true;
+                if (i > 0 && (attrs & ATTR_HOLDREST)) held = true;
+                if (held) continue;
+
+                Expr* arg = res->data.function.args[i];
+                if (arg->type == EXPR_FUNCTION &&
+                    arg->data.function.head->type == EXPR_SYMBOL &&
+                    strcmp(arg->data.function.head->data.symbol, "Unevaluated") == 0 &&
+                    arg->data.function.arg_count == 1) {
+                    Expr* stripped = expr_copy(arg->data.function.args[0]);
+                    expr_free(arg);
+                    res->data.function.args[i] = stripped;
+                }
+            }
 
             /* 3. Apply structural and semantic attributes */
             /* Listable: automatic threading */

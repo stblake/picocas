@@ -137,6 +137,30 @@ void info_init(void) {
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
     symtab_set_docstring("Evaluate", "Evaluate[expr]\n\tcauses expr to be evaluated even if it appears as the argument of a function whose attributes specify that it should be held unevaluated.\nEvaluate only overrides HoldFirst, HoldRest, and HoldAll attributes when it appears directly as the head of the function argument that would otherwise be held.\nEvaluate does not override HoldAllComplete.");
     symtab_set_docstring("ReleaseHold", "ReleaseHold[expr]\n\tremoves Hold, HoldForm, HoldPattern, and HoldComplete in expr.\nReleaseHold removes only one layer of Hold etc.; it does not remove inner occurrences in nested Hold etc. functions.");
+    symtab_set_docstring("Unevaluated",
+        "Unevaluated[expr]\n"
+        "\trepresents the unevaluated form of expr when it appears as the argument to a function.\n"
+        "f[Unevaluated[expr]] effectively works by temporarily holding that argument, then evaluating f[expr] with the wrapper removed.\n"
+        "The wrapper is NOT removed when the argument is held (e.g. when f has HoldAll, HoldFirst, or HoldRest applies) or when f has attribute HoldAllComplete.\n"
+        "Sequence expressions directly inside Unevaluated are NOT flattened: Length[Unevaluated[Sequence[a, b]]] gives 2.\n"
+        "Unevaluated has attributes {HoldAllComplete, Protected}, so its own argument is itself protected from evaluation, Sequence flattening, and wrapper stripping.");
+    symtab_set_docstring("Hold",
+        "Hold[expr]\n"
+        "\tmaintains expr in an unevaluated form.\n"
+        "Hold has attribute HoldAll: its arguments are not evaluated.\n"
+        "Evaluate[expr] inside Hold overrides the hold and evaluates expr once.\n"
+        "Sequence expressions inside Hold are flattened; use HoldComplete to prevent this.");
+    symtab_set_docstring("HoldComplete",
+        "HoldComplete[expr]\n"
+        "\tshields expr completely from evaluation.\n"
+        "HoldComplete has attribute HoldAllComplete: it prevents argument evaluation, Sequence flattening, Unevaluated stripping, and Evaluate from firing.\n"
+        "Substitution (via ReplaceAll, etc.) still happens inside HoldComplete.\n"
+        "HoldComplete is removed by one level of ReleaseHold.");
+    symtab_set_docstring("HoldAllComplete",
+        "HoldAllComplete\n"
+        "\tis an attribute which specifies that all arguments to a function are not to be modified or looked at in any way in the process of evaluation.\n"
+        "HoldAllComplete prevents argument evaluation, Sequence flattening inside arguments, Unevaluated wrapper stripping, and application of Evaluate.\n"
+        "Evaluate cannot override HoldAllComplete.");
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");
     symtab_set_docstring("SetDelayed", "lhs := rhs assigns rhs to lhs, evaluating it only when needed.");
     symtab_set_docstring("Default", "Default[f] gives the default value for arguments of the function f obtained with a _. pattern object.");
