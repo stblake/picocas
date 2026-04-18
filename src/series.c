@@ -601,7 +601,8 @@ static SeriesObj* so_compose_scalar_kernel(Expr** kernel, size_t N, SeriesObj* u
         return so_from_constant(expr_new_integer(0), u->x, u->x0, u->order, u->den);
     }
     SeriesObj* result = so_from_constant(kernel[N - 1], u->x, u->x0, u->order, u->den);
-    for (ssize_t k = (ssize_t)N - 2; k >= 0; k--) {
+    /* Iterate k = N-2, N-3, ..., 0 using a size_t-safe reverse loop. */
+    for (size_t k = N - 1; k-- > 0; ) {
         SeriesObj* mul = so_mul(result, u);
         so_free(result);
         result = mul;
