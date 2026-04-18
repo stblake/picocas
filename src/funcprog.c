@@ -755,43 +755,30 @@ static Expr* inner_n1_B(Expr* f, Expr** A_leaves, Expr** B_slices, size_t L, Exp
 static Expr* inner_n1_A(Expr* f, Expr** A_slices, Expr** B_slices, size_t L, Expr* g, Expr* head) {
     Expr* first_a = A_slices[0];
 
-    /* If first A slice is not a list, go to B-side */
+    /* If first A slice is not a list, A is at leaf level — go to B-side */
     if (first_a->type != EXPR_FUNCTION || !expr_eq(first_a->data.function.head, head)) {
         return inner_n1_B(f, A_slices, B_slices, L, g, head);
     }
 
-    /* Check if first A slice is a "matrix" (its elements are also lists) */
-    bool a_is_matrix = false;
-    if (first_a->data.function.arg_count > 0 &&
-        first_a->data.function.args[0]->type == EXPR_FUNCTION &&
-        expr_eq(first_a->data.function.args[0]->data.function.head, head)) {
-        a_is_matrix = true;
-    }
-
-    if (a_is_matrix) {
-        /* A has deeper remaining structure — descend one level */
-        size_t M = first_a->data.function.arg_count;
-        Expr** res_args = malloc(sizeof(Expr*) * M);
-        Expr** new_slices = malloc(sizeof(Expr*) * L);
-        for (size_t i = 0; i < M; i++) {
-            for (size_t k = 0; k < L; k++) {
-                Expr* ak = A_slices[k];
-                if (ak->type == EXPR_FUNCTION && i < ak->data.function.arg_count) {
-                    new_slices[k] = ak->data.function.args[i];
-                } else {
-                    new_slices[k] = ak; /* fallback for ragged */
-                }
+    /* A still has remaining structure — descend one level along A's next free index */
+    size_t M = first_a->data.function.arg_count;
+    Expr** res_args = malloc(sizeof(Expr*) * M);
+    Expr** new_slices = malloc(sizeof(Expr*) * L);
+    for (size_t i = 0; i < M; i++) {
+        for (size_t k = 0; k < L; k++) {
+            Expr* ak = A_slices[k];
+            if (ak->type == EXPR_FUNCTION && i < ak->data.function.arg_count) {
+                new_slices[k] = ak->data.function.args[i];
+            } else {
+                new_slices[k] = ak; /* fallback for ragged */
             }
-            res_args[i] = inner_n1_A(f, new_slices, B_slices, L, g, head);
         }
-        free(new_slices);
-        Expr* ret = expr_new_function(expr_copy(head), res_args, M);
-        free(res_args);
-        return ret;
-    } else {
-        /* A slices are vectors or atoms — go to B-side */
-        return inner_n1_B(f, A_slices, B_slices, L, g, head);
+        res_args[i] = inner_n1_A(f, new_slices, B_slices, L, g, head);
     }
+    free(new_slices);
+    Expr* ret = expr_new_function(expr_copy(head), res_args, M);
+    free(res_args);
+    return ret;
 }
 
 /* --- Standard Inner: contract last index of A with first index of B --- */
