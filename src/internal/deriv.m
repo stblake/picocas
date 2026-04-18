@@ -36,6 +36,7 @@ D[ArcTanh[f_], x_] := D[f, x] / (1 - f^2);
 D[ArcCoth[f_], x_] := D[f, x] / (1 - f^2);
 D[ArcSech[f_], x_] := -D[f, x] / (f^2 * Sqrt[1/f^2 - 1]);
 D[ArcCsch[f_], x_] := -D[f, x] / (f^2 * Sqrt[1 + 1/f^2]);
+D[Derivative[n_Integer][f_][g_], x_] := Derivative[n + 1][f][g] * D[g, x];
 D[f_[g_], x_] := Derivative[1][f][g] * D[g, x];
 Dt[c_?NumberQ] := 0;
 Dt[Pi] := 0;
@@ -77,6 +78,6 @@ Dt[f_[g_]] := Derivative[1][f][g] * Dt[g];
 Dt[f_, x_] := D[f, x];
 Dt[f_, {x_, n_Integer}] := D[f, {x, n}];
 Dt[f_, x_, y__] := Dt[Dt[f, x], y];
-SetAttributes[D, {Listable, Protected, ReadProtected}];
-SetAttributes[Dt, {Listable, Protected, ReadProtected}];
+SetAttributes[D, {Protected, ReadProtected}];
+SetAttributes[Dt, {Protected, ReadProtected}];
 SetAttributes[Derivative, {Protected, ReadProtected}]

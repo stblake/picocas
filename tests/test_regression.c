@@ -65,19 +65,17 @@ void test_regression_set_evaluation() {
     void test_regression_infinite_eval() {
     symtab_init();
     core_init();
-    
-    // HoldFirst should not evaluate the first arg
-    Expr* e1 = parse_expression("Set[Hold[x], 50]");
+
+    // Set is HoldFirst, so the LHS is not evaluated before the assignment
+    // installs a DownValue on the head symbol. Use an unprotected symbol
+    // (ufoo) so the Protected check does not reject the assignment.
+    Expr* e1 = parse_expression("Set[ufoo[x], 50]");
     Expr* res1 = evaluate(e1);
-    // Set is HoldFirst, so Hold[x] is not evaluated (it evaluates to itself anyway).
-    // Set expects LHS to be Symbol or Function. Here it's Function Hold[x].
-    // It creates DownValue for Hold!
-    // We should test if it succeeded.
     ASSERT(res1->type == EXPR_INTEGER && res1->data.integer == 50);
     expr_free(e1); expr_free(res1);
-    
-    // Hold[x] should now evaluate to 50 because we defined a downvalue for Hold!
-    Expr* e2 = parse_expression("Hold[x]");
+
+    // ufoo[x] should now evaluate to 50 via the freshly installed DownValue.
+    Expr* e2 = parse_expression("ufoo[x]");
     Expr* res2 = evaluate(e2);
     ASSERT(res2->type == EXPR_INTEGER && res2->data.integer == 50);
     expr_free(e2); expr_free(res2);

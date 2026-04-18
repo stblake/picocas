@@ -130,8 +130,32 @@ static Expr* add_numbers(Expr* a, Expr* b) {
     if (is_rational(a, &n1, &d1) && is_rational(b, &n2, &d2)) {
         __int128_t num = (__int128_t)n1 * d2 + (__int128_t)n2 * d1;
         __int128_t den = (__int128_t)d1 * d2;
-        if (num > INT64_MAX || num < INT64_MIN || den > INT64_MAX || den < INT64_MIN)
-            return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+        if (num > INT64_MAX || num < INT64_MIN || den > INT64_MAX || den < INT64_MIN) {
+            /* Promote to a BigInt-backed Rational rather than flagging
+             * overflow: this keeps symbolic series/polynomial computations
+             * exact when intermediate numerators or denominators exceed
+             * 64 bits. */
+            mpz_t mn1, md1, mn2, md2, t1, t2, mnum, mden, g;
+            mpz_init_set_si(mn1, n1); mpz_init_set_si(md1, d1);
+            mpz_init_set_si(mn2, n2); mpz_init_set_si(md2, d2);
+            mpz_inits(t1, t2, mnum, mden, g, NULL);
+            mpz_mul(t1, mn1, md2);
+            mpz_mul(t2, mn2, md1);
+            mpz_add(mnum, t1, t2);
+            mpz_mul(mden, md1, md2);
+            if (mpz_sgn(mden) < 0) { mpz_neg(mden, mden); mpz_neg(mnum, mnum); }
+            mpz_gcd(g, mnum, mden);
+            if (mpz_sgn(g) != 0) { mpz_divexact(mnum, mnum, g); mpz_divexact(mden, mden, g); }
+            Expr* r_num = expr_bigint_normalize(expr_new_bigint_from_mpz(mnum));
+            Expr* r_den = expr_bigint_normalize(expr_new_bigint_from_mpz(mden));
+            mpz_clears(mn1, md1, mn2, md2, t1, t2, mnum, mden, g, NULL);
+            if (r_den->type == EXPR_INTEGER && r_den->data.integer == 1) {
+                expr_free(r_den);
+                return r_num;
+            }
+            Expr* r_args[2] = { r_num, r_den };
+            return expr_new_function(expr_new_symbol("Rational"), r_args, 2);
+        }
         return make_rational((int64_t)num, (int64_t)den);
     }
     

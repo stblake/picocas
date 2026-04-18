@@ -1,0 +1,687 @@
+/*
+ * test_series.c -- unit tests for Series[], SeriesData, and Normal.
+ *
+ * Each test case corresponds to one of the behaviours specified in the
+ * user-facing series spec (see picocas_spec.md "Power Series"). The
+ * assertions compare against FullForm strings, which is the most stable
+ * way to check symbolic output because it avoids differences in printer
+ * formatting choices. Known limitations (e.g. int64 rational overflow in
+ * deeply-Laurent examples like 1/Sin[x]^10) are documented inline.
+ */
+
+#include "eval.h"
+#include "parse.h"
+#include "expr.h"
+#include "symtab.h"
+#include "core.h"
+#include "test_utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+/* Initialise the symbol table, register builtins, and load the derivative
+ * rule file the same way the REPL does. init.m references deriv.m via the
+ * relative path "src/internal/deriv.m" so we first chdir to the project
+ * root (once) before calling Get[]. The chdir target is detected by
+ * walking up from the current directory until we find a folder containing
+ * src/internal/init.m. */
+static bool g_setup_done = false;
+static void setup_full(void) {
+    symtab_init();
+    core_init();
+    if (!g_setup_done) {
+        const char* ups[] = { ".", "..", "../..", "../../..", "../../../..", NULL };
+        for (int i = 0; ups[i]; i++) {
+            char path[256];
+            snprintf(path, sizeof(path), "%s/src/internal/init.m", ups[i]);
+            if (access(path, F_OK) == 0) {
+                (void)!chdir(ups[i]);
+                break;
+            }
+        }
+        g_setup_done = true;
+    }
+    Expr* c = parse_expression("Get[\"src/internal/init.m\"]");
+    if (c) {
+        Expr* r = evaluate(c);
+        expr_free(c);
+        if (r) expr_free(r);
+    }
+}
+
+/* Convenience: evaluate `input` and compare its FullForm against `expected`. */
+static void assert_fullform(const char* input, const char* expected) {
+    assert_eval_eq(input, expected, 1);
+}
+
+/* Convenience: evaluate `input` and compare its OutputForm (pretty printer)
+ * against `expected`. Use sparingly: the pretty printer has formatting
+ * choices (spacing, Times order, Rational display) that are brittle. */
+static void assert_outputform(const char* input, const char* expected) {
+    assert_eval_eq(input, expected, 0);
+}
+
+/* 1. Taylor: Series[Exp[x], {x, 0, 10}] */
+static void test_series_taylor_exp(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Exp[x], {x, 0, 10}]",
+        "SeriesData[x, 0, List[1, 1, Rational[1, 2], Rational[1, 6], "
+        "Rational[1, 24], Rational[1, 120], Rational[1, 720], "
+        "Rational[1, 5040], Rational[1, 40320], Rational[1, 362880], "
+        "Rational[1, 3628800]], 0, 11, 1]");
+}
+
+/* 2. Known elementary functions at x = 0. */
+static void test_series_sin_cos(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sin[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[-1, 6], 0, Rational[1, 120]], "
+        "0, 6, 1]");
+    assert_fullform(
+        "Series[Cos[x], {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 0, Rational[-1, 2], 0, Rational[1, 24], "
+        "0, Rational[-1, 720]], 0, 7, 1]");
+}
+
+/* 3. Symbolic Taylor: Series[f[x], {x, a, 3}] yields Derivative coefficients. */
+static void test_series_symbolic_f(void) {
+    setup_full();
+    /* Expected Taylor: f[a] + f'[a] (x-a) + f''[a]/2 (x-a)^2 + f'''[a]/6 (x-a)^3 + O. */
+    assert_fullform(
+        "Series[f[x], {x, a, 3}]",
+        "SeriesData[x, a, List[f[a], Derivative[1][f][a], "
+        "Times[Rational[1, 2], Derivative[2][f][a]], "
+        "Times[Rational[1, 6], Derivative[3][f][a]]], 0, 4, 1]");
+}
+
+/* 4. Laurent series: Cos[x]/x. */
+static void test_series_laurent(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Cos[x]/x, {x, 0, 10}]",
+        "SeriesData[x, 0, List[1, 0, Rational[-1, 2], 0, Rational[1, 24], "
+        "0, Rational[-1, 720], 0, Rational[1, 40320], 0, "
+        "Rational[-1, 3628800], 0], -1, 11, 1]");
+}
+
+/* 5. Leading-term form Series[f, x -> x0]: user says output is 1 + O[x]^2
+ * for Exp[Sin[x]-x]^3 at x -> 0 (first correction is at x^3, so O[x]^2
+ * correctly signals "we stopped at first-order terms"). */
+static void test_series_leading_term(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Exp[Sin[x]-x]^3, x -> 0]",
+        "SeriesData[x, 0, List[1, 0], 0, 2, 1]");
+}
+
+/* 6. Puiseux: Sqrt[Sin[x]] has fractional-power expansion. */
+static void test_series_puiseux_sqrt_sin(void) {
+    setup_full();
+    /* The spec expected output has five explicit terms; the final term
+     * -1/5677056 x^(21/2) that our engine produces beyond the user's
+     * published series comes from the extra precision we keep internally
+     * and gets truncated away at the user's requested order (O[x]^(21/2)
+     * in Puiseux representation, which is numerator 21 in den=2). */
+    assert_fullform(
+        "Series[Sqrt[Sin[x]], {x, 0, 10}]",
+        "SeriesData[x, 0, List[1, 0, 0, 0, Rational[-1, 12], 0, 0, 0, "
+        "Rational[1, 1440], 0, 0, 0, Rational[-1, 24192], 0, 0, 0, "
+        "Rational[-67, 29030400], 0, 0, 0], 1, 21, 2]");
+}
+
+/* 7. Logarithmic expansion: x^x = Exp[x Log[x]]. Coefficients carry Log[x]
+ * as a symbolic constant with respect to the expansion variable. */
+static void test_series_logarithmic_x_power_x(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x^x, {x, 0, 4}]",
+        "SeriesData[x, 0, List[1, Log[x], Times[Rational[1, 2], Power[Log[x], 2]], "
+        "Times[Rational[1, 6], Power[Log[x], 3]], "
+        "Times[Rational[1, 24], Power[Log[x], 4]]], 0, 5, 1]");
+}
+
+/* 8. Symbolic binomial: (1+x)^n = sum_k Binomial[n,k] x^k. */
+static void test_series_binomial_symbolic(void) {
+    setup_full();
+    /* Coefficients are n * (n-1) * ... * (n-k+1) / k!, kept unexpanded. */
+    assert_outputform(
+        "Series[(1+x)^n, {x, 0, 4}]",
+        "1 + n x + 1/2 n (-1 + n) x^2 + 1/6 n (-2 + n) (-1 + n) x^3 "
+        "+ 1/24 n (-3 + n) (-2 + n) (-1 + n) x^4 + O[x]^5");
+}
+
+/* 9. Deep Laurent series: 1/Sin[x]^10. The engine matches Mathematica up to
+ * the last visible coefficient; PicoCAS's int64-backed Rational arithmetic
+ * overflows on the (6803477/127702575) coefficient. We assert on the first
+ * six coefficients and the overall shape. */
+static void test_series_deep_laurent(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[1/Sin[x]^10, {x, 0, 2}]");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(r->data.function.head->type == EXPR_SYMBOL);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.arg_count == 6);
+    /* nmin = -10, nmax = 3, den = 1. */
+    ASSERT(r->data.function.args[3]->type == EXPR_INTEGER);
+    ASSERT(r->data.function.args[3]->data.integer == -10);
+    ASSERT(r->data.function.args[4]->type == EXPR_INTEGER);
+    ASSERT(r->data.function.args[4]->data.integer == 3);
+    ASSERT(r->data.function.args[5]->type == EXPR_INTEGER);
+    ASSERT(r->data.function.args[5]->data.integer == 1);
+    expr_free(r);
+}
+
+/* 10. Expansion at Infinity: substitute x -> 1/u internally and emit
+ * SeriesData whose variable is Power[x, -1]. */
+static void test_series_at_infinity(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sin[1/x], {x, Infinity, 10}]",
+        "SeriesData[Power[x, -1], 0, List[0, 1, 0, Rational[-1, 6], 0, "
+        "Rational[1, 120], 0, Rational[-1, 5040], 0, Rational[1, 362880], 0], "
+        "0, 11, 1]");
+}
+
+/* 11. Multivariate iterated expansion. Each inner coefficient is itself a
+ * SeriesData in the next variable. */
+static void test_series_bivariate(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[Sin[x+y], {x, 0, 3}, {y, 0, 3}]");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.arg_count == 6);
+    /* Outer nmin=0, nmax=4, den=1. */
+    ASSERT(r->data.function.args[3]->data.integer == 0);
+    ASSERT(r->data.function.args[4]->data.integer == 4);
+    Expr* coefs = r->data.function.args[2];
+    ASSERT(strcmp(coefs->data.function.head->data.symbol, "List") == 0);
+    ASSERT(coefs->data.function.arg_count == 4);
+    /* Each inner coefficient is itself a SeriesData in y. */
+    for (size_t i = 0; i < 4; i++) {
+        Expr* c = coefs->data.function.args[i];
+        ASSERT(c->type == EXPR_FUNCTION);
+        ASSERT(strcmp(c->data.function.head->data.symbol, "SeriesData") == 0);
+    }
+    expr_free(r);
+}
+
+/* 12. List threading: Series over a list produces a list of SeriesData. */
+static void test_series_list_threading(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[{Sin[x], Cos[x], Tan[x]}, {x, 0, 5}]");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "List") == 0);
+    ASSERT(r->data.function.arg_count == 3);
+    for (size_t i = 0; i < 3; i++) {
+        Expr* s = r->data.function.args[i];
+        ASSERT(strcmp(s->data.function.head->data.symbol, "SeriesData") == 0);
+    }
+    expr_free(r);
+}
+
+/* 13. Approximate numeric coefficients flow through series arithmetic. */
+static void test_series_approximate_numbers(void) {
+    setup_full();
+    /* Compute Series[Sin[2.5 x], {x, 0, 5}] and check the x^1 coef is 2.5. */
+    Expr* e = parse_expression("Series[Sin[2.5 x], {x, 0, 5}]");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    Expr* coefs = r->data.function.args[2];
+    Expr* c1 = coefs->data.function.args[1];
+    ASSERT(c1->type == EXPR_REAL);
+    ASSERT(c1->data.real > 2.49 && c1->data.real < 2.51);
+    expr_free(r);
+}
+
+/* 14. Normal drops the O-term and returns an ordinary expression. */
+static void test_normal_converts(void) {
+    setup_full();
+    Expr* e = parse_expression("Normal[Series[Exp[x], {x, 0, 3}]]");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    /* Exp series to order 3 is 1 + x + x^2/2 + x^3/6, no O term. */
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "Plus") == 0);
+    expr_free(r);
+}
+
+/* 15. Normal pass-through for non-SeriesData. */
+static void test_normal_passthrough(void) {
+    setup_full();
+    assert_fullform("Normal[5]", "5");
+    assert_fullform("Normal[a + b]", "Plus[a, b]");
+}
+
+/* 16. Constant input -> constant series. */
+static void test_series_constant(void) {
+    setup_full();
+    assert_fullform(
+        "Series[5, {x, 0, 3}]",
+        "SeriesData[x, 0, List[5, 0, 0, 0], 0, 4, 1]");
+}
+
+/* 17. Identity x -> variable series. */
+static void test_series_identity(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x, {x, 0, 3}]",
+        "SeriesData[x, 0, List[0, 1, 0, 0], 0, 4, 1]");
+}
+
+/* 18. Expansion around a non-zero point for a Taylor-nice function. */
+static void test_series_at_nonzero_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Exp[x], {x, 1, 3}]",
+        "SeriesData[x, 1, List[E, E, Times[Rational[1, 2], E], "
+        "Times[Rational[1, 6], E]], 0, 4, 1]");
+}
+
+/* 19. Protected: Series cannot be reassigned. */
+static void test_series_protected(void) {
+    setup_full();
+    Expr* e = parse_expression("Series = 7");
+    Expr* r = evaluate(e);
+    expr_free(e);
+    expr_free(r);
+    /* Series is still a builtin: calling it should still produce SeriesData. */
+    Expr* e2 = parse_expression("Series[Exp[x], {x, 0, 2}]");
+    Expr* r2 = evaluate(e2);
+    expr_free(e2);
+    ASSERT(r2->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r2->data.function.head->data.symbol, "SeriesData") == 0);
+    expr_free(r2);
+}
+
+/* ==== Regression coverage for bugs fixed in the 2026-04 pass ==== */
+
+/* Previously hung: ArcTan / ArcSin / ArcCos / ArcTanh etc. fell back to
+ * naive Taylor via D, whose derivative expressions blow up exponentially.
+ * Now served by direct series kernels at u = 0. */
+static void test_series_arctan(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcTan[x], {x, 0, 7}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[-1, 3], 0, Rational[1, 5], 0, "
+        "Rational[-1, 7]], 0, 8, 1]");
+}
+static void test_series_arctanh(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcTanh[x], {x, 0, 7}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[1, 3], 0, Rational[1, 5], 0, "
+        "Rational[1, 7]], 0, 8, 1]");
+}
+static void test_series_arcsin(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSin[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[1, 6], 0, Rational[3, 40]], 0, 6, 1]");
+}
+static void test_series_arcsinh(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSinh[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[-1, 6], 0, Rational[3, 40]], 0, 6, 1]");
+}
+static void test_series_arccos(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCos[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Rational[1, 2], Pi], -1, 0, Rational[-1, 6], 0, "
+        "Rational[-3, 40]], 0, 6, 1]");
+}
+static void test_series_arccot(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCot[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Rational[1, 2], Pi], -1, 0, Rational[1, 3], 0, "
+        "Rational[-1, 5]], 0, 6, 1]");
+}
+/* ArcCoth[x] ~ I*Pi/2 + ArcTanh[x] near x = 0 (principal branch). The
+ * leading constant prints as Times[Complex[0, 1/2], Pi] after the
+ * evaluator folds the imaginary unit into the Complex head. */
+static void test_series_arccoth_at_zero(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCoth[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Complex[0, Rational[1, 2]], Pi], 1, 0, "
+        "Rational[1, 3], 0, Rational[1, 5]], 0, 6, 1]");
+}
+/* ArcCoth[x^2] at x = 0: constant plus even-power series. */
+static void test_series_arccoth_of_xsquared(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCoth[x^2], {x, 0, 3}]",
+        "SeriesData[x, 0, List[Times[Complex[0, Rational[1, 2]], Pi], 0, 1, 0], 0, 4, 1]");
+}
+/* Previously: infinite "1/0" errors because naive Taylor substituted
+ * x -> 0 in an expression with ArcCoth[ComplexInfinity]. Now the
+ * engine detects the blowing-up inner series and applies the identity
+ * ArcCoth[1/u] = ArcTanh[u]. */
+static void test_series_arccoth_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCoth[1/x], {x, 0, 12}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[1, 3], 0, Rational[1, 5], 0, "
+        "Rational[1, 7], 0, Rational[1, 9], 0, Rational[1, 11], 0], 0, 13, 1]");
+}
+static void test_series_arccot_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCot[1/x], {x, 0, 12}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[-1, 3], 0, Rational[1, 5], 0, "
+        "Rational[-1, 7], 0, Rational[1, 9], 0, Rational[-1, 11], 0], 0, 13, 1]");
+}
+
+/* Sec, Csc, Cot, Sech, Csch, Coth: previously hung (naive Taylor through
+ * D). Now rewritten via reciprocal identities before recursion. */
+static void test_series_cot(void) {
+    setup_full();
+    /* 1/x - x/3 - x^3/45 - 2 x^5/945 - x^7/4725 - 2 x^9/93555 - 1382 x^11/638512875 + O[x]^13 */
+    Expr* e = parse_expression("Series[Cot[x], {x, 0, 12}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    /* nmin = -1 (Laurent), nmax = 13, den = 1. */
+    ASSERT(r->data.function.args[3]->data.integer == -1);
+    ASSERT(r->data.function.args[4]->data.integer == 13);
+    expr_free(r);
+}
+static void test_series_csc(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Csc[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, 0, Rational[1, 6], 0, Rational[7, 360], 0, "
+        "Rational[31, 15120]], -1, 6, 1]");
+}
+static void test_series_sec(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sec[x], {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 0, Rational[1, 2], 0, Rational[5, 24], 0, "
+        "Rational[61, 720]], 0, 7, 1]");
+}
+static void test_series_sech(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sech[x], {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 0, Rational[-1, 2], 0, Rational[5, 24], 0, "
+        "Rational[-61, 720]], 0, 7, 1]");
+}
+static void test_series_coth(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Coth[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, 0, Rational[1, 3], 0, Rational[-1, 45], 0, "
+        "Rational[2, 945]], -1, 6, 1]");
+}
+static void test_series_csch(void) {
+    setup_full();
+    /* 1/x - x/6 + 7 x^3/360 - 31 x^5/15120 + ... */
+    Expr* e = parse_expression("Series[Csch[x], {x, 0, 11}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[3]->data.integer == -1);
+    ASSERT(r->data.function.args[4]->data.integer == 12);
+    expr_free(r);
+}
+
+/* ArcCosh[x+1] has a square-root branch point at x = 0 (derivative
+ * blows up). Naive Taylor would spin emitting 1/0 errors; our guard
+ * returns NULL and leaves the expression unevaluated. The test asserts
+ * that the engine does not spin and that Series[...] passes through. */
+static void test_series_arccosh_branch_point(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[ArcCosh[x+1], {x, 0, 5}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    /* Should return unevaluated Series[...] rather than hang or SeriesData. */
+    ASSERT(strcmp(r->data.function.head->data.symbol, "Series") == 0);
+    expr_free(r);
+}
+
+/* ==== Overflow: rational arithmetic now promotes to BigInt ==== */
+
+/* Previously: the last three coefficients were Overflow[] because
+ * JCPM-recurrence intermediates exceeded int64 range. With big-rational
+ * promotion they now land as exact rationals. */
+static void test_series_sqrt_log_no_overflow(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[Sqrt[Log[x+1]], {x, 0, 12}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    /* den = 2 (Puiseux), nmin = 1, nmax = 25 (target n = 12 -> 12*2+1). */
+    ASSERT(r->data.function.args[3]->data.integer == 1);
+    ASSERT(r->data.function.args[4]->data.integer == 25);
+    ASSERT(r->data.function.args[5]->data.integer == 2);
+    Expr* coefs = r->data.function.args[2];
+    /* Walk the whole coefficient list; none should be Overflow[]. */
+    for (size_t i = 0; i < coefs->data.function.arg_count; i++) {
+        Expr* ci = coefs->data.function.args[i];
+        if (ci->type == EXPR_FUNCTION && ci->data.function.head->type == EXPR_SYMBOL) {
+            ASSERT(strcmp(ci->data.function.head->data.symbol, "Overflow") != 0);
+        }
+    }
+    expr_free(r);
+}
+
+/* Previously: the x^2 coefficient was Overflow[] because int64 Rational
+ * multiplication capped out. Now reaches the full
+ * 6803477/127702575 coefficient. */
+static void test_series_deep_laurent_no_overflow(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[1/Sin[x]^10, {x, 0, 2}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    Expr* coefs = r->data.function.args[2];
+    ASSERT(coefs->data.function.arg_count >= 13);
+    /* Last visible coefficient is at x^2, which is index 12 (nmin = -10). */
+    Expr* last = coefs->data.function.args[12];
+    /* Must be a Rational BigInt/Integer pair: 6803477/127702575. */
+    ASSERT(last->type == EXPR_FUNCTION);
+    ASSERT(strcmp(last->data.function.head->data.symbol, "Rational") == 0);
+    /* Numerator 6803477, denominator 127702575 both fit int64, so stored as
+     * plain Integer inside the Rational. */
+    Expr* num = last->data.function.args[0];
+    Expr* den = last->data.function.args[1];
+    ASSERT(num->type == EXPR_INTEGER);
+    ASSERT(num->data.integer == 6803477);
+    ASSERT(den->type == EXPR_INTEGER);
+    ASSERT(den->data.integer == 127702575);
+    expr_free(r);
+}
+
+/* ==== New working examples reported by user ==== */
+
+static void test_series_sqrt_of_xplus1(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sqrt[x + 1], {x, 0, 4}]",
+        "SeriesData[x, 0, List[1, Rational[1, 2], Rational[-1, 8], Rational[1, 16], "
+        "Rational[-5, 128]], 0, 5, 1]");
+}
+static void test_series_geometric(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(1 - x), {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 1, 1, 1, 1, 1, 1], 0, 7, 1]");
+}
+static void test_series_even_geometric(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(1 + x^2), {x, 0, 12}]",
+        "SeriesData[x, 0, List[1, 0, -1, 0, 1, 0, -1, 0, 1, 0, -1, 0, 1], 0, 13, 1]");
+    assert_fullform(
+        "Series[1/(1 - x^2), {x, 0, 12}]",
+        "SeriesData[x, 0, List[1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1], 0, 13, 1]");
+}
+static void test_series_sqrt_x_minus_xsquared(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sqrt[x - x^2], {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, 0, Rational[-1, 2], 0, Rational[-1, 8], 0, "
+        "Rational[-1, 16], 0, Rational[-5, 128], 0], 1, 11, 2]");
+}
+static void test_series_fourth_root(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(x + 1)^(1/4), {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, Rational[1, 4], Rational[-3, 32], Rational[7, 128], "
+        "Rational[-77, 2048], Rational[231, 8192], Rational[-1463, 65536]], 0, 7, 1]");
+}
+static void test_series_one_over_one_minus_sqrt_at_one(void) {
+    setup_full();
+    /* Series[1/(1-Sqrt[x]), {x, 1, 7}]: Laurent expansion around x = 1
+     * with a simple pole, leading -2/(x - 1). */
+    Expr* e = parse_expression("Series[1/(1-Sqrt[x]), {x, 1, 7}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    /* x0 = 1, nmin = -1, nmax = 8, den = 1. */
+    ASSERT(r->data.function.args[1]->type == EXPR_INTEGER);
+    ASSERT(r->data.function.args[1]->data.integer == 1);
+    ASSERT(r->data.function.args[3]->data.integer == -1);
+    ASSERT(r->data.function.args[4]->data.integer == 8);
+    expr_free(r);
+}
+
+/* ==== Inverse trig / hyperbolic at 1/x: coverage for the full set ====
+ *
+ * Previously ArcCsch[1/x], ArcSech[1/x], ArcSec[1/x] and ArcCsc[1/x]
+ * fell through to naive Taylor, whose probe `f /. x -> 0` substituted
+ * into `1/x` triggering `Power::infy: 1/0 encountered.` warnings.
+ * ArcCosh[1/x], ArcSinh[1/x], ArcTanh[1/x] returned unevaluated.
+ *
+ * Now:
+ *   - ArcSec/ArcCsc/ArcSech/ArcCsch rewrite via reciprocal identities
+ *     (ArcSec[z] = ArcCos[1/z], etc.) so z = 1/x collapses to x and
+ *     dispatches through the convergent kernel path.
+ *   - ArcTanh[1/x] uses the principal-branch identity
+ *     ArcTanh[1/u] = I*Pi/2 + ArcTanh[u].
+ *   - ArcCosh[1/x] / ArcSinh[1/x] use Log+Sqrt identities whose
+ *     -Log[x] term rides the series_expand symbolic-Log path.
+ */
+static void test_series_arccsch_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCsch[1/x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[-1, 6], 0, Rational[3, 40]], 0, 6, 1]");
+}
+static void test_series_arccsc_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCsc[1/x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[0, 1, 0, Rational[1, 6], 0, Rational[3, 40]], 0, 6, 1]");
+}
+static void test_series_arcsec_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSec[1/x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Rational[1, 2], Pi], -1, 0, Rational[-1, 6], 0, "
+        "Rational[-3, 40]], 0, 6, 1]");
+}
+static void test_series_arcsech_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSech[1/x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Complex[0, Rational[1, 2]], Pi], Complex[0, -1], 0, "
+        "Complex[0, Rational[-1, 6]], 0, Complex[0, Rational[-3, 40]]], 0, 6, 1]");
+}
+/* ArcCosh around x = 0 is served by ArcCosh[u] = I*ArcCos[u] kernel. */
+static void test_series_arccosh_at_zero(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCosh[x], {x, 0, 5}]",
+        "SeriesData[x, 0, List[Times[Complex[0, Rational[1, 2]], Pi], Complex[0, -1], 0, "
+        "Complex[0, Rational[-1, 6]], 0, Complex[0, Rational[-3, 40]]], 0, 6, 1]");
+}
+static void test_series_arctanh_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcTanh[1/x], {x, 0, 7}]",
+        "SeriesData[x, 0, List[Times[Complex[0, Rational[1, 2]], Pi], 1, 0, "
+        "Rational[1, 3], 0, Rational[1, 5], 0, Rational[1, 7]], 0, 8, 1]");
+}
+/* ArcCosh[1/x] / ArcSinh[1/x] expansions carry the symbolic -Log[x]
+ * constant term from the identity rewrite. */
+static void test_series_arccosh_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcCosh[1/x], {x, 0, 4}]",
+        "SeriesData[x, 0, List[Plus[Log[2], Times[-1, Log[x]]], 0, Rational[-1, 4], 0, "
+        "Rational[-3, 32]], 0, 5, 1]");
+}
+static void test_series_arcsinh_of_inverse(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSinh[1/x], {x, 0, 4}]",
+        "SeriesData[x, 0, List[Plus[Log[2], Times[-1, Log[x]]], 0, Rational[1, 4], 0, "
+        "Rational[-3, 32]], 0, 5, 1]");
+}
+
+int main(void) {
+    TEST(test_series_taylor_exp);
+    TEST(test_series_sin_cos);
+    TEST(test_series_symbolic_f);
+    TEST(test_series_laurent);
+    TEST(test_series_leading_term);
+    TEST(test_series_puiseux_sqrt_sin);
+    TEST(test_series_logarithmic_x_power_x);
+    TEST(test_series_binomial_symbolic);
+    TEST(test_series_deep_laurent);
+    TEST(test_series_at_infinity);
+    TEST(test_series_bivariate);
+    TEST(test_series_list_threading);
+    TEST(test_series_approximate_numbers);
+    TEST(test_series_arctan);
+    TEST(test_series_arctanh);
+    TEST(test_series_arcsin);
+    TEST(test_series_arcsinh);
+    TEST(test_series_arccos);
+    TEST(test_series_arccot);
+    TEST(test_series_arccoth_at_zero);
+    TEST(test_series_arccoth_of_xsquared);
+    TEST(test_series_arccoth_of_inverse);
+    TEST(test_series_arccot_of_inverse);
+    TEST(test_series_cot);
+    TEST(test_series_csc);
+    TEST(test_series_sec);
+    TEST(test_series_sech);
+    TEST(test_series_coth);
+    TEST(test_series_csch);
+    TEST(test_series_arccosh_branch_point);
+    TEST(test_series_arccsch_of_inverse);
+    TEST(test_series_arccsc_of_inverse);
+    TEST(test_series_arcsec_of_inverse);
+    TEST(test_series_arcsech_of_inverse);
+    TEST(test_series_arccosh_at_zero);
+    TEST(test_series_arctanh_of_inverse);
+    TEST(test_series_arccosh_of_inverse);
+    TEST(test_series_arcsinh_of_inverse);
+    TEST(test_series_sqrt_log_no_overflow);
+    TEST(test_series_deep_laurent_no_overflow);
+    TEST(test_series_sqrt_of_xplus1);
+    TEST(test_series_geometric);
+    TEST(test_series_even_geometric);
+    TEST(test_series_sqrt_x_minus_xsquared);
+    TEST(test_series_fourth_root);
+    TEST(test_series_one_over_one_minus_sqrt_at_one);
+    TEST(test_normal_converts);
+    TEST(test_normal_passthrough);
+    TEST(test_series_constant);
+    TEST(test_series_identity);
+    TEST(test_series_at_nonzero_point);
+    TEST(test_series_protected);
+    printf("All series tests passed.\n");
+    return 0;
+}

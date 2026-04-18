@@ -156,12 +156,59 @@ static Expr* apply_listable(Expr* e) {
 }
 
 /*
+ * assignment_target_symbol:
+ * Returns the name of the symbol whose OwnValue/DownValue/Part would be
+ * written if lhs were used as the LHS of a Set or SetDelayed, or NULL if
+ * lhs does not name a specific symbol. Wrappers that do not change the
+ * ultimate target (Condition[pat, test], HoldPattern[pat], Part[x, ...])
+ * are unwrapped so that Protected can be detected on the underlying head.
+ */
+static const char* assignment_target_symbol(Expr* lhs) {
+    if (!lhs) return NULL;
+    if (lhs->type == EXPR_SYMBOL) return lhs->data.symbol;
+    if (lhs->type == EXPR_FUNCTION &&
+        lhs->data.function.head->type == EXPR_SYMBOL &&
+        lhs->data.function.arg_count >= 1) {
+        const char* h = lhs->data.function.head->data.symbol;
+        if (strcmp(h, "Condition") == 0 ||
+            strcmp(h, "HoldPattern") == 0 ||
+            strcmp(h, "Part") == 0) {
+            return assignment_target_symbol(lhs->data.function.args[0]);
+        }
+        return h;
+    }
+    return NULL;
+}
+
+/*
  * apply_assignment:
  * Helper to handle the 'Set' (=) and 'SetDelayed' (:=) primitives.
  * Supports recursive list destructuring.
  * Example: {x, y} = {1, 2}
+ *
+ * Returns true if the caller should respond as if the assignment
+ * succeeded (return the RHS for Set, Null for SetDelayed). Attempts to
+ * assign to a Protected symbol emit a Set::wrsym message, leave state
+ * unchanged, and still return true so the caller yields the RHS, matching
+ * Mathematica semantics.
  */
 static bool apply_assignment(Expr* lhs, Expr* rhs, bool is_delayed) {
+    /* Block writes to Protected symbols. List destructuring is recursed
+     * into below and each child runs through apply_assignment again, so
+     * per-element protection checks happen naturally -- we only skip the
+     * outer check when lhs itself is a List. */
+    bool lhs_is_list = (lhs->type == EXPR_FUNCTION &&
+                        lhs->data.function.head->type == EXPR_SYMBOL &&
+                        strcmp(lhs->data.function.head->data.symbol, "List") == 0);
+    if (!lhs_is_list) {
+        const char* target = assignment_target_symbol(lhs);
+        if (target && (get_attributes(target) & ATTR_PROTECTED)) {
+            fprintf(stderr, "%s::wrsym: Symbol %s is Protected.\n",
+                    is_delayed ? "SetDelayed" : "Set", target);
+            return true;
+        }
+    }
+
     if (lhs->type == EXPR_SYMBOL) {
         /* Standard symbol assignment */
         symtab_add_own_value(lhs->data.symbol, lhs, rhs);
