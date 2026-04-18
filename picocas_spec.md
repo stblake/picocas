@@ -2535,6 +2535,8 @@ Expansions where the inner series diverges at the expansion point (e.g. `Series[
 - `ArcTanh[1/u] = I*Pi/2 + ArcTanh[u]` (principal branch).
 - `ArcSinh[1/v] = -Log[v] + Log[1 + Sqrt[1 + v^2]]` and `ArcCosh[1/v] = -Log[v] + Log[1 + Sqrt[1 - v^2]]` (handled by rewriting at the expression level; the symbolic `-Log[x]` term rides the existing `Log[x]` symbolic-coefficient path).
 
+**Internal padding for symbolic expansion points**: The engine computes series at a padded internal order (user order + 12 by default) so that intermediate Laurent/Puiseux operations don't lose accuracy. When the expansion point `x0` is not a literal number, padding is capped at 2 — at a symbolic point the series coefficients are themselves symbolic expressions (e.g. `Cosh[a]`, `Sinh[a]`), and the `O(N^2)` convolution inside `so_inv`/`so_div` would otherwise spin indefinitely on exponentially growing expression trees. This makes cases like `Series[Coth[x], {x, a, 1}]`, `Series[Tanh[x], {x, a, 1}]`, `Series[Sec[x], {x, a, 1}]`, and `Series[1/Cosh[x], {x, a, 1}]` terminate in milliseconds.
+
 **Known limitation**: `Series` does not yet emit Puiseux expansions at square-root-style branch points (e.g. `ArcCosh[x + 1]` near `x = 0`); such inputs are returned unevaluated rather than risking infinite-loop or incorrect output. The naive-Taylor fallback also caps iterations and bails out on `Infinity`/`Indeterminate` derivatives so unknown heads cannot spin the engine.
 
 ```mathematica

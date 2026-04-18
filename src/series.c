@@ -1453,10 +1453,20 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     /* Laurent and compound expressions lose O-term accuracy when negative
      * exponents flow through multiplication; we compensate by expanding
      * internally to a padded order, then truncating the result back down
-     * to the user-requested O-term. Padding = 15 is chosen to survive
+     * to the user-requested O-term. Padding = 12 is chosen to survive
      * deep Laurent expansions like 1/Sin[x]^10 while keeping big-rational
-     * coefficient arithmetic (Puiseux, logarithmic) tractable. */
-    int64_t pad = 12;
+     * coefficient arithmetic (Puiseux, logarithmic) tractable.
+     *
+     * When x0 is not a literal number, coefficients are symbolic
+     * (e.g. Sinh[a], Cosh[a]) and so_inv's O(N^2) symbolic convolution
+     * explodes expression size via evaluate(): e.g. Series[Coth[x],
+     * {x, a, 1}] with pad=12 would grow unbounded. Cap pad tight in that
+     * case -- real poles/roots at a symbolic point are uncommon, and
+     * compound expressions still get a couple of correction slots. */
+    bool x0_is_numeric = (x0_use->type == EXPR_INTEGER ||
+                          x0_use->type == EXPR_REAL ||
+                          x0_use->type == EXPR_BIGINT);
+    int64_t pad = x0_is_numeric ? 12 : 2;
     int64_t internal_order = order + pad;
 
     SeriesCtx ctx = { x_use, x0_use, internal_order };

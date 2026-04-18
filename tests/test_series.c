@@ -287,6 +287,113 @@ static void test_series_at_nonzero_point(void) {
         "Times[Rational[1, 6], E]], 0, 4, 1]");
 }
 
+/* Regression: expansion around a symbolic point must not hang. Prior to
+ * the internal-padding fix, so_inv's O(N^2) symbolic convolution over
+ * 14 Cosh[a]/Sinh[a]-valued coefficients blew up expression size and
+ * spun indefinitely inside evaluate(). */
+static void test_series_coth_at_symbolic_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Coth[x], {x, a, 1}]",
+        "SeriesData[x, a, List[Times[Cosh[a], Power[Sinh[a], -1]], "
+        "Plus[1, Times[-1, Times[Power[Cosh[a], 2], Power[Sinh[a], -2]]]]], "
+        "0, 2, 1]");
+}
+
+static void test_series_tanh_at_symbolic_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Tanh[x], {x, a, 1}]",
+        "SeriesData[x, a, List[Times[Power[Cosh[a], -1], Sinh[a]], "
+        "Plus[1, Times[-1, Times[Power[Cosh[a], -2], Power[Sinh[a], 2]]]]], "
+        "0, 2, 1]");
+}
+
+static void test_series_sec_at_symbolic_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Sec[x], {x, a, 1}]",
+        "SeriesData[x, a, List[Power[Cos[a], -1], "
+        "Times[Power[Cos[a], -2], Sin[a]]], 0, 2, 1]");
+}
+
+static void test_series_recip_cosh_at_symbolic_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/Cosh[x], {x, a, 1}]",
+        "SeriesData[x, a, List[Power[Cosh[a], -1], "
+        "Times[-1, Power[Cosh[a], -2], Sinh[a]]], 0, 2, 1]");
+}
+
+/* Fibonacci generating function: x/(1-x-x^2) produces Fibonacci numbers. */
+static void test_series_fibonacci_gf(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x/(1-x-x^2), {x, 0, 7}]",
+        "SeriesData[x, 0, List[0, 1, 1, 2, 3, 5, 8, 13], 0, 8, 1]");
+}
+
+/* Polynomial-plus-Laurent at nonzero point: Series[x + 1/x, {x, 1, 3}]. */
+static void test_series_x_plus_recip_at_one(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x + 1/x, {x, 1, 3}]",
+        "SeriesData[x, 1, List[2, 0, 1, -1], 0, 4, 1]");
+}
+
+/* Taylor of Exp[x] at origin, order 8. */
+static void test_series_exp_order_8(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Exp[x], {x, 0, 8}]",
+        "SeriesData[x, 0, List[1, 1, Rational[1, 2], Rational[1, 6], "
+        "Rational[1, 24], Rational[1, 120], Rational[1, 720], "
+        "Rational[1, 5040], Rational[1, 40320]], 0, 9, 1]");
+}
+
+/* Laurent: Series[Exp[x]/x, {x, 0, 8}] has leading 1/x term. */
+static void test_series_exp_over_x(void) {
+    setup_full();
+    assert_fullform(
+        "Series[Exp[x]/x, {x, 0, 8}]",
+        "SeriesData[x, 0, List[1, 1, Rational[1, 2], Rational[1, 6], "
+        "Rational[1, 24], Rational[1, 120], Rational[1, 720], "
+        "Rational[1, 5040], Rational[1, 40320], Rational[1, 362880]], "
+        "-1, 9, 1]");
+}
+
+/* Deep Laurent with big rational coefficients: 1/(Exp[x] - 1 - x)
+ * tests big-rational arithmetic in series inversion (leading 2/x^2). */
+static void test_series_recip_exp_minus_one_minus_x(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(Exp[x] - 1 - x), {x, 0, 10}]",
+        "SeriesData[x, 0, List[2, Rational[-2, 3], Rational[1, 18], "
+        "Rational[1, 270], Rational[-1, 3240], Rational[-1, 13608], "
+        "Rational[-1, 2041200], Rational[1, 874800], "
+        "Rational[13, 146966400], Rational[-307, 24249456000], "
+        "Rational[-479, 203695430400], Rational[167, 3610964448000], "
+        "Rational[100921, 2383236535680000]], -2, 11, 1]");
+}
+
+/* x^x produces logarithmic coefficients: 1 + Log[x] x + Log[x]^2/2 x^2 + ... */
+static void test_series_x_to_the_x(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x^x, {x, 0, 3}]",
+        "SeriesData[x, 0, List[1, Log[x], "
+        "Times[Rational[1, 2], Power[Log[x], 2]], "
+        "Times[Rational[1, 6], Power[Log[x], 3]]], 0, 4, 1]");
+}
+
+/* Series at Infinity of a rational function: expands in powers of 1/x. */
+static void test_series_rational_at_infinity(void) {
+    setup_full();
+    assert_fullform(
+        "Series[x^3/(x^4 + 4 x - 5), {x, Infinity, 6}]",
+        "SeriesData[Power[x, -1], 0, List[1, 0, 0, -4, 5, 0], 1, 7, 1]");
+}
+
 /* 19. Protected: Series cannot be reassigned. */
 static void test_series_protected(void) {
     setup_full();
@@ -681,6 +788,17 @@ int main(void) {
     TEST(test_series_constant);
     TEST(test_series_identity);
     TEST(test_series_at_nonzero_point);
+    TEST(test_series_coth_at_symbolic_point);
+    TEST(test_series_tanh_at_symbolic_point);
+    TEST(test_series_sec_at_symbolic_point);
+    TEST(test_series_recip_cosh_at_symbolic_point);
+    TEST(test_series_fibonacci_gf);
+    TEST(test_series_x_plus_recip_at_one);
+    TEST(test_series_exp_order_8);
+    TEST(test_series_exp_over_x);
+    TEST(test_series_recip_exp_minus_one_minus_x);
+    TEST(test_series_x_to_the_x);
+    TEST(test_series_rational_at_infinity);
     TEST(test_series_protected);
     printf("All series tests passed.\n");
     return 0;
