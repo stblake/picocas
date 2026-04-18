@@ -1,5 +1,5 @@
-#ifndef STRINGS_H
-#define STRINGS_H
+#ifndef PICOSTRINGS_H
+#define PICOSTRINGS_H
 
 #include "expr.h"
 
@@ -11,4 +11,4 @@ Expr* builtin_stringtake(Expr* res);
 
 void strings_init(void);
 
-#endif // STRINGS_H
+#endif // PICOSTRINGS_H

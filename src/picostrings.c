@@ -8,7 +8,7 @@
  * StringTake["string", spec]    - extracts substrings by count, range, or step
  */
 
-#include "strings.h"
+#include "picostrings.h"
 #include "symtab.h"
 #include "attr.h"
 #include "eval.h"

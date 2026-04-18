@@ -43,7 +43,7 @@
 #include "rat.h"
 #include "parfrac.h"
 #include "random.h"
-#include "strings.h"
+#include "picostrings.h"
 
 void core_init(void) {
     parfrac_init();
