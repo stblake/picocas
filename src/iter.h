@@ -5,6 +5,7 @@
 
 Expr* builtin_do(Expr* res);
 Expr* builtin_for(Expr* res);
+Expr* builtin_while(Expr* res);
 
 void iter_init(void);
 

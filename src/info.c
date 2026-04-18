@@ -126,6 +126,13 @@ void info_init(void) {
     // Control Flow
     symtab_set_docstring("Do", "Do[expr, n] evaluates expr n times.\nDo[expr, {i, imax}] evaluates expr with i successively taking on values 1 through imax.\nDo[expr, {i, imin, imax, di}] uses steps di.");
     symtab_set_docstring("For", "For[start, test, incr, body] executes start, then repeatedly evaluates body and incr until test fails to give True.");
+    symtab_set_docstring("While",
+        "While[test, body] evaluates test, then body, repeatedly, until test first fails to give True.\n"
+        "While[test] does the loop with a Null body, which is useful when test has side-effects.\n"
+        "While has attribute HoldAll.\n"
+        "Break[] inside body exits the loop.\n"
+        "Continue[] inside body skips the rest of body and re-evaluates test.\n"
+        "Return[v] inside body causes While to yield v; otherwise While returns Null.");
     symtab_set_docstring("If", "If[condition, t, f] gives t if condition evaluates to True, and f if it evaluates to False.\nIf[condition, t, f, u] gives u if condition evaluates to neither True nor False.");
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
     symtab_set_docstring("Evaluate", "Evaluate[expr]\n\tcauses expr to be evaluated even if it appears as the argument of a function whose attributes specify that it should be held unevaluated.\nEvaluate only overrides HoldFirst, HoldRest, and HoldAll attributes when it appears directly as the head of the function argument that would otherwise be held.\nEvaluate does not override HoldAllComplete.");

@@ -3201,6 +3201,31 @@ In[1]:= For[i=0, i<4, i++, Print[i]]
 Out[1]= Null
 ```
 
+#### While
+Evaluates a test expression and, while it yields `True`, repeatedly evaluates a body expression.
+- `While[test, body]`: Evaluates `test`, then `body`, repeatedly, until `test` first fails to give `True`.
+- `While[test]`: Executes the loop with a `Null` body. Useful when `test` itself has side-effects.
+
+**Features**:
+- Has attribute `HoldAll`; both `test` and `body` are re-evaluated each iteration.
+- `Break[]` inside `body` exits the loop, yielding `Null`.
+- `Continue[]` inside `body` skips the rest of `body` and returns to re-evaluating `test`.
+- `Return[v]` inside `body` causes `While` to yield `v`.
+- `Throw`, `Abort`, and `Quit` propagate unchanged.
+- If the very first evaluation of `test` is not `True`, `body` is never evaluated.
+- Returns `Null` unless an explicit `Return` is issued.
+
+```mathematica
+In[1]:= n = 1; While[n < 4, n = n + 1]; n
+Out[1]= 4
+
+In[2]:= {a, b} = {27, 6}; While[b != 0, {t1, t2} = {b, Mod[a, b]}; a = t1; b = t2]; a
+Out[2]= 3
+
+In[3]:= n = 1; While[True, If[n > 10, Break[]]; n = n + 1]; n
+Out[3]= 11
+```
+
 #### If
 Evaluates condition and executes the corresponding branch.
 - `If[condition, t, f]`: Gives `t` if `condition` evaluates to `True`, and `f` if it evaluates to `False`.
