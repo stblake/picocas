@@ -237,6 +237,16 @@ static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch
     if (!pattern) return false;
     if (!expr) return false;
 
+    /* HoldPattern[p] is equivalent to p for matching purposes. The
+     * HoldAll attribute on HoldPattern prevents the inner expression from
+     * being evaluated when the rule LHS is formed, so patterns that would
+     * otherwise simplify (e.g. _+_ becoming 2 Blank[]) are preserved. */
+    if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(pattern->data.function.head->data.symbol, "HoldPattern") == 0 &&
+        pattern->data.function.arg_count == 1) {
+        return match_internal(expr, pattern->data.function.args[0], env, parent);
+    }
+
     // Handle Except
     if (pattern->type == EXPR_FUNCTION && pattern->data.function.head->type == EXPR_SYMBOL &&
         strcmp(pattern->data.function.head->data.symbol, "Except") == 0) {

@@ -15,6 +15,7 @@ static SymbolAttr builtin_attrs[] = {
     {"HoldFirst", ATTR_HOLDFIRST | ATTR_PROTECTED},
     {"HoldRest", ATTR_HOLDREST | ATTR_PROTECTED},
     {"HoldComplete", ATTR_HOLDALLCOMPLETE | ATTR_PROTECTED},
+    {"HoldPattern", ATTR_HOLDALL | ATTR_PROTECTED},
     {"Unevaluated", ATTR_HOLDALLCOMPLETE | ATTR_PROTECTED},
     {"Set", ATTR_HOLDFIRST | ATTR_PROTECTED},
     {"SetDelayed", ATTR_HOLDALL | ATTR_PROTECTED},

@@ -149,6 +149,12 @@ void info_init(void) {
     symtab_set_docstring("TrueQ", "TrueQ[expr] yields True if expr is True, and False otherwise.");
     symtab_set_docstring("Evaluate", "Evaluate[expr]\n\tcauses expr to be evaluated even if it appears as the argument of a function whose attributes specify that it should be held unevaluated.\nEvaluate only overrides HoldFirst, HoldRest, and HoldAll attributes when it appears directly as the head of the function argument that would otherwise be held.\nEvaluate does not override HoldAllComplete.");
     symtab_set_docstring("ReleaseHold", "ReleaseHold[expr]\n\tremoves Hold, HoldForm, HoldPattern, and HoldComplete in expr.\nReleaseHold removes only one layer of Hold etc.; it does not remove inner occurrences in nested Hold etc. functions.");
+    symtab_set_docstring("HoldPattern",
+        "HoldPattern[expr]\n"
+        "\tis equivalent to expr for pattern matching, but maintains expr in an unevaluated form.\n"
+        "HoldPattern has attributes {HoldAll, Protected}.\n"
+        "The left-hand sides of rules and assignments are normally evaluated before being used for matching; wrap the LHS in HoldPattern to stop that evaluation (e.g. HoldPattern[_+_] -> 0 matches any two-term sum, whereas _+_ -> 0 would match a pattern simplified by Plus before the rule is applied).\n"
+        "HoldPattern is removed by one layer of ReleaseHold.");
     symtab_set_docstring("Unevaluated",
         "Unevaluated[expr]\n"
         "\trepresents the unevaluated form of expr when it appears as the argument to a function.\n"

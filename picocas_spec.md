@@ -1099,6 +1099,30 @@ In[8]:= ReleaseHold[{f[Hold[1+2]], g[HoldForm[3+4]]}]
 Out[8]= {f[3], g[7]}
 ```
 
+#### HoldPattern
+Keeps a pattern expression in unevaluated form while still allowing it to act as a pattern for matching.
+- `HoldPattern[expr]`
+
+**Features**:
+- Attributes: `{HoldAll, Protected}`.
+- `HoldPattern[p]` is equivalent to `p` in the pattern matcher; the matcher transparently unwraps a single-argument `HoldPattern` before matching.
+- Useful on the left-hand side of rules and assignments, because those positions are normally evaluated before being used for matching. Wrapping in `HoldPattern` stops that evaluation and preserves the literal pattern shape.
+- `HoldPattern` is removed by one layer of `ReleaseHold`.
+
+```mathematica
+In[1]:= HoldPattern[_+_] -> 0
+Out[1]= HoldPattern[Blank[] + Blank[]] -> 0
+
+In[2]:= a + b /. HoldPattern[_+_] -> 0
+Out[2]= 0
+
+In[3]:= Cases[{a -> b, c -> d}, HoldPattern[a -> _]]
+Out[3]= {a -> b}
+
+In[4]:= MatchQ[a + b, HoldPattern[_+_]]
+Out[4]= True
+```
+
 #### Unevaluated
 Represents the unevaluated form of `expr` when it appears as the argument to a function.
 - `Unevaluated[expr]`

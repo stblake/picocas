@@ -124,6 +124,31 @@ void test_holdcomplete_releasehold() {
 }
 
 /* ==============================================================
+ * HoldPattern
+ * ============================================================== */
+
+void test_holdpattern_attributes() {
+    assert_eval_eq("Attributes[HoldPattern]", "{HoldAll, Protected}", 0);
+}
+
+/* The HoldAll attribute keeps the pattern unevaluated; matching unwraps it. */
+void test_holdpattern_basic_rule() {
+    assert_eval_eq("a + b /. HoldPattern[_+_] -> 0", "0", 0);
+    assert_eval_eq("{a + b, x * y} /. HoldPattern[_+_] -> 99", "{99, x y}", 0);
+}
+
+/* Cases with HoldPattern keeps the Rule structure intact. Without HoldPattern,
+ * the pattern `a -> _` would be evaluated as a rule itself, not a match spec. */
+void test_holdpattern_cases() {
+    assert_eval_eq("Cases[{a -> b, c -> d}, HoldPattern[a -> _]]", "{a -> b}", 0);
+}
+
+void test_holdpattern_matchq() {
+    assert_eval_eq("MatchQ[a + b, HoldPattern[_+_]]", "True", 0);
+    assert_eval_eq("MatchQ[a, HoldPattern[_+_]]", "False", 0);
+}
+
+/* ==============================================================
  * Hold comparison (confirms HoldAll semantics still work)
  * ============================================================== */
 
@@ -156,6 +181,11 @@ int main() {
     TEST(test_holdcomplete_blocks_sequence_flatten);
     TEST(test_holdcomplete_replace_all);
     TEST(test_holdcomplete_releasehold);
+
+    TEST(test_holdpattern_attributes);
+    TEST(test_holdpattern_basic_rule);
+    TEST(test_holdpattern_cases);
+    TEST(test_holdpattern_matchq);
 
     TEST(test_hold_basic);
 
