@@ -29,6 +29,7 @@
 #include "attr.h"
 #include "eval.h"
 #include "arithmetic.h"
+#include "poly.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -90,6 +91,154 @@ static bool expr_free_of(Expr* e, Expr* target) {
         }
     }
     return true;
+}
+
+/* ------------------------------------------------------------------------- *
+ * split_two_term: decompose e = a + b*x^(p/q)
+ *
+ * A Maxima-style probe (cf. split-two-term-poly in series.lisp) that looks
+ * at the structural shape of `e` without doing a full series expansion.
+ * Returns true when `e` can be written as a sum of a term free of `x` and
+ * a single monomial term in `x` with a rational exponent. This is used as
+ * a cheap shape check by several fast paths:
+ *
+ *  - Log[a + b x^(p/q)] can be rewritten as Log[a] + Log[1 + (b/a) x^(p/q)]
+ *    and handed to the Log1p kernel without expanding the arg.
+ *  - (a + b x^(p/q))^alpha maps onto the monomial binomial fast path.
+ *  - Apart preprocessing skips inputs that are already in "a + b x^c" form.
+ *
+ * On success the caller receives ownership of *a_out and *b_out.
+ *
+ * Handled forms:
+ *   x                     -> (0, 1, 1/1)
+ *   free-of-x expression  -> (e, 0, 1/1)
+ *   Plus[t_i]             -> sum a-parts; at most one exponent class in b
+ *   Times[f_i]            -> at most one non-free factor; others fold into prod
+ *   Power[x, p/q]         -> (0, 1, p/q) when the exponent is a rational
+ *
+ * Returns false (and sets *a_out, *b_out to NULL) for anything else, e.g.
+ * (1 + x)(1 + x) or Sin[x] -- those would need full series algebra.
+ * ------------------------------------------------------------------------- */
+bool series_split_two_term(Expr* e, Expr* x,
+                           Expr** a_out, Expr** b_out,
+                           int64_t* exp_num, int64_t* exp_den) {
+    *a_out = NULL; *b_out = NULL;
+    *exp_num = 1; *exp_den = 1;
+
+    if (expr_eq(e, x)) {
+        *a_out = expr_new_integer(0);
+        *b_out = expr_new_integer(1);
+        *exp_num = 1; *exp_den = 1;
+        return true;
+    }
+    /* "Free of x" is tested *after* the e==x check so that nested
+     * lookups into the same symbol still bind correctly. */
+    if (expr_free_of(e, x)) {
+        *a_out = expr_copy(e);
+        *b_out = expr_new_integer(0);
+        return true;
+    }
+    if (e->type != EXPR_FUNCTION || e->data.function.head->type != EXPR_SYMBOL) {
+        return false;
+    }
+    const char* head = e->data.function.head->data.symbol;
+    size_t n = e->data.function.arg_count;
+
+    if (strcmp(head, "Plus") == 0) {
+        Expr* a_sum = expr_new_integer(0);
+        Expr* b_sum = NULL;
+        int64_t cn = 0, cd = 1;
+        bool have_b = false;
+        for (size_t i = 0; i < n; i++) {
+            Expr* aa; Expr* bb; int64_t ccn, ccd;
+            if (!series_split_two_term(e->data.function.args[i], x, &aa, &bb, &ccn, &ccd)) {
+                expr_free(a_sum);
+                if (b_sum) expr_free(b_sum);
+                return false;
+            }
+            a_sum = simp(mk_plus(a_sum, aa));
+            if (is_lit_zero(bb)) { expr_free(bb); continue; }
+            if (!have_b) {
+                b_sum = bb;
+                cn = ccn; cd = ccd;
+                have_b = true;
+            } else {
+                /* Require the same rational exponent. Compare p/q == p'/q' as
+                 * p*q' == p'*q -- both fit int64 at the call sites we see. */
+                if (ccn * cd != cn * ccd) {
+                    expr_free(bb); expr_free(a_sum); expr_free(b_sum);
+                    return false;
+                }
+                b_sum = simp(mk_plus(b_sum, bb));
+            }
+        }
+        *a_out = a_sum;
+        *b_out = b_sum ? b_sum : expr_new_integer(0);
+        *exp_num = have_b ? cn : 1;
+        *exp_den = have_b ? cd : 1;
+        return true;
+    }
+
+    if (strcmp(head, "Times") == 0) {
+        Expr* prod = expr_new_integer(1);
+        Expr* a_inner = NULL;
+        Expr* b_inner = NULL;
+        int64_t cn = 0, cd = 1;
+        bool have_nf = false;
+        for (size_t i = 0; i < n; i++) {
+            Expr* aa; Expr* bb; int64_t ccn, ccd;
+            if (!series_split_two_term(e->data.function.args[i], x, &aa, &bb, &ccn, &ccd)) {
+                expr_free(prod);
+                if (a_inner) expr_free(a_inner);
+                if (b_inner) expr_free(b_inner);
+                return false;
+            }
+            if (is_lit_zero(bb)) {
+                /* Factor has no b part -- multiply into prod. */
+                expr_free(bb);
+                prod = simp(mk_times(prod, aa));
+                continue;
+            }
+            if (have_nf) {
+                /* Two non-free factors would give cross terms we can't represent. */
+                expr_free(aa); expr_free(bb); expr_free(prod);
+                expr_free(a_inner); expr_free(b_inner);
+                return false;
+            }
+            a_inner = aa; b_inner = bb;
+            cn = ccn; cd = ccd;
+            have_nf = true;
+        }
+        if (have_nf) {
+            /* (a_inner + b_inner x^c) * prod = prod*a_inner + prod*b_inner * x^c. */
+            *a_out = simp(mk_times(expr_copy(prod), a_inner));
+            *b_out = simp(mk_times(prod, b_inner));
+            *exp_num = cn; *exp_den = cd;
+            return true;
+        }
+        *a_out = prod;
+        *b_out = expr_new_integer(0);
+        return true;
+    }
+
+    if (strcmp(head, "Power") == 0 && n == 2) {
+        Expr* base = e->data.function.args[0];
+        Expr* exp  = e->data.function.args[1];
+        if (expr_eq(base, x) && expr_free_of(exp, x)) {
+            int64_t en, ed;
+            if (exp->type == EXPR_INTEGER) { en = exp->data.integer; ed = 1; }
+            else if (is_rational(exp, &en, &ed)) { /* ok */ }
+            else return false;
+            if (en == 0) return false;  /* x^0 would have been simplified away */
+            *a_out = expr_new_integer(0);
+            *b_out = expr_new_integer(1);
+            *exp_num = en; *exp_den = ed;
+            return true;
+        }
+        return false;
+    }
+
+    return false;
 }
 
 /* ReplaceAll helper: substitute `from` with `to` everywhere in `e`.
@@ -462,12 +611,79 @@ static SeriesObj* so_pow_int(SeriesObj* a, int64_t n) {
     return result;
 }
 
+/* Monomial fast path for (1 + c*x^e)^alpha.
+ *
+ * When u has exactly one non-zero coefficient (a monomial), the generic
+ * Horner-composition step in so_pow_1plus_alpha spends O(N^2) work on
+ * so_mul convolutions that are mostly multiplying by zero. Here we emit
+ * coefficients directly: the k-th binomial coefficient sits at exponent
+ * k * e, and everything in between is zero.
+ *
+ *   (1 + c*x^e)^alpha = sum_k C(alpha, k) * c^k * x^(e*k)
+ *
+ * with C(alpha, k) generated by the recurrence
+ *   C(alpha, 0) = 1,  C(alpha, k+1) = C(alpha, k) * (alpha - k) / (k + 1).
+ *
+ * Returns NULL if u has more than one non-zero coefficient (caller should
+ * fall back to the generic path). Preserves u.den and u.order. */
+static SeriesObj* so_pow_1plus_alpha_monomial(SeriesObj* u, Expr* alpha) {
+    size_t monomial_idx = SIZE_MAX;
+    for (size_t i = 0; i < u->coef_count; i++) {
+        if (is_lit_zero(u->coefs[i])) continue;
+        if (monomial_idx != SIZE_MAX) return NULL;
+        monomial_idx = i;
+    }
+
+    SeriesObj* r = so_alloc(u->x, u->x0, 0, u->order, u->den);
+    if (r->coef_count == 0) return r;
+
+    /* (1 + 0)^alpha = 1 when u is the zero series. */
+    if (monomial_idx == SIZE_MAX) {
+        so_set_coef(r, 0, expr_new_integer(1));
+        return r;
+    }
+
+    int64_t e = u->nmin + (int64_t)monomial_idx;   /* monomial exponent numerator */
+    if (e <= 0) { so_free(r); return NULL; }       /* u.nmin >= 1 invariant */
+
+    Expr* c = expr_copy(u->coefs[monomial_idx]);
+    Expr* b_k = expr_new_integer(1);               /* C(alpha, 0) */
+    Expr* c_k = expr_new_integer(1);               /* c^0 */
+
+    for (int64_t k = 0; ; k++) {
+        int64_t exp_num = k * e;
+        if (exp_num >= u->order) break;
+        size_t idx = (size_t)exp_num;
+        if (idx >= r->coef_count) break;
+        Expr* coef_val = simp(mk_times(expr_copy(b_k), expr_copy(c_k)));
+        so_set_coef(r, idx, coef_val);
+        /* Advance b_{k+1} = b_k * (alpha - k) / (k + 1). */
+        Expr* diff = simp(mk_plus(expr_copy(alpha), expr_new_integer(-k)));
+        Expr* numer = simp(mk_times(b_k, diff));
+        Expr* rat   = make_rational(1, k + 1);
+        b_k = simp(mk_times(numer, rat));
+        /* Advance c_{k+1} = c_k * c. */
+        Expr* c_next = simp(mk_times(c_k, expr_copy(c)));
+        c_k = c_next;
+    }
+    expr_free(b_k);
+    expr_free(c_k);
+    expr_free(c);
+    return r;
+}
+
 /* Compute (1 + u)^alpha, given u with u.nmin >= 1 (u has no constant term),
  * using the recurrence b_{k+1} = (alpha - k)/(k+1) * b_k applied
  * symbolically. alpha can be an arbitrary Expr (rational, symbolic).
  * Returns a series whose exponents are multiples of u.nmin up to
  * u.order (in u.den), i.e. in the original common denominator. */
 static SeriesObj* so_pow_1plus_alpha(SeriesObj* u, Expr* alpha) {
+    /* Fast path: u is a monomial (0 or 1 non-zero coefficient). */
+    {
+        SeriesObj* fast = so_pow_1plus_alpha_monomial(u, alpha);
+        if (fast) return fast;
+    }
+
     /* Determine how many terms of the 1+u kernel we need: u.nmin is the
      * minimum power contributed, and we need kernel-index k such that
      * k * u.nmin < u.order. */
@@ -1267,6 +1483,38 @@ static SeriesObj* series_expand(Expr* e, const SeriesCtx* ctx) {
             if (expr_eq(arg, ctx->x) && is_lit_zero(ctx->x0)) {
                 return so_from_constant(e, ctx->x, ctx->x0, ctx->order, 1);
             }
+            /* Maxima-style sp2log fast path: if arg = a + b*x^(p/q) with a, b
+             * both free of x and both non-zero, rewrite as
+             *   Log[a] + Log[1 + (b/a)*x^(p/q)]
+             * so the Log1p kernel sees a pure monomial inner and the monomial
+             * binomial fast path kicks in. Only applies at x0 = 0 because the
+             * rewrite needs x -> x - x0 translation otherwise. */
+            if (is_lit_zero(ctx->x0)) {
+                Expr* a; Expr* b; int64_t en, ed;
+                if (series_split_two_term(arg, ctx->x, &a, &b, &en, &ed)) {
+                    /* Guard against self-recursion: when a is already 1, the
+                     * rewrite Log[1] + Log[1 + b*x^c] reduces back to the
+                     * original Log[1 + b*x^c] and we'd loop. Require a != 1. */
+                    bool a_is_one = (a->type == EXPR_INTEGER && a->data.integer == 1);
+                    if (!a_is_one && !is_lit_zero(a) && !is_lit_zero(b)) {
+                        Expr* inv_a = simp(mk_power(expr_copy(a), expr_new_integer(-1)));
+                        Expr* b_over_a = simp(mk_times(b, inv_a));
+                        Expr* exp_expr = (ed == 1) ? expr_new_integer(en) : make_rational(en, ed);
+                        Expr* x_pow = simp(mk_power(expr_copy(ctx->x), exp_expr));
+                        Expr* monom = simp(mk_times(b_over_a, x_pow));
+                        Expr* inner = simp(mk_plus(expr_new_integer(1), monom));
+                        Expr* log1pu = mk_fn1("Log", inner);
+                        Expr* log_a = simp(mk_fn1("Log", a));
+                        Expr* rewrite = simp(mk_plus(log_a, log1pu));
+                        SeriesObj* r = series_expand(rewrite, ctx);
+                        expr_free(rewrite);
+                        if (r) return r;
+                        /* Fall through to the generic path on failure. */
+                    } else {
+                        expr_free(a); expr_free(b);
+                    }
+                }
+            }
             /* General: expand arg, split leading monomial if vanishing. */
             SeriesObj* as = series_expand(arg, ctx);
             if (!as) return NULL;
@@ -1604,6 +1852,80 @@ static Expr* try_factor_power_prefactor(Expr* f, Expr* x, Expr** body_out) {
     return prefactor;
 }
 
+/* True iff `e` contains a Power[g(x), k] subterm where g involves x and
+ * k is a negative integer. A cheap conservative test used to decide whether
+ * it's worth calling Apart on the input. */
+static bool has_negative_power_in(Expr* e, Expr* x) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* base = e->data.function.args[0];
+        Expr* exp  = e->data.function.args[1];
+        if (!expr_free_of(base, x) && exp->type == EXPR_INTEGER &&
+            exp->data.integer < 0) {
+            return true;
+        }
+    }
+    if (has_negative_power_in(e->data.function.head, x)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (has_negative_power_in(e->data.function.args[i], x)) return true;
+    }
+    return false;
+}
+
+/* True iff every Power[base, negative_integer] subterm of `e` with `base`
+ * depending on `x` has `base` as a polynomial in `x`. Non-polynomial
+ * denominators (e.g. Exp[x] - 1 - x) would confuse Apart, whose semantics
+ * are only well-defined for rational functions. Conservative: if any
+ * suspicious subterm fails the polynomial test, return false. */
+static bool all_negative_powers_polynomial(Expr* e, Expr* x) {
+    if (!e) return true;
+    if (e->type != EXPR_FUNCTION) return true;
+    if (e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* base = e->data.function.args[0];
+        Expr* exp  = e->data.function.args[1];
+        if (!expr_free_of(base, x) && exp->type == EXPR_INTEGER &&
+            exp->data.integer < 0) {
+            Expr* vars[1] = { x };
+            if (!is_polynomial(base, vars, 1)) return false;
+        }
+    }
+    if (!all_negative_powers_polynomial(e->data.function.head, x)) return false;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (!all_negative_powers_polynomial(e->data.function.args[i], x)) return false;
+    }
+    return true;
+}
+
+/* Maxima-style rational-function preprocessing. If `f` contains a negative
+ * integer power of an x-dependent subexpression (the marker of a rational
+ * function in x), call Apart[f, x] to decompose it into partial fractions.
+ * Returns a newly owned expression on success (caller must free), or NULL
+ * when Apart either couldn't help or returned something equal to the input.
+ *
+ * The payoff: each partial-fraction term is easier for the series machinery
+ * to expand. Terms like c/(a + b*x)^m route through the monomial binomial
+ * fast path and produce closed-form coefficients instead of a full Newton
+ * inversion over the composite polynomial denominator. */
+static Expr* try_apart_preprocess(Expr* f, Expr* x) {
+    if (!has_negative_power_in(f, x)) return NULL;
+    /* Apart is only defined for rational functions. If any negative-power
+     * subterm has a non-polynomial base (e.g. 1/(Exp[x] - 1 - x), which has
+     * a transcendental denominator), bail out rather than risk feeding
+     * Apart something it can't cleanly handle. */
+    if (!all_negative_powers_polynomial(f, x)) return NULL;
+    Expr* args[2] = { expr_copy(f), expr_copy(x) };
+    Expr* call = expr_new_function(mk_symbol("Apart"), args, 2);
+    Expr* result = evaluate(call);
+    if (!result) return NULL;
+    if (expr_eq(result, f)) { expr_free(result); return NULL; }
+    return result;
+}
+
 /* Scan coefs of s for the first non-zero entry at or beyond exponent
  * `from_exp`. Returns the exponent of that entry, or INT64_MAX if none. */
 static int64_t so_first_nonzero_exp(SeriesObj* s, int64_t from_exp) {
@@ -1628,6 +1950,27 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     if (expr_free_of(f_eval, x)) {
         expr_free(x0_eval);
         return f_eval;
+    }
+
+    /* Apart preprocessing: if f_eval is (or contains) a rational function
+     * in x, decompose it into partial fractions first. Each term in the
+     * decomposition is cheaper to expand (c/(a + b*x)^m -> monomial fast
+     * path) and avoids the O(N*deg(q)) Newton inversion of the composite
+     * denominator. Gated by a cheap check so non-rational inputs pay no
+     * overhead. */
+    {
+        Expr* apart_result = try_apart_preprocess(f_eval, x);
+        if (apart_result) {
+            expr_free(f_eval);
+            f_eval = apart_result;
+            /* Re-check the "free of x" early-out after Apart; a rational
+             * function whose simplification collapses to a constant would
+             * otherwise take the generic path unnecessarily. */
+            if (expr_free_of(f_eval, x)) {
+                expr_free(x0_eval);
+                return f_eval;
+            }
+        }
     }
 
     /* Factor out x^alpha for symbolic alpha (e.g. Series[x^a Exp[x], ...]).

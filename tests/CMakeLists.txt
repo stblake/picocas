@@ -251,6 +251,9 @@ target_include_directories(strings_tests PRIVATE ../src)
 add_executable(series_tests test_series.c ${COMMON_SRC})
 target_include_directories(series_tests PRIVATE ../src)
 
+add_executable(series_twoterm_tests test_series_twoterm.c ${COMMON_SRC})
+target_include_directories(series_twoterm_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -304,6 +307,7 @@ if(USE_ECM)
     add_dependencies(unevaluated_tests build_ecm)
     add_dependencies(strings_tests build_ecm)
     add_dependencies(series_tests build_ecm)
+    add_dependencies(series_twoterm_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

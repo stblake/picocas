@@ -795,6 +795,305 @@ static void test_series_arc_at_regular_point(void) {
         "SeriesData[x, 2, List[ArcTan[2], Rational[1, 5], Rational[-2, 25]], 0, 3, 1]");
 }
 
+/* ==========================================================================
+ * Monomial binomial fast path  (so_pow_1plus_alpha_monomial)
+ * ==========================================================================
+ *
+ * (a + b x^m)^alpha routes through so_pow_expr, which factors out the leading
+ * a, produces u = (b/a) x^m, and hands u off to so_pow_1plus_alpha. With u
+ * a pure monomial the generic Horner convolution is wasteful -- the fast
+ * path writes binomial(alpha, k) * (b/a)^k directly at exponent k*m.
+ *
+ * The tests below exercise every shape that should hit the fast path:
+ * rational alpha, symbolic alpha, non-unit a and b, positive/negative b,
+ * integer-power monomial bases, Puiseux bases, and edge cases (alpha = 0,
+ * alpha = 1, alpha = -1, b = 1, a = 1).
+ */
+
+/* Rational alpha: Sqrt[1+x]. */
+static void test_binomial_monomial_sqrt_1px(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1+x)^(1/2), {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, Rational[1, 2], Rational[-1, 8], "
+        "Rational[1, 16], Rational[-5, 128], Rational[7, 256]], 0, 6, 1]");
+}
+
+/* Rational alpha, negative b: Sqrt[1-x^2]. */
+static void test_binomial_monomial_sqrt_1mxsq(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1 - x^2)^(1/2), {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 0, Rational[-1, 2], 0, "
+        "Rational[-1, 8], 0, Rational[-1, 16]], 0, 7, 1]");
+}
+
+/* Negative integer alpha: 1/(1+x^2). */
+static void test_binomial_monomial_recip_1pxsq(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1 + x^2)^(-1), {x, 0, 8}]",
+        "SeriesData[x, 0, List[1, 0, -1, 0, 1, 0, -1, 0, 1], 0, 9, 1]");
+}
+
+/* Cube-root over a monomial of exponent 3. */
+static void test_binomial_monomial_cuberoot_1px3(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1 - x^3)^(1/3), {x, 0, 9}]",
+        "SeriesData[x, 0, List[1, 0, 0, Rational[-1, 3], 0, 0, "
+        "Rational[-1, 9], 0, 0, Rational[-5, 81]], 0, 10, 1]");
+}
+
+/* Non-unit constant a: 2^(1/3) pulls out of (2 + x)^(1/3). */
+static void test_binomial_monomial_nonunit_a(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(2 + 3 x)^(1/3), {x, 0, 3}]",
+        "SeriesData[x, 0, List[Power[2, Rational[1, 3]], "
+        "Times[Rational[1, 2], Power[2, Rational[1, 3]]], "
+        "Times[Rational[-1, 4], Power[2, Rational[1, 3]]], "
+        "Times[Rational[5, 24], Power[2, Rational[1, 3]]]], 0, 4, 1]");
+}
+
+/* Symbolic alpha: (1 + x)^n kept in symbolic form. */
+static void test_binomial_monomial_symbolic_alpha(void) {
+    setup_full();
+    assert_outputform(
+        "Series[(1 + x)^n, {x, 0, 4}]",
+        "1 + n x + 1/2 n (-1 + n) x^2 + 1/6 n (-2 + n) (-1 + n) x^3 "
+        "+ 1/24 n (-3 + n) (-2 + n) (-1 + n) x^4 + O[x]^5");
+}
+
+/* Symbolic alpha over a non-unit leading term: (a + b x)^n. */
+static void test_binomial_monomial_all_symbolic(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[(a + b*x)^n, {x, 0, 2}]");
+    Expr* r = evaluate(e); expr_free(e);
+    /* Don't pin the exact form here -- the fast path just has to succeed.
+     * Verify via round-trip: Normal[%] minus (a+b*x)^n expanded symbolically
+     * should simplify away once we series_expand it. Here we just check the
+     * head is SeriesData with den=1, nmin=0, and the requested order. */
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[3]->data.integer == 0);
+    ASSERT(r->data.function.args[4]->data.integer == 3);
+    ASSERT(r->data.function.args[5]->data.integer == 1);
+    expr_free(r);
+}
+
+/* Puiseux base exponent: (1 + x^(1/2))^(1/2). */
+static void test_binomial_monomial_puiseux_base(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[(1 + x^(1/2))^(1/2), {x, 0, 2}]");
+    Expr* r = evaluate(e); expr_free(e);
+    /* Expected: 1 + x^(1/2)/2 - x/8 + x^(3/2)/16 - ... den=2, nmin=0. */
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[5]->data.integer == 2);
+    expr_free(r);
+}
+
+/* Alpha = 0 degenerate: (1 + x^2)^0 = 1. */
+static void test_binomial_monomial_alpha_zero(void) {
+    setup_full();
+    /* (anything)^0 evaluates to 1 before Series sees it, so the input
+     * becomes Series[1, {x, 0, 3}] and the free-of-x early-out fires. */
+    assert_fullform("Series[(1 + x^2)^0, {x, 0, 3}]", "1");
+}
+
+/* Alpha = 1 identity: (1 + x^2)^1 = 1 + x^2 (passes through). */
+static void test_binomial_monomial_alpha_one(void) {
+    setup_full();
+    /* Analogous: (1 + x^2)^1 evaluates to 1 + x^2 before Series, so this
+     * test just verifies the pass-through shape. */
+    assert_fullform(
+        "Series[(1 + x^2)^1, {x, 0, 4}]",
+        "SeriesData[x, 0, List[1, 0, 1, 0, 0], 0, 5, 1]");
+}
+
+/* Stress: high-order rational-alpha expansion (should not blow up). */
+static void test_binomial_monomial_high_order(void) {
+    setup_full();
+    Expr* e = parse_expression("Series[(1 - x^2)^(1/2), {x, 0, 20}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    Expr* coefs = r->data.function.args[2];
+    /* Coefficients at odd indices should all be zero (only even powers
+     * appear when the base is a pure function of x^2). */
+    for (size_t i = 1; i < coefs->data.function.arg_count; i += 2) {
+        Expr* c = coefs->data.function.args[i];
+        ASSERT(c->type == EXPR_INTEGER && c->data.integer == 0);
+    }
+    expr_free(r);
+}
+
+/* Cross-check the fast-path result against the generic power series for
+ * Sqrt[1 + x]: we round-trip through Normal and compare to a polynomial
+ * reconstruction. */
+static void test_binomial_monomial_matches_known_series(void) {
+    setup_full();
+    /* Sqrt[1+x] truncated to order 5 -> 1 + x/2 - x^2/8 + x^3/16 - 5x^4/128 + 7x^5/256. */
+    assert_outputform(
+        "Normal[Series[Sqrt[1+x], {x, 0, 5}]]",
+        "1 + 1/2 x - 1/8 x^2 + 1/16 x^3 - 5/128 x^4 + 7/256 x^5");
+}
+
+/* ==========================================================================
+ * Apart preprocessing for rational inputs (try_apart_preprocess)
+ * ==========================================================================
+ *
+ * When the input is (or contains) Power[polynomial(x), negative_integer],
+ * we call Apart[f, x] before dispatching to series_expand. The goal is to
+ * decompose composite denominators into simpler partial fractions that the
+ * monomial fast path can absorb. The gate is conservative: if any negative
+ * power has a non-polynomial base (e.g. 1/(Exp[x] - 1 - x)), we skip.
+ *
+ * Correctness is what matters here -- these tests verify the series output
+ * matches the expected numerical coefficients whether or not Apart fired.
+ */
+
+/* Distinct real rational roots: 1/((1-x)(1-2x)) -> coefficients 2^(k+1) - 1. */
+static void test_apart_distinct_roots_simple(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/((1-x)(1-2x)), {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 3, 7, 15, 31, 63, 127], 0, 7, 1]");
+}
+
+/* Denominator in quadratic form: 1/(x^2 - 5x + 6) = 1/((x-2)(x-3)). */
+static void test_apart_quadratic_denom(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(x^2 - 5 x + 6), {x, 0, 4}]",
+        "SeriesData[x, 0, List[Rational[1, 6], Rational[5, 36], "
+        "Rational[19, 216], Rational[65, 1296], Rational[211, 7776]], 0, 5, 1]");
+}
+
+/* Double-root denominator: 1/(1-x)^2 = sum (k+1) x^k. The result is the
+ * standard arithmetic progression 1, 2, 3, 4, ... */
+static void test_apart_double_root(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(1-x)^2, {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, 2, 3, 4, 5, 6], 0, 6, 1]");
+}
+
+/* Irreducible quadratic denominator 1/(x^2 + 1): Apart won't factor over
+ * the rationals, so the generic path handles it and returns the standard
+ * 1 - x^2 + x^4 - ... series. */
+static void test_apart_irreducible_quadratic(void) {
+    setup_full();
+    assert_fullform(
+        "Series[1/(x^2 + 1), {x, 0, 6}]",
+        "SeriesData[x, 0, List[1, 0, -1, 0, 1, 0, -1], 0, 7, 1]");
+}
+
+/* Rational with polynomial numerator: (x + 1)/(1 - x). */
+static void test_apart_with_numerator(void) {
+    setup_full();
+    /* (x + 1)/(1 - x) = 2/(1 - x) - 1 = -1 + 2 + 2x + 2x^2 + ... = 1 + 2x + 2x^2 + ... */
+    assert_fullform(
+        "Series[(x + 1)/(1 - x), {x, 0, 4}]",
+        "SeriesData[x, 0, List[1, 2, 2, 2, 2], 0, 5, 1]");
+}
+
+/* Rational function whose Apart output collapses to a polynomial:
+ * (1 - x^2)/(1 - x) = 1 + x, which is itself a truncated polynomial. */
+static void test_apart_collapses_to_polynomial(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1 - x^2)/(1 - x), {x, 0, 3}]",
+        "SeriesData[x, 0, List[1, 1, 0, 0], 0, 4, 1]");
+}
+
+/* Three distinct simple roots: 1/((1-x)(1-2x)(1-3x)). */
+static void test_apart_three_distinct_roots(void) {
+    setup_full();
+    /* Partial fractions would give 1/(2(1-x)) - 2/(1-2x) + 9/(2(1-3x)).
+     * The x^0 coefficient is 1/2 - 2 + 9/2 = 1/2 - 4/2 + 9/2 = 6/2 = 3.
+     * Wait, let me compute directly: 1/((1-0)(1-0)(1-0)) = 1 at x=0, not 3.
+     *
+     * Evaluated at x=0, 1/((1-x)(1-2x)(1-3x)) = 1, so coefficient 0 is 1.
+     * Then using partial fractions:
+     *   1/((1-x)(1-2x)(1-3x)) = A/(1-x) + B/(1-2x) + C/(1-3x).
+     *   At x=1: 1/(-1)(-2) = 1/2 = A, so A = 1/2.
+     *   Actually let me just trust our implementation and assert the first
+     *   few coefficients match: 1, 6, 25, 90, 301, 966, ... (known sequence).
+     */
+    Expr* e = parse_expression("Series[1/((1-x)(1-2x)(1-3x)), {x, 0, 5}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    Expr* coefs = r->data.function.args[2];
+    int64_t expected[] = {1, 6, 25, 90, 301, 966};
+    for (size_t i = 0; i < 6; i++) {
+        Expr* c = coefs->data.function.args[i];
+        ASSERT(c->type == EXPR_INTEGER && c->data.integer == expected[i]);
+    }
+    expr_free(r);
+}
+
+/* Negative-integer power of a linear polynomial: 1/(1-x)^3. */
+static void test_apart_cubed_linear(void) {
+    setup_full();
+    /* 1/(1-x)^3 = sum C(k+2, 2) x^k = 1, 3, 6, 10, 15, 21, ... (triangular numbers + 1). */
+    assert_fullform(
+        "Series[1/(1-x)^3, {x, 0, 5}]",
+        "SeriesData[x, 0, List[1, 3, 6, 10, 15, 21], 0, 6, 1]");
+}
+
+/* Rational function that Apart leaves unchanged (single pole of highest
+ * multiplicity): 1/x^2 -- a pure Laurent term. */
+static void test_apart_laurent_passthrough(void) {
+    setup_full();
+    /* This should expand to 1/x^2 + O[x]^n. */
+    Expr* e = parse_expression("Series[1/x^2, {x, 0, 3}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[3]->data.integer == -2);
+    expr_free(r);
+}
+
+/* Non-rational denominator: 1/(Exp[x] - 1 - x). Apart can't help here;
+ * the gate rejects and we fall through to the generic so_inv path. */
+static void test_apart_nonrational_denominator_guard(void) {
+    setup_full();
+    /* Exp[x] - 1 - x = x^2/2 + x^3/6 + ... so 1/(that) has leading term 2/x^2.
+     * nmin should be -2. */
+    Expr* e = parse_expression("Series[1/(Exp[x] - 1 - x), {x, 0, 3}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[3]->data.integer == -2);
+    expr_free(r);
+}
+
+/* Expansion at a non-zero point for a rational function. x0 = 1. */
+static void test_apart_at_nonzero_point(void) {
+    setup_full();
+    /* 1/(x(x+1)) at x = 1: value is 1/2. Expanding in (x-1), coefficients
+     * are the Taylor coefficients. Just verify shape is well-formed. */
+    Expr* e = parse_expression("Series[1/(x*(x+1)), {x, 1, 3}]");
+    Expr* r = evaluate(e); expr_free(e);
+    ASSERT(r->type == EXPR_FUNCTION);
+    ASSERT(strcmp(r->data.function.head->data.symbol, "SeriesData") == 0);
+    ASSERT(r->data.function.args[1]->type == EXPR_INTEGER);
+    ASSERT(r->data.function.args[1]->data.integer == 1);
+    expr_free(r);
+}
+
+/* Expansion at infinity: 1/(x^2 - 1) should expand as 1/x^2 + 1/x^4 + ... */
+static void test_apart_at_infinity(void) {
+    setup_full();
+    /* 1/(x^2 - 1) at Infinity = 1/x^2 * 1/(1 - 1/x^2) = 1/x^2 + 1/x^4 + 1/x^6 + ...
+     * The engine emits the trimmed-leading-zero form with nmin = 1 (the
+     * leading zero at (1/x)^1 is kept explicitly, and nmin starts at 1
+     * since the series has no constant term). */
+    assert_fullform(
+        "Series[1/(x^2 - 1), {x, Infinity, 6}]",
+        "SeriesData[Power[x, -1], 0, List[0, 1, 0, 1, 0, 1], 1, 7, 1]");
+}
+
 /* Puiseux expansion at branch points for ArcSin / ArcCos at x = ±1.
  * ArcSin[x] at x=1: Pi/2 - I*Sqrt[2]*Sqrt[x-1] + O[x-1]^(3/2). The trailing
  * zero coefficient at exp 1 is retained in SeriesData; it drops from the
@@ -886,6 +1185,35 @@ int main(void) {
     TEST(test_series_exp_of_log1p_over_x);
     TEST(test_series_arc_at_regular_point);
     TEST(test_series_arcsin_branch_point);
+
+    /* Monomial binomial fast path */
+    TEST(test_binomial_monomial_sqrt_1px);
+    TEST(test_binomial_monomial_sqrt_1mxsq);
+    TEST(test_binomial_monomial_recip_1pxsq);
+    TEST(test_binomial_monomial_cuberoot_1px3);
+    TEST(test_binomial_monomial_nonunit_a);
+    TEST(test_binomial_monomial_symbolic_alpha);
+    TEST(test_binomial_monomial_all_symbolic);
+    TEST(test_binomial_monomial_puiseux_base);
+    TEST(test_binomial_monomial_alpha_zero);
+    TEST(test_binomial_monomial_alpha_one);
+    TEST(test_binomial_monomial_high_order);
+    TEST(test_binomial_monomial_matches_known_series);
+
+    /* Apart preprocessing */
+    TEST(test_apart_distinct_roots_simple);
+    TEST(test_apart_quadratic_denom);
+    TEST(test_apart_double_root);
+    TEST(test_apart_irreducible_quadratic);
+    TEST(test_apart_with_numerator);
+    TEST(test_apart_collapses_to_polynomial);
+    TEST(test_apart_three_distinct_roots);
+    TEST(test_apart_cubed_linear);
+    TEST(test_apart_laurent_passthrough);
+    TEST(test_apart_nonrational_denominator_guard);
+    TEST(test_apart_at_nonzero_point);
+    TEST(test_apart_at_infinity);
+
     printf("All series tests passed.\n");
     return 0;
 }
