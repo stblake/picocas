@@ -45,6 +45,7 @@
 #include "random.h"
 #include "picostrings.h"
 #include "series.h"
+#include "deriv.h"
 
 void core_init(void) {
     parfrac_init();
@@ -324,6 +325,7 @@ void core_init(void) {
     random_init();
     strings_init();
     series_init();
+    deriv_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {

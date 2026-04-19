@@ -1,0 +1,675 @@
+/*
+ * deriv.c -- Native C implementation of Mathematica-style differentiation.
+ *
+ * This module replaces the fragile rule-based bootstrap in
+ * src/internal/deriv.m with a direct, dispatch-driven implementation.
+ *
+ * Overview
+ * --------
+ * The two key entry points are the builtins D (partial derivative) and
+ * Dt (total derivative). Both ultimately funnel through a single
+ * recursive core, ``compute_deriv``, parameterised by an optional
+ * differentiation variable. When the variable is non-NULL we compute a
+ * partial derivative treating everything else as constant (using a fast
+ * FreeQ-style walk to short-circuit constant sub-trees). When the
+ * variable is NULL we compute a total derivative -- unknown symbols
+ * then participate as ``Dt[sym]`` terms.
+ *
+ * Why this is faster than the rule-based implementation
+ * -----------------------------------------------------
+ * The old deriv.m relied on ~60 DownValues. Each call to D[f, x] would:
+ *   * scan the DownValues list for D linearly,
+ *   * attempt pattern matching against every rule head (Plus, Times,
+ *     Power, every elementary function, ...),
+ *   * run ``/;`` side-conditions such as FreeQ,
+ *   * perform attempt-evaluate/backtrack cycles in the matcher,
+ *   * recursively re-evaluate the result through the full rule engine.
+ *
+ * In contrast, this module performs a single head-symbol strcmp dispatch
+ * per call, constructs the derivative expression directly, and lets the
+ * outer evaluator simplify arithmetic. Crucially, the constant-detection
+ * step uses a tailored structural traversal (expr_free_of) that avoids
+ * calling out to the generic FreeQ builtin.
+ *
+ * Returned expressions
+ * --------------------
+ * Every builder below produces plain un-reduced expression trees (e.g.
+ * Plus[0, x] or Times[1, x]). The outer PicoCAS evaluator runs a full
+ * fixed-point reduction on the value we return, so Plus[0, ...],
+ * Times[1, ...], and all subsequent chain-rule simplifications fold
+ * automatically. This keeps the code readable and avoids duplicating
+ * the arithmetic simplifier.
+ *
+ * Memory ownership
+ * ----------------
+ * Every helper that returns an ``Expr*`` returns a freshly allocated
+ * tree owned by the caller. Input expressions are never mutated;
+ * sub-expressions that need to be reused are always deep-copied.
+ */
+
+#include "deriv.h"
+#include "eval.h"
+#include "symtab.h"
+#include "attr.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* ---------------------------------------------------------------------- */
+/* Tiny expression builders                                                */
+/* ---------------------------------------------------------------------- */
+
+static Expr* mk_int(int64_t v) { return expr_new_integer(v); }
+static Expr* mk_sym(const char* s) { return expr_new_symbol(s); }
+
+/* Build a Function expression with the given head (already owned) and
+ * a stack-provided argument array. Arguments are moved (ownership
+ * transferred) into the new node. */
+static Expr* mk_fn_take(Expr* head, Expr** args, size_t n) {
+    /* expr_new_function memcpys the pointer slice, so a local stack
+     * buffer is enough. */
+    return expr_new_function(head, args, n);
+}
+
+static Expr* mk_fn1(const char* name, Expr* a) {
+    Expr* args[1] = { a };
+    return mk_fn_take(mk_sym(name), args, 1);
+}
+
+static Expr* mk_fn2(const char* name, Expr* a, Expr* b) {
+    Expr* args[2] = { a, b };
+    return mk_fn_take(mk_sym(name), args, 2);
+}
+
+/* Take ownership of `items` pointers and wrap them as name[items...].
+ * The `items` array itself is freed here. */
+static Expr* mk_fnN_adopt(const char* name, Expr** items, size_t n) {
+    Expr* r = expr_new_function(mk_sym(name), items, n);
+    free(items);
+    return r;
+}
+
+/* Like mk_fnN_adopt but the head is an arbitrary pre-built expression
+ * (e.g. Derivative[k][f] when producing Derivative[k][f][g]). The
+ * `items` pointer must be a heap-allocated array owned by the caller;
+ * this helper frees it. */
+static Expr* mk_fn_head_adopt(Expr* head, Expr** items, size_t n) {
+    Expr* r = expr_new_function(head, items, n);
+    free(items);
+    return r;
+}
+
+/* Wrap a single expression `arg` under an arbitrary pre-built head,
+ * producing `head[arg]`. Used to build things like Derivative[1][f]
+ * and Derivative[1][f][g]. */
+static Expr* mk_fn_head1(Expr* head, Expr* arg) {
+    Expr* items[1] = { arg };
+    return expr_new_function(head, items, 1);
+}
+
+/* Negation helper: build Times[-1, a]. */
+static Expr* mk_neg(Expr* a) {
+    return mk_fn2("Times", mk_int(-1), a);
+}
+
+/* ---------------------------------------------------------------------- */
+/* Predicates                                                              */
+/* ---------------------------------------------------------------------- */
+
+static bool is_sym(const Expr* e, const char* name) {
+    return e && e->type == EXPR_SYMBOL && strcmp(e->data.symbol, name) == 0;
+}
+
+static bool is_lit_zero(const Expr* e) {
+    return e && e->type == EXPR_INTEGER && e->data.integer == 0;
+}
+
+/* True if ``f`` contains no subexpression structurally equal to ``x``.
+ *
+ * This is a hot path: it is called once per recursive deriv step to
+ * short-circuit constant sub-trees. We avoid expr_hash and the generic
+ * FreeQ builtin to keep the inner loop allocation-free. */
+static bool expr_free_of(const Expr* f, const Expr* x) {
+    if (expr_eq(f, x)) return false;
+    if (f->type == EXPR_FUNCTION) {
+        if (!expr_free_of(f->data.function.head, x)) return false;
+        for (size_t i = 0; i < f->data.function.arg_count; i++) {
+            if (!expr_free_of(f->data.function.args[i], x)) return false;
+        }
+    }
+    return true;
+}
+
+/* Recognise the symbols that Dt treats as absolute constants. These
+ * mirror the rule set in the original deriv.m plus a few additional
+ * Mathematica-compatible constants. */
+static bool is_dt_constant_symbol(const Expr* e) {
+    if (!e || e->type != EXPR_SYMBOL) return false;
+    const char* s = e->data.symbol;
+    return !strcmp(s, "Pi") || !strcmp(s, "E") || !strcmp(s, "I") ||
+           !strcmp(s, "Infinity") || !strcmp(s, "ComplexInfinity") ||
+           !strcmp(s, "EulerGamma") || !strcmp(s, "Catalan") ||
+           !strcmp(s, "GoldenRatio") || !strcmp(s, "Degree") ||
+           !strcmp(s, "True") || !strcmp(s, "False");
+}
+
+/* ---------------------------------------------------------------------- */
+/* Derivative of an elementary unary function                              */
+/* ---------------------------------------------------------------------- */
+
+/* Given the head name of a known elementary single-argument function F
+ * and its argument g, produce F'(g). Returns NULL if F is not
+ * recognised.
+ *
+ * The argument `g` is NOT consumed -- we copy it as needed.
+ */
+static Expr* elementary_fprime(const char* name, Expr* g) {
+    /* --- trigonometric --- */
+    if (!strcmp(name, "Sin")) return mk_fn1("Cos", expr_copy(g));
+    if (!strcmp(name, "Cos")) return mk_neg(mk_fn1("Sin", expr_copy(g)));
+    if (!strcmp(name, "Tan")) return mk_fn2("Power", mk_fn1("Sec", expr_copy(g)), mk_int(2));
+    if (!strcmp(name, "Cot")) return mk_neg(mk_fn2("Power", mk_fn1("Csc", expr_copy(g)), mk_int(2)));
+    if (!strcmp(name, "Sec")) return mk_fn2("Times", mk_fn1("Sec", expr_copy(g)), mk_fn1("Tan", expr_copy(g)));
+    if (!strcmp(name, "Csc")) return mk_neg(mk_fn2("Times", mk_fn1("Csc", expr_copy(g)), mk_fn1("Cot", expr_copy(g))));
+
+    /* --- inverse trigonometric --- */
+    /* D[ArcSin[g], g] = 1 / Sqrt[1 - g^2]; we encode 1/Sqrt[u] as Power[u, -1/2]. */
+    if (!strcmp(name, "ArcSin")) {
+        Expr* one_minus_g2 = mk_fn2("Plus", mk_int(1),
+                                    mk_neg(mk_fn2("Power", expr_copy(g), mk_int(2))));
+        return mk_fn2("Power", mk_fn1("Sqrt", one_minus_g2), mk_int(-1));
+    }
+    if (!strcmp(name, "ArcCos")) {
+        Expr* one_minus_g2 = mk_fn2("Plus", mk_int(1),
+                                    mk_neg(mk_fn2("Power", expr_copy(g), mk_int(2))));
+        return mk_neg(mk_fn2("Power", mk_fn1("Sqrt", one_minus_g2), mk_int(-1)));
+    }
+    if (!strcmp(name, "ArcTan")) {
+        Expr* one_plus_g2 = mk_fn2("Plus", mk_int(1), mk_fn2("Power", expr_copy(g), mk_int(2)));
+        return mk_fn2("Power", one_plus_g2, mk_int(-1));
+    }
+    if (!strcmp(name, "ArcCot")) {
+        Expr* one_plus_g2 = mk_fn2("Plus", mk_int(1), mk_fn2("Power", expr_copy(g), mk_int(2)));
+        return mk_neg(mk_fn2("Power", one_plus_g2, mk_int(-1)));
+    }
+    if (!strcmp(name, "ArcSec")) {
+        /* 1 / (g^2 * Sqrt[1 - 1/g^2]) */
+        Expr* g2 = mk_fn2("Power", expr_copy(g), mk_int(2));
+        Expr* inv_g2 = mk_fn2("Power", expr_copy(g), mk_int(-2));
+        Expr* radicand = mk_fn2("Plus", mk_int(1), mk_neg(inv_g2));
+        Expr* denom = mk_fn2("Times", g2, mk_fn1("Sqrt", radicand));
+        return mk_fn2("Power", denom, mk_int(-1));
+    }
+    if (!strcmp(name, "ArcCsc")) {
+        Expr* g2 = mk_fn2("Power", expr_copy(g), mk_int(2));
+        Expr* inv_g2 = mk_fn2("Power", expr_copy(g), mk_int(-2));
+        Expr* radicand = mk_fn2("Plus", mk_int(1), mk_neg(inv_g2));
+        Expr* denom = mk_fn2("Times", g2, mk_fn1("Sqrt", radicand));
+        return mk_neg(mk_fn2("Power", denom, mk_int(-1)));
+    }
+
+    /* --- hyperbolic --- */
+    if (!strcmp(name, "Sinh")) return mk_fn1("Cosh", expr_copy(g));
+    if (!strcmp(name, "Cosh")) return mk_fn1("Sinh", expr_copy(g));
+    if (!strcmp(name, "Tanh")) return mk_fn2("Power", mk_fn1("Sech", expr_copy(g)), mk_int(2));
+    if (!strcmp(name, "Coth")) return mk_neg(mk_fn2("Power", mk_fn1("Csch", expr_copy(g)), mk_int(2)));
+    if (!strcmp(name, "Sech")) return mk_neg(mk_fn2("Times", mk_fn1("Sech", expr_copy(g)), mk_fn1("Tanh", expr_copy(g))));
+    if (!strcmp(name, "Csch")) return mk_neg(mk_fn2("Times", mk_fn1("Csch", expr_copy(g)), mk_fn1("Coth", expr_copy(g))));
+
+    /* --- inverse hyperbolic --- */
+    if (!strcmp(name, "ArcSinh")) {
+        Expr* radicand = mk_fn2("Plus", mk_int(1), mk_fn2("Power", expr_copy(g), mk_int(2)));
+        return mk_fn2("Power", mk_fn1("Sqrt", radicand), mk_int(-1));
+    }
+    if (!strcmp(name, "ArcCosh")) {
+        Expr* radicand = mk_fn2("Plus", mk_fn2("Power", expr_copy(g), mk_int(2)), mk_int(-1));
+        return mk_fn2("Power", mk_fn1("Sqrt", radicand), mk_int(-1));
+    }
+    if (!strcmp(name, "ArcTanh")) {
+        Expr* denom = mk_fn2("Plus", mk_int(1), mk_neg(mk_fn2("Power", expr_copy(g), mk_int(2))));
+        return mk_fn2("Power", denom, mk_int(-1));
+    }
+    if (!strcmp(name, "ArcCoth")) {
+        Expr* denom = mk_fn2("Plus", mk_int(1), mk_neg(mk_fn2("Power", expr_copy(g), mk_int(2))));
+        return mk_fn2("Power", denom, mk_int(-1));
+    }
+    if (!strcmp(name, "ArcSech")) {
+        Expr* g2 = mk_fn2("Power", expr_copy(g), mk_int(2));
+        Expr* inv_g2 = mk_fn2("Power", expr_copy(g), mk_int(-2));
+        Expr* radicand = mk_fn2("Plus", inv_g2, mk_int(-1));
+        Expr* denom = mk_fn2("Times", g2, mk_fn1("Sqrt", radicand));
+        return mk_neg(mk_fn2("Power", denom, mk_int(-1)));
+    }
+    if (!strcmp(name, "ArcCsch")) {
+        Expr* g2 = mk_fn2("Power", expr_copy(g), mk_int(2));
+        Expr* inv_g2 = mk_fn2("Power", expr_copy(g), mk_int(-2));
+        Expr* radicand = mk_fn2("Plus", mk_int(1), inv_g2);
+        Expr* denom = mk_fn2("Times", g2, mk_fn1("Sqrt", radicand));
+        return mk_neg(mk_fn2("Power", denom, mk_int(-1)));
+    }
+
+    /* --- exp/log and sqrt --- */
+    if (!strcmp(name, "Exp")) return mk_fn1("Exp", expr_copy(g));
+    if (!strcmp(name, "Log")) return mk_fn2("Power", expr_copy(g), mk_int(-1));
+    if (!strcmp(name, "Sqrt")) {
+        /* d/dg Sqrt[g] = 1/(2 Sqrt[g]) */
+        return mk_fn2("Power", mk_fn2("Times", mk_int(2), mk_fn1("Sqrt", expr_copy(g))), mk_int(-1));
+    }
+
+    return NULL; /* not a recognised elementary unary */
+}
+
+/* ---------------------------------------------------------------------- */
+/* Core recursive derivative                                               */
+/* ---------------------------------------------------------------------- */
+
+/* Forward declarations. */
+static Expr* compute_deriv(Expr* f, Expr* x);
+
+/* Shortcut: return D[g, x] as a fresh tree. When x is NULL, return
+ * Dt[g] instead. For symbols and numeric atoms the answer is folded
+ * immediately; for compound expressions we recurse through
+ * compute_deriv so constants short-circuit there too. */
+static Expr* deriv_of(Expr* g, Expr* x) {
+    return compute_deriv(g, x);
+}
+
+/* The chain rule applied to an ``f[g1, g2, ..., gn]`` expression whose
+ * head is not one of the explicitly-handled elementary heads. Produces
+ *
+ *   Sum_{k : D[gk, x] != 0} Derivative[0..1_k..0][f][g1..gn] * D[gk, x]
+ *
+ * If all partials vanish the result is 0. If exactly one contributes,
+ * the outer Plus is elided. */
+static Expr* chain_rule_unknown(Expr* f, Expr* x) {
+    Expr* head = f->data.function.head;
+    size_t n = f->data.function.arg_count;
+    Expr** args = f->data.function.args;
+
+    /* Collect (nonzero-derivative, partial-index) terms. */
+    Expr** terms = malloc(sizeof(Expr*) * n);
+    size_t nterms = 0;
+    for (size_t k = 0; k < n; k++) {
+        Expr* dk = deriv_of(args[k], x);
+        if (is_lit_zero(dk)) { expr_free(dk); continue; }
+
+        /* Build the indicator Derivative[0,..,1,..,0]. */
+        Expr** idx = malloc(sizeof(Expr*) * n);
+        for (size_t j = 0; j < n; j++) idx[j] = mk_int(j == k ? 1 : 0);
+        Expr* op = mk_fnN_adopt("Derivative", idx, n);          /* Derivative[...]   */
+        Expr* op_f = mk_fn_head1(op, expr_copy(head));          /* Derivative[...][f] */
+
+        /* Apply to the original argument list. */
+        Expr** gcopy = malloc(sizeof(Expr*) * n);
+        for (size_t j = 0; j < n; j++) gcopy[j] = expr_copy(args[j]);
+        Expr* applied = mk_fn_head_adopt(op_f, gcopy, n);
+
+        terms[nterms++] = mk_fn2("Times", applied, dk);
+    }
+
+    if (nterms == 0) { free(terms); return mk_int(0); }
+    if (nterms == 1) { Expr* r = terms[0]; free(terms); return r; }
+    return mk_fnN_adopt("Plus", terms, nterms);
+}
+
+/* Differentiate an expression of the form
+ *
+ *     Derivative[n1, ..., nm][f] [ g1, ..., gn ]
+ *
+ * Each nonzero partial derivative advances the corresponding index in
+ * the Derivative head. Returns NULL if the expression doesn't match
+ * this shape (so the caller can try other dispatch rules). */
+static Expr* deriv_of_derivative_form(Expr* f, Expr* x) {
+    Expr* head = f->data.function.head;
+    if (head->type != EXPR_FUNCTION) return NULL;
+    if (head->data.function.arg_count != 1) return NULL;   /* need exactly one f */
+
+    Expr* outer = head->data.function.head;                /* Derivative[n1..nm] */
+    if (outer->type != EXPR_FUNCTION) return NULL;
+    if (!is_sym(outer->data.function.head, "Derivative")) return NULL;
+
+    size_t m = outer->data.function.arg_count;
+    size_t n = f->data.function.arg_count;
+    if (m != n) return NULL;                               /* arity mismatch */
+
+    Expr* f0 = head->data.function.args[0];                /* the underlying f */
+    Expr** args = f->data.function.args;
+
+    Expr** terms = malloc(sizeof(Expr*) * n);
+    size_t nterms = 0;
+    for (size_t k = 0; k < n; k++) {
+        Expr* dk = deriv_of(args[k], x);
+        if (is_lit_zero(dk)) { expr_free(dk); continue; }
+
+        /* Advance the k-th order index. If it's a plain integer, bump it;
+         * otherwise wrap it in a Plus so the evaluator can simplify. */
+        Expr** new_idx = malloc(sizeof(Expr*) * m);
+        for (size_t j = 0; j < m; j++) {
+            Expr* orig = outer->data.function.args[j];
+            if (j == k) {
+                if (orig->type == EXPR_INTEGER) {
+                    new_idx[j] = mk_int(orig->data.integer + 1);
+                } else {
+                    new_idx[j] = mk_fn2("Plus", expr_copy(orig), mk_int(1));
+                }
+            } else {
+                new_idx[j] = expr_copy(orig);
+            }
+        }
+        Expr* new_op = mk_fnN_adopt("Derivative", new_idx, m);
+        Expr* new_op_f = mk_fn_head1(new_op, expr_copy(f0));
+
+        Expr** gcopy = malloc(sizeof(Expr*) * n);
+        for (size_t j = 0; j < n; j++) gcopy[j] = expr_copy(args[j]);
+        Expr* applied = mk_fn_head_adopt(new_op_f, gcopy, n);
+
+        terms[nterms++] = mk_fn2("Times", applied, dk);
+    }
+
+    if (nterms == 0) { free(terms); return mk_int(0); }
+    if (nterms == 1) { Expr* r = terms[0]; free(terms); return r; }
+    return mk_fnN_adopt("Plus", terms, nterms);
+}
+
+/* Core dispatch. If `x` is non-NULL we are computing D[f, x]; otherwise
+ * we are computing Dt[f]. The two paths share 95% of their logic --
+ * only constant-handling and the "unknown symbol" base-case differ. */
+static Expr* compute_deriv(Expr* f, Expr* x) {
+    /* --- Partial-derivative base cases. --- */
+    if (x) {
+        if (expr_free_of(f, x)) return mk_int(0);
+        if (expr_eq(f, x)) return mk_int(1);
+    } else {
+        /* Dt mode: numeric atoms and distinguished constants vanish. */
+        if (f->type == EXPR_INTEGER || f->type == EXPR_REAL || f->type == EXPR_BIGINT) {
+            return mk_int(0);
+        }
+        if (is_dt_constant_symbol(f)) return mk_int(0);
+        if (f->type == EXPR_SYMBOL) {
+            /* Unknown symbols are treated as implicit functions of an
+             * implicit parameter -- their total derivative is Dt[x]. */
+            return mk_fn1("Dt", expr_copy(f));
+        }
+    }
+
+    /* At this point f must be compound. */
+    if (f->type != EXPR_FUNCTION) {
+        /* Strings and other atoms we cannot differentiate -- bail. */
+        return NULL;
+    }
+
+    Expr* head = f->data.function.head;
+    size_t n = f->data.function.arg_count;
+    Expr** args = f->data.function.args;
+
+    /* ------------------------------------------------------------------ */
+    /* Head is a plain symbol -- dispatch on the head name.               */
+    /* ------------------------------------------------------------------ */
+    if (head->type == EXPR_SYMBOL) {
+        const char* h = head->data.symbol;
+
+        /* --- Plus: sum of derivatives. --- */
+        if (!strcmp(h, "Plus")) {
+            Expr** ts = malloc(sizeof(Expr*) * n);
+            for (size_t i = 0; i < n; i++) ts[i] = deriv_of(args[i], x);
+            return mk_fnN_adopt("Plus", ts, n);
+        }
+
+        /* --- Times: general product rule. For n factors this is
+         *      sum_i (d/dx arg_i) * prod_{j!=i} arg_j.
+         * We build each term directly; the evaluator handles
+         * simplification of Times[0, ...] and trivial identities. --- */
+        if (!strcmp(h, "Times")) {
+            Expr** ts = malloc(sizeof(Expr*) * n);
+            for (size_t i = 0; i < n; i++) {
+                Expr** factors = malloc(sizeof(Expr*) * n);
+                for (size_t j = 0; j < n; j++) {
+                    factors[j] = (i == j) ? deriv_of(args[j], x)
+                                          : expr_copy(args[j]);
+                }
+                ts[i] = mk_fnN_adopt("Times", factors, n);
+            }
+            return mk_fnN_adopt("Plus", ts, n);
+        }
+
+        /* --- Power: d/dx f^g = f^(g-1) * (g*f' + f*Log[f]*g'). ---
+         *
+         * When g turns out to be independent of x we collapse to the
+         * usual g * f^(g-1) * f'. This avoids introducing spurious
+         * Log[f] terms that the outer evaluator would then have to
+         * fight to remove (and which are problematic for non-positive
+         * bases). We detect "g is constant" by computing d g / d x once
+         * and checking for the literal 0. */
+        if (!strcmp(h, "Power") && n == 2) {
+            Expr* a = args[0];
+            Expr* b = args[1];
+            Expr* da = deriv_of(a, x);
+            Expr* db = deriv_of(b, x);
+
+            if (is_lit_zero(db)) {
+                expr_free(db);
+                Expr* bm1 = mk_fn2("Plus", expr_copy(b), mk_int(-1));
+                Expr* f_pow = mk_fn2("Power", expr_copy(a), bm1);
+                Expr** factors = malloc(sizeof(Expr*) * 3);
+                factors[0] = expr_copy(b);
+                factors[1] = f_pow;
+                factors[2] = da;
+                return mk_fnN_adopt("Times", factors, 3);
+            }
+
+            Expr* bm1 = mk_fn2("Plus", expr_copy(b), mk_int(-1));
+            Expr* f_pow = mk_fn2("Power", expr_copy(a), bm1);
+            Expr* t1 = mk_fn2("Times", expr_copy(b), da);
+            Expr* t2_inner = mk_fn2("Times", expr_copy(a), mk_fn1("Log", expr_copy(a)));
+            Expr* t2 = mk_fn2("Times", t2_inner, db);
+            Expr* inner = mk_fn2("Plus", t1, t2);
+            return mk_fn2("Times", f_pow, inner);
+        }
+
+        /* --- List: thread element-wise. --- */
+        if (!strcmp(h, "List")) {
+            Expr** ts = malloc(sizeof(Expr*) * n);
+            for (size_t i = 0; i < n; i++) ts[i] = deriv_of(args[i], x);
+            return mk_fnN_adopt("List", ts, n);
+        }
+
+        /* --- Log[b, f]: reduce to Log[f]/Log[b]. --- */
+        if (!strcmp(h, "Log") && n == 2) {
+            Expr* lb = mk_fn1("Log", expr_copy(args[0]));
+            Expr* lf = mk_fn1("Log", expr_copy(args[1]));
+            Expr* quot = mk_fn2("Times", lf, mk_fn2("Power", lb, mk_int(-1)));
+            Expr* r = compute_deriv(quot, x);
+            expr_free(quot);
+            return r;
+        }
+
+        /* --- Known elementary unary function: F'(g) * D[g, x]. --- */
+        if (n == 1) {
+            Expr* fp = elementary_fprime(h, args[0]);
+            if (fp) {
+                Expr* dg = deriv_of(args[0], x);
+                return mk_fn2("Times", fp, dg);
+            }
+            /* Unknown single-argument function -- standard chain rule:
+             *     Derivative[1][f][g] * D[g, x]. */
+            Expr* op = mk_fn1("Derivative", mk_int(1));         /* Derivative[1]      */
+            Expr* op_f = mk_fn_head1(op, expr_copy(head));      /* Derivative[1][f]   */
+            Expr* applied = mk_fn_head1(op_f, expr_copy(args[0])); /* Derivative[1][f][g] */
+            Expr* dg = deriv_of(args[0], x);
+            return mk_fn2("Times", applied, dg);
+        }
+
+        /* --- Unknown multi-argument function: full chain rule. --- */
+        return chain_rule_unknown(f, x);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Head is itself a function. The only pattern we can reduce is       */
+    /* Derivative[...][f][args...].                                       */
+    /* ------------------------------------------------------------------ */
+    if (head->type == EXPR_FUNCTION) {
+        Expr* r = deriv_of_derivative_form(f, x);
+        if (r) return r;
+    }
+
+    /* Give up -- caller keeps the expression unevaluated. */
+    return NULL;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Higher-order: D[f, {x, n}]                                              */
+/* ---------------------------------------------------------------------- */
+
+/* Returns a new expression representing the n-th partial derivative of
+ * f with respect to x. For n == 0 the input is deep-copied. */
+static Expr* higher_order_partial(Expr* f, Expr* x, int64_t order) {
+    if (order <= 0) return expr_copy(f);
+    Expr* current = expr_copy(f);
+    for (int64_t i = 0; i < order; i++) {
+        Expr* nxt = compute_deriv(current, x);
+        if (!nxt) {
+            /* Cannot differentiate further -- leave as D[current, x]
+             * and wrap any remaining orders as nested D calls. In
+             * practice this only occurs for truly opaque heads. */
+            Expr* wrap = mk_fn2("D", current, expr_copy(x));
+            for (int64_t k = i + 1; k < order; k++) {
+                wrap = mk_fn2("D", wrap, expr_copy(x));
+            }
+            return wrap;
+        }
+        /* The outer evaluator will also reduce the final expression,
+         * but we need a simplified form between iterations so that
+         * expr_free_of short-circuits work on the next pass. evaluate()
+         * consumes `nxt` and returns a (possibly new) tree. */
+        Expr* reduced = evaluate(nxt);
+        expr_free(current);
+        current = reduced;
+    }
+    return current;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Builtin: D                                                              */
+/* ---------------------------------------------------------------------- */
+
+/* Parse a second-argument spec which may be either
+ *     x            -- a bare variable, order 1
+ *     {x, n}       -- an integer-order spec
+ * On success, *var is set to a NON-owned pointer into the spec and
+ * *order is set. Returns false if the spec cannot be interpreted. */
+static bool parse_var_spec(Expr* spec, Expr** var, int64_t* order) {
+    if (spec->type == EXPR_FUNCTION &&
+        is_sym(spec->data.function.head, "List") &&
+        spec->data.function.arg_count == 2 &&
+        spec->data.function.args[1]->type == EXPR_INTEGER) {
+        *var = spec->data.function.args[0];
+        *order = spec->data.function.args[1]->data.integer;
+        return *order >= 0;
+    }
+    *var = spec;
+    *order = 1;
+    return true;
+}
+
+Expr* builtin_d(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 2) return NULL;                 /* D[f] stays unevaluated */
+
+    Expr* f = res->data.function.args[0];
+    Expr** specs = &res->data.function.args[1];
+    size_t nspecs = argc - 1;
+
+    /* Sequentially apply each spec (handling mixed partials D[f, x, y, ...]). */
+    Expr* current = expr_copy(f);
+    for (size_t i = 0; i < nspecs; i++) {
+        Expr* var = NULL;
+        int64_t order = 1;
+        if (!parse_var_spec(specs[i], &var, &order)) {
+            expr_free(current);
+            return NULL;                       /* malformed spec */
+        }
+        Expr* stepped = higher_order_partial(current, var, order);
+        expr_free(current);
+        current = stepped;
+    }
+
+    return current;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Builtin: Dt                                                             */
+/* ---------------------------------------------------------------------- */
+
+Expr* builtin_dt(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc == 0) return NULL;
+
+    Expr* f = res->data.function.args[0];
+
+    /* Dt[f]: total derivative. */
+    if (argc == 1) {
+        return compute_deriv(f, NULL);        /* may be NULL to stay unevaluated */
+    }
+
+    /* Dt[f, var_specs...] is identical to D[f, var_specs...]: it gives
+     * the partial derivative. Forward to the D path. */
+    Expr* current = expr_copy(f);
+    for (size_t i = 1; i < argc; i++) {
+        Expr* var = NULL;
+        int64_t order = 1;
+        if (!parse_var_spec(res->data.function.args[i], &var, &order)) {
+            expr_free(current);
+            return NULL;
+        }
+        Expr* stepped = higher_order_partial(current, var, order);
+        expr_free(current);
+        current = stepped;
+    }
+
+    return current;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Builtin: Derivative                                                     */
+/* ---------------------------------------------------------------------- */
+
+/*
+ * The Derivative symbol primarily serves as a tag; the actual
+ * differentiation happens inside the D dispatch. However, there is one
+ * useful simplification we can perform at the head level:
+ *
+ *     Derivative[0, 0, ..., 0]  -->  Identity-like behaviour via the
+ *     calling evaluator (the expression Derivative[0,..,0][f][args]
+ *     is recognised by compute_deriv and does not need a builtin
+ *     rewrite here).
+ *
+ * We therefore simply return NULL, leaving ``Derivative[n]`` in its
+ * canonical unevaluated form. The value of this builtin is that it
+ * lets us register attributes on the Derivative symbol.
+ */
+Expr* builtin_derivative(Expr* res) {
+    (void)res;
+    return NULL;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Registration                                                            */
+/* ---------------------------------------------------------------------- */
+
+void deriv_init(void) {
+    symtab_add_builtin("D", builtin_d);
+    symtab_add_builtin("Dt", builtin_dt);
+    symtab_add_builtin("Derivative", builtin_derivative);
+
+    /* Match the original deriv.m attribute set:
+     *     SetAttributes[D, {Protected, ReadProtected}]
+     *     SetAttributes[Dt, {Protected, ReadProtected}]
+     *     SetAttributes[Derivative, {Protected, ReadProtected}] */
+    symtab_get_def("D")->attributes          |= ATTR_PROTECTED | ATTR_READPROTECTED;
+    symtab_get_def("Dt")->attributes         |= ATTR_PROTECTED | ATTR_READPROTECTED;
+    symtab_get_def("Derivative")->attributes |= ATTR_PROTECTED | ATTR_READPROTECTED;
+}
