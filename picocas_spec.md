@@ -2609,7 +2609,7 @@ Out[5]= Sqrt[x] + 2 x + 3 x^(3/2) + O[x]^(7/2)
 #### Series
 Produces the power-series expansion of an expression about a point.
 - `Series[f, {x, x0, n}]` — Taylor/Laurent/Puiseux expansion up to order `(x - x0)^n`.
-- `Series[f, x -> x0]` — leading-term form, emitting the first non-trivial part plus `O[x - x0]^2`.
+- `Series[f, x -> x0]` — leading-term form. The engine scans the internal expansion for the first non-zero coefficient at exponent `e1` and the next non-zero at `e2 > e1`; the reported `O`-term lands at exponent `e2` (or `e1 + 1` when no further non-zero term exists). So `Series[Sin[x] - x, x -> 0]` returns `-x^3/6 + O[x]^5`, `Series[f[x], x -> 0]` returns `f[0] + O[x]^1`, and analytic-at-x0 inputs collapse to their constant plus `O[x - x0]^1`.
 - `Series[f, {x, x0, nx}, {y, y0, ny}, ...]` — iterated multivariate expansion. Each inner coefficient is itself a `SeriesData` in the next variable.
 - `Series[f, {x, Infinity, n}]` — expansion at infinity, substituting `x -> 1/u` internally. The emitted `SeriesData` uses `Power[x, -1]` as its variable, so the series prints with `1/x` as the base and an `O[1/x]^(n+1)` term.
 
@@ -2634,7 +2634,15 @@ Expansions where the inner series diverges at the expansion point (e.g. `Series[
 
 **Internal padding for symbolic expansion points**: The engine computes series at a padded internal order (user order + 12 by default) so that intermediate Laurent/Puiseux operations don't lose accuracy. When the expansion point `x0` is not a literal number, padding is capped at 2 — at a symbolic point the series coefficients are themselves symbolic expressions (e.g. `Cosh[a]`, `Sinh[a]`), and the `O(N^2)` convolution inside `so_inv`/`so_div` would otherwise spin indefinitely on exponentially growing expression trees. This makes cases like `Series[Coth[x], {x, a, 1}]`, `Series[Tanh[x], {x, a, 1}]`, `Series[Sec[x], {x, a, 1}]`, and `Series[1/Cosh[x], {x, a, 1}]` terminate in milliseconds.
 
-**Known limitation**: `Series` does not yet emit Puiseux expansions at square-root-style branch points (e.g. `ArcCosh[x + 1]` near `x = 0`); such inputs are returned unevaluated rather than risking infinite-loop or incorrect output. The naive-Taylor fallback also caps iterations and bails out on `Infinity`/`Indeterminate` derivatives so unknown heads cannot spin the engine.
+**Constant inputs**: If `f` is free of the expansion variable (e.g. `Series[0, {x, 0, 4}]`, `Series[Sin[y], {x, 0, 4}]`, `Series[a + b^2, {x, 0, 3}]`), `Series` returns `f` verbatim instead of wrapping it in a trivial `SeriesData`.
+
+**Symbolic prefactors**: A factor of `x^alpha` with `alpha` symbolic (non-integer, non-rational) is pulled outside the expansion so the remaining body is expanded as an ordinary power series. For example, `Series[x^a Exp[x], {x, 0, 5}]` returns `x^a (1 + x + x^2/2 + x^3/6 + x^4/24 + x^5/120 + O[x]^6)` — a `Times[Power[x, a], SeriesData[...]]` at the expression level, so the `SeriesData` pretty-printer still renders the body and the outer `Times` decorates it with the symbolic prefactor.
+
+**Expansion at regular points of `Arc*` heads**: When `so_apply_kernel_at_zero` can't apply (because the inner series constant `c` is not `0`), the engine falls back to naive Taylor via `D`. This makes `Series[ArcSin[x], {x, 1/2, 3}]`, `Series[ArcTan[x], {x, 2, 2}]`, `Series[ArcSinh[x], {x, 1, 2}]`, etc. work without special-casing each non-zero expansion point.
+
+**Puiseux branch points for `ArcSin` / `ArcCos` at `x = ±1`**: Dedicated handler emits a Puiseux series with `den = 2` using the identity `ArcCos[1 - s] = Sqrt[2s] sum_{k>=0} b_k s^k / (2k+1)` (with `b_k = (2k)! / (8^k (k!)^2)`) and the symmetries `ArcSin[x] = Pi/2 - ArcCos[x]`, `ArcCos[-x] = Pi - ArcCos[x]`. Supports the simple-linear inner case `ArcSin[c + q (x - x0)]` / `ArcCos[c + q (x - x0)]` with `c = ±1`. Example: `Series[ArcSin[x], {x, 1, 1}]` returns `Pi/2 - I Sqrt[2] Sqrt[x - 1] + O[x - 1]^(3/2)`; `Series[ArcCos[x], {x, -1, 2}]` returns `Pi - Sqrt[2] Sqrt[x + 1] - Sqrt[2] (x + 1)^(3/2) / 12 + O[x + 1]^(5/2)`.
+
+**Known limitation**: Puiseux branch points for the hyperbolic `Arc*` heads (`ArcCosh[x]` at `x = 1`, `ArcTanh[x]` at `x = ±1`, etc.) and for non-simple inner series at the circular branch points are still returned unevaluated rather than risking infinite-loop or incorrect output. The naive-Taylor fallback also caps iterations and bails out on `Infinity`/`Indeterminate` derivatives so unknown heads cannot spin the engine.
 
 ```mathematica
 In[1]:= Series[Exp[x], {x, 0, 10}]

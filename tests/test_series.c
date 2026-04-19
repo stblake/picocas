@@ -107,14 +107,15 @@ static void test_series_laurent(void) {
         "Rational[-1, 3628800], 0], -1, 11, 1]");
 }
 
-/* 5. Leading-term form Series[f, x -> x0]: user says output is 1 + O[x]^2
- * for Exp[Sin[x]-x]^3 at x -> 0 (first correction is at x^3, so O[x]^2
- * correctly signals "we stopped at first-order terms"). */
+/* 5. Leading-term form Series[f, x -> x0]: Mathematica emits the first
+ * non-zero term and the next potential non-zero position as the O-term.
+ * Exp[Sin[x]-x]^3 = 1 - x^3/2 + x^5/40 + ... so the first non-zero after
+ * the constant 1 is at exponent 3, and the O-term lands there. */
 static void test_series_leading_term(void) {
     setup_full();
     assert_fullform(
         "Series[Exp[Sin[x]-x]^3, x -> 0]",
-        "SeriesData[x, 0, List[1, 0], 0, 2, 1]");
+        "SeriesData[x, 0, List[1, 0, 0], 0, 3, 1]");
 }
 
 /* 6. Puiseux: Sqrt[Sin[x]] has fractional-power expansion. */
@@ -262,12 +263,13 @@ static void test_normal_passthrough(void) {
     assert_fullform("Normal[a + b]", "Plus[a, b]");
 }
 
-/* 16. Constant input -> constant series. */
+/* 16. Constant input -> bare constant (matches Mathematica: Series[5, {x, 0, 3}]
+ * returns 5, Series[Sin[y], {x, 0, 3}] returns Sin[y], etc.). */
 static void test_series_constant(void) {
     setup_full();
-    assert_fullform(
-        "Series[5, {x, 0, 3}]",
-        "SeriesData[x, 0, List[5, 0, 0, 0], 0, 4, 1]");
+    assert_fullform("Series[5, {x, 0, 3}]", "5");
+    assert_fullform("Series[Sin[y], {x, 0, 3}]", "Sin[y]");
+    assert_fullform("Series[0, {x, 0, 4}]", "0");
 }
 
 /* 17. Identity x -> variable series. */
@@ -736,6 +738,84 @@ static void test_series_arcsinh_of_inverse(void) {
         "Rational[-3, 32]], 0, 5, 1]");
 }
 
+/* Leading-term form: extend order past cancellations so the O-term lands
+ * at the next non-zero exponent, matching Mathematica. */
+static void test_series_leading_term_cancellation(void) {
+    setup_full();
+    /* Sin[x] - x = -x^3/6 + x^5/120 - ... : leading is -x^3/6, next is x^5, so O-term at 5. */
+    assert_fullform(
+        "Series[Sin[x] - x, x -> 0]",
+        "SeriesData[x, 0, List[0, 0, 0, Rational[-1, 6], 0], 0, 5, 1]");
+    /* Unknown f: report only the constant term. */
+    assert_fullform(
+        "Series[f[x], x -> 0]",
+        "SeriesData[x, 0, List[f[0]], 0, 1, 1]");
+}
+
+/* Pure-constant inputs return the constant verbatim, not SeriesData. */
+static void test_series_free_of_x_returns_constant(void) {
+    setup_full();
+    assert_fullform("Series[0, {x, 0, 4}]", "0");
+    assert_fullform("Series[Sin[y], {x, 0, 4}]", "Sin[y]");
+    assert_fullform("Series[a + b^2, {x, 0, 3}]", "Plus[a, Power[b, 2]]");
+}
+
+/* Symbolic exponent x^a is factored out so the remaining expansion runs
+ * as an ordinary power series. */
+static void test_series_symbolic_prefactor(void) {
+    setup_full();
+    /* Times[x^a, SeriesData[Exp[x] series]] -- the FullForm wraps the
+     * factored Power around the expanded series. */
+    assert_fullform(
+        "Series[x^a Exp[x], {x, 0, 5}]",
+        "Times[Power[x, a], "
+        "SeriesData[x, 0, List[1, 1, Rational[1, 2], Rational[1, 6], "
+        "Rational[1, 24], Rational[1, 120]], 0, 6, 1]]");
+}
+
+/* Laurent/compound-series-input case: Exp of a (Log[1+u])/u-style expression
+ * was returning NULL due to a spurious leading-zero coefficient in the
+ * product series; the trimmed-split fix makes the computation go through. */
+static void test_series_exp_of_log1p_over_x(void) {
+    setup_full();
+    assert_fullform(
+        "Series[(1 + 1/n)^n, {n, Infinity, 5}]",
+        "SeriesData[Power[n, -1], 0, List[E, Times[Rational[-1, 2], E], "
+        "Times[Rational[11, 24], E], Times[Rational[-7, 16], E], "
+        "Times[Rational[2447, 5760], E], Times[Rational[-959, 2304], E]], "
+        "0, 6, 1]");
+}
+
+/* Expansion of Arc* functions at non-branch points falls back to Taylor
+ * via D when the at-zero kernel path isn't applicable. */
+static void test_series_arc_at_regular_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcTan[x], {x, 2, 2}]",
+        "SeriesData[x, 2, List[ArcTan[2], Rational[1, 5], Rational[-2, 25]], 0, 3, 1]");
+}
+
+/* Puiseux expansion at branch points for ArcSin / ArcCos at x = ±1.
+ * ArcSin[x] at x=1: Pi/2 - I*Sqrt[2]*Sqrt[x-1] + O[x-1]^(3/2). The trailing
+ * zero coefficient at exp 1 is retained in SeriesData; it drops from the
+ * pretty-printed form because the coefficient is literally zero. */
+static void test_series_arcsin_branch_point(void) {
+    setup_full();
+    assert_fullform(
+        "Series[ArcSin[x], {x, 1, 1}]",
+        "SeriesData[x, 1, List[Times[Rational[1, 2], Pi], "
+        "Times[Complex[0, -1], Power[2, Rational[1, 2]]], 0], 0, 3, 2]");
+    /* ArcSin at x = -1 is the real branch. */
+    assert_fullform(
+        "Series[ArcSin[x], {x, -1, 1}]",
+        "SeriesData[x, -1, List[Times[Rational[-1, 2], Pi], "
+        "Power[2, Rational[1, 2]], 0], 0, 3, 2]");
+    /* ArcCos at x = -1: constant Pi, real coefficient. */
+    assert_fullform(
+        "Series[ArcCos[x], {x, -1, 1}]",
+        "SeriesData[x, -1, List[Pi, Times[-1, Power[2, Rational[1, 2]]], 0], 0, 3, 2]");
+}
+
 int main(void) {
     TEST(test_series_taylor_exp);
     TEST(test_series_sin_cos);
@@ -800,6 +880,12 @@ int main(void) {
     TEST(test_series_x_to_the_x);
     TEST(test_series_rational_at_infinity);
     TEST(test_series_protected);
+    TEST(test_series_leading_term_cancellation);
+    TEST(test_series_free_of_x_returns_constant);
+    TEST(test_series_symbolic_prefactor);
+    TEST(test_series_exp_of_log1p_over_x);
+    TEST(test_series_arc_at_regular_point);
+    TEST(test_series_arcsin_branch_point);
     printf("All series tests passed.\n");
     return 0;
 }

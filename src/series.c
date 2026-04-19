@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 /* ----------------------------------------------------------------------------
  * Tiny Expr helpers
@@ -732,8 +733,14 @@ static void kernel_coefs_free(Expr** c, size_t N) {
 
 /* Split s into constant part and non-constant-part.
  * On return, *c is the coefficient at (x-x0)^0 (or 0 if nmin > 0), and
- * *u is a new series equal to s minus that constant (nmin >= 1 after). */
-static void so_split_constant(SeriesObj* s, Expr** c_out, SeriesObj** u_out) {
+ * *u is a new series equal to s minus that constant (nmin >= 1 after).
+ *
+ * Works on a trimmed copy of the input so spurious leading zeros (which
+ * routinely arise from e.g. Sin[u]/u, whose so_mul output has coef[0]=0
+ * at exp=-1 even though the true series starts at exp=0) don't look like
+ * a Laurent input to the caller. */
+static void so_split_constant(SeriesObj* s_in, Expr** c_out, SeriesObj** u_out) {
+    SeriesObj* s = so_copy_trimmed(s_in);
     Expr* c = expr_new_integer(0);
     SeriesObj* u;
     if (s->nmin > 0 || s->coef_count == 0) {
@@ -741,9 +748,8 @@ static void so_split_constant(SeriesObj* s, Expr** c_out, SeriesObj** u_out) {
         u = so_alloc(s->x, s->x0, s->nmin, s->order, s->den);
         for (size_t i = 0; i < s->coef_count; i++) so_set_coef(u, i, expr_copy(s->coefs[i]));
     } else if (s->nmin < 0) {
-        /* Series has terms below constant (Laurent). Splitting constant
-         * this way isn't meaningful; return s as u, c = 0. The caller
-         * should check whether this path is reachable. */
+        /* True Laurent: splitting the constant is not meaningful. Return s
+         * as u with c = 0 so the caller's `u->nmin < 1` check rejects it. */
         u = so_alloc(s->x, s->x0, s->nmin, s->order, s->den);
         for (size_t i = 0; i < s->coef_count; i++) so_set_coef(u, i, expr_copy(s->coefs[i]));
     } else {
@@ -757,6 +763,7 @@ static void so_split_constant(SeriesObj* s, Expr** c_out, SeriesObj** u_out) {
         }
         so_trim_leading(u);
     }
+    so_free(s);
     *c_out = c;
     *u_out = u;
 }
@@ -852,6 +859,114 @@ static SeriesObj* so_apply_kernel_at_zero(const char* name, SeriesObj* s) {
     SeriesObj* r = so_compose_scalar_kernel(k, (size_t)N, u);
     kernel_coefs_free(k, (size_t)N);
     so_free(u);
+    return r;
+}
+
+/* Detect the constant term of `inner` being a literal integer +1 or -1.
+ * Returns +1, -1, or 0 (none). Used to dispatch Puiseux branch-point
+ * expansions for ArcSin / ArcCos when the at-zero kernel can't apply. */
+static int so_branch_point_sign(SeriesObj* inner) {
+    SeriesObj* t = so_copy_trimmed(inner);
+    int result = 0;
+    if (t->nmin == 0 && t->coef_count >= 1) {
+        Expr* c = t->coefs[0];
+        if (c->type == EXPR_INTEGER) {
+            if (c->data.integer == 1) result = 1;
+            else if (c->data.integer == -1) result = -1;
+        }
+    }
+    so_free(t);
+    return result;
+}
+
+/* Puiseux branch-point expansion for ArcSin[c + q*w] or ArcCos[c + q*w],
+ * where c = ±1, q is any non-zero Expr free of w, and the inner series is
+ * exactly c + q*w (i.e. a constant + a single linear term; higher-order
+ * coefficients must be zero).
+ *
+ * Derivation. Starting from the integral identity
+ *   ArcCos[1-s] = Sqrt[2s] * sum_{k>=0} b_k / (2k+1) * s^k,
+ *   b_k = (2k)! / (8^k (k!)^2)
+ * and ArcSin[x] = Pi/2 - ArcCos[x], plus odd symmetry ArcSin[-y] = -ArcSin[y]
+ * and ArcCos[-y] = Pi - ArcCos[y] for the c=-1 case, we get:
+ *
+ *   at c=+1, with s = -q*w:
+ *     ArcCos[1+q*w] = Sqrt[-2q]*Sqrt[w] * sum (-q)^k * b_k/(2k+1) * w^k
+ *     ArcSin[1+q*w] = Pi/2 - ArcCos[1+q*w]
+ *   at c=-1, with s = q*w:
+ *     ArcCos[-1+q*w] = Pi - Sqrt[2q]*Sqrt[w] * sum q^k * b_k/(2k+1) * w^k
+ *     ArcSin[-1+q*w] = -Pi/2 + Sqrt[2q]*Sqrt[w] * sum q^k * b_k/(2k+1) * w^k
+ *
+ * Output uses den = 2 (half-integer exponents in w) with the constant term
+ * at exponent 0 and the k-th Puiseux coefficient at exponent (2k+1)/2.
+ */
+static SeriesObj* so_apply_arc_branch_point(SeriesObj* inner, int sign_c,
+                                            bool is_arcsin, int64_t user_order) {
+    SeriesObj* t = so_copy_trimmed(inner);
+    if (t->nmin != 0 || t->coef_count < 2) { so_free(t); return NULL; }
+    Expr* c_coef = t->coefs[0];
+    if (!(c_coef->type == EXPR_INTEGER && c_coef->data.integer == sign_c)) {
+        so_free(t); return NULL;
+    }
+    for (size_t i = 2; i < t->coef_count; i++) {
+        if (!is_lit_zero(t->coefs[i])) { so_free(t); return NULL; }
+    }
+    Expr* q = expr_copy(t->coefs[1]);
+    if (is_lit_zero(q)) { expr_free(q); so_free(t); return NULL; }
+
+    int64_t new_den = 2;
+    int64_t new_order = (user_order + 1) * new_den;
+    if (new_order < 2) new_order = 2;
+    SeriesObj* r = so_alloc(t->x, t->x0, 0, new_order, new_den);
+
+    /* Constant at exp 0: ±Pi/2 (ArcSin) or 0/Pi (ArcCos). */
+    Expr* const_term;
+    if (is_arcsin) {
+        const_term = simp(mk_times(make_rational(sign_c, 2), mk_symbol("Pi")));
+    } else {
+        const_term = (sign_c == -1) ? mk_symbol("Pi") : expr_new_integer(0);
+    }
+    if (r->coef_count > 0) so_set_coef(r, 0, const_term);
+    else expr_free(const_term);
+
+    /* s = -sign_c * q, so Sqrt[2s] is real for q in the right domain. */
+    Expr* s_expr = (sign_c == 1)
+        ? simp(mk_times(expr_new_integer(-1), expr_copy(q)))
+        : expr_copy(q);
+    Expr* two_s = simp(mk_times(expr_new_integer(2), expr_copy(s_expr)));
+    Expr* sqrt_2s = simp(mk_power(two_s, make_rational(1, 2)));
+    /* sign_adj: -1 for ArcSin@+1 or ArcCos@-1, +1 otherwise. */
+    int sign_adj = is_arcsin ? -sign_c : sign_c;
+    Expr* prefactor = (sign_adj == -1)
+        ? simp(mk_times(expr_new_integer(-1), sqrt_2s))
+        : sqrt_2s;
+
+    /* r_k = b_k / (2k+1) with b_0 = 1, b_{k+1}/b_k = (2k+1)(2k+2) / (8(k+1)^2).
+     * Chained with the 1/(2k+1) factor: r_{k+1}/r_k = (2k+1)^2 / (4(k+1)(2k+3)). */
+    Expr* s_pow = expr_new_integer(1);
+    Expr* r_k   = expr_new_integer(1);
+    int64_t max_k = (new_order - 1) / 2;
+    for (int64_t k = 0; k <= max_k; k++) {
+        size_t idx = (size_t)(2*k + 1);
+        if (idx >= r->coef_count) break;
+        Expr* inner_prod = simp(mk_times(expr_copy(s_pow), expr_copy(r_k)));
+        Expr* coef = simp(mk_times(expr_copy(prefactor), inner_prod));
+        so_set_coef(r, idx, coef);
+        /* Advance the coefficient recurrence. */
+        int64_t num = (2*k + 1) * (2*k + 1);
+        int64_t den_val = 4 * (k + 1) * (2*k + 3);
+        Expr* ratio = make_rational(num, den_val);
+        r_k = simp(mk_times(r_k, ratio));
+        /* Advance s_pow = s^k -> s^(k+1). */
+        Expr* s_next = simp(mk_times(s_pow, expr_copy(s_expr)));
+        s_pow = s_next;
+    }
+    expr_free(s_pow);
+    expr_free(r_k);
+    expr_free(s_expr);
+    expr_free(q);
+    expr_free(prefactor);
+    so_free(t);
     return r;
 }
 
@@ -1241,7 +1356,13 @@ static SeriesObj* series_expand(Expr* e, const SeriesCtx* ctx) {
                     }
                 }
             }
-            else if (strcmp(head, "ArcSin")  == 0) r = so_apply_kernel_at_zero("ArcSin",   inner);
+            else if (strcmp(head, "ArcSin")  == 0) {
+                r = so_apply_kernel_at_zero("ArcSin", inner);
+                if (!r) {
+                    int sc = so_branch_point_sign(inner);
+                    if (sc != 0) r = so_apply_arc_branch_point(inner, sc, true, ctx->order);
+                }
+            }
             else if (strcmp(head, "ArcSinh") == 0) {
                 r = so_apply_kernel_at_zero("ArcSinh", inner);
                 /* Identity at infinity: ArcSinh[1/v] = -Log[v] + Log[1 + Sqrt[1 + v^2]].
@@ -1263,7 +1384,13 @@ static SeriesObj* series_expand(Expr* e, const SeriesCtx* ctx) {
                     expr_free(rewrite);
                 }
             }
-            else if (strcmp(head, "ArcCos")  == 0) r = so_apply_arccos(inner);
+            else if (strcmp(head, "ArcCos")  == 0) {
+                r = so_apply_arccos(inner);
+                if (!r) {
+                    int sc = so_branch_point_sign(inner);
+                    if (sc != 0) r = so_apply_arc_branch_point(inner, sc, false, ctx->order);
+                }
+            }
             else if (strcmp(head, "ArcCosh") == 0) {
                 r = so_apply_arccosh(inner);
                 /* Identity at infinity: ArcCosh[1/v] = -Log[v] + Log[1 + Sqrt[1 - v^2]]. */
@@ -1301,6 +1428,13 @@ static SeriesObj* series_expand(Expr* e, const SeriesCtx* ctx) {
                 }
             }
             so_free(inner);
+            /* Fall back to naive Taylor-via-D when the kernel path can't
+             * handle the expansion point -- e.g. ArcSin[x] at x = 1/2, where
+             * the arg's constant term is non-zero so the at-zero kernels
+             * return NULL. D-path still fails at true branch points
+             * (ArcSin[x] at x = 1) because the derivative blows up there,
+             * which Puiseux expansion would handle but is out of scope. */
+            if (!r) r = series_taylor_via_D(e, ctx);
             return r;
         }
     }
@@ -1418,6 +1552,69 @@ static bool parse_series_spec(Expr* spec, Expr** x_out, Expr** x0_out,
     return false;
 }
 
+/* Detect a single Times-factor of the form Power[x, alpha] where alpha is
+ * free of x and is NOT an integer/rational (so the series machinery can't
+ * absorb it into the exponent of the monomial). If found, returns a
+ * freshly allocated Power[x, alpha] and sets *body_out to the product of
+ * the remaining factors (also freshly allocated). Returns NULL otherwise.
+ *
+ * Mathematica prints Series[x^a Exp[x], {x, 0, 5}] as
+ *   x^a (1 + x + x^2/2 + ... + O[x]^6)
+ * i.e. the symbolic power is factored out verbatim. We mimic this by
+ * expanding `body_out` as an ordinary series and wrapping the SeriesData
+ * result in a Times with the pre-factor at the end. */
+static Expr* try_factor_power_prefactor(Expr* f, Expr* x, Expr** body_out) {
+    if (f->type != EXPR_FUNCTION || !has_symbol_head(f, "Times")) return NULL;
+    size_t n = f->data.function.arg_count;
+    Expr* prefactor = NULL;
+    size_t found_idx = n;
+    for (size_t i = 0; i < n; i++) {
+        Expr* a = f->data.function.args[i];
+        if (!has_symbol_head(a, "Power") || a->data.function.arg_count != 2) continue;
+        Expr* base = a->data.function.args[0];
+        Expr* exp  = a->data.function.args[1];
+        if (!expr_eq(base, x)) continue;
+        if (!expr_free_of(exp, x)) continue;
+        if (exp->type == EXPR_INTEGER) continue;
+        int64_t pp, qq;
+        if (is_rational(exp, &pp, &qq)) continue;
+        prefactor = expr_copy(a);
+        found_idx = i;
+        break;
+    }
+    if (!prefactor) return NULL;
+    /* Build the rest of the factors as a new Times (or a single Expr). */
+    size_t rc = n > 0 ? n - 1 : 0;
+    Expr** rest = rc ? calloc(rc, sizeof(Expr*)) : NULL;
+    size_t k = 0;
+    for (size_t i = 0; i < n; i++) {
+        if (i == found_idx) continue;
+        rest[k++] = expr_copy(f->data.function.args[i]);
+    }
+    Expr* body;
+    if (rc == 0)      { body = expr_new_integer(1); if (rest) free(rest); }
+    else if (rc == 1) { body = rest[0]; free(rest); }
+    else {
+        /* expr_new_function copies the pointers out of `rest` into its own
+         * args buffer; we must still free the caller-owned array. */
+        body = expr_new_function(mk_symbol("Times"), rest, rc);
+        free(rest);
+    }
+    *body_out = body;
+    return prefactor;
+}
+
+/* Scan coefs of s for the first non-zero entry at or beyond exponent
+ * `from_exp`. Returns the exponent of that entry, or INT64_MAX if none. */
+static int64_t so_first_nonzero_exp(SeriesObj* s, int64_t from_exp) {
+    int64_t start_i = from_exp - s->nmin;
+    if (start_i < 0) start_i = 0;
+    for (size_t i = (size_t)start_i; i < s->coef_count; i++) {
+        if (!is_lit_zero(s->coefs[i])) return s->nmin + (int64_t)i;
+    }
+    return INT64_MAX;
+}
+
 /* Expand f around x=x0 to order n and return SeriesData expression. */
 static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leading_only) {
     /* Evaluate f with the series context implicit. Since Series has
@@ -1425,29 +1622,56 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     Expr* f_eval = evaluate(expr_copy(f));
     Expr* x0_eval = evaluate(expr_copy(x0));
 
+    /* Mathematica convention: Series[c, {x, ...}] where c is free of x
+     * returns c verbatim (not SeriesData[...]). Applies to Series[0, ...]
+     * and Series[Sin[y], {x, 0, 4}] alike. */
+    if (expr_free_of(f_eval, x)) {
+        expr_free(x0_eval);
+        return f_eval;
+    }
+
+    /* Factor out x^alpha for symbolic alpha (e.g. Series[x^a Exp[x], ...]).
+     * We detect only the top-level Times case; nested occurrences are rare
+     * and harder to match Mathematica's output form on. */
+    Expr* prefactor = NULL;
+    Expr* f_used_for_expand = f_eval;
+    Expr* f_body_owned = NULL;
+    {
+        Expr* body = NULL;
+        Expr* pf = try_factor_power_prefactor(f_eval, x, &body);
+        if (pf) {
+            prefactor = pf;
+            f_body_owned = body;
+            f_used_for_expand = body;
+        }
+    }
+
     /* Handle expansion at Infinity by substituting x -> 1/u. */
     bool at_infinity = (x0_eval->type == EXPR_SYMBOL &&
                         (strcmp(x0_eval->data.symbol, "Infinity") == 0));
-    Expr* f_use  = f_eval;
+    Expr* f_use  = f_used_for_expand;
     Expr* x_use  = x;
     Expr* x0_use = x0_eval;
     Expr* u_sym  = NULL;
+    Expr* f_sub_owned = NULL;
     if (at_infinity) {
         u_sym = mk_symbol("$SeriesInvVar$");
         Expr* inv_u = mk_power(expr_copy(u_sym), expr_new_integer(-1));
-        Expr* f_sub = replace_all_of(f_eval, x, inv_u);
+        f_sub_owned = replace_all_of(f_used_for_expand, x, inv_u);
         expr_free(inv_u);
-        f_use = f_sub;
+        f_use = f_sub_owned;
         x_use = u_sym;
         expr_free(x0_eval);
         x0_use = expr_new_integer(0);
     }
 
     /* target_exp_n is the user-facing O-term exponent, i.e. x^target_exp_n
-     * is the smallest power that has been dropped. Series[f,{x,x0,n}]
-     * sets this to n; Series[f, x->x0] emits O[x-x0]^2 per Mathematica's
-     * observed behaviour (first-order approximation), so target_exp_n = 1. */
-    int64_t target_exp_n = leading_only ? 1 : n;
+     * is the smallest power that has been dropped. For Series[f, {x, x0, n}]
+     * this is n. For the leading-term form Series[f, x -> x0] we set it to
+     * 0 initially, then widen it by scanning the computed series so the
+     * O-term lands at the next non-zero exponent (matching Mathematica's
+     * extension-on-cancellation behaviour, e.g. Sin[x]-x -> -x^3/6 + O[x]^5). */
+    int64_t target_exp_n = leading_only ? 0 : n;
     int64_t order = target_exp_n + 1;
     if (order < 1) order = 1;
 
@@ -1474,13 +1698,32 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     SeriesObj* s = series_expand(f_use, &ctx);
     Expr* result = NULL;
     if (s) {
+        /* Scan for leading-term extension in the rule form: find the first
+         * non-zero coefficient at exponent e1, then the next at e2, and
+         * place the O-term at e2 (or e1+1 if no next term within the
+         * internal expansion, or at the original target otherwise). */
+        if (leading_only) {
+            int64_t e1 = so_first_nonzero_exp(s, 0);
+            int64_t new_target = 1;
+            if (e1 != INT64_MAX) {
+                int64_t e2 = so_first_nonzero_exp(s, e1 + 1);
+                new_target = (e2 != INT64_MAX) ? e2 : (e1 + 1);
+                if (new_target < 1) new_target = 1;
+            }
+            target_exp_n = new_target;
+        }
         /* Truncate to the user-facing O-term exponent.
          * User asked for x^target_exp_n to be the first dropped term.
          * In the series's internal denominator this is target_exp_n*den
          * plus one step: terms at exponents strictly less than
          * target_exp_n + 1/den are kept, and the O-term is placed at
          * the next valid step beyond target_exp_n. */
-        int64_t target_num = target_exp_n * s->den + 1;
+        int64_t target_num;
+        if (leading_only) {
+            target_num = target_exp_n * s->den;  /* O-term exactly at target_exp_n. */
+        } else {
+            target_num = target_exp_n * s->den + 1;
+        }
         if (s->order > target_num) {
             SeriesObj* t = so_alloc(s->x, s->x0, s->nmin, target_num, s->den);
             for (size_t i = 0; i < t->coef_count && i < s->coef_count; i++) {
@@ -1497,10 +1740,20 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
         result = so_to_expr(s);
         so_free(s);
     }
-    if (at_infinity) { expr_free(f_use); expr_free(u_sym); }
+    if (at_infinity) { expr_free(f_sub_owned); expr_free(u_sym); expr_free(x0_use); }
     else             expr_free(x0_eval);
+    if (f_body_owned) expr_free(f_body_owned);
     expr_free(f_eval);
-    if (at_infinity) expr_free(x0_use);
+
+    /* Wrap the result in the factored-out prefactor, if any. We keep the
+     * factorisation at the *expression* level (Times[x^a, SeriesData[...]])
+     * so the SeriesData printer still formats the series and the outer
+     * Times adds the symbolic x^a factor. */
+    if (prefactor) {
+        if (!result) { expr_free(prefactor); return NULL; }
+        Expr* wrapped = mk_times(prefactor, result);
+        return wrapped;
+    }
     return result;
 }
 
