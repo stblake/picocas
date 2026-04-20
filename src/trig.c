@@ -381,6 +381,25 @@ static Expr* exact_csc(int64_t n, int64_t d) {
 
 // --- Built-in Functions ---
 
+/* If arg is a one-argument call whose head is `inverse_name`, return a deep
+ * copy of its single argument; otherwise NULL. Used to fold the direct
+ * forward/inverse identities Sin[ArcSin[x]] -> x, Cos[ArcCos[x]] -> x, ...
+ * These hold identically over the complex numbers because each ArcX is a
+ * right inverse of X by construction. The two-argument form ArcTan[x, y]
+ * is excluded by the arg_count guard (Tan[ArcTan[x, y]] = y/x, not a single
+ * variable). We deliberately do NOT fold the opposite direction
+ * (ArcSin[Sin[x]], etc.) because those only reduce to x on each function's
+ * principal domain. */
+static Expr* strip_inverse_call(Expr* arg, const char* inverse_name) {
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.arg_count == 1 &&
+        arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, inverse_name) == 0) {
+        return expr_copy(arg->data.function.args[0]);
+    }
+    return NULL;
+}
+
 /*
  * builtin_sin:
  * Implements the standard evaluation logic for Sin.
@@ -390,7 +409,9 @@ static Expr* exact_csc(int64_t n, int64_t d) {
 Expr* builtin_sin(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcSin"); if (inv) return inv; }
+
     // Sin[0] = 0
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     
@@ -421,7 +442,9 @@ Expr* builtin_sin(Expr* res) {
 Expr* builtin_cos(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCos"); if (inv) return inv; }
+
     // Cos[0] = 1
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
     
@@ -452,7 +475,9 @@ Expr* builtin_cos(Expr* res) {
 Expr* builtin_tan(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcTan"); if (inv) return inv; }
+
     // Tan[0] = 0
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     
@@ -483,7 +508,9 @@ Expr* builtin_tan(Expr* res) {
 Expr* builtin_cot(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCot"); if (inv) return inv; }
+
     // Cot[0] = ComplexInfinity
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");
     
@@ -514,7 +541,9 @@ Expr* builtin_cot(Expr* res) {
 Expr* builtin_sec(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcSec"); if (inv) return inv; }
+
     // Sec[0] = 1
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
     
@@ -545,7 +574,9 @@ Expr* builtin_sec(Expr* res) {
 Expr* builtin_csc(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCsc"); if (inv) return inv; }
+
     // Csc[0] = ComplexInfinity
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");
     

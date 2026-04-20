@@ -75,12 +75,52 @@ void test_trig_inverse() {
     }
 }
 
+void test_trig_forward_of_inverse() {
+    /* f[f_inv[x]] = x for each direct trig / inverse-trig pair. Uses
+     * InputForm-style strings since the simplification strips the inverse
+     * and leaves the inner argument untouched. */
+    struct {
+        const char* input;
+        const char* expected;
+    } cases[] = {
+        {"Sin[ArcSin[x]]", "x"},
+        {"Cos[ArcCos[y]]", "y"},
+        {"Tan[ArcTan[a]]", "a"},
+        {"Cot[ArcCot[b]]", "b"},
+        {"Sec[ArcSec[c]]", "c"},
+        {"Csc[ArcCsc[d]]", "d"},
+        /* Composite arguments survive as-is */
+        {"Sin[ArcSin[x^2 + 1]]", "1 + x^2"},
+        {"Cos[ArcCos[2 y]]", "2 y"},
+        /* ArcTan[x, y] two-arg form must NOT be stripped: our rule guards
+         * on arg_count==1, so Tan[ArcTan[x, y]] stays unevaluated here
+         * rather than collapsing via the (wrong) single-argument rule. */
+        {"Tan[ArcTan[3, 4]]", "Tan[ArcTan[3, 4]]"},
+        /* Opposite direction is NOT folded: ArcSin[Sin[x]] stays put */
+        {"ArcSin[Sin[x]]", "ArcSin[Sin[x]]"},
+        {NULL, NULL}
+    };
+
+    for (int i = 0; cases[i].input != NULL; i++) {
+        Expr* e = parse_expression(cases[i].input);
+        Expr* res = evaluate(e);
+        char* s = expr_to_string(res);
+        ASSERT_MSG(strcmp(s, cases[i].expected) == 0,
+                   "Forward-of-inverse %s: expected %s, got %s",
+                   cases[i].input, cases[i].expected, s);
+        free(s);
+        expr_free(res);
+        expr_free(e);
+    }
+}
+
 int main() {
     symtab_init();
     core_init();
-    
+
     TEST(test_trig_forward);
     TEST(test_trig_inverse);
-    
+    TEST(test_trig_forward_of_inverse);
+
     return 0;
 }

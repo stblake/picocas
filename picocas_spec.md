@@ -2880,6 +2880,53 @@ In[5]:= b^Log[b, a]
 Out[5]= a
 ```
 
+**Log of a Power with a matching base.** `builtin_log` folds
+`Log[E^k] -> k` and `Log[b, b^k] -> k` when the exponent `k` is a real
+numeric (integer, bigint, rational, or real) and (for the two-argument
+form) `b` is a known-positive value (positive numeric, or a symbol
+like `E` / `Pi`). The real-`k` guard keeps us on the principal branch --
+for complex `k` the identity `Log[b^k] = k Log[b]` can fail by a
+multiple of `2 Pi i`.
+
+```mathematica
+In[6]:= Log[E^4]
+Out[6]= 4
+
+In[7]:= Log[E^(1/3)]
+Out[7]= 1/3
+
+In[8]:= Log[2, 2^(1/3)]
+Out[8]= 1/3
+```
+
+#### Trig / inverse-trig and hyperbolic / inverse-hyperbolic cancellation
+
+`builtin_sin`, `builtin_cos`, ..., `builtin_csc` and their hyperbolic
+counterparts fold the direct forward-of-inverse identities:
+
+- `Sin[ArcSin[x]]   -> x`,  `Cos[ArcCos[x]]   -> x`, ...
+- `Sinh[ArcSinh[x]] -> x`,  `Cosh[ArcCosh[x]] -> x`, ...
+
+These hold identically over the complex numbers because each `ArcF` is a
+right inverse of `F` by construction. The opposite direction
+(`ArcSin[Sin[x]]`, etc.) is *not* folded: it only reduces to `x` on each
+function's principal domain.
+
+The two-argument form `ArcTan[x, y]` is deliberately excluded from the
+`Tan[ArcTan[...]]` rule -- `Tan[ArcTan[x, y]] = y/x`, not a single
+variable -- so `Tan[ArcTan[3, 4]]` stays unevaluated.
+
+```mathematica
+In[9]:= Sin[ArcSin[x^2 + 1]]
+Out[9]= 1 + x^2
+
+In[10]:= Tanh[ArcTanh[z]]
+Out[10]= z
+
+In[11]:= ArcSin[Sin[x]]
+Out[11]= ArcSin[Sin[x]]
+```
+
 
 #### TrigToExp
 Converts trigonometric and hyperbolic functions in `expr` to exponentials.
@@ -4281,3 +4328,39 @@ now fixed.
   fall-through path (strictly speaking both `Indeterminate` and `1`
   are defensible depending on convention; Mathematica returns
   `Indeterminate`).
+
+
+---
+
+## Simplification extensions (2026-04-20)
+
+### `Log[E^k]` and `Log[b, b^k]`
+
+`builtin_log` now folds direct Log-of-Power forms:
+
+* `Log[E^k] -> k` (one-argument Log), when `k` is a real numeric
+  (integer, bigint, rational, or real).
+* `Log[b, b^k] -> k` (two-argument Log), when `k` is a real numeric
+  and `b` is a known-positive value (positive numeric, `E`, or `Pi`).
+
+The real-`k` restriction keeps us on the principal branch -- for
+complex `k` the identity `Log[b^k] = k Log[b]` can fail by a multiple
+of `2 Pi i / Log[b]`. Helpers `is_real_numeric_expr` and
+`is_positive_known` are local to `logexp.c`. Example:
+`Log[E^4] -> 4`, `Log[2, 2^(1/3)] -> 1/3`, `Log[E^x]` stays.
+
+### Trig / inverse-trig and hyperbolic / inverse-hyperbolic cancellation
+
+`builtin_sin`, `builtin_cos`, `builtin_tan`, `builtin_cot`,
+`builtin_sec`, `builtin_csc` (in `trig.c`) and
+`builtin_sinh`..`builtin_csch` (in `hyperbolic.c`) each fold
+`F[F_inv[x]] -> x` via a small shared helper (`strip_inverse_call`).
+These identities hold identically over the complex numbers because
+each `ArcF` is a right inverse of `F` by construction.
+
+The opposite direction (`ArcSin[Sin[x]]`, etc.) is deliberately *not*
+folded -- that identity only holds on each function's principal
+domain. The two-argument `ArcTan[x, y]` form is also excluded from
+the `Tan[ArcTan[...]]` rule (guarded by `arg_count == 1`) because
+`Tan[ArcTan[x, y]] = y/x` rather than a single variable.
+

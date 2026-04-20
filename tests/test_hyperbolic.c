@@ -65,12 +65,46 @@ void test_hyperbolic_inverse() {
     }
 }
 
+void test_hyperbolic_forward_of_inverse() {
+    /* f[f_inv[x]] = x for each direct hyperbolic / inverse-hyperbolic
+     * pair. Identity holds over the complex numbers since each ArcXh is a
+     * right inverse of Xh by construction. */
+    struct {
+        const char* input;
+        const char* expected;
+    } cases[] = {
+        {"Sinh[ArcSinh[x]]", "x"},
+        {"Cosh[ArcCosh[y]]", "y"},
+        {"Tanh[ArcTanh[z]]", "z"},
+        {"Coth[ArcCoth[w]]", "w"},
+        {"Sech[ArcSech[u]]", "u"},
+        {"Csch[ArcCsch[v]]", "v"},
+        {"Sinh[ArcSinh[x^2 - 1]]", "-1 + x^2"},
+        /* Opposite direction is NOT folded */
+        {"ArcSinh[Sinh[x]]", "ArcSinh[Sinh[x]]"},
+        {NULL, NULL}
+    };
+
+    for (int i = 0; cases[i].input != NULL; i++) {
+        Expr* e = parse_expression(cases[i].input);
+        Expr* res = evaluate(e);
+        char* s = expr_to_string(res);
+        ASSERT_MSG(strcmp(s, cases[i].expected) == 0,
+                   "Forward-of-inverse %s: expected %s, got %s",
+                   cases[i].input, cases[i].expected, s);
+        free(s);
+        expr_free(e);
+        expr_free(res);
+    }
+}
+
 int main() {
     symtab_init();
     core_init();
-    
+
     TEST(test_hyperbolic_forward);
     TEST(test_hyperbolic_inverse);
-    
+    TEST(test_hyperbolic_forward_of_inverse);
+
     return 0;
 }

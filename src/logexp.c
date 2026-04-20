@@ -92,6 +92,45 @@ static Expr* make_minus_infinity() {
     return expr_new_function(expr_new_symbol("Times"), args, 2);
 }
 
+/* True when e is a concrete real numeric value (int, bigint, rational, real).
+ * Used to guard Log[E^k] -> k and Log[b, b^k] -> k: on the principal branch
+ * these identities hold for any real k, but for complex k the result can
+ * differ from k by 2 pi i / Log[b]. Restricting k to real numerics keeps us
+ * safe without a full assumption system. */
+static bool is_real_numeric_expr(Expr* e) {
+    if (e->type == EXPR_INTEGER) return true;
+    if (e->type == EXPR_BIGINT)  return true;
+    if (e->type == EXPR_REAL)    return true;
+    int64_t n, d;
+    if (is_rational(e, &n, &d)) return true;
+    return false;
+}
+
+/* True when e is known to be strictly positive: a positive numeric value or
+ * a symbol whose value is intrinsically positive (E, Pi). Used to guard
+ * Log[b, b^k] -> k so we don't cross a branch cut. */
+static bool is_positive_known(Expr* e) {
+    if (e->type == EXPR_INTEGER) return e->data.integer > 0;
+    if (e->type == EXPR_BIGINT)  return mpz_sgn(e->data.bigint) > 0;
+    if (e->type == EXPR_REAL)    return e->data.real > 0.0;
+    int64_t n, d;
+    if (is_rational(e, &n, &d)) return n > 0;
+    if (e->type == EXPR_SYMBOL) {
+        const char* s = e->data.symbol;
+        if (strcmp(s, "E") == 0)  return true;
+        if (strcmp(s, "Pi") == 0) return true;
+    }
+    return false;
+}
+
+/* True when e has the shape Power[_, _] (a two-argument Power call). */
+static bool is_power_call(Expr* e) {
+    return e->type == EXPR_FUNCTION &&
+           e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+           e->data.function.arg_count == 2;
+}
+
 /*
  * builtin_log:
  * Implements the evaluation logic for the 'Log' function.
@@ -153,6 +192,20 @@ Expr* builtin_log(Expr* res) {
             return ret;
         }
 
+        // Log[E^k] -> k for real numeric k (int, bigint, rational, real).
+        // E > 0 puts us on the principal branch; restricting k to real
+        // numerics avoids the branch-cut mismatch that can occur for
+        // complex k.
+        if (is_power_call(z)) {
+            Expr* pbase = z->data.function.args[0];
+            Expr* pexp  = z->data.function.args[1];
+            if (pbase->type == EXPR_SYMBOL &&
+                strcmp(pbase->data.symbol, "E") == 0 &&
+                is_real_numeric_expr(pexp)) {
+                return expr_copy(pexp);
+            }
+        }
+
         // Approximate numerical evaluation
         double complex c;
         bool inexact = false;
@@ -174,6 +227,20 @@ Expr* builtin_log(Expr* res) {
         if (expr_eq(b, z)) {
             Expr* ret = expr_new_integer(1);
             return ret;
+        }
+
+        // Log[b, b^k] -> k when b is known positive (positive numeric or
+        // a symbol like E, Pi) and k is a real numeric. Same branch-cut
+        // reasoning as Log[E^k]: the identity holds for all real k but
+        // can fail on the principal branch for complex k.
+        if (is_power_call(z)) {
+            Expr* pbase = z->data.function.args[0];
+            Expr* pexp  = z->data.function.args[1];
+            if (expr_eq(pbase, b) &&
+                is_positive_known(b) &&
+                is_real_numeric_expr(pexp)) {
+                return expr_copy(pexp);
+            }
         }
 
         // Attempt to return exact rational results for integer bases and arguments (e.g. Log[2, 8] = 3)

@@ -64,6 +64,22 @@ static bool is_infinity(Expr* e) {
     return e->type == EXPR_SYMBOL && strcmp(e->data.symbol, "Infinity") == 0;
 }
 
+/* If arg is a one-argument call whose head is `inverse_name`, return a deep
+ * copy of its single argument; otherwise NULL. Folds the direct
+ * hyperbolic forward/inverse identities (Sinh[ArcSinh[x]] -> x, etc.):
+ * each ArcXh is a right inverse of Xh by construction, so the identity
+ * holds over the complex numbers. The opposite direction is NOT folded
+ * because those only reduce on each function's principal domain. */
+static Expr* strip_inverse_call(Expr* arg, const char* inverse_name) {
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.arg_count == 1 &&
+        arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, inverse_name) == 0) {
+        return expr_copy(arg->data.function.args[0]);
+    }
+    return NULL;
+}
+
 static bool is_minus_infinity(Expr* e) {
     if (e->type == EXPR_FUNCTION && e->data.function.arg_count == 2 && 
         e->data.function.head->type == EXPR_SYMBOL && strcmp(e->data.function.head->data.symbol, "Times") == 0) {
@@ -78,7 +94,9 @@ static bool is_minus_infinity(Expr* e) {
 Expr* builtin_sinh(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcSinh"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     if (is_infinity(arg)) return expr_new_symbol("Infinity");
     if (is_minus_infinity(arg)) {
@@ -99,7 +117,9 @@ Expr* builtin_sinh(Expr* res) {
 Expr* builtin_cosh(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCosh"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_symbol("Infinity");
 
@@ -116,7 +136,9 @@ Expr* builtin_cosh(Expr* res) {
 Expr* builtin_tanh(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcTanh"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     if (is_infinity(arg)) return expr_new_integer(1);
     if (is_minus_infinity(arg)) return expr_new_integer(-1);
@@ -134,7 +156,9 @@ Expr* builtin_tanh(Expr* res) {
 Expr* builtin_coth(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCoth"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");
     if (is_infinity(arg)) return expr_new_integer(1);
     if (is_minus_infinity(arg)) return expr_new_integer(-1);
@@ -152,7 +176,9 @@ Expr* builtin_coth(Expr* res) {
 Expr* builtin_sech(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcSech"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
@@ -169,7 +195,9 @@ Expr* builtin_sech(Expr* res) {
 Expr* builtin_csch(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
-    
+
+    { Expr* inv = strip_inverse_call(arg, "ArcCsch"); if (inv) return inv; }
+
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");
     if (is_infinity(arg) || is_minus_infinity(arg)) return expr_new_integer(0);
 
