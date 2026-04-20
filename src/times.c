@@ -13,9 +13,17 @@ static bool is_overflow(Expr* e) {
            strcmp(e->data.function.head->data.symbol, "Overflow") == 0;
 }
 
-static bool is_positive_integer_expr(Expr* e) {
+/* True for positive numeric expressions: positive int/bigint, positive real,
+ * or Rational[n, d] with positive numerator (denominators are conventionally
+ * positive in PicoCAS). Used to guard the radical-fusion rewrite
+ * a^q * b^(-q) -> (a/b)^q, which is only valid on the principal branch when
+ * both bases are strictly positive. */
+static bool is_positive_numeric_expr(Expr* e) {
     if (e->type == EXPR_INTEGER) return e->data.integer > 0;
     if (e->type == EXPR_BIGINT)  return mpz_sgn(e->data.bigint) > 0;
+    if (e->type == EXPR_REAL)    return e->data.real > 0.0;
+    int64_t n, d;
+    if (is_rational(e, &n, &d)) return n > 0;
     return false;
 }
 
@@ -240,17 +248,19 @@ Expr* builtin_times(Expr* res) {
     }
 
     /* Radical fusion: collapse Power[a, q] * Power[b, -q] into Power[a/b, q]
-     * when a, b are positive integers and the ratio a/b is itself a positive
-     * integer. Applied after base-grouping so that same-base factors have
-     * already been merged; only heterogeneous pairs reach here. We restrict
-     * to integer ratios so that the output is strictly simpler than the
-     * input -- Sqrt[6]/Sqrt[2] -> Sqrt[3], but Sqrt[6]/Sqrt[4] (ratio 3/2)
-     * is left alone because Sqrt[3/2] is no cleaner than 1/2 Sqrt[6]. */
+     * when a, b are both positive numeric (integer, bigint, rational, real)
+     * -- a > 0 and b > 0 ensures we stay on the principal branch. Applied
+     * after base-grouping so same-base factors have already merged; only
+     * heterogeneous pairs reach here. Examples:
+     *   Sqrt[6]/Sqrt[2]    -> Sqrt[3]         (ratio is a positive integer)
+     *   2^(1/3)/3^(1/3)    -> (2/3)^(1/3)     (ratio is a positive rational)
+     * The ratio is computed by delegating to the evaluator so integer,
+     * bigint, rational, and real bases all compose correctly. */
     for (size_t i = 0; i < group_count; i++) {
-        if (!is_positive_integer_expr(groups[i].base)) continue;
+        if (!is_positive_numeric_expr(groups[i].base)) continue;
         if (!is_rational(groups[i].exponent, NULL, NULL)) continue;
         for (size_t j = i + 1; j < group_count; j++) {
-            if (!is_positive_integer_expr(groups[j].base)) continue;
+            if (!is_positive_numeric_expr(groups[j].base)) continue;
             if (!is_rational(groups[j].exponent, NULL, NULL)) continue;
             if (!exponents_sum_to_zero(groups[i].exponent, groups[j].exponent)) continue;
 
@@ -260,29 +270,28 @@ Expr* builtin_times(Expr* res) {
             size_t ni = i, nj = j;
             if (rational_sign(groups[i].exponent) < 0) { ni = j; nj = i; }
 
-            /* Compute ratio = num_base / den_base and require an integer
-             * result (num_base is a positive-integer multiple of den_base). */
-            mpz_t num_z, den_z, q_z, r_z;
-            mpz_inits(num_z, den_z, q_z, r_z, NULL);
-            expr_to_mpz(groups[ni].base, num_z);
-            expr_to_mpz(groups[nj].base, den_z);
-            mpz_fdiv_qr(q_z, r_z, num_z, den_z);
-            bool exact = (mpz_sgn(r_z) == 0) && (mpz_cmp_ui(q_z, 1) > 0);
-            mpz_clears(num_z, den_z, r_z, NULL);
-            if (!exact) { mpz_clear(q_z); continue; }
+            Expr* ratio = eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){
+                expr_copy(groups[ni].base),
+                expr_new_function(expr_new_symbol("Power"), (Expr*[]){
+                    expr_copy(groups[nj].base), expr_new_integer(-1)
+                }, 2)
+            }, 2));
 
-            Expr* new_base = expr_bigint_normalize(expr_new_bigint_from_mpz(q_z));
-            mpz_clear(q_z);
-            Expr* new_exp  = expr_copy(groups[ni].exponent);
+            /* Guard: only keep the fusion if the ratio is a positive numeric
+             * we can wrap in a single Power. If evaluation produced anything
+             * else (it shouldn't with positive numeric bases, but be safe)
+             * discard and leave the original pair intact. */
+            if (!is_positive_numeric_expr(ratio)) { expr_free(ratio); continue; }
 
-            /* Replace slot i with the fused group and remove slot j. */
+            Expr* new_exp = expr_copy(groups[ni].exponent);
+
             size_t keep = (ni == i) ? i : j;
             size_t drop = (ni == i) ? j : i;
             expr_free(groups[keep].base);
             expr_free(groups[keep].exponent);
             expr_free(groups[drop].base);
             expr_free(groups[drop].exponent);
-            groups[keep].base = new_base;
+            groups[keep].base = ratio;
             groups[keep].exponent = new_exp;
             for (size_t k = drop; k + 1 < group_count; k++) groups[k] = groups[k + 1];
             group_count--;

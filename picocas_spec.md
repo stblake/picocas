@@ -2846,7 +2846,7 @@ Out[1]= 1/4*Pi
 
 #### Exponential and Logarithmic Functions
 - `Exp[z]`: Natural exponential. Reduces `Exp[I*q*Pi]` using Euler's formula.
-- `Log[z]`: Natural logarithm.
+- `Log[z]`: Natural logarithm. For a negative integer `n` (including `BigInt`), rewrites `Log[n]` as `I Pi + Log[-n]` (principal branch).
 - `Log[b, z]`: Logarithm to base `b`.
 
 ```mathematica
@@ -2855,6 +2855,29 @@ Out[1]= 3
 
 In[2]:= Exp[I * Pi]
 Out[2]= -1
+
+In[3]:= Log[-5]
+Out[3]= Log[5] + (I) Pi
+```
+
+**Power/Log cancellation.** `builtin_power` recognizes a `Log` in the
+exponent and strips it:
+
+- `Exp[c Log[a]]               -> a^c`   (since `Log[E] = 1`)
+- `Power[base, c Log[base, a]] -> a^c`   (the `Log[base]` denominator cancels)
+
+Internally `Log[b, a]` is represented as `Log[a] * Log[b]^(-1)`, so
+`b^Log[b, a] -> a` and `Power[10, 3 Log[10, x]] -> x^3` both fall out of the
+same rule. The coefficient `c` may be any (sub-)expression; it is the
+product of whatever factors remain after removing the matching `Log[a]`
+and (when `base != E`) `Log[base]^(-1)` factors from the exponent.
+
+```mathematica
+In[4]:= Exp[b Log[a]]
+Out[4]= a^b
+
+In[5]:= b^Log[b, a]
+Out[5]= a
 ```
 
 
@@ -4213,11 +4236,14 @@ of REPL-driven cases.
    out of `limit.c` and into `builtin_times` so that
    `Sqrt[6]/Sqrt[2]` becomes `Sqrt[3]` system-wide, not only as a
    Limit post-pass. The rule fuses `Power[a, q] * Power[b, -q]` into
-   `Power[a/b, q]` whenever `a`, `b` are positive integers and `a/b`
-   is itself a positive integer; rational ratios are left alone
-   because `Sqrt[3/2]` is no cleaner than `(1/2) Sqrt[6]`. Applies
-   after same-base grouping, restarts on each fusion so chained
-   reductions like `Sqrt[210]/Sqrt[6]/Sqrt[5] -> Sqrt[7]` converge.
+   `Power[a/b, q]` whenever `a` and `b` are both positive numeric
+   (integer, bigint, rational, or real) -- `a > 0` and `b > 0`
+   places us on the principal branch. The ratio `a/b` may itself
+   be an integer (`Sqrt[6]/Sqrt[2] -> Sqrt[3]`) or a rational
+   (`9^(1/3)/3^(1/3) -> 3^(1/3)`, `2^(1/3)/3^(1/3) -> (2/3)^(1/3)`,
+   `Sqrt[3]/Sqrt[6] -> Sqrt[1/2]`). Applies after same-base
+   grouping, restarts on each fusion so chained reductions like
+   `Sqrt[210]/Sqrt[6]/Sqrt[5] -> Sqrt[7]` converge.
 5. *`Power[0, b]` folding* in `builtin_power`. `0^b` now evaluates to
    `0` for any positive `b` (integer, rational, or real) and to
    `ComplexInfinity` for any negative `b`. This eliminates the

@@ -113,6 +113,37 @@ Expr* builtin_log(Expr* res) {
             Expr* ret = expr_new_integer(0); // Log[1] = 0
             return ret;
         }
+
+        // Negative integer: Log[n] = I*Pi + Log[-n] for n < 0
+        if ((z->type == EXPR_INTEGER && z->data.integer < 0) ||
+            (z->type == EXPR_BIGINT && mpz_sgn(z->data.bigint) < 0)) {
+            Expr* neg_z;
+            if (z->type == EXPR_INTEGER) {
+                if (z->data.integer == INT64_MIN) {
+                    mpz_t tmp;
+                    mpz_init_set_si(tmp, z->data.integer);
+                    mpz_neg(tmp, tmp);
+                    neg_z = expr_new_bigint_from_mpz(tmp);
+                    mpz_clear(tmp);
+                } else {
+                    neg_z = expr_new_integer(-z->data.integer);
+                }
+            } else {
+                mpz_t tmp;
+                mpz_init(tmp);
+                mpz_neg(tmp, z->data.bigint);
+                neg_z = expr_new_bigint_from_mpz(tmp);
+                mpz_clear(tmp);
+                neg_z = expr_bigint_normalize(neg_z);
+            }
+            Expr* log_args[1] = { neg_z };
+            Expr* log_neg = expr_new_function(expr_new_symbol("Log"), log_args, 1);
+            Expr* times_args[2] = { expr_new_symbol("I"), expr_new_symbol("Pi") };
+            Expr* i_pi = expr_new_function(expr_new_symbol("Times"), times_args, 2);
+            Expr* plus_args[2] = { i_pi, log_neg };
+            return expr_new_function(expr_new_symbol("Plus"), plus_args, 2);
+        }
+
         if (is_infinity(z)) {
             Expr* ret = expr_new_symbol("Infinity"); // Log[Infinity] = Infinity
             return ret;

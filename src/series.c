@@ -1288,7 +1288,14 @@ static SeriesObj* so_apply_sinh_or_cosh(SeriesObj* s, bool is_sinh) {
 typedef struct {
     Expr*   x;      /* expansion variable (borrowed) */
     Expr*   x0;     /* expansion point (borrowed) */
-    int64_t order;  /* target order (numerator); den is always 1 entering */
+    int64_t order;  /* padded internal order; composite series arithmetic
+                     * (so_inv, so_compose_scalar_kernel, ...) needs headroom
+                     * beyond the user-facing order to survive cancellations. */
+    int64_t target_order;  /* user-facing order (unpadded). Independent-coef
+                            * paths like series_taylor_via_D use this so they
+                            * don't compute derivatives they'll just truncate
+                            * away again -- D[f, x, k=13] for ArcTan[x] at x=2
+                            * takes ~12s, versus ~0.01s for k=3. */
 } SeriesCtx;
 
 static SeriesObj* series_expand(Expr* e, const SeriesCtx* ctx);
@@ -1329,15 +1336,22 @@ static bool has_infinity(Expr* e) {
  * that truly need more terms should go through a direct kernel path. */
 #define MAX_NAIVE_ORDER 20
 static SeriesObj* series_taylor_via_D(Expr* e, const SeriesCtx* ctx) {
-    int64_t n_iter = ctx->order;
+    /* Taylor coefficients are computed independently, so there is no benefit
+     * to running beyond the user's requested order -- the padding that
+     * composite arithmetic (so_inv, so_compose_scalar_kernel) relies on is
+     * discarded at the end. Cap at target_order + a couple of slack terms
+     * in case a surrounding operation needs a touch more precision. */
+    int64_t n_iter = ctx->target_order > 0 ? ctx->target_order + 2 : ctx->order;
+    if (n_iter > ctx->order) n_iter = ctx->order;
     if (n_iter > MAX_NAIVE_ORDER) n_iter = MAX_NAIVE_ORDER;
+    if (n_iter < 1) n_iter = 1;
     /* Quick singularity check before starting. */
     Expr* probe = replace_all_of(e, ctx->x, ctx->x0);
     bool bad = has_infinity(probe);
     expr_free(probe);
     if (bad) return NULL;
 
-    SeriesObj* s = so_alloc(ctx->x, ctx->x0, 0, ctx->order, 1);
+    SeriesObj* s = so_alloc(ctx->x, ctx->x0, 0, n_iter, 1);
     Expr* current = expr_copy(e);
     Expr* factorial = expr_new_integer(1);
     for (int64_t k = 0; k < n_iter; k++) {
@@ -2037,7 +2051,7 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     int64_t pad = x0_is_numeric ? 12 : 2;
     int64_t internal_order = order + pad;
 
-    SeriesCtx ctx = { x_use, x0_use, internal_order };
+    SeriesCtx ctx = { x_use, x0_use, internal_order, order };
     SeriesObj* s = series_expand(f_use, &ctx);
     Expr* result = NULL;
     if (s) {

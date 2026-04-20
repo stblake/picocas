@@ -26,7 +26,17 @@ void test_logexp_forward() {
         {"Log[10, 10]", "1"},
         {"Log[E, x]", "Log[x]"},
         {"Exp[0.0]", "1.0"},
-        {"Log[-1.0]", "0.0 + 3.14159*I"}, 
+        {"Log[-1.0]", "0.0 + 3.14159*I"},
+        {"Log[-1]", "(I) Pi"},
+        {"Log[-5]", "Log[5] + (I) Pi"},
+        {"Exp[Log[x]]", "x"},
+        {"Exp[b Log[a]]", "a^b"},
+        {"Exp[2 Log[x]]", "x^2"},
+        {"Exp[3 Log[2]]", "8"},
+        {"3^Log[3, x]", "x"},
+        {"b^Log[b, a]", "a"},
+        {"Power[base, b Log[base, a]]", "a^b"},
+        {"10^(3 Log[10, x])", "x^3"},
         {"Table[Exp[I * n * Pi / 2], {n, 0, 4}]", "{1, I, -1, -I, 1}"},
         {NULL, NULL}
     };

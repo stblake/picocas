@@ -3,9 +3,10 @@
  * pass inside builtin_times, and for Power[0, b] folding in builtin_power.
  *
  * The fusion rule:  a^q * b^(-q)  ->  (a/b)^q
- *   fires only when a and b are positive integers and a/b is itself a
- *   positive integer (strictly simpler output). Mixed or rational ratios
- *   are left unfused.
+ *   fires whenever a and b are both positive numeric (integer, bigint,
+ *   rational, real). The ratio a/b may itself be integer (e.g.
+ *   Sqrt[6]/Sqrt[2] -> Sqrt[3]) or rational (e.g. Sqrt[10]/Sqrt[3] ->
+ *   Sqrt[10/3]).
  *
  * The Power[0, b] rule:
  *   Power[0, b]  ->  0                for any positive b (int/real/rational),
@@ -41,14 +42,16 @@ static void test_cube_root_ratio(void) {
     assert_eval_eq("Power[30, 1/3] * Power[6, -1/3]", "5^(1/3)", 0);
 }
 
-static void test_rational_ratio_left_alone(void) {
-    /* 6/4 = 3/2 is not an integer -- fusion would produce Sqrt[3/2]
-     * which is no simpler, so we leave it. The existing Power folding
-     * strips the perfect-square factor from the 4, turning Sqrt[4]
-     * into 2, so the canonical form is 1/2 Sqrt[6]. */
+static void test_rational_ratio_fuses(void) {
+    /* Sqrt[4] reduces to 2 before fusion, so Sqrt[6]/Sqrt[4] short-circuits
+     * through integer folding to 1/2 Sqrt[6] rather than Sqrt[3/2]. */
     assert_eval_eq("Sqrt[6]/Sqrt[4]", "1/2 Sqrt[6]", 0);
-    /* Coprime bases with rational ratio: 10/3 is rational, not integer. */
-    assert_eval_eq("Sqrt[10]/Sqrt[3]", "Sqrt[10]/Sqrt[3]", 0);
+    /* Coprime bases with rational ratio now fuse into a single radical
+     * over the rational ratio. */
+    assert_eval_eq("Sqrt[10]/Sqrt[3]",       "Sqrt[10/3]",   0);
+    assert_eval_eq("Power[2, 1/3] / Power[3, 1/3]", "(2/3)^(1/3)", 0);
+    /* Ratio <1: Sqrt[3]/Sqrt[6] = Sqrt[1/2]. */
+    assert_eval_eq("Sqrt[3]/Sqrt[6]", "Sqrt[1/2]", 0);
 }
 
 static void test_fusion_with_symbolic_factor(void) {
@@ -126,7 +129,7 @@ int main(void) {
 
     TEST(test_sqrt_integer_ratio);
     TEST(test_cube_root_ratio);
-    TEST(test_rational_ratio_left_alone);
+    TEST(test_rational_ratio_fuses);
     TEST(test_fusion_with_symbolic_factor);
     TEST(test_same_base_still_works);
     TEST(test_chained_fusion);

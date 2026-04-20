@@ -77,6 +77,85 @@ Expr* make_power(Expr* base, Expr* exp) {
     return expr_new_function(expr_new_symbol("Power"), args, 2);
 }
 
+static bool is_head_call(Expr* e, const char* name, size_t argc) {
+    return e->type == EXPR_FUNCTION &&
+           e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, name) == 0 &&
+           e->data.function.arg_count == argc;
+}
+
+/* Cancel Log inside a Power exponent:
+ *   Exp[c Log[a]]                  -> a^c                   (base == E)
+ *   Power[base, c Log[base, a]]    -> a^c                   (general)
+ *
+ * Internally Log[b, a] is represented as Log[a] * Log[b]^(-1), so case 2
+ * reduces to matching Log[a] * Power[Log[base], -1] among the exponent's
+ * Times-factors. We require exactly one Log[a] factor and, when base != E,
+ * exactly one matching Power[Log[base], -1] factor; the remaining factors
+ * become the coefficient c in the rewritten Power[a, c]. */
+static Expr* simplify_exp_log(Expr* base, Expr* exp) {
+    bool exp_is_times = exp->type == EXPR_FUNCTION &&
+                        exp->data.function.head->type == EXPR_SYMBOL &&
+                        strcmp(exp->data.function.head->data.symbol, "Times") == 0;
+    size_t nf = exp_is_times ? exp->data.function.arg_count : 1;
+    Expr** factors = exp_is_times ? exp->data.function.args : &exp;
+
+    bool base_is_E = (base->type == EXPR_SYMBOL && strcmp(base->data.symbol, "E") == 0);
+
+    int log_idx = -1;
+    Expr* a = NULL;
+    for (size_t i = 0; i < nf; i++) {
+        if (!is_head_call(factors[i], "Log", 1)) continue;
+        log_idx = (int)i;
+        a = factors[i]->data.function.args[0];
+        break;
+    }
+    if (log_idx < 0) return NULL;
+
+    int inv_log_idx = -1;
+    if (!base_is_E) {
+        for (size_t i = 0; i < nf; i++) {
+            if ((int)i == log_idx) continue;
+            Expr* f = factors[i];
+            if (!is_head_call(f, "Power", 2)) continue;
+            Expr* ib = f->data.function.args[0];
+            Expr* ie = f->data.function.args[1];
+            if (!(ie->type == EXPR_INTEGER && ie->data.integer == -1)) continue;
+            if (!is_head_call(ib, "Log", 1)) continue;
+            if (!expr_eq(ib->data.function.args[0], base)) continue;
+            inv_log_idx = (int)i;
+            break;
+        }
+        if (inv_log_idx < 0) return NULL;
+    }
+
+    Expr* coeff;
+    if (!exp_is_times) {
+        coeff = expr_new_integer(1);
+    } else {
+        Expr** rest = malloc(sizeof(Expr*) * nf);
+        size_t kept = 0;
+        for (size_t i = 0; i < nf; i++) {
+            if ((int)i == log_idx) continue;
+            if ((int)i == inv_log_idx) continue;
+            rest[kept++] = expr_copy(factors[i]);
+        }
+        if (kept == 0) {
+            free(rest);
+            coeff = expr_new_integer(1);
+        } else if (kept == 1) {
+            coeff = rest[0];
+            free(rest);
+        } else {
+            coeff = expr_new_function(expr_new_symbol("Times"), rest, kept);
+            free(rest);
+        }
+    }
+
+    return eval_and_free(expr_new_function(expr_new_symbol("Power"),
+        (Expr*[]){ expr_copy(a), coeff }, 2));
+}
+
 Expr* builtin_power(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     
@@ -317,6 +396,11 @@ Expr* builtin_power(Expr* res) {
             Expr* p_args[2] = { expr_copy(inner_base), new_exp };
             return expr_new_function(expr_new_symbol("Power"), p_args, 2);
         }
+    }
+
+    {
+        Expr* simp = simplify_exp_log(base, exp);
+        if (simp) return simp;
     }
 
     int64_t p, q;
