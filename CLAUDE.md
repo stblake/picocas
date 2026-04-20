@@ -19,6 +19,12 @@ After any change or improvement to the system is made, a summary of the features
 
 -- Every builtin function should have an Information string that gives a concise, but complete description of the function (via symtab_set_docstring)
 
+-- Code must compile cleanly under strict C99 on Linux (gcc -std=c99 -Wall -Wextra). Do NOT use POSIX-only or non-C99 types/functions without a portable fallback. In particular:
+    - Avoid `ssize_t` (POSIX, not C99). For reverse iteration over a `size_t` count, loop from `n` down to `1` and index with `i - 1`, or use a fixed-width signed type like `int64_t` from `<stdint.h>`.
+    - Avoid `strdup`, `strndup`, `asprintf`, `getline`, `fileno`, `popen`, etc. without guarded fallbacks — these are not in C99.
+    - Avoid GNU/BSD extensions (e.g., nested functions, statement expressions, `__attribute__` without a portability guard).
+    - Darwin (macOS) headers often expose POSIX symbols implicitly that Linux glibc hides under `-std=c99`. Test any new system-header usage on both platforms, or include the correct feature-test macros / headers explicitly.
+
 <!-- code-review-graph MCP tools -->
 ## MCP Tools: code-review-graph
 

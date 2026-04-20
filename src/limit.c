@@ -793,8 +793,8 @@ static int poly_degree_in(Expr* p, Expr* x) {
         /* Walk from the tail back to the first non-zero coefficient.
          * CoefficientList returns {c0, c1, ..., cn}, i.e. ordered by
          * ascending power. */
-        for (ssize_t i = (ssize_t)cl->data.function.arg_count - 1; i >= 0; i--) {
-            if (!is_lit_zero(cl->data.function.args[i])) { deg = (int)i; break; }
+        for (size_t i = cl->data.function.arg_count; i > 0; i--) {
+            if (!is_lit_zero(cl->data.function.args[i - 1])) { deg = (int)(i - 1); break; }
         }
     }
     expr_free(cl);
