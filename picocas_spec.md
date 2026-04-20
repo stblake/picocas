@@ -4192,6 +4192,38 @@ and `Sqrt[0]` to `0` locally, so `Limit[Sqrt[x-1]/x, x -> 1]` reports
 `0` instead of the un-folded `Sqrt[0]` that PicoCAS's Power evaluator
 leaves in place.
 
+**Regression-suite additions (2026-04-20, batch 2):** three further
+layers and one post-processing pass were added after a second round
+of REPL-driven cases.
+
+1. *Log of a finite-limit inner* (runs before Series). If `f = Log[g]`
+   and `Limit[g]` is finite, returns `Log[c]`. Enables shapes such as
+   `Log[1 + 2 Exp[-x]]` at `Infinity`.
+2. *Log / polynomial merge at infinity* (runs after the Log-of-finite
+   layer). Rewrites `Sum(Log[g_i]) + Sum(h_j)` into a single
+   `Log[(Product g_i) * Exp[Sum h_j]]` whose inner product is expanded
+   to expose cancellations (e.g. `Exp[x] * Exp[-x] -> 1`). Resolves
+   `-x + Log[2 + E^x]` at `Infinity` to `0`.
+3. *Term-wise Plus at infinity*. If every summand of a `Plus` at
+   `+/- Infinity` has an individually finite limit, return the sum of
+   those limits. Refuses as soon as any term is divergent or
+   unresolved. Keeps the outer log-merge sound, because individually
+   divergent shapes still bail and reach the other layers.
+4. *Radical canonicalization* (post-processing on the final result).
+   Fuses `Times[Power[a, q], Power[b, -q]]` factors with positive
+   integer bases into `Power[a/b, q]` when `a/b` reduces to an
+   integer or rational literal. Turns `Sqrt[6]/Sqrt[2]` into
+   `Sqrt[3]` (and suppresses the spurious `Power::infy` warning that
+   used to leak out of a `Sqrt[0]/Sqrt[0]` substitution, now caught
+   by the extended `reduces_to_zero` predicate).
+
+Also fixed: `heuristic_factor` in `facpoly.c` recursed indefinitely
+when factoring `Power[a, rational]` where `a` was a constant (no
+variables, but non-unit content). The guard is a single early return
+for `v_count == 0` (no variables -> return the constant); segfault in
+`Limit[1/(t Sqrt[t+1]) - 1/t, t -> 0]` was caused by this path and is
+now fixed.
+
 **Known limitations** (remaining; these return the original
 `Limit[...]` unevaluated):
 * Multivariate limits that are truly path-dependent (e.g.
@@ -4201,8 +4233,6 @@ leaves in place.
 * `(1 + Sinh[x])/Exp[x]` at `Infinity`: Series at Infinity does not
   recognise the natural `Exp[-x]` factorisation, and L'Hospital stalls
   on the Cosh/Sinh derivative cycle.
-* `-x + Log[2 + E^x]` at `Infinity`: needs the logarithmic identity
-  `Log[A B] = Log[A] + Log[B]` applied structurally; deferred.
 * `Csc[x]/E^x` at `Infinity` and the `(x Sin[x])/(x + Sin[x])` /
   `(x^2(1+Sin[x]^2))/(x+Sin[x])^2` shapes: these are genuinely
   `Indeterminate` (bounded but sign-oscillating numerator divided by a

@@ -566,7 +566,14 @@ static Expr* heuristic_factor(Expr* P) {
     Expr** vars = malloc(sizeof(Expr*) * v_cap);
     collect_variables(P, &vars, &v_count, &v_cap);
     if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
-    
+
+    /* No variables -> constant; content-recursion would not terminate on
+     * rationals or non-unit integers, so return the constant itself. */
+    if (v_count == 0) {
+        free(vars);
+        return expr_copy(P);
+    }
+
     Expr* cont = poly_content(P, vars, v_count);
     if (!(cont->type == EXPR_INTEGER && cont->data.integer == 1)) {
         Expr* pp = exact_poly_div(P, cont, vars, v_count);

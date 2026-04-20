@@ -243,6 +243,26 @@ static void test_misc(void) {
     check_equiv("Limit[(Tan[x] - x)/x^3, x -> 0]", "1/3");
 }
 
+/* Regression set added 2026-04-20 (batch 2).
+ * Includes the Factor[(1+t)^(-1/2)] segfault case and eight challenging
+ * limits reported from the REPL, covering Csc * Log, (1+sin)^cot forms,
+ * ArcTan at infinity, Csc^3 singularity, Log merge at infinity, and
+ * Sin/Cos removable singularities. */
+static void test_regression_batch2(void) {
+    check_equiv("Limit[1/(t*Sqrt[t + 1]) - 1/t, t -> 0]", "-1/2");
+    check_equiv("Limit[Csc[Pi*x]*Log[x], x -> 1]", "-1/Pi");
+    check_equiv("Limit[(1 + Sin[a x])^Cot[b x], x -> 0]", "E^(a/b)");
+    check_equiv("Limit[ArcTan[x^2 - x^4], x -> Infinity]", "-Pi/2");
+    check_equiv("Limit[(x - ArcSin[x]) Csc[x]^3, x -> 0]", "-1/6");
+    check_equiv("Limit[Cos[x]^Cot[x], x -> 0]", "1");
+    check_equiv("Limit[-x + Log[2 + E^x], x -> Infinity]", "0");
+    check_equiv("Limit[(Sin[x] - Cos[x])/Cos[2x], x -> Pi/4]", "-1/Sqrt[2]");
+    check_equiv("Limit[(Sqrt[x^2 + 4] - Sqrt[8])/(x^2 - 4), x -> 2]", "Sqrt[2]/8");
+    /* Radical-ratio post-processing: Sqrt[6]/Sqrt[2] -> Sqrt[3], and the
+     * 0/0 Sqrt-denominator path must not emit a spurious Power::infy. */
+    check("Limit[Sqrt[x^2 - 9]/Sqrt[2 x - 6], x -> 3]", "Sqrt[3]");
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -263,6 +283,7 @@ int main(void) {
     TEST(test_exp_indeterminate);
     TEST(test_power_zero_folding);
     TEST(test_misc);
+    TEST(test_regression_batch2);
 
     printf("All limit tests passed.\n");
     return 0;
