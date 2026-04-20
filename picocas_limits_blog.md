@@ -376,54 +376,6 @@ Limit[Sin[1/x], x -> 0]       = Interval[{-1, 1}]
 Limit[Sin[x], x -> Infinity]  = Interval[{-1, 1}]
 ```
 
-### Aside -- Radical fusion in Times (not in Limit)
-
-Limits sometimes finish in a form that is algebraically equal to a
-simpler one. `Sqrt[6]/Sqrt[2]` ought to print as `Sqrt[3]`. The fix
-does not belong in `Limit` -- it is a simplification that should
-apply to every multiplication in the system, not just ones produced
-as limit output. We therefore added the rule to `builtin_times`
-(`src/times.c`):
-
-```c
-/* Radical fusion: collapse Power[a, q] * Power[b, -q] into Power[a/b, q]
- * when a, b are positive integers and the ratio a/b is itself a positive
- * integer. Applied after base-grouping so that same-base factors have
- * already been merged; only heterogeneous pairs reach here. We restrict
- * to integer ratios so that the output is strictly simpler than the
- * input -- Sqrt[6]/Sqrt[2] -> Sqrt[3], but Sqrt[6]/Sqrt[4] (ratio 3/2)
- * is left alone because Sqrt[3/2] is no cleaner than 1/2 Sqrt[6]. */
-```
-
-Worked examples (from `tests/test_radical_fusion.c`):
-
-```text
-Sqrt[6]/Sqrt[2]                    = Sqrt[3]
-Sqrt[15]/Sqrt[5]                   = Sqrt[3]
-Sqrt[30]/Sqrt[6]                   = Sqrt[5]
-Power[6, 1/3] * Power[2, -1/3]     = 3^(1/3)
-Power[12, 1/3] * Power[4, -1/3]    = 3^(1/3)
-Sqrt[210] / Sqrt[6] / Sqrt[5]      = Sqrt[7]  (chained fusion)
-Sqrt[6]/Sqrt[4]                    = 1/2 Sqrt[6]  (ratio 3/2, not fused)
-Sqrt[10]/Sqrt[3]                   = Sqrt[10]/Sqrt[3]  (no integer ratio)
-```
-
-The integer-ratio restriction matters. If we fused whenever the ratio
-was rational, `Sqrt[6]/Sqrt[4]` would become `Sqrt[3/2]`, which is no
-simpler than the current `(1/2) Sqrt[6]` and arguably harder to read.
-Keeping the rule narrow means we never produce `Sqrt[p/q]` forms that
-we would then want to undo.
-
-With the rule in the right place, the original motivating limit
-
-```text
-Limit[Sqrt[x^2 - 9]/Sqrt[2 x - 6], x -> 3]  = Sqrt[3]
-```
-
-works without any post-processing in `Limit` at all: the limit layer
-returns `Sqrt[6]/Sqrt[2]`, and the surrounding evaluator fuses it on
-the way out.
-
 ---
 
 ## Comparison with Maxima
