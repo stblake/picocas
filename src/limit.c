@@ -143,17 +143,6 @@ static bool is_lit_zero(Expr* e) {
     return false;
 }
 
-/* PicoCAS's Power evaluator does not fold Power[0, positive] -> 0 on its
- * own, so Sqrt[0] survives as a structural expression. This predicate
- * accepts both the literal 0 and any Power[0, positive] form. */
-static bool reduces_to_zero(Expr* e) {
-    if (is_lit_zero(e)) return true;
-    if (has_head(e, "Power") && e->data.function.arg_count == 2 &&
-        is_lit_zero(e->data.function.args[0]) &&
-        literal_sign(e->data.function.args[1]) > 0) return true;
-    return false;
-}
-
 static bool is_infinity_sym(Expr* e) {
     return is_sym(e, "Infinity");
 }
@@ -258,7 +247,6 @@ static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx);
 static Expr* rewrite_reciprocal_trig(Expr* e);
 static Expr* magnitude_upper_bound(Expr* e, Expr* x);
 static bool  contains_bounded_head(Expr* e);
-static Expr* canonicalize_radicals(Expr* e);
 
 /* ---------------------------------------------------------------------- */
 /* Reciprocal trig normalization                                           */
@@ -556,7 +544,7 @@ static Expr* try_continuous_substitution(Expr* f, LimitCtx* ctx) {
     Expr* den = simp(mk_fn1("Denominator", expr_copy(tog)));
     expr_free(tog);
     Expr* den_at = subst_eval(den, ctx->x, ctx->point);
-    bool den_bad = reduces_to_zero(den_at) || is_divergent(den_at);
+    bool den_bad = is_lit_zero(den_at) || is_divergent(den_at);
     expr_free(den_at);
     if (den_bad) {
         expr_free(num); expr_free(den);
@@ -577,15 +565,6 @@ static Expr* try_continuous_substitution(Expr* f, LimitCtx* ctx) {
     if (is_divergent(s) || expr_contains(s, ctx->x)) {
         expr_free(s);
         return NULL;
-    }
-    /* PicoCAS's Power evaluator does not fold Power[0, q] for positive
-     * rational q, which bubbles up as Sqrt[0] in shapes like Sqrt[x-1]/x
-     * at x=1. Normalize Power[0, positive] and Sqrt[0] to 0. */
-    if (has_head(s, "Power") && s->data.function.arg_count == 2 &&
-        is_lit_zero(s->data.function.args[0]) &&
-        literal_sign(s->data.function.args[1]) > 0) {
-        expr_free(s);
-        return mk_int(0);
     }
     return s;
 }
@@ -1453,102 +1432,6 @@ static Expr* run_multivariate(Expr* f, Expr* vars, Expr* points) {
 }
 
 /* ---------------------------------------------------------------------- */
-/* Radical canonicalization                                                */
-/*                                                                         */
-/* PicoCAS's Power evaluator does not merge Power[a, q] * Power[b, -q]     */
-/* into Power[a/b, q] when a, b are positive integers, so limits sometimes  */
-/* surface in the form Sqrt[6]/Sqrt[2] instead of Sqrt[3]. This walker      */
-/* fuses such factors inside Times nodes, applying the identity            */
-/*   a^p * b^q  ->  (a^(p/g) * b^(q/g))^g    (with g = gcd-of-exponents)    */
-/* when a, b are positive integers and p, q are rationals with the same    */
-/* sign of numerator. We specifically target the opposite-exponent case    */
-/* (p + q = 0) to avoid changing other forms.                              */
-/* ---------------------------------------------------------------------- */
-static bool is_positive_integer(Expr* e) {
-    if (e->type == EXPR_INTEGER) return e->data.integer > 0;
-    if (e->type == EXPR_BIGINT)  return mpz_sgn(e->data.bigint) > 0;
-    return false;
-}
-
-static Expr* canonicalize_radicals(Expr* e) {
-    if (!e) return NULL;
-    /* Recurse structurally. */
-    if (e->type == EXPR_FUNCTION) {
-        Expr* new_head = canonicalize_radicals(e->data.function.head);
-        size_t n = e->data.function.arg_count;
-        Expr** new_args = (n > 0) ? malloc(sizeof(Expr*) * n) : NULL;
-        for (size_t i = 0; i < n; i++) {
-            new_args[i] = canonicalize_radicals(e->data.function.args[i]);
-        }
-        Expr* rebuilt = expr_new_function(new_head, new_args, n);
-        if (new_args) free(new_args);
-
-        /* Fuse opposite-exponent Power factors within a Times node. */
-        if (has_head(rebuilt, "Times") && rebuilt->data.function.arg_count >= 2) {
-            size_t m = rebuilt->data.function.arg_count;
-            for (size_t i = 0; i < m; i++) {
-                Expr* fi = rebuilt->data.function.args[i];
-                if (!has_head(fi, "Power") || fi->data.function.arg_count != 2) continue;
-                Expr* ai = fi->data.function.args[0];
-                Expr* pi = fi->data.function.args[1];
-                if (!is_positive_integer(ai)) continue;
-                for (size_t j = i + 1; j < m; j++) {
-                    Expr* fj = rebuilt->data.function.args[j];
-                    if (!has_head(fj, "Power") || fj->data.function.arg_count != 2) continue;
-                    Expr* aj = fj->data.function.args[0];
-                    Expr* pj = fj->data.function.args[1];
-                    if (!is_positive_integer(aj)) continue;
-                    /* opposite exponents? */
-                    Expr* sum = simp(expr_new_function(
-                        expr_new_symbol("Plus"),
-                        (Expr*[]){expr_copy(pi), expr_copy(pj)}, 2));
-                    bool opposite = is_lit_zero(sum);
-                    expr_free(sum);
-                    if (!opposite) continue;
-                    /* Put the factor with the positive exponent on top so
-                     * the combined form prints as (num/den)^(+q), not
-                     * (den/num)^(-q) which the printer renders as 1/Sqrt[..]. */
-                    Expr *a_num = ai, *a_den = aj, *p_pos = pi;
-                    if (literal_sign(pi) < 0) {
-                        a_num = aj; a_den = ai; p_pos = pj;
-                    }
-                    Expr* ratio = simp(mk_fn2("Times",
-                        expr_copy(a_num),
-                        mk_fn2("Power", expr_copy(a_den), mk_int(-1))));
-                    bool clean = (ratio->type == EXPR_INTEGER) ||
-                                 (ratio->type == EXPR_BIGINT) ||
-                                 (has_head(ratio, "Rational") &&
-                                  ratio->data.function.arg_count == 2);
-                    if (!clean) { expr_free(ratio); continue; }
-                    Expr* combined = simp(mk_fn2("Power", ratio, expr_copy(p_pos)));
-
-                    /* Build a new Times with fi, fj replaced by combined. */
-                    Expr** kept = malloc(sizeof(Expr*) * m);
-                    size_t k = 0;
-                    for (size_t t = 0; t < m; t++) {
-                        if (t == i) { kept[k++] = combined; }
-                        else if (t == j) { /* skip */ }
-                        else { kept[k++] = expr_copy(rebuilt->data.function.args[t]); }
-                    }
-                    Expr* merged = (k == 1)
-                        ? kept[0]
-                        : expr_new_function(expr_new_symbol("Times"), kept, k);
-                    free(kept);
-                    Expr* done = simp(merged);
-                    expr_free(rebuilt);
-                    /* Repeat on the merged result in case more fusions apply. */
-                    Expr* recur = canonicalize_radicals(done);
-                    expr_free(done);
-                    return recur;
-                }
-            }
-        }
-        return rebuilt;
-    }
-    return expr_copy(e);
-}
-
-/* ---------------------------------------------------------------------- */
 /* Public entry point                                                      */
 /* ---------------------------------------------------------------------- */
 Expr* builtin_limit(Expr* res) {
@@ -1584,13 +1467,7 @@ Expr* builtin_limit(Expr* res) {
         Expr *var, *point;
         split_rule(spec, &var, &point);
         LimitCtx ctx = { var, point, dir, 0 };
-        Expr* r = compute_limit(f, &ctx);
-        if (r) {
-            Expr* canon = canonicalize_radicals(r);
-            expr_free(r);
-            return canon;
-        }
-        return NULL;
+        return compute_limit(f, &ctx);
     }
 
     /* --- Form B: Limit[f, {x1 -> a1, ..., xn -> an}] iterated --- */

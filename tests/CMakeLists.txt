@@ -262,6 +262,9 @@ target_include_directories(deriv_tests PRIVATE ../src)
 add_executable(limit_tests test_limit.c ${COMMON_SRC})
 target_include_directories(limit_tests PRIVATE ../src)
 
+add_executable(radical_fusion_tests test_radical_fusion.c ${COMMON_SRC})
+target_include_directories(radical_fusion_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -318,6 +321,7 @@ if(USE_ECM)
     add_dependencies(series_twoterm_tests build_ecm)
     add_dependencies(deriv_tests build_ecm)
     add_dependencies(limit_tests build_ecm)
+    add_dependencies(radical_fusion_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

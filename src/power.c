@@ -109,14 +109,31 @@ Expr* builtin_power(Expr* res) {
     if (base->type == EXPR_REAL && base->data.real == 0.0) base_is_zero = true;
 
     bool exp_is_negative = false;
-    if (exp->type == EXPR_INTEGER && exp->data.integer < 0) exp_is_negative = true;
-    if (exp->type == EXPR_REAL && exp->data.real < 0.0) exp_is_negative = true;
+    bool exp_is_positive = false;
+    if (exp->type == EXPR_INTEGER) {
+        if (exp->data.integer < 0) exp_is_negative = true;
+        else if (exp->data.integer > 0) exp_is_positive = true;
+    }
+    if (exp->type == EXPR_REAL) {
+        if (exp->data.real < 0.0) exp_is_negative = true;
+        else if (exp->data.real > 0.0) exp_is_positive = true;
+    }
     int64_t rn, rd;
-    if (is_rational(exp, &rn, &rd) && rn < 0) exp_is_negative = true;
+    if (is_rational(exp, &rn, &rd)) {
+        if (rn < 0) exp_is_negative = true;
+        else if (rn > 0) exp_is_positive = true;
+    }
 
     if (base_is_zero && exp_is_negative) {
         printf("Power::infy: Infinite expression 1/0 encountered.\n");
         return expr_new_symbol("ComplexInfinity");
+    }
+    /* 0^positive -> 0 (includes 0^(1/2) = Sqrt[0] = 0, 0^0.5 = 0, etc.).
+     * Preserves the base's numeric type: real 0.0 for real exponents or a
+     * real-base zero, integer 0 otherwise. */
+    if (base_is_zero && exp_is_positive) {
+        if (base->type == EXPR_REAL || exp->type == EXPR_REAL) return expr_new_real(0.0);
+        return expr_new_integer(0);
     }
 
     Expr *re_b = NULL, *im_b = NULL, *re_e = NULL, *im_e = NULL;

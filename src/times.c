@@ -13,6 +13,31 @@ static bool is_overflow(Expr* e) {
            strcmp(e->data.function.head->data.symbol, "Overflow") == 0;
 }
 
+static bool is_positive_integer_expr(Expr* e) {
+    if (e->type == EXPR_INTEGER) return e->data.integer > 0;
+    if (e->type == EXPR_BIGINT)  return mpz_sgn(e->data.bigint) > 0;
+    return false;
+}
+
+/* Sum of two rational exponents equals zero, exactly? */
+static bool exponents_sum_to_zero(Expr* p, Expr* q) {
+    int64_t pn, pd, qn, qd;
+    if (!is_rational(p, &pn, &pd) || !is_rational(q, &qn, &qd)) return false;
+    /* pn/pd + qn/qd = 0  iff  pn*qd + qn*pd = 0 */
+    __int128_t lhs = (__int128_t)pn * qd + (__int128_t)qn * pd;
+    return lhs == 0;
+}
+
+/* Sign of a rational Expr -- returns -1, 0, or +1, or 0 if not rational. */
+static int rational_sign(Expr* e) {
+    int64_t n, d;
+    if (!is_rational(e, &n, &d)) return 0;
+    /* Denominators are conventionally positive in PicoCAS Rational[n, d]. */
+    if (n > 0) return (d > 0) ? +1 : -1;
+    if (n < 0) return (d > 0) ? -1 : +1;
+    return 0;
+}
+
 static Expr* multiply_numbers(Expr* a, Expr* b) {
     if (is_overflow(a) || is_overflow(b)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
     if (a->type == EXPR_REAL || b->type == EXPR_REAL) {
@@ -212,6 +237,61 @@ Expr* builtin_times(Expr* res) {
         if (complex_val) expr_free(complex_val);
         for(size_t j=0; j<group_count; j++) { expr_free(groups[j].base); expr_free(groups[j].exponent); }
         free(groups); return num_prod;
+    }
+
+    /* Radical fusion: collapse Power[a, q] * Power[b, -q] into Power[a/b, q]
+     * when a, b are positive integers and the ratio a/b is itself a positive
+     * integer. Applied after base-grouping so that same-base factors have
+     * already been merged; only heterogeneous pairs reach here. We restrict
+     * to integer ratios so that the output is strictly simpler than the
+     * input -- Sqrt[6]/Sqrt[2] -> Sqrt[3], but Sqrt[6]/Sqrt[4] (ratio 3/2)
+     * is left alone because Sqrt[3/2] is no cleaner than 1/2 Sqrt[6]. */
+    for (size_t i = 0; i < group_count; i++) {
+        if (!is_positive_integer_expr(groups[i].base)) continue;
+        if (!is_rational(groups[i].exponent, NULL, NULL)) continue;
+        for (size_t j = i + 1; j < group_count; j++) {
+            if (!is_positive_integer_expr(groups[j].base)) continue;
+            if (!is_rational(groups[j].exponent, NULL, NULL)) continue;
+            if (!exponents_sum_to_zero(groups[i].exponent, groups[j].exponent)) continue;
+
+            /* Pick the positive-exponent factor as numerator so the fused
+             * power has the positive exponent (otherwise we'd print the
+             * result as 1/(b/a)^q rather than (a/b)^q). */
+            size_t ni = i, nj = j;
+            if (rational_sign(groups[i].exponent) < 0) { ni = j; nj = i; }
+
+            /* Compute ratio = num_base / den_base and require an integer
+             * result (num_base is a positive-integer multiple of den_base). */
+            mpz_t num_z, den_z, q_z, r_z;
+            mpz_inits(num_z, den_z, q_z, r_z, NULL);
+            expr_to_mpz(groups[ni].base, num_z);
+            expr_to_mpz(groups[nj].base, den_z);
+            mpz_fdiv_qr(q_z, r_z, num_z, den_z);
+            bool exact = (mpz_sgn(r_z) == 0) && (mpz_cmp_ui(q_z, 1) > 0);
+            mpz_clears(num_z, den_z, r_z, NULL);
+            if (!exact) { mpz_clear(q_z); continue; }
+
+            Expr* new_base = expr_bigint_normalize(expr_new_bigint_from_mpz(q_z));
+            mpz_clear(q_z);
+            Expr* new_exp  = expr_copy(groups[ni].exponent);
+
+            /* Replace slot i with the fused group and remove slot j. */
+            size_t keep = (ni == i) ? i : j;
+            size_t drop = (ni == i) ? j : i;
+            expr_free(groups[keep].base);
+            expr_free(groups[keep].exponent);
+            expr_free(groups[drop].base);
+            expr_free(groups[drop].exponent);
+            groups[keep].base = new_base;
+            groups[keep].exponent = new_exp;
+            for (size_t k = drop; k + 1 < group_count; k++) groups[k] = groups[k + 1];
+            group_count--;
+            /* Restart from the beginning -- the fused base may pair with an
+             * earlier group. Each fusion strictly decreases group_count so
+             * the overall loop still terminates in O(group_count) restarts. */
+            i = (size_t)-1;
+            break;
+        }
     }
 
     if (complex_val && !(num_prod->type == EXPR_INTEGER && num_prod->data.integer == 1)) {

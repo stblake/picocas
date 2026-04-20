@@ -4209,13 +4209,21 @@ of REPL-driven cases.
    those limits. Refuses as soon as any term is divergent or
    unresolved. Keeps the outer log-merge sound, because individually
    divergent shapes still bail and reach the other layers.
-4. *Radical canonicalization* (post-processing on the final result).
-   Fuses `Times[Power[a, q], Power[b, -q]]` factors with positive
-   integer bases into `Power[a/b, q]` when `a/b` reduces to an
-   integer or rational literal. Turns `Sqrt[6]/Sqrt[2]` into
-   `Sqrt[3]` (and suppresses the spurious `Power::infy` warning that
-   used to leak out of a `Sqrt[0]/Sqrt[0]` substitution, now caught
-   by the extended `reduces_to_zero` predicate).
+4. *Radical fusion in `Times`* (global, not Limit-specific). Moved
+   out of `limit.c` and into `builtin_times` so that
+   `Sqrt[6]/Sqrt[2]` becomes `Sqrt[3]` system-wide, not only as a
+   Limit post-pass. The rule fuses `Power[a, q] * Power[b, -q]` into
+   `Power[a/b, q]` whenever `a`, `b` are positive integers and `a/b`
+   is itself a positive integer; rational ratios are left alone
+   because `Sqrt[3/2]` is no cleaner than `(1/2) Sqrt[6]`. Applies
+   after same-base grouping, restarts on each fusion so chained
+   reductions like `Sqrt[210]/Sqrt[6]/Sqrt[5] -> Sqrt[7]` converge.
+5. *`Power[0, b]` folding* in `builtin_power`. `0^b` now evaluates to
+   `0` for any positive `b` (integer, rational, or real) and to
+   `ComplexInfinity` for any negative `b`. This eliminates the
+   `Sqrt[0]` leak that previously bubbled up from continuous
+   substitution in Limit; the auxiliary `reduces_to_zero` predicate
+   has been removed from `limit.c`.
 
 Also fixed: `heuristic_factor` in `facpoly.c` recursed indefinitely
 when factoring `Power[a, rational]` where `a` was a constant (no
