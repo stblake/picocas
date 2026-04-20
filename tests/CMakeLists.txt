@@ -79,6 +79,7 @@ set(COMMON_SRC
     ../src/picostrings.c
     ../src/series.c
     ../src/deriv.c
+    ../src/limit.c
 )
 
 add_executable(expr_tests test_expr.c test_part.c ${COMMON_SRC})
@@ -258,6 +259,9 @@ target_include_directories(series_twoterm_tests PRIVATE ../src)
 add_executable(deriv_tests test_deriv.c ${COMMON_SRC})
 target_include_directories(deriv_tests PRIVATE ../src)
 
+add_executable(limit_tests test_limit.c ${COMMON_SRC})
+target_include_directories(limit_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -313,6 +317,7 @@ if(USE_ECM)
     add_dependencies(series_tests build_ecm)
     add_dependencies(series_twoterm_tests build_ecm)
     add_dependencies(deriv_tests build_ecm)
+    add_dependencies(limit_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

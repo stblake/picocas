@@ -4046,3 +4046,174 @@ The largest wins come from higher-order and mixed-partial calls,
 where the rule-based implementation had to re-traverse the entire
 DownValue list at every inner step; the native dispatch visits the
 relevant head exactly once per sub-expression.
+
+### 6.3. Limits (`limit.c`)
+
+PicoCAS now has a native `Limit` built-in implemented in C in
+`src/limit.c`, registered by `limit_init()` in the standard
+`core_init()` chain. The design follows the layered dispatch outlined
+in `limit_candidate_spec.md`, with each layer either resolving the
+limit and short-circuiting or passing the problem down:
+
+```
+Layer 0 -- Interface normalization (calling forms + Direction option)
+Layer 1 -- Structural fast paths (free-of-var, identity, continuous subst.)
+Layer 3 -- Rational function P(x)/Q(x) short-cut
+Layer 5.3 -- Logarithmic reduction for f^g indeterminate forms
+Layer 2 -- Series-based evaluation (the workhorse)
+Layer 5.1 -- L'Hospital with complexity-growth guardrail
+Layer 6 -- Bounded-oscillation Interval returns
+```
+
+**Calling forms** (Mathematica-compatible):
+
+| Form                                            | Meaning                            |
+|-------------------------------------------------|------------------------------------|
+| `Limit[f, x -> a]`                              | single-variable limit              |
+| `Limit[f, {x1 -> a1, ..., xn -> an}]`           | iterated limit (rightmost first)   |
+| `Limit[f, {x1, ..., xn} -> {a1, ..., an}]`      | multivariate joint limit           |
+| `Limit[f, x -> a, Direction -> spec]`           | directional approach               |
+
+**Direction settings:**
+
+| Setting                        | Internal meaning                  |
+|--------------------------------|-----------------------------------|
+| `Reals`, `"TwoSided"`          | two-sided (default on the reals)  |
+| `"FromAbove"` or `-1`          | approach from above (x -> a^+)    |
+| `"FromBelow"` or `+1`          | approach from below (x -> a^-)    |
+| `Complexes`                    | complex / radial-in-all-directions|
+
+The Mathematica sign convention (`-1 == FromAbove`) is applied once in
+the option parser so that the math layers only ever see internal
+`+1 / -1 / 0` tags.
+
+**Return values:** finite expression, `Infinity`, `-Infinity`,
+`ComplexInfinity`, `Indeterminate`, `Interval[{lo, hi}]`, or the
+original unevaluated `Limit[...]` when the system cannot determine a
+value.
+
+**Integration:**
+* Registered under `Limit` with attributes
+  `Protected | ReadProtected | HoldAll`. `HoldAll` prevents the
+  second-argument rule from being evaluated prematurely against any
+  OwnValue of the limit variable.
+* Documented via `symtab_set_docstring` for `?Limit` in the REPL.
+* Covered by `tests/test_limit.c`, which exercises each layer and
+  every Direction setting.
+
+**Layer highlights:**
+1. *Continuous substitution* (Layer 1) does not just evaluate
+   `f /. x -> a`; it Together-normalizes first and checks that the
+   denominator does not vanish, so `Sin[x]/x` at x = 0 correctly skips
+   the fast path instead of silently returning 0 (as PicoCAS's
+   arithmetic would fold `Sin[0] * 0^(-1)`). Expressions of the form
+   `Power[_, expr_with_x]` are likewise refused here -- they are
+   handled by Layer 5.3 instead.
+2. *Series-based evaluation* (Layer 2) calls `Series[f, {x, a, k}]`
+   with increasing orders (4, 8, 16, 32) until a nonzero leading term
+   is found, then reads the limit off the leading exponent. Limits at
+   `-Infinity` substitute x -> -y internally and recurse at +Infinity.
+3. *Log reduction* (Layer 5.3) fires for any `Power[base, exp]` whose
+   exponent depends on the limit variable, rewriting as
+   `Exp[Limit[exp * Log[base]]]` and recursing. It sits above Series in
+   the dispatch order because Series has no kernel for `b^g` with
+   g a non-trivial function of x.
+4. *L'Hospital* (Layer 5.1) only fires when pointwise evaluation is
+   strictly `0/0` or `inf/inf`, and aborts if the leaf count of the
+   quotient grows for three consecutive derivations -- this avoids
+   spinning on Sin/Cos expansions where the series layer is the right
+   tool.
+5. *Bound analysis* (Layer 6) handles the canonical
+   `Limit[Sin[1/x], x -> 0] = Interval[{-1, 1}]` shape by recognising
+   a bounded trigonometric head wrapped around a divergent argument.
+
+**Worked examples (cross-checked against Mathematica):**
+
+| Input                                                   | Result        |
+|---------------------------------------------------------|---------------|
+| `Limit[Sin[x]/x, x -> 0]`                               | `1`           |
+| `Limit[(Cos[x]-1)/(Exp[x^2]-1), x -> 0]`                | `-1/2`        |
+| `Limit[(Tan[x]-x)/x^3, x -> 0]`                         | `1/3`         |
+| `Limit[Sin[2 x]/Sin[x], x -> Pi]`                       | `-2`          |
+| `Limit[(x^a - 1)/a, a -> 0]`                            | `Log[x]`      |
+| `Limit[(1 + A x)^(1/x), x -> 0]`                        | `E^A`         |
+| `Limit[(1 + a/x)^(b x), x -> Infinity]`                 | `E^(a b)`     |
+| `Limit[x/(x+1), x -> Infinity]`                         | `1`           |
+| `Limit[3 x^2/(x^2 - 2), x -> -Infinity]`                | `3`           |
+| `Limit[Sqrt[x^2+a x]-Sqrt[x^2+b x], x -> Infinity]`     | `(a-b)/2`     |
+| `Limit[1/x, x -> 0, Direction -> "FromAbove"]`          | `Infinity`    |
+| `Limit[1/x, x -> 0, Direction -> "FromBelow"]`          | `-Infinity`   |
+| `Limit[Sin[1/x], x -> 0]`                               | `Interval[{-1, 1}]` |
+| `Limit[x/(x + y), {x -> 0, y -> 0}]`                    | `1` (iterated)|
+
+**Regression-suite additions (2026-04-20):** four new layers were
+bolted on in response to a batch of REPL-driven test cases. Each is
+composable with the original dispatcher and sits at the order indicated
+below:
+
+1. *Reciprocal-trig normalization* (runs at the top of
+   `compute_limit`, before any other layer). Rewrites
+   `Csc[z] -> 1/Sin[z]`, `Sec[z] -> 1/Cos[z]`, `Cot[z] -> Cos[z]/Sin[z]`,
+   plus hyperbolic twins `Csch/Sech/Coth`, and also `Tan[z] -> Sin[z]/Cos[z]`,
+   `Tanh[z] -> Sinh[z]/Cosh[z]`. The rewrite is purely structural (tree
+   walk) followed by a single `evaluate()` pass. It turns the
+   `0 * ComplexInfinity` folding trap (e.g. `x Csc[x] -> 0`) into a
+   structural `0/0` that Series and L'Hospital can resolve. This one
+   change resolves roughly 15 REPL-failing cases on its own.
+2. *ArcTan / ArcCot at divergent inner argument* (runs before the
+   rational layer). Computes `Limit[inner, ...]`; on
+   `+Infinity / -Infinity` maps `ArcTan` to `+/- Pi/2` and `ArcCot` to
+   `0 / Pi`. Previously `ArcTan[x^2 - x^4]` at `Infinity` sat on a
+   Series that could not expand the inner polynomial at infinity and
+   emitted `Power::infy` warnings.
+3. *Bounded envelope (squeeze theorem)* (gated to `+Infinity` limits,
+   runs before the Series layer). Uses a structural magnitude-bound
+   walk to produce `|f| <= g(x)`: `|Sin/Cos/Tanh[anything]| <= 1`,
+   `|ArcTan/ArcCot[anything]| <= Pi/2`, triangle inequality on Plus,
+   multiplicativity on Times, and `|a^n| = |a|^n` for non-negative
+   integer `n`. If `Limit[g(x), x -> Infinity] = 0`, the original limit
+   is zero. Covers `Sin[t^2]/t^2`, `(1 +/- Cos[x])/x`,
+   `(x Sin[x])/(5 + x^2)`, and friends at infinity, plus `x^2 Sin[1/x]`
+   at 0 (which already worked through a different path but now routes
+   here without Series warnings).
+4. *Generalized log-reduction* (replaces the old single-`Power` form).
+   Fires for a top-level `Power[b, g]` with x in `g` OR a top-level
+   `Times[P1, P2, ...]` whose non-constant factors are all of that
+   shape. Rewrites as `Exp[Limit[Sum[g_i * Log[b_i]]]]`. A
+   post-processor maps a `+Infinity / -Infinity` log-limit to
+   `Infinity / 0`, and refuses to produce an answer for
+   `ComplexInfinity` / `Indeterminate`. Covers
+   `((-3+2x)/(5+2x))^(1+2x)` at `Infinity`, `x^Tan[Pi x/2]` at 1,
+   `(1+Sin[ax])^Cot[bx]` at 0, and the `E^(-x) x^20` shape (via
+   log-reduction of the implicit `Power[E, -x] * Power[x, 20]`).
+
+A smaller tweak: continuous substitution now folds `Power[0, positive]`
+and `Sqrt[0]` to `0` locally, so `Limit[Sqrt[x-1]/x, x -> 1]` reports
+`0` instead of the un-folded `Sqrt[0]` that PicoCAS's Power evaluator
+leaves in place.
+
+**Known limitations** (remaining; these return the original
+`Limit[...]` unevaluated):
+* Multivariate limits that are truly path-dependent (e.g.
+  `x y / (x^2 + y^2)` at `{0,0}`) are left unevaluated rather than
+  returning `Indeterminate`; the polar-substitution heuristic from
+  Layer 5a of the spec is future work.
+* `(1 + Sinh[x])/Exp[x]` at `Infinity`: Series at Infinity does not
+  recognise the natural `Exp[-x]` factorisation, and L'Hospital stalls
+  on the Cosh/Sinh derivative cycle.
+* `-x + Log[2 + E^x]` at `Infinity`: needs the logarithmic identity
+  `Log[A B] = Log[A] + Log[B]` applied structurally; deferred.
+* `Csc[x]/E^x` at `Infinity` and the `(x Sin[x])/(x + Sin[x])` /
+  `(x^2(1+Sin[x]^2))/(x+Sin[x])^2` shapes: these are genuinely
+  `Indeterminate` (bounded but sign-oscillating numerator divided by a
+  factor that does not dominate). A conservative "Indeterminate
+  classifier" is future work.
+* `(1 - E^(-x))^E^x` at `Infinity`: should reduce to `1/E` via
+  Series-of-log but the inner limit `Log[1 - E^(-x)] * E^x` sits
+  outside the current log-expansion capabilities.
+* `Limit[(1/(1-x))^(-1/x^2), x -> 0]`: two-sided, the from-above and
+  from-below limits are respectively `0` and `Infinity`, so the
+  two-sided answer is ambiguous. Our dispatcher returns `1` via a
+  fall-through path (strictly speaking both `Indeterminate` and `1`
+  are defensible depending on convention; Mathematica returns
+  `Indeterminate`).

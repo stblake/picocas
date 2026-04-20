@@ -46,6 +46,7 @@
 #include "picostrings.h"
 #include "series.h"
 #include "deriv.h"
+#include "limit.h"
 
 void core_init(void) {
     parfrac_init();
@@ -326,6 +327,7 @@ void core_init(void) {
     strings_init();
     series_init();
     deriv_init();
+    limit_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {
