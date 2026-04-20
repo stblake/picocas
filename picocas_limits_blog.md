@@ -1,0 +1,532 @@
+# Computing Limits in PicoCAS
+
+## Introduction
+
+`Limit` is one of the few builtins in PicoCAS where correctness is not
+local: you cannot decide the answer by looking at one node of the
+expression tree. `Sin[x]/x` at `x -> 0` is indeterminate by
+substitution, finite in value, and undetectable without some theory of
+growth rates. A computer algebra system that ships `Limit` ships an
+opinion about how all of calculus fits together.
+
+This post is a tour of that opinion in PicoCAS. We will:
+
+1. set the scene with a couple of easy cases,
+2. walk through the dispatcher layer by layer, using actual entries
+   from `tests/test_limit.c` as worked examples,
+3. compare the resulting architecture with Maxima's `limit.lisp`.
+
+The implementation lives in `src/limit.c`
+(~1640 lines) and the test battery in `tests/test_limit.c`
+(16 test groups, ~70 assertions).
+
+## Two easy examples
+
+```text
+In[1]:= Limit[x^2, x -> 2]
+Out[1]= 4
+
+In[2]:= Limit[Sin[x]/x, x -> 0]
+Out[2]= 1
+```
+
+The first is continuous substitution: plug `x = 2` into `x^2`. The
+second is everything `Limit` is allowed to do that substitution is not.
+
+PicoCAS treats the two cases with different machinery. The first falls
+out of a fast path that checks whether the expression is free of the
+variable at the target point. The second triggers a Taylor series
+expansion, reads off the leading term, and hands it back. Every other
+limit in the test suite is one of those two with an additional
+preprocessing pass in front, or a different structural recognizer.
+
+## The dispatcher
+
+`compute_limit` in `src/limit.c` is a cascade of specialists.
+Each is a function of signature
+
+```c
+static Expr* layer_xxx(Expr* f, LimitCtx* ctx);
+```
+
+that either returns a freshly allocated result (done, stop cascading)
+or `NULL` (pass to the next layer). The order encodes the priority we
+want at each shape: cheap and exact first, speculative and expensive
+last.
+
+```
+  rewrite_reciprocal_trig   (pre-pass: Csc/Sec/Cot -> Sin/Cos)
+      |
+      v
+  layer1_fast_paths           (free-of-x, variable-itself,
+                               continuous substitution)
+  layer_arctan_infinity       (ArcTan/ArcCot of divergent arg)
+  layer3_rational             (polynomial / polynomial)
+  layer_log_of_finite         (Log[g] with finite inner limit)
+  layer_log_merge             (Log[..] + polynomial at infinity)
+  layer_plus_termwise         (Plus at infinity with finite terms)
+  layer5_log_reduction        (f^g indeterminate forms)
+  layer_bounded_envelope      (squeeze for Sin / Cos / ... decay)
+  layer2_series               (Series-based, the workhorse)
+  layer5_lhospital            (L'Hospital with growth guard)
+  layer6_bounded              (Interval[{-1,1}] for Sin[1/x])
+```
+
+The rest of this post walks the layers in the same order, with the
+test cases each one is responsible for.
+
+---
+
+### Reciprocal-trig rewrite (pre-pass)
+
+```c
+/* Normalize reciprocal trig up-front. */
+Expr* rewritten = rewrite_reciprocal_trig(f_in);
+Expr* f = simp(rewritten);
+```
+
+PicoCAS's evaluator aggressively folds `0 * ComplexInfinity -> 0`. That
+is the correct algebraic identity when the `ComplexInfinity` is really
+a pole of fixed order, but it is a trap for symbolic limit computation:
+`Csc[x]` at `x = 0` evaluates to `ComplexInfinity`, so `x Csc[x]` would
+fold to `0` by substitution before a limit routine has a chance to
+think.
+
+We avoid the trap by rewriting `Csc`, `Sec`, `Cot`, `Csch`, `Sech`,
+`Coth` into their `Sin` / `Cos` / `Sinh` / `Cosh` forms **before** the
+dispatcher runs. Eighteen entries in `test_reciprocal_trig` exercise
+this path, including:
+
+```text
+Limit[x Csc[x], x -> 0]                  = 1
+Limit[Cot[4 x] Tan[3 x], x -> 0]         = 3/4
+Limit[Csc[Pi x] Log[x], x -> 1]          = -1/Pi
+Limit[(x - ArcSin[x]) Csc[x]^3, x -> 0]  = -1/6
+Limit[Sec[2 x] (1 - Tan[x]), x -> Pi/4]  = 1
+```
+
+After the rewrite, `x Csc[x]` becomes `x/Sin[x]`, which the Series
+layer dispatches to `1` in one step.
+
+### Layer 1 -- Fast paths and continuous substitution
+
+Three cheap checks, in order:
+
+1. **Free of `x`.** If the expression does not contain the variable, it
+   is its own limit. `Limit[7, x -> 0]` is `7`; `Limit[a, x -> 5]` is
+   `a`.
+2. **The variable itself.** `Limit[x, x -> 5]` is `5`.
+3. **Continuous substitution.** `Together`-normalize `f` into `N/D`,
+   evaluate `D(point)`; if non-zero and non-divergent, plug `point`
+   into both `N` and `D` and divide.
+
+```c
+Expr* tog = simp(mk_fn1("Together", expr_copy(f)));
+Expr* num = simp(mk_fn1("Numerator",   expr_copy(tog)));
+Expr* den = simp(mk_fn1("Denominator", expr_copy(tog)));
+Expr* den_at = subst_eval(den, ctx->x, ctx->point);
+bool den_bad = is_lit_zero(den_at) || is_divergent(den_at);
+```
+
+The `is_lit_zero` check is enough because PicoCAS's `Power` evaluator
+folds `Power[0, b] -> 0` for any positive `b` and
+`Power[0, b] -> ComplexInfinity` for negative `b`. `Sqrt[x-1]/x` at
+`x = 1` substitutes to `Sqrt[0]/1`, which collapses to `0/1 = 0`
+automatically. Earlier versions of the limit layer carried a
+`reduces_to_zero` predicate to handle `Sqrt[0]`; moving the fold into
+`builtin_power` removed the need.
+
+Worked examples (from `test_fast_paths`, `test_power_zero_folding`):
+
+```text
+Limit[7, x -> 0]                        = 7          (free-of-x)
+Limit[x, x -> 5]                        = 5          (variable itself)
+Limit[x^2, x -> 2]                      = 4          (substitution)
+Limit[a x^2 + 4 x + 7, x -> 1]          = 11 + a     (substitution)
+Limit[Sqrt[x - 1]/x, x -> 1]            = 0          (Power[0, 1/2] fold)
+```
+
+Multivariate limits `Limit[f, {x, y} -> {a, b}]` run through a
+specialised variant of the continuous-substitution check; iterated
+limits `Limit[f, {x -> a, y -> b}]` recurse right-to-left.
+
+### Layer -- ArcTan / ArcCot at infinity
+
+Series cannot see through `ArcTan[h(x)]` when `h(x) -> oo`. We
+intercept that shape early: compute `Limit[h(x)]`, and if it diverges
+to `+/- oo`, return `+/- Pi/2` (for `ArcTan`) or `0 / Pi` (for
+`ArcCot`).
+
+```text
+Limit[ArcTan[x^2 - x^4], x -> Infinity] = -Pi/2
+```
+
+Internally: `Limit[x^2 - x^4] = -Infinity` via the rational-function
+layer, so the outer `ArcTan` limit is `-Pi/2`.
+
+### Layer 3 -- Rational functions
+
+For `P(x) / Q(x)` with both sides polynomial in `x`, we extract degrees
+and leading coefficients via `CoefficientList` and decide in one shot:
+
+- At `+/- Infinity`: compare degrees, use the leading-coefficient
+  ratio when they are equal, and pick a sign of infinity from the
+  parity of `deg(P) - deg(Q)` when unequal.
+- At a finite point: substitute, handle `0/0` by deferring to a later
+  layer, handle `nonzero/0` as a directional infinity.
+
+```text
+Limit[x/(x + 1), x -> Infinity]         = 1
+Limit[3 x^2/(x^2 - 2), x -> -Infinity]  = 3
+Limit[x/(x - 2 a), x -> a]              = -1
+```
+
+### Layer -- Log of a finite expression
+
+If `f = Log[g]` and the inner limit of `g` is a finite non-zero `c`,
+return `Log[c]`. One-liner, but load-bearing: it turns
+
+```text
+Log[(2 + E^x) Exp[-x]]  ->  Log[1 + 2 Exp[-x]]  ->  Log[1]  =  0
+```
+
+at `x -> oo`, which is the finishing move for the `layer_log_merge`
+rewrite just below.
+
+### Layer -- Log merge at infinity
+
+Individually divergent summands can cancel into a finite `Log`. The
+canonical shape is
+
+```text
+Limit[-x + Log[2 + E^x], x -> Infinity]
+```
+
+where `-x -> -oo` and `Log[2 + E^x] -> +oo`. Term-by-term the answer
+is `-oo + oo`, which no finite-term dispatcher will resolve. The trick
+is to fuse the sum under a single logarithm:
+
+```
+ Sum(Log[g_i]) + Sum(h_j)  ->  Log[ Prod(g_i) * Prod(Exp[h_j]) ]
+```
+
+The rewrite uses `Exp[h_j]` as a fictitious kernel -- we are just
+moving everything inside `Log`, counting on `Expand` to simplify the
+argument afterwards. In the example:
+
+```
+Log[(2 + E^x) * Exp[-x]]
+  = Log[2 Exp[-x] + 1]
+  -> Log[1] = 0                (as x -> Infinity)
+```
+
+Termination is guarded by a structural-change check
+(`expr_eq(new_f, f)` bails out); recursion is bounded by `ctx->depth`.
+
+### Layer -- Plus termwise at infinity
+
+If every summand of a top-level `Plus` has a finite limit individually,
+add them up. This is what the previous two layers feed into when they
+need a clean "finish". It is also what rescues harmless shapes that
+only look divergent because of a dominant term hiding a cancellation
+that `Together` did not catch.
+
+### Layer 5.3 -- Log-reduction for exponential indeterminate forms
+
+`f^g` with `f -> 1` and `g -> oo` is the classical `1^oo`
+indeterminate form. We use the identity
+
+```
+ f^g = Exp[g Log[f]]
+```
+
+and compute the inner limit. The layer fires whenever any `Power`
+factor at the top level of `f` has the limit variable in its exponent.
+
+```c
+static Expr* log_contribution(Expr* factor) {
+    if (has_head(factor, "Power") && factor->data.function.arg_count == 2) {
+        /* Log[a^b] = b Log[a]. */
+        return mk_times(expr_copy(factor->data.function.args[1]),
+                        mk_fn1("Log", expr_copy(factor->data.function.args[0])));
+    }
+    return mk_fn1("Log", expr_copy(factor));
+}
+```
+
+A guard keeps the layer from firing on shapes like
+`(Cos[x]-1)/(Exp[x^2]-1)` where `Exp` is buried inside a `Plus` -- those
+are determinate `0/0` forms best left for the Series layer.
+
+Worked examples (from `test_log_reduction` and `test_exp_indeterminate`):
+
+```text
+Limit[(1 + A x)^(1/x), x -> 0]                 = E^A
+Limit[(1 + a/x)^(b x), x -> Infinity]          = E^(a b)
+Limit[Cos[x]^Cot[x], x -> 0]                   = 1
+Limit[(1 + Sin[a x])^Cot[b x], x -> 0]         = E^(a/b)
+Limit[x^Tan[(Pi x)/2], x -> 1]                 = E^(-2/Pi)
+Limit[((-3+2x)/(5+2x))^(1+2x), x -> Infinity]  = 1/E^8
+Limit[E^(-x) x^20, x -> Infinity]              = 0
+```
+
+The last one is worth unpacking. After log-reduction we are asking for
+`Limit[-x + 20 Log[x], x -> Infinity]`, which the `layer_log_merge`
+pass rewrites as `Log[Exp[-x] * x^20]`. `Exp[-x] * x^20` on its own has
+limit `0` (this happens through the bounded-envelope and series
+routines), so `Log[...] = -Infinity`, and `Exp[-Infinity] = 0`.
+
+### Layer -- Bounded envelope (squeeze theorem)
+
+`Sin[t^2]` has no Taylor expansion at infinity, so if the series layer
+were to run first it would flail. We intercept shapes where a bounded
+oscillatory head (currently `Sin`, `Cos`, and relatives) is multiplied
+by a factor that decays, producing `|f|` times a bound on the
+oscillator's magnitude. If the bound's limit is `0`, the whole
+expression limit is `0`.
+
+```text
+Limit[Sin[t^2]/t^2, t -> Infinity]          = 0
+Limit[(1 - Cos[x])/x, x -> Infinity]        = 0
+Limit[x^2 Sin[1/x], x -> 0]                 = 0
+Limit[(x Sin[x])/(5 + x^2), x -> Infinity]  = 0
+```
+
+The layer is currently gated to `+Infinity` because the
+magnitude-upper-bound utility returns `x` (not `Abs[x]`) for the bare
+variable, which is only an upper bound when `x` is positive.
+Negative-infinity cases would need a preparatory `x -> -y` substitution.
+
+### Layer 2 -- Series-based evaluation
+
+This is the workhorse. We call `Series[f, {x, x0, k}]` with increasing
+order `k` (starting at 4, doubling up to 64) and read off the leading
+term from the resulting `SeriesData`. The three outcomes:
+
+| leading exponent | limit |
+|-----------------:|:------|
+| `> 0`            | `0`   |
+| `= 0`            | leading coefficient |
+| `< 0`            | directional infinity (sign from the leading coefficient and the direction) |
+
+Worked example: `Limit[Sin[x]/x, x -> 0]`.
+
+```
+Series[Sin[x]/x, {x, 0, 4}]
+  = 1 - x^2/6 + x^4/120 + O[x]^5
+```
+
+The leading exponent is `0`; the leading coefficient is `1`; done.
+
+Another: `Limit[(Tan[x] - x)/x^3, x -> 0]`.
+
+```
+Series[(Tan[x] - x)/x^3, {x, 0, 4}]
+  = 1/3 + (2 x^2)/15 + O[x]^3
+```
+
+The leading exponent is `0`; the leading coefficient is `1/3`.
+
+At `-Infinity` we first substitute `x -> -y` so Series can use its
+`+Infinity` kernel. Tests covered by this layer:
+
+```text
+Limit[Sin[x]/x, x -> 0]                  = 1
+Limit[(Cos[x]-1)/(Exp[x^2]-1), x -> 0]   = -1/2
+Limit[(Tan[x]-x)/x^3, x -> 0]            = 1/3
+Limit[Sin[2 x]/Sin[x], x -> Pi]          = -2
+Limit[(x^a - 1)/a, a -> 0]               = Log[x]
+Limit[Sqrt[x^2 + a x] - Sqrt[x^2 + b x], x -> Infinity] = (a - b)/2
+```
+
+The last, `Sqrt[x^2 + a x] - Sqrt[x^2 + b x]`, is an "RP-form"
+(radical-polynomial) family where Series at infinity expands in
+`1/x`:
+
+```
+Series[Sqrt[x^2 + a x] - Sqrt[x^2 + b x], {x, Infinity, 2}]
+  = (a - b)/2 + (b^2 - a^2)/(8 x) + O[1/x]^2
+```
+
+Leading term `(a - b)/2`, exponent `0`: that is the answer.
+
+### Layer 5.1 -- L'Hospital with a growth guard
+
+If Series cannot see through the expression (typical symptoms: leading
+coefficients all literally zero up to a large order, or Series
+returning itself), we try L'Hospital. We insist on a `N/D` split
+(non-trivial denominator), and we insist on the numerator and
+denominator being simultaneously zero (or simultaneously divergent) at
+the point; otherwise the rule is not applicable.
+
+A growth guard aborts if the leaf count of `N' / D'` grows in three
+consecutive iterations without the indeterminacy resolving. This is
+the escape hatch for pathological inputs -- L'Hospital on the wrong
+shape can generate expressions that blow up in size faster than they
+simplify.
+
+### Layer 6 -- Bounded-oscillation interval returns
+
+`Limit[Sin[1/x], x -> 0]` has no value in the ordinary sense; we
+return `Interval[{-1, 1}]`. The layer fires for `Sin` or `Cos` of an
+expression that diverges at the target point.
+
+```text
+Limit[Sin[1/x], x -> 0]       = Interval[{-1, 1}]
+Limit[Sin[x], x -> Infinity]  = Interval[{-1, 1}]
+```
+
+### Aside -- Radical fusion in Times (not in Limit)
+
+Limits sometimes finish in a form that is algebraically equal to a
+simpler one. `Sqrt[6]/Sqrt[2]` ought to print as `Sqrt[3]`. The fix
+does not belong in `Limit` -- it is a simplification that should
+apply to every multiplication in the system, not just ones produced
+as limit output. We therefore added the rule to `builtin_times`
+(`src/times.c`):
+
+```c
+/* Radical fusion: collapse Power[a, q] * Power[b, -q] into Power[a/b, q]
+ * when a, b are positive integers and the ratio a/b is itself a positive
+ * integer. Applied after base-grouping so that same-base factors have
+ * already been merged; only heterogeneous pairs reach here. We restrict
+ * to integer ratios so that the output is strictly simpler than the
+ * input -- Sqrt[6]/Sqrt[2] -> Sqrt[3], but Sqrt[6]/Sqrt[4] (ratio 3/2)
+ * is left alone because Sqrt[3/2] is no cleaner than 1/2 Sqrt[6]. */
+```
+
+Worked examples (from `tests/test_radical_fusion.c`):
+
+```text
+Sqrt[6]/Sqrt[2]                    = Sqrt[3]
+Sqrt[15]/Sqrt[5]                   = Sqrt[3]
+Sqrt[30]/Sqrt[6]                   = Sqrt[5]
+Power[6, 1/3] * Power[2, -1/3]     = 3^(1/3)
+Power[12, 1/3] * Power[4, -1/3]    = 3^(1/3)
+Sqrt[210] / Sqrt[6] / Sqrt[5]      = Sqrt[7]  (chained fusion)
+Sqrt[6]/Sqrt[4]                    = 1/2 Sqrt[6]  (ratio 3/2, not fused)
+Sqrt[10]/Sqrt[3]                   = Sqrt[10]/Sqrt[3]  (no integer ratio)
+```
+
+The integer-ratio restriction matters. If we fused whenever the ratio
+was rational, `Sqrt[6]/Sqrt[4]` would become `Sqrt[3/2]`, which is no
+simpler than the current `(1/2) Sqrt[6]` and arguably harder to read.
+Keeping the rule narrow means we never produce `Sqrt[p/q]` forms that
+we would then want to undo.
+
+With the rule in the right place, the original motivating limit
+
+```text
+Limit[Sqrt[x^2 - 9]/Sqrt[2 x - 6], x -> 3]  = Sqrt[3]
+```
+
+works without any post-processing in `Limit` at all: the limit layer
+returns `Sqrt[6]/Sqrt[2]`, and the surrounding evaluator fuses it on
+the way out.
+
+---
+
+## Comparison with Maxima
+
+Maxima's limit implementation lives in
+[`src/limit.lisp`](https://github.com/calyau/maxima/blob/master/src/limit.lisp)
+(a ~4300-line Common Lisp file) with an auxiliary `src/gruntz.lisp`
+for the Gruntz algorithm on real-valued limits at infinity. The shapes
+of the two systems are worth putting side by side.
+
+### Architectural similarities
+
+- **Dispatcher on expression shape.** Maxima's `limit` entry point
+  dispatches to per-head handlers (`simplim%sin`, `simplim%log`,
+  `simplim%atan`, ...) via the `SIMPLIM%` property on symbols; PicoCAS
+  cascades through `layer_*` functions. Both amount to a dictionary
+  keyed by the head of the expression.
+- **Series/Taylor as the primary tool for indeterminate forms.**
+  Maxima has a dedicated `taylim` / `tlimit` mode that replaces the
+  default limit algorithm with "take a Taylor series and read off the
+  leading term." PicoCAS's `layer2_series` is exactly this, hooked in
+  as the main engine rather than an alternative mode.
+- **L'Hospital as a fallback with a growth guard.** Maxima uses
+  `lhospitallim` (default 4) as the maximum number of L'Hospital
+  applications; PicoCAS uses an analogous iteration cap plus a leaf-
+  count growth detector.
+- **Special-case logarithmic reduction for `f^g`.** Both rewrite `f^g`
+  as `Exp[g Log[f]]` when the form is indeterminate. Maxima calls this
+  in `exp-lim`; PicoCAS calls it `layer5_log_reduction`.
+- **Bounded-oscillation / squeeze handling for `Sin`, `Cos`.** Maxima
+  returns `ind` (for "indeterminate but bounded") when it can only say
+  the limit is in an interval; PicoCAS returns `Interval[{-1, 1}]`.
+- **Finite-point 0/0 and infinity/infinity both use the same
+  pipeline.** Neither system has a separate algorithm for limits at
+  `Infinity`; we substitute the point into the series kernel.
+
+### Architectural differences
+
+- **No Gruntz algorithm.** Maxima's `gruntz.lisp` implements the
+  Gruntz "MrvLimit" algorithm for limits of real-valued exp-log
+  functions at infinity. It handles arbitrarily-nested iterated
+  exponentials like `Exp[Exp[x] - Exp[x + 1/x]]` that our Series-plus-
+  log-merge combination cannot reach. This is the biggest capability
+  gap.
+- **Sign/assumption machinery.** Maxima uses its global `asksign` and
+  assumption database to resolve sign ambiguities during limit
+  computation ("Is `a` positive, negative, or zero?"). PicoCAS has no
+  assumption database; our sign decisions are all literal
+  (`literal_sign` checks structural sign only), and we conservatively
+  return `DirectedInfinity[c]` or leave the expression unevaluated
+  when the sign of a leading coefficient is symbolic.
+- **Direction convention.** Maxima's third argument is a plus/minus
+  symbol; PicoCAS accepts both the Mathematica strings
+  (`"FromAbove"`, `"FromBelow"`) and Mathematica integer direction
+  codes (`-1` meaning "approaching from above", `+1` from below).
+  Both are tested.
+- **Log-merge preprocessing.** Maxima does not have a direct analogue
+  of PicoCAS's `layer_log_merge`; it would typically handle
+  `-x + Log[2 + E^x]` through the Gruntz layer's exp-log rewriting.
+  Our merge pass is a simpler, targeted rewrite for the finite
+  combinations of `Plus`, `Log`, and polynomial summands.
+- **Radical simplification.** Maxima has `radcan` as a user-callable
+  simplifier; PicoCAS runs a narrow version of radical fusion inside
+  `builtin_times` itself, so that `Sqrt[6]/Sqrt[2]` becomes `Sqrt[3]`
+  system-wide -- not only when it appears as `Limit` output.
+- **Scope.** Maxima's `limit.lisp` is a mature file with dozens of
+  special-function handlers (`%bessel_j`, `%gamma`, `%zeta`, etc.).
+  PicoCAS currently implements only the elementary-function
+  subsection.
+
+### Capability snapshot
+
+| Shape                              | PicoCAS        | Maxima |
+|:-----------------------------------|:---------------|:-------|
+| `P(x)/Q(x)` at `+/- Infinity`      | yes (Layer 3)  | yes    |
+| Taylor-leading-term at a finite point | yes (Layer 2) | yes    |
+| `1^Infinity`, `0^0`, `Infinity^0`  | yes (Layer 5.3)| yes    |
+| L'Hospital fallback                | yes (Layer 5.1)| yes    |
+| `Sin[1/x]` -> `Interval`           | yes (Layer 6)  | yes (`ind`) |
+| Squeeze for `Sin[h(x)]/p(x)`       | yes            | partial|
+| Gruntz nested exp-log at infinity  | no             | yes (`gruntz.lisp`) |
+| Assumption-driven sign resolution  | no             | yes    |
+| Special functions (Gamma, Bessel)  | no             | yes    |
+
+## Conclusion
+
+The layered structure in `src/limit.c` is not a natural decomposition
+of a single theory; it is a decomposition of the *failure modes* of
+the two tools we actually have -- substitution and series expansion.
+Every layer in between exists because something in the test suite
+showed us a shape where substitution collapses wrong and series
+cannot see through the kernel. The pre-pass for reciprocal trig, the
+log-merge at infinity, the bounded envelope, the radical canonicalizer
+-- each one is a patch over an observed failure, not a general theory.
+
+The near-term path forward is clear: the largest capability gap
+relative to Maxima is the Gruntz algorithm for exp-log limits at
+infinity. An MRV-set construction is tractable to write against the
+existing `Series` and `Together` infrastructure, and would subsume the
+log-merge layer. After that, an assumption database would unlock the
+symbolic-leading-coefficient cases that currently bail out with
+`DirectedInfinity[c]`.
+
+The tests pass, the memory is clean under Valgrind, and the 70-odd
+cases in `tests/test_limit.c` are a regression line for every change
+to the file.
