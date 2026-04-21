@@ -10,6 +10,7 @@
 #include "print.h"
 #include "expr.h"
 #include "arithmetic.h"
+#include "context.h"
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -80,7 +81,7 @@ void expr_print_fullform(Expr* e) {
             else printf("%s", buf);
             break;
         }
-        case EXPR_SYMBOL: printf("%s", e->data.symbol); break;
+        case EXPR_SYMBOL: printf("%s", context_display_name(e->data.symbol)); break;
         case EXPR_STRING: printf("\"%s\"", e->data.string); break;
         case EXPR_FUNCTION: print_function_fullform(e); break;
         case EXPR_BIGINT: {

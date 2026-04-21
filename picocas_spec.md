@@ -5090,3 +5090,178 @@ Out[6]= y++
 * `tests/test_increment.c` -- full test coverage of each transcript
     in the feature request (symbols, numerical, symbolic, list,
     `Part`, and the `rvalue` path) plus two parser edge cases.
+
+## Contexts and Packages (2026-04-21)
+
+PicoCAS now supports Mathematica-style **contexts**: every symbol conceptually
+lives in a namespace identified by a string ending in a backtick, such as
+`Global``` or `MyPackage`Private``. Five new built-ins (`Context`, `Begin`,
+`BeginPackage`, `End`, `EndPackage`) together with two system variables
+(`$Context`, `$ContextPath`) make it possible to write self-contained
+packages with private helpers and a clean public surface.
+
+All the machinery lives in `src/context.c` / `src/context.h`; the parser
+(`src/parse.c`) and the printer (`src/print.c`) were updated to resolve /
+shorten qualified names. Existing code that never touches Begin or
+BeginPackage sees no behavioral change -- bare names continue to resolve
+exactly as before.
+
+### Pragmatic design notes
+
+Two simplifications keep the change self-contained rather than rippling
+through the ~250 existing `symtab_add_builtin` registration sites:
+
+1. **Built-ins stay stored under their bare names.** PicoCAS registers
+   `Plus`, `Sin`, etc. in the symbol table without a `System``` prefix.
+   The context resolver treats such bare names as implicitly belonging
+   to `System```: `Context[Plus]` reports `"System`"`, and
+   `System`Plus[2,3]` canonicalizes to `Plus[2,3]` so it still dispatches
+   to the built-in.
+2. **Inside the default `Global``` context, bare names pass through
+   unchanged.** Context qualification is enabled only once the user
+   enters a non-Global context via `Begin` or `BeginPackage`. This
+   preserves legacy REPL and test behavior.
+
+### `$Context`
+
+`$Context` evaluates to a string giving the current context. Default
+value is `"Global`"`. Mutated by `Begin`, `End`, `BeginPackage`, and
+`EndPackage` (the symbol is `Protected`; direct assignment is refused).
+
+```mathematica
+In[1]:= $Context
+Out[1]= "Global`"
+```
+
+### `$ContextPath`
+
+`$ContextPath` evaluates to a list of contexts consulted (in order) when
+the parser encounters a bare identifier that has not yet been seen. Used
+so that symbols exported from a package become reachable by short name
+after `EndPackage[]`. Default value is `{"Global`", "System`"}`.
+
+```mathematica
+In[1]:= $ContextPath
+Out[1]= {"Global`", "System`"}
+```
+
+### `Context`
+
+| Form                   | Meaning                                                         |
+|------------------------|-----------------------------------------------------------------|
+| `Context[]`            | Returns the current context (same as `$Context`).               |
+| `Context[sym]`         | Returns the context in which `sym` resides, as a string.        |
+| `Context["name"]`      | Returns the context for the symbol whose name is `"name"`.       |
+
+Attributes: `{HoldFirst, Protected}`.
+
+```mathematica
+In[1]:= Context[]
+Out[1]= "Global`"
+
+In[2]:= Context[Plus]
+Out[2]= "System`"
+
+In[3]:= x = 1; Context[x]
+Out[3]= "Global`"
+```
+
+### `BeginPackage`
+
+| Form                                      | Meaning                                                   |
+|-------------------------------------------|-----------------------------------------------------------|
+| `BeginPackage["ctx`"]`                    | Saves `$Context` and `$ContextPath`, then sets them to `"ctx`"` and `{"ctx`", "System`"}`. |
+| `BeginPackage["ctx`", {"n1`", ...}]`      | Same, additionally appending the needed contexts to the path. |
+
+Returns the new current context as a string. Attributes: `{Protected}`.
+
+### `Begin`
+
+| Form                   | Meaning                                                                                          |
+|------------------------|--------------------------------------------------------------------------------------------------|
+| `Begin["ctx`"]`        | Sets the current context to `"ctx`"`, saving the previous value for a matching `End[]`.           |
+| `Begin["`rel`"]`       | If the argument starts with a backtick, the context is taken relative to the current context, e.g. `Begin["`Private`"]` inside `"UtilPkg`"` yields `"UtilPkg`Private`"`. |
+
+Returns the new current context as a string. Attributes: `{Protected}`.
+
+### `End`
+
+`End[]` pops the most recent Begin/BeginPackage frame, restoring the
+previous `$Context` and (for BeginPackage) the previous `$ContextPath`.
+Returns the just-closed context as a string. Attributes: `{Protected}`.
+
+### `EndPackage`
+
+`EndPackage[]` pops the most recent BeginPackage frame, prepending the
+just-closed package context to `$ContextPath` so that any public symbols
+defined within the package remain reachable by short name. Returns
+`Null`. Attributes: `{Protected}`.
+
+### Example: defining and using a small package
+
+```mathematica
+In[1]:= BeginPackage["square`"]
+Out[1]= "square`"
+
+In[2]:= square[x_] := x^2
+Out[2]= Null
+
+In[3]:= EndPackage[]
+Out[3]= Null
+
+In[4]:= $ContextPath
+Out[4]= {"square`", "Global`", "System`"}
+
+In[5]:= square[12]
+Out[5]= 144
+
+In[6]:= square`square[12]  (* same function, fully qualified *)
+Out[6]= 144
+```
+
+### Parser rules in detail
+
+The parser calls `context_resolve_name` on every identifier. The rule
+applied, in order:
+
+1. Names starting with `$` pass through unchanged (system variables).
+2. A leading backtick is taken as relative to the current context:
+   `` `Private`f `` in context `"foo`"` resolves to `"foo`Private`f"`.
+3. Names containing a backtick elsewhere are treated as absolute, with
+   one canonicalization: `"System`X"` is reduced to bare `"X"` so that
+   built-ins stored under bare names still dispatch.
+4. For a bare identifier, the resolver searches each prefix in
+   `{$Context} U $ContextPath`. If a qualified symbol with that prefix
+   already exists, its full name is used.
+5. If a bare builtin is already registered, it is used directly
+   (implicit `System``` membership).
+6. If `$Context == "Global`"`, the bare name is kept as-is.
+7. Otherwise the name is qualified with `$Context`.
+
+### Printer
+
+When printing a symbol, if its context prefix is currently visible
+(equal to `$Context`, present on `$ContextPath`, or `"System`"`), the
+prefix is dropped so output reads naturally -- `UtilPkg`f[3]` prints as
+`f[3]` while `UtilPkg`` is on the path. `FullForm[]` uses the same
+shortening rule.
+
+### Files touched
+
+* `src/context.c`, `src/context.h` -- new module holding the context
+  stack, resolution rules, and the five built-in functions plus the
+  `$Context`/`$ContextPath` OwnValue publishing.
+* `src/parse.c` -- `parse_symbol` now passes every identifier through
+  `context_resolve_name`.
+* `src/print.c` -- `expr_print_fullform` shortens symbol names whose
+  context is visible via `context_display_name`.
+* `src/symtab.c`, `src/symtab.h` -- adds `symtab_lookup` (non-creating
+  hash-table probe) so the resolver can ask whether a qualified name
+  already exists.
+* `src/core.c` -- calls `context_init()` first in `core_init()`;
+  `builtin_information` uses `context_display_name` when reporting a
+  missing docstring so the short name appears in the diagnostic.
+* `tests/test_context.c` -- direct API tests plus end-to-end coverage
+  of `Context`, `$Context`, `$ContextPath`, `Begin`/`End` round-trip,
+  `BeginPackage` path manipulation, and a `Begin["`Private`"]` package
+  example.

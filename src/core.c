@@ -47,8 +47,12 @@
 #include "series.h"
 #include "deriv.h"
 #include "limit.h"
+#include "context.h"
 
 void core_init(void) {
+    /* Context system must come first: the parser calls context_resolve_name
+     * on every identifier, including those produced while loading init.m. */
+    context_init();
     parfrac_init();
     modular_init();
     symtab_add_builtin("AtomQ", builtin_atomq);
@@ -801,7 +805,10 @@ Expr* builtin_information(Expr* res) {
     const char* doc = symtab_get_docstring(sym_name);
     if (!doc) {
         char buf[256];
-        snprintf(buf, sizeof(buf), "No information available for symbol \"%s\".", sym_name);
+        /* Show the short (context-shortened) name in the diagnostic so that
+         * symbols reached via the context path read naturally. */
+        snprintf(buf, sizeof(buf), "No information available for symbol \"%s\".",
+                 context_display_name(sym_name));
         return expr_new_string(buf);
     }
     return expr_new_string(doc);

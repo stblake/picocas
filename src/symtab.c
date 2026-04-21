@@ -53,6 +53,18 @@ SymbolDef* symtab_get_def(const char* symbol_name) {
     return def;
 }
 
+SymbolDef* symtab_lookup(const char* symbol_name) {
+    unsigned int idx = hash(symbol_name);
+    SymEntry* entry = symtab[idx];
+    while (entry) {
+        if (strcmp(entry->def->symbol_name, symbol_name) == 0) {
+            return entry->def;
+        }
+        entry = entry->next;
+    }
+    return NULL;
+}
+
 void symtab_add_builtin(const char* symbol_name, BuiltinFunc func) {
     SymbolDef* def = symtab_get_def(symbol_name);
     def->builtin_func = func;

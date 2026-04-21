@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "expr.h"
+#include "context.h"
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,17 +66,22 @@ static void skip_whitespace(ParserState* s) {
     }
 }
 
-// Parses a symbol (x, `name`, $var)
+// Parses a symbol (x, `name`, $var) and resolves it through the context
+// system, producing a canonical (possibly qualified) symbol name.
 static Expr* parse_symbol(ParserState* s) {
     char buffer[256];
     size_t i = 0;
-    
+
     while (isalnum(*s->pos) || *s->pos == '`' || *s->pos == '$') {
         if (i < sizeof(buffer)-1) buffer[i++] = *s->pos;
         s->pos++;
     }
     buffer[i] = '\0';
-    return expr_new_symbol(buffer);
+
+    char* resolved = context_resolve_name(buffer);
+    Expr* out = expr_new_symbol(resolved ? resolved : buffer);
+    free(resolved);
+    return out;
 }
 
 // Parses numbers (integers, reals, scientific notation)

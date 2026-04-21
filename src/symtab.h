@@ -36,6 +36,10 @@ void symtab_clear_symbol(const char* symbol_name);
 // Get definition for a symbol, or create it if it doesn't exist
 SymbolDef* symtab_get_def(const char* symbol_name);
 
+// Look up a symbol without creating one. Returns NULL if not present.
+// Used by the context resolver to test whether a qualified name exists.
+SymbolDef* symtab_lookup(const char* symbol_name);
+
 // Register a built-in C function for a symbol
 void symtab_add_builtin(const char* symbol_name, BuiltinFunc func);
 

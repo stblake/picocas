@@ -80,6 +80,7 @@ set(COMMON_SRC
     ../src/series.c
     ../src/deriv.c
     ../src/limit.c
+    ../src/context.c
 )
 
 add_executable(expr_tests test_expr.c test_part.c ${COMMON_SRC})
@@ -234,6 +235,9 @@ endif()
 
 add_executable(print_tests test_print.c ${COMMON_SRC})
 target_include_directories(print_tests PRIVATE ../src)
+
+add_executable(context_tests test_context.c ${COMMON_SRC})
+target_include_directories(context_tests PRIVATE ../src)
 
 add_executable(random_tests test_random.c ${COMMON_SRC})
 target_include_directories(random_tests PRIVATE ../src)
