@@ -36,6 +36,10 @@
 #include "eval.h"
 #include "symtab.h"
 #include "attr.h"
+#include "arithmetic.h"  /* arith_warnings_mute_push/pop -- silences the
+                          * Power::infy / Infinity::indet messages that our
+                          * internal probes would otherwise emit while poking
+                          * at candidate sub-expressions. */
 /* Note: Series and D are invoked symbolically (through the evaluator),
  * not via direct C calls, so series.h / deriv.h are intentionally not
  * included here. Adding the Series and Derivative symbols to the symbol
@@ -155,9 +159,7 @@ static bool is_lit_zero(Expr* e) {
     return false;
 }
 
-static bool is_infinity_sym(Expr* e) {
-    return is_sym(e, "Infinity");
-}
+/* is_infinity_sym is shared via arithmetic.h (identical semantics). */
 
 static bool is_neg_infinity(Expr* e) {
     /* Canonical form of -Infinity is Times[-1, Infinity]. */
@@ -632,6 +634,37 @@ static int literal_sign(Expr* e) {
          * only if unambiguous from the leading literal. */
         return s;
     }
+    /* Log[c] for a positive real literal c: sign follows c vs 1.
+     * This is the narrow shape the log-reduction layer leaves behind
+     * after folding b^(g(x)) = Exp[g(x) Log[b]]: whether the Limit is
+     * +Infinity or -Infinity depends on Sign[Log[b]], which the series
+     * sign test would otherwise miss (Log[3] is symbolic to literal_sign
+     * without this arm). */
+    if (has_head(e, "Log") && e->data.function.arg_count == 1) {
+        Expr* a = e->data.function.args[0];
+        if (a->type == EXPR_INTEGER) {
+            if (a->data.integer >  1) return +1;
+            if (a->data.integer == 1) return  0;
+            if (a->data.integer >  0) return -1;  /* 0 < c < 1: impossible for Integer, no-op */
+        } else if (a->type == EXPR_REAL) {
+            if (a->data.real > 1.0) return +1;
+            if (a->data.real == 1.0) return 0;
+            if (a->data.real > 0.0) return -1;
+        } else if (a->type == EXPR_BIGINT) {
+            if (mpz_cmp_ui(a->data.bigint, 1) > 0) return +1;
+            if (mpz_cmp_ui(a->data.bigint, 1) == 0) return 0;
+        } else if (has_head(a, "Rational") && a->data.function.arg_count == 2) {
+            /* Positive rational: compare numerator and denominator. */
+            Expr* rn = a->data.function.args[0];
+            Expr* rd = a->data.function.args[1];
+            if (rn->type == EXPR_INTEGER && rd->type == EXPR_INTEGER &&
+                rd->data.integer > 0 && rn->data.integer > 0) {
+                if (rn->data.integer > rd->data.integer) return +1;
+                if (rn->data.integer < rd->data.integer) return -1;
+                return 0;
+            }
+        }
+    }
     return 0;
 }
 
@@ -909,6 +942,26 @@ static Expr* read_leading_term_limit(Expr* s, LimitCtx* ctx) {
     int64_t leading_num = nmin + (int64_t)k;
     Expr* leading_coef = expr_copy(coefs->data.function.args[k]);
 
+    /* A genuine power-series coefficient cannot depend on the expansion
+     * variable. PicoCAS's Series does not always enforce this -- for
+     * asymptotic shapes like Log[E^x - E^a] at x -> a it emits a Log[x-a]
+     * term as the "constant coefficient" (the logarithmic part of an
+     * asymptotic expansion). Treating that as the limit value gives a
+     * result that still depends on x, which is structurally wrong.
+     * Escalating the Series order won't remove the residual -- the
+     * Log-term is part of the expansion's form, not a truncation
+     * artefact -- so we bail out of the whole series layer by setting the
+     * variable to NULL and returning. The caller's escalation loop will
+     * move on to subsequent attempts. We can't easily tell layer2_series
+     * to skip further k values without a side-channel flag; instead, to
+     * avoid an expensive retry at k=32 (Series on these shapes is O(n^3)
+     * in the expansion order), we detect the same residual early. */
+    if (expr_contains(leading_coef, ctx->x)) {
+        expr_free(leading_coef);
+        if (prefactor) expr_free(prefactor);
+        return NULL;
+    }
+
     /* Decide the limit from the leading exponent leading_num/den.
      *    > 0  -> 0
      *    = 0  -> leading coefficient
@@ -1041,8 +1094,15 @@ static Expr* layer2_series(Expr* f, LimitCtx* ctx) {
         Expr* s    = simp(call);
         LimitCtx leaf = { x_use, x0_use, effective_dir, ctx->depth };
         result = read_leading_term_limit(s, &leaf);
+        /* If the series expansion still mentions the limit variable in
+         * its coefficients (asymptotic shapes like Log[E^x-E^a] at x->a
+         * whose leading "coefficient" is Log[x-a]), escalating to higher
+         * order won't help and is expensive (O(k^3) for common heads).
+         * Short-circuit and hand off to the later layers. */
+        bool stuck = (result == NULL) && s && expr_contains(s, x_use);
         expr_free(s);
         if (result) break;
+        if (stuck) break;
     }
 
     if (f_owned)  expr_free(f_owned);
@@ -1808,6 +1868,161 @@ static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx) {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Layer -- Atom substitution for Power-in-x-exponent shapes               */
+/*                                                                         */
+/* Replaces a uniform Power[b, e(x)] subterm with a fresh symbol u, then   */
+/* recurses on Limit[f_sub, u -> Limit[atom, x -> point]]. Works for       */
+/* shapes like                                                             */
+/*                                                                         */
+/*     (-1 + 3^(2/x)) / (1 + 3^(2/x))     at x -> 0 one-sided              */
+/*                                                                         */
+/* where Series cannot expand around the essential singularity of the      */
+/* inner Power, but the expression IS polynomial in the atom itself and   */
+/* the atom has a clean one-sided limit (+Infinity for x -> 0+, 0 for     */
+/* x -> 0-). The rational-function layer then closes out u -> Infinity.   */
+/*                                                                         */
+/* The atom must appear in every x-dependent position of f; if x survives */
+/* outside the atom we can't reason about f by u alone. This is exactly    */
+/* the condition that subst_eval(f, atom, u) leaves no x behind. We only  */
+/* try when the original pipeline (Series + L'Hospital) has already       */
+/* failed, so the extra cost is amortised over genuinely hard inputs.     */
+/* ---------------------------------------------------------------------- */
+static Expr* find_mrv_power(Expr* e, Expr* x) {
+    if (!e || e->type != EXPR_FUNCTION) return NULL;
+    if (has_head(e, "Power") && e->data.function.arg_count == 2) {
+        Expr* exp = e->data.function.args[1];
+        /* Require the exponent to depend on x AND the base to NOT depend
+         * on x; otherwise the "atom" is actually a moving target and the
+         * substitution trick gives the wrong answer. */
+        Expr* base = e->data.function.args[0];
+        if (expr_contains(exp, x) && free_of(base, x)) return e;
+    }
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        Expr* r = find_mrv_power(e->data.function.args[i], x);
+        if (r) return r;
+    }
+    return NULL;
+}
+
+static Expr* layer_atom_substitute(Expr* f, LimitCtx* ctx) {
+    /* Narrow gating: the trigger shape is a Power[constant, e(x)] where
+     * e diverges at the point. If no such subtree already exists in f we
+     * save an expensive Together call and bail immediately. */
+    if (!find_mrv_power(f, ctx->x)) return NULL;
+
+    /* Numeric literal limit points are the working scope. Symbolic points
+     * (Limit[..., x -> a]) don't produce a clean "atom -> infinity" shape;
+     * attempting Together here can also cost seconds on exponential
+     * subexpressions like E^x - E^a. */
+    if (!is_numeric_literal_point(ctx->point)) return NULL;
+
+    /* Depth guard: Together on a recursively-substituted f can explode in
+     * size. Keep this layer to the top few recursion levels. */
+    if (ctx->depth > 3) return NULL;
+
+    /* Need a Together-normalised view: the trigger shape (e.g.
+     * (3^(1/x) - 3^(-1/x))/(3^(1/x) + 3^(-1/x))) only exposes a single
+     * atom after Together factors out the shared 3^(-1/x) and collapses
+     * to (-1 + 3^(2/x))/(1 + 3^(2/x)). */
+    Expr* g = simp(mk_fn1("Together", expr_copy(f)));
+
+    Expr* atom = find_mrv_power(g, ctx->x);
+    if (!atom) { expr_free(g); return NULL; }
+
+    /* Compute the atom's limit with the current direction. If the atom's
+     * limit is divergent *or* the atom itself doesn't resolve, we can't
+     * make progress by substituting (a dangling symbol with no value would
+     * defeat the whole point). */
+    LimitCtx sub = *ctx; sub.depth += 1;
+    Expr* atom_copy = expr_copy(atom);   /* atom is borrowed from g */
+    Expr* atom_lim = compute_limit(atom_copy, &sub);
+    expr_free(atom_copy);
+    if (!atom_lim) { expr_free(g); return NULL; }
+    if (expr_contains(atom_lim, ctx->x)) { expr_free(atom_lim); expr_free(g); return NULL; }
+
+    /* Substitute atom -> u. We want a symbol that cannot clash with any
+     * user variable in f; the `$` prefix convention in PicoCAS marks
+     * system-local symbols. */
+    Expr* u_sym = mk_sym("$LimitAtomU$");
+    Expr* f_sub = subst_eval(g, atom, u_sym);
+    expr_free(g);
+
+    /* If x survives outside the atom, the atom trick is invalid. */
+    if (expr_contains(f_sub, ctx->x)) {
+        expr_free(f_sub); expr_free(u_sym); expr_free(atom_lim);
+        return NULL;
+    }
+
+    /* Run the u-limit. Use TWOSIDED inside -- u takes a one-sided value
+     * (e.g. Infinity or 0) driven by the direction on x, but once we're
+     * asking for Limit in u the approach is along the real line of u
+     * itself. */
+    LimitCtx sub2 = { u_sym, atom_lim, LIMIT_DIR_TWOSIDED, ctx->depth };
+    Expr* result = compute_limit(f_sub, &sub2);
+    expr_free(f_sub); expr_free(u_sym); expr_free(atom_lim);
+    return result;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Layer -- Two-sided disagreement probe                                   */
+/*                                                                         */
+/* When a two-sided limit at a finite numeric point has reached the end of */
+/* the pipeline without resolving, compute the one-sided limits from both  */
+/* sides and compare. This catches shapes like                             */
+/*                                                                         */
+/*     (3^(1/x) - 3^(-1/x)) / (3^(1/x) + 3^(-1/x))    at x -> 0            */
+/*                                                                         */
+/* where Series / L'Hospital can't expand around the essential singularity */
+/* but the one-sided limits (+1 from above, -1 from below) are both        */
+/* reachable through the standard layers (the divergent Power collapses to */
+/* 0 or Infinity on one side and the quotient simplifies).                 */
+/*                                                                         */
+/* Gating is deliberately narrow: only at a finite numeric point, only     */
+/* with dir == TWOSIDED, only when f has the variable in some exponent     */
+/* (the failure mode we're after), and only near the top of the recursion */
+/* (depth cap prevents a combinatorial explosion in deeply nested Limits). */
+/* ---------------------------------------------------------------------- */
+static Expr* layer_onesided_disagree(Expr* f, LimitCtx* ctx) {
+    if (ctx->dir != LIMIT_DIR_TWOSIDED) return NULL;
+    if (!is_numeric_literal_point(ctx->point)) return NULL;
+    if (is_divergent(ctx->point)) return NULL;
+    /* Only fire for shapes that defeat the closed-form layers. Having x in
+     * an exponent is the canonical trigger (3^(1/x), (1+1/x)^x, and the
+     * family); it also keeps the cost in check -- ordinary rationals and
+     * analytic points never reach this layer because the earlier pipeline
+     * resolves them. */
+    if (!has_var_in_exponent(f, ctx->x)) return NULL;
+    /* Depth guard so recursive inner Limits don't expand the pair on every
+     * step. The two recursive compute_limit calls below run with a FROM*
+     * direction, so the early dir!=TWOSIDED check above prevents re-entry. */
+    if (ctx->depth > 3) return NULL;
+
+    LimitCtx left  = { ctx->x, ctx->point, LIMIT_DIR_FROMBELOW, ctx->depth };
+    LimitCtx right = { ctx->x, ctx->point, LIMIT_DIR_FROMABOVE, ctx->depth };
+
+    Expr* L = compute_limit(f, &left);
+    if (!L) return NULL;
+    if (expr_contains(L, ctx->x)) { expr_free(L); return NULL; }
+
+    Expr* R = compute_limit(f, &right);
+    if (!R) { expr_free(L); return NULL; }
+    if (expr_contains(R, ctx->x)) { expr_free(L); expr_free(R); return NULL; }
+
+    /* Both sides agree -> that's the two-sided value. */
+    if (expr_eq(L, R)) { expr_free(R); return L; }
+
+    /* Both sides well-defined but distinct -> Indeterminate. The one-sided
+     * outputs are kept long enough to confirm they are both not divergent
+     * (an Indeterminate on either side would be a wash and we should stay
+     * unevaluated; Infinity on exactly one side is a genuine disagreement). */
+    bool L_indet = is_indeterminate(L);
+    bool R_indet = is_indeterminate(R);
+    expr_free(L); expr_free(R);
+    if (L_indet || R_indet) return NULL;
+    return mk_sym("Indeterminate");
+}
+
+/* ---------------------------------------------------------------------- */
 /* Top-level dispatch                                                      */
 /* ---------------------------------------------------------------------- */
 static Expr* compute_limit(Expr* f_in, LimitCtx* ctx) {
@@ -1842,6 +2057,22 @@ static Expr* compute_limit(Expr* f_in, LimitCtx* ctx) {
     }
 
     Expr* f = simp(rewritten);
+
+    /* Re-check for opaque / discontinuous heads AFTER evaluation. User-
+     * defined wrappers (`h[n_] := Ceiling[n]`) look "known" to the pre-simp
+     * gate — h has DownValues — but the expression they unfold to may
+     * involve a discontinuous head (Ceiling, Floor, Sign, ...) applied to
+     * something that still depends on x. If we let the continuous-
+     * substitution fast path run we would silently pick one side's value
+     * at a jump. Bail out here so the caller sees an unevaluated Limit.
+     * The check is also useful against `Ceiling[g[x]]` written directly
+     * with a finite numeric point: the naive substitution would produce
+     * `Ceiling[finite]` and then return it as if analytic. */
+    if (contains_opaque_head_over(f, ctx->x)) {
+        expr_free(f);
+        ctx->depth--;
+        return NULL;
+    }
 
     Expr* r = NULL;
 
@@ -1898,6 +2129,19 @@ static Expr* compute_limit(Expr* f_in, LimitCtx* ctx) {
 
     /* Layer 6: bounded-oscillation Interval. */
     r = layer6_bounded(f, ctx);
+    if (r) { expr_free(f); ctx->depth--; return r; }
+
+    /* Atom substitution: rewrite a Power[b, e(x)] subterm as a fresh
+     * symbol u and recurse on the u-limit. Catches shapes like
+     * (-1 + 3^(2/x))/(1 + 3^(2/x)) at x -> 0 one-sided, where Series
+     * hits the essential singularity but the ratio is polynomial-in-u. */
+    r = layer_atom_substitute(f, ctx);
+    if (r) { expr_free(f); ctx->depth--; return r; }
+
+    /* Last-resort one-sided disagreement probe for two-sided limits at a
+     * finite numeric point with an x-bearing exponent. Returns
+     * Indeterminate for the 3^(1/x)-family shapes. */
+    r = layer_onesided_disagree(f, ctx);
     if (r) { expr_free(f); ctx->depth--; return r; }
 
     expr_free(f);
@@ -2357,7 +2601,7 @@ static Expr* conjugate_imaginary(Expr* e) {
     return simp(ra);
 }
 
-Expr* builtin_limit(Expr* res) {
+static Expr* builtin_limit_impl(Expr* res) {
     /* Contract: the evaluator frees `res` on a non-NULL return (see
      * src/eval.c); we must not free it ourselves. Return NULL to leave
      * the expression unevaluated. */
@@ -2469,6 +2713,19 @@ Expr* builtin_limit(Expr* res) {
     }
 
     return NULL;
+}
+
+/* Public entry point. Wraps the implementation with the arithmetic-warning
+ * mute: Limit's internal probes (Together, Series, L'Hospital, polar
+ * substitutions, direct sub-at-point attempts) routinely generate transient
+ * Power::infy / Infinity::indet messages. Those are noise to the user --
+ * the divergent sub-expression is expected and handled. Muting applies only
+ * while Limit is running; nested Limit calls nest cleanly via the counter. */
+Expr* builtin_limit(Expr* res) {
+    arith_warnings_mute_push();
+    Expr* out = builtin_limit_impl(res);
+    arith_warnings_mute_pop();
+    return out;
 }
 
 /* ---------------------------------------------------------------------- */

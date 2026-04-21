@@ -4742,3 +4742,153 @@ All `series_tests`, `simp_tests`, and `distribute_tests` soft-failures
 (printer-cleanup staleness in the latter two, series correctness in
 the first) are resolved. The test suite is now entirely pass-clean:
 59 binaries, 0 hard failures, 0 silent `FAIL:` prints.
+
+## Limit robustness pass (2026-04-21)
+
+Five categorical issues in `Limit[]` were fixed after a second head-to-head
+review against Mathematica on 15 adversarial inputs. Each is handled at
+the layer that has the right context, and every fix is gated narrowly so
+the change does not regress other limit shapes (verified against the full
+`limit_tests` + `series_tests` + whole-repo test battery -- 59 binaries,
+all green).
+
+### 1. Spurious `Power::infy` / `Infinity::indet` stderr spam
+
+PicoCAS's arithmetic modules (`arithmetic.c`, `power.c`, `plus.c`,
+`times.c`) print informational messages whenever they fold `1/0`,
+`Infinity^0`, `0^ComplexInfinity` and similar. `Limit`'s internal probes
+(continuous substitution, Series / L'Hospital, polar substitution) hit
+these shapes *by design* — that is how they discover a divergent form.
+The messages were escaping to the user's terminal and drowning out
+otherwise-correct answers.
+
+A re-entrant counter (`g_arith_warnings_muted`, declared in
+`arithmetic.h`) now gates the fprintf sites. `builtin_limit` pushes the
+counter on entry and pops it on exit, so nested limits stack cleanly.
+The return values (Indeterminate / ComplexInfinity) are unchanged; only
+the stderr noise is suppressed during limit evaluation.
+
+### 2. Discontinuous-head leak past the opaque-head gate
+
+`contains_opaque_head_over(f, x)` is invoked at the top of
+`compute_limit` to refuse limits through `Ceiling`, `Floor`, `Sign`, ...
+But user wrappers (`h[n_] := Ceiling[n]`) evade that check: the outer
+head `h` has DownValues, so `is_known_head_symbol` returns true. Once
+the expression is evaluated inside `compute_limit` (via `simp`), the
+wrapper unfolds and the discontinuous head is exposed — but by then the
+opaque check has already passed and the continuous-substitution fast
+path happily returns `Ceiling[4] = 4` for `Limit[h[5-x^2], x -> 1]`.
+
+The fix is a **second opaque-head check after `simp`**. If the
+evaluated form applies a discontinuous head to anything involving `x`,
+`compute_limit` returns NULL and leaves the expression unevaluated.
+This matches Mathematica: `Limit[Ceiling[5-x^2], x -> 1]` is left
+symbolic because the ceiling jumps at 4.
+
+### 3. Asymptotic-Log contamination of the Series layer's leading
+coefficient
+
+`Series[Log[E^x - E^a], {x, a, k}]` yields `Log[E^a] + Log[-a + x] +
+(x-a)/2 + ...` — an *asymptotic* expansion whose leading "constant
+coefficient" is `Log[x - a]`, which is in fact unbounded at `x = a`.
+`read_leading_term_limit` previously returned this coefficient verbatim
+when the leading exponent was 0, yielding a "limit" that still depended
+on the limit variable (for `Limit[Log[x-a]/Log[E^x-E^a], x -> a]` the
+wrong answer `Log[-a+x]/(Log[E^a] + Log[-a+x])`).
+
+Two defensive changes:
+  * `read_leading_term_limit` refuses the leading coefficient if it
+    contains the limit variable. The coefficient of a genuine power
+    series is a constant; an `x`-residual is a structural signal that
+    the expansion is asymptotic, not Taylor.
+  * `layer2_series`'s escalation loop terminates early when a Series
+    call produces an `x`-residual expression. Escalating the order to
+    `LIMIT_SERIES_MAX_ORDER = 32` for these shapes is O(k^3) in the
+    Series kernel and was observed to hang on `Log[E^x - E^a]`; the
+    short-circuit brings the worst case back to milliseconds.
+
+Effect: `Limit[Log[x-a]/Log[E^x-E^a], x -> a]` now returns unevaluated
+rather than a wrong-looking `x`-dependent expression. (Mathematica
+returns the closed form 1 via a Gruntz/series analysis that PicoCAS
+does not yet implement; returning unevaluated is a strict improvement
+over the prior incorrect answer.)
+
+### 4. Atom-substitution layer for `Power[b, e(x)]` shapes
+
+Expressions like `(3^(1/x) - 3^(-1/x)) / (3^(1/x) + 3^(-1/x))` at
+`x -> 0` are rational in `3^(2/x)` (after Together) but not expandable
+as a Taylor series — the Power has an essential singularity. A new
+layer, `layer_atom_substitute`, detects a `Power[b, e(x)]` subterm with
+`b` free of `x` and `e(x)` containing `x`, substitutes a fresh symbol
+`u` for it, computes `Limit[Power[b, e(x)], x -> point]`, and recurses
+on `Limit[f_sub, u -> atom_lim]`. The rational layer then closes out
+the `u`-limit.
+
+Gating is deliberately narrow:
+  * A suitable `Power` must already exist in `f` (no expensive Together
+    call otherwise).
+  * The limit point must be a numeric literal (the shape does not apply
+    to Limits at a symbolic point, and Together on shapes like
+    `E^x - E^a` is itself expensive).
+  * The recursion depth is capped at 3 to keep the total work bounded
+    when substitutions chain.
+
+### 5. Two-sided disagreement probe (new `Indeterminate` backstop)
+
+`(3^(1/x) - 3^(-1/x)) / (3^(1/x) + 3^(-1/x))` at `x -> 0` two-sided:
+the one-sided limits are `+1` (from above) and `-1` (from below), so
+the two-sided limit is `Indeterminate`. A new final-fallback layer,
+`layer_onesided_disagree`, fires when:
+  * `ctx->dir == LIMIT_DIR_TWOSIDED`
+  * the point is a numeric literal
+  * the expression has `x` in some exponent (the failure mode)
+  * recursion depth is shallow
+
+It computes the two one-sided limits; if both succeed and disagree, the
+result is `Indeterminate`. If they agree, that common value is returned
+(so the layer is also a correctness tightening). Recursive calls use
+one-sided directions, so the probe does not re-enter itself.
+
+### 6. Literal-sign for `Log[c]` with positive real `c`
+
+`literal_sign(Log[c])` previously returned 0 for numeric `c`, which
+prevented the series layer from resolving the sign of a leading
+`DirectedInfinity[Log[k]]` term and surfacing it as `+Infinity` or
+`0`. The helper now returns `+1` / `0` / `-1` based on `c` vs `1` for
+positive-real `c` (Integer, Real, BigInt, positive Rational). This
+rescues `Limit[3^(1/x), x -> 0, "FromAbove"]` → `Infinity`, which is a
+prerequisite for the two-sided disagreement probe to classify `3^(1/x)`
+shapes.
+
+### Adversarial-input scorecard
+
+| # | Input                                                                | Before              | After            | Mathematica      |
+|---|----------------------------------------------------------------------|---------------------|------------------|------------------|
+| 1 | `Limit[Sin[1/x], x -> 0]`                                            | Indeterminate + 6×1/0 noise | Indeterminate        | Indeterminate    |
+| 2 | `Limit[Log[x]/x, x -> 0]`                                            | unevaluated         | unevaluated      | `-Infinity` (dir-sensitive) |
+| 3 | `Limit[Sin[x] + Log[x-a]/Log[E^x-E^a], x -> a]`                      | wrong (has `x` in answer) | unevaluated      | `1 + Sin[a]` (out of reach) |
+| 4 | `Limit[Sin[x], x -> Infinity]`                                       | Indeterminate + 4×1/0 noise | Indeterminate    | Indeterminate    |
+| 9 | `Limit[ArcTan[y/x], {x,y} -> {Inf,Inf}]` (joint)                     | unevaluated + 1/0   | Indeterminate    | `Pi/2` (out of reach) |
+| 11 | `Limit[f[x,y], {x,y} -> {0,0}]` where `f = ArcTan[y^2/(x^2+x^3)]`    | Indeterminate + 2×1/0 noise | Indeterminate    | Indeterminate    |
+| 12 | `Limit[(3^(1/x)-3^(-1/x))/(3^(1/x)+3^(-1/x)), x -> 0]`               | unevaluated + 19×1/0 noise | Indeterminate    | Indeterminate    |
+| 13 | `Limit[Ceiling[5-x^2], x -> 1]`                                      | wrong (returned 4)  | unevaluated      | (left as is)     |
+| 14 | `Limit[x Sin[1/x], x -> 0]`                                          | 0 + 1×1/0 noise     | 0                | 0                |
+| 15 | `Limit[Sin[n Pi], n -> Infinity]`                                    | wrong (`-Infinity`) | Indeterminate    | Indeterminate    |
+
+Cases 5-8 (nested exp / iterated log / deeply composed asymptotics)
+remain unevaluated: they are the classical Gruntz-algorithm test cases
+that require an MRV (most-rapidly-varying) analysis PicoCAS does not
+yet have. Returning unevaluated is the correct fall-through; a future
+pass can add a Gruntz layer if needed.
+
+### Files touched
+
+  * `src/arithmetic.h`, `src/arithmetic.c` -- mute counter + gated
+    prints
+  * `src/plus.c`, `src/times.c`, `src/power.c` -- gated prints
+  * `src/limit.c` -- post-`simp` opaque check; `read_leading_term_limit`
+    x-residual guard; `layer2_series` early-terminate; new
+    `layer_atom_substitute`; new `layer_onesided_disagree`;
+    `literal_sign` `Log` arm
+  * `src/limit.h` -- unchanged (public interface preserved)
+

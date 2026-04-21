@@ -31,6 +31,17 @@ bool is_neg_infinity_form(Expr* e);
 // Returns +1, -1, 0 for known signs; 0 for non-numeric or ambiguous.
 int  expr_numeric_sign(Expr* e);
 
+/* Re-entrant mute for arithmetic warnings (Power::infy, Infinity::indet, ...).
+ * Internal probes that evaluate candidate sub-expressions — e.g. Limit — bump
+ * this counter while they poke at divergent forms, then decrement on exit.
+ * When the counter is non-zero, arithmetic modules skip their stderr messages.
+ * The messages are informational only; the return value (ComplexInfinity,
+ * Indeterminate) is unchanged. */
+extern int g_arith_warnings_muted;
+static inline void arith_warnings_mute_push(void)   { g_arith_warnings_muted++; }
+static inline void arith_warnings_mute_pop(void)    { if (g_arith_warnings_muted > 0) g_arith_warnings_muted--; }
+static inline int  arith_warnings_muted(void)       { return g_arith_warnings_muted; }
+
 Expr* builtin_divide(Expr* res);
 Expr* builtin_subtract(Expr* res);
 Expr* builtin_complex(Expr* res);

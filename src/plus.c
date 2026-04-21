@@ -233,13 +233,15 @@ Expr* builtin_plus(Expr* res) {
         }
         if (has_indet) return expr_new_symbol("Indeterminate");
         if (pos_inf > 0 && neg_inf > 0) {
-            fprintf(stderr,
-                "Infinity::indet: Indeterminate expression -Infinity + Infinity encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr,
+                    "Infinity::indet: Indeterminate expression -Infinity + Infinity encountered.\n");
             return expr_new_symbol("Indeterminate");
         }
         if (cinf > 1 || (cinf > 0 && (pos_inf > 0 || neg_inf > 0))) {
-            fprintf(stderr,
-                "Infinity::indet: Indeterminate expression involving ComplexInfinity encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr,
+                    "Infinity::indet: Indeterminate expression involving ComplexInfinity encountered.\n");
             return expr_new_symbol("Indeterminate");
         }
         if (cinf == 1) return expr_new_symbol("ComplexInfinity");

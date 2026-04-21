@@ -1,10 +1,13 @@
 
 #include "arithmetic.h"
 #include "eval.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <gmp.h>
+
+int g_arith_warnings_muted = 0;
 
 int64_t gcd(int64_t a, int64_t b) {
     a = llabs(a);
@@ -132,10 +135,12 @@ Expr* builtin_rational(Expr* res) {
         int64_t n = n_expr->data.integer;
         int64_t d = d_expr->data.integer;
         if (d == 0) {
-            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
             if (n == 0) {
-                fprintf(stderr,
-                    "Infinity::indet: Indeterminate expression 0 ComplexInfinity encountered.\n");
+                if (!arith_warnings_muted())
+                    fprintf(stderr,
+                        "Infinity::indet: Indeterminate expression 0 ComplexInfinity encountered.\n");
                 return expr_new_symbol("Indeterminate");
             }
             return expr_new_symbol("ComplexInfinity");
@@ -234,7 +239,8 @@ Expr* builtin_divide(Expr* res) {
         double vnum = (num->type == EXPR_REAL) ? num->data.real : (num->type == EXPR_INTEGER) ? (double)num->data.integer : (num->type == EXPR_BIGINT) ? mpz_get_d(num->data.bigint) : 0.0;
         double vden = (den->type == EXPR_REAL) ? den->data.real : (den->type == EXPR_INTEGER) ? (double)den->data.integer : (den->type == EXPR_BIGINT) ? mpz_get_d(den->data.bigint) : 0.0;
         if (vden == 0.0) {
-            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
             return expr_new_symbol("ComplexInfinity");
         }
         return expr_new_real(vnum / vden);
@@ -246,10 +252,12 @@ Expr* builtin_divide(Expr* res) {
             /* x / 0 with rational/integer x: 0/0 -> Indeterminate (handled in
              * Times when 0 multiplies ComplexInfinity); otherwise emit the
              * Power::infy message and yield ComplexInfinity. */
-            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
             if (n1 == 0) {
-                fprintf(stderr,
-                    "Infinity::indet: Indeterminate expression 0 ComplexInfinity encountered.\n");
+                if (!arith_warnings_muted())
+                    fprintf(stderr,
+                        "Infinity::indet: Indeterminate expression 0 ComplexInfinity encountered.\n");
                 return expr_new_symbol("Indeterminate");
             }
             return expr_new_symbol("ComplexInfinity");

@@ -225,21 +225,24 @@ Expr* builtin_power(Expr* res) {
 
         if (base_is_one && exp_is_inf) {
             const char* what = e_inf ? "Infinity" : (e_ninf ? "-Infinity" : "ComplexInfinity");
-            fprintf(stderr,
-                "Infinity::indet: Indeterminate expression 1^%s encountered.\n", what);
+            if (!arith_warnings_muted())
+                fprintf(stderr,
+                    "Infinity::indet: Indeterminate expression 1^%s encountered.\n", what);
             return expr_new_symbol("Indeterminate");
         }
 
         if (base_is_inf && exp_is_zero_lit) {
             const char* what = b_inf ? "Infinity" : (b_ninf ? "-Infinity" : "ComplexInfinity");
-            fprintf(stderr,
-                "Infinity::indet: Indeterminate expression %s^0 encountered.\n", what);
+            if (!arith_warnings_muted())
+                fprintf(stderr,
+                    "Infinity::indet: Indeterminate expression %s^0 encountered.\n", what);
             return expr_new_symbol("Indeterminate");
         }
 
         if (base_is_zero_lit && e_cinf) {
-            fprintf(stderr,
-                "Infinity::indet: Indeterminate expression 0^ComplexInfinity encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr,
+                    "Infinity::indet: Indeterminate expression 0^ComplexInfinity encountered.\n");
             return expr_new_symbol("Indeterminate");
         }
 
@@ -248,7 +251,8 @@ Expr* builtin_power(Expr* res) {
         }
 
         if (base_is_zero_lit && e_ninf) {
-            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+            if (!arith_warnings_muted())
+                fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
             return expr_new_symbol("ComplexInfinity");
         }
 
@@ -295,7 +299,8 @@ Expr* builtin_power(Expr* res) {
     }
 
     if (base_is_zero && exp_is_negative) {
-        fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+        if (!arith_warnings_muted())
+            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
         return expr_new_symbol("ComplexInfinity");
     }
     /* 0^positive -> 0 (includes 0^(1/2) = Sqrt[0] = 0, 0^0.5 = 0, etc.).

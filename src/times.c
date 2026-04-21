@@ -232,8 +232,9 @@ Expr* builtin_times(Expr* res) {
                 expr_free(coeff);
                 if (is_zero) {
                     const char* what = (cinf_count > 0) ? "ComplexInfinity" : "Infinity";
-                    fprintf(stderr,
-                        "Infinity::indet: Indeterminate expression 0 %s encountered.\n", what);
+                    if (!arith_warnings_muted())
+                        fprintf(stderr,
+                            "Infinity::indet: Indeterminate expression 0 %s encountered.\n", what);
                     return expr_new_symbol("Indeterminate");
                 }
                 if (cinf_count > 0) return expr_new_symbol("ComplexInfinity");
