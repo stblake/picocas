@@ -496,6 +496,34 @@ int expr_numeric_sign(Expr* e) {
     return 0;
 }
 
+bool expr_is_superficially_negative(Expr* e) {
+    if (!e) return false;
+    int s = expr_numeric_sign(e);
+    if (s < 0) return true;
+    if (s > 0) return false;
+    /* s == 0: either a zero numeric (not negative) or a non-numeric --
+     * fall through to Complex and Times shape checks. */
+    Expr* re; Expr* im;
+    if (is_complex(e, &re, &im)) {
+        int rs = expr_numeric_sign(re);
+        if (rs < 0) return true;
+        if (rs > 0) return false;
+        /* Real part is zero: use the imaginary part's sign. Catches the
+         * "pure imaginary with negative coefficient" case, e.g. -2 I =
+         * Complex[0, -2]. */
+        return expr_numeric_sign(im) < 0;
+    }
+    if (e->type == EXPR_FUNCTION && e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Times") == 0 &&
+        e->data.function.arg_count > 0) {
+        /* Leading factor carries the syntactic sign, per Times canonical
+         * ordering (numerics sort first). */
+        return expr_is_superficially_negative(e->data.function.args[0]);
+    }
+    return false;
+}
+
 bool is_neg_infinity_form(Expr* e) {
     if (!e || e->type != EXPR_FUNCTION) return false;
     if (e->data.function.head->type != EXPR_SYMBOL) return false;

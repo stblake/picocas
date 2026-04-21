@@ -10,6 +10,7 @@
 #include "power.h"
 #include "complex.h"
 #include "symtab.h"
+#include "eval.h"
 #include <math.h>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
@@ -56,7 +57,101 @@ static bool extract_pi_multiplier(Expr* e, int64_t* n, int64_t* d) {
     return false;
 }
 
-/* 
+/*
+ * flip_sign:
+ * Returns a newly allocated, evaluated expression equal to -e. Caller
+ * owns the result; `e` is untouched. Uses the evaluator so that e.g.
+ * Times[-1, Complex[0, -2]] canonicalises back to Complex[0, 2] and
+ * Times[-1, Times[-k, x]] collapses to Times[k, x].
+ */
+static Expr* flip_sign(Expr* e) {
+    Expr* args[2] = { expr_new_integer(-1), expr_copy(e) };
+    return eval_and_free(expr_new_function(expr_new_symbol("Times"), args, 2));
+}
+
+/*
+ * even_fold / odd_fold:
+ * If `arg` is superficially negative (see expr_is_superficially_negative
+ * in arithmetic.h), rewrite f[arg] as the simplified form -- f[|arg|]
+ * for even f, -f[|arg|] for odd f -- and return the new expression.
+ * Return NULL otherwise so the caller can continue with other
+ * simplifications. The caller's `res` is freed by evaluate_step once
+ * this helper returns a non-NULL replacement, per the builtin calling
+ * convention -- do NOT free it here.
+ */
+static Expr* even_fold(Expr* arg, const char* head_name) {
+    if (!expr_is_superficially_negative(arg)) return NULL;
+    Expr* neg = flip_sign(arg);
+    Expr* inner_args[1] = { neg };
+    return expr_new_function(expr_new_symbol(head_name), inner_args, 1);
+}
+
+static Expr* odd_fold(Expr* arg, const char* head_name) {
+    if (!expr_is_superficially_negative(arg)) return NULL;
+    Expr* neg = flip_sign(arg);
+    Expr* inner_args[1] = { neg };
+    Expr* inner = expr_new_function(expr_new_symbol(head_name), inner_args, 1);
+    return make_times(expr_new_integer(-1), inner);
+}
+
+/*
+ * peel_imaginary_unit:
+ * If `arg` is a pure-imaginary-unit-scaled expression -- Complex[0, k]
+ * (k > 0) or Times[Complex[0, k], rest...] (k > 0) -- return a newly
+ * allocated, evaluated expression equal to `arg / I` (the "real"
+ * coefficient). Otherwise NULL. Assumes sign-extraction has already
+ * canonicalised the leading imaginary coefficient to positive.
+ */
+static Expr* peel_imaginary_unit(Expr* arg) {
+    Expr* re; Expr* im;
+    if (is_complex(arg, &re, &im)) {
+        if (expr_numeric_sign(re) != 0) return NULL;
+        if (expr_numeric_sign(im) <= 0) return NULL;
+        return expr_copy(im);
+    }
+    if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Times") == 0 &&
+        arg->data.function.arg_count > 0) {
+        Expr* first = arg->data.function.args[0];
+        Expr* fre; Expr* fim;
+        if (!is_complex(first, &fre, &fim)) return NULL;
+        if (expr_numeric_sign(fre) != 0) return NULL;
+        if (expr_numeric_sign(fim) <= 0) return NULL;
+        size_t n = arg->data.function.arg_count;
+        if (n == 1) return expr_copy(fim);
+        Expr** new_args = (Expr**)malloc(sizeof(Expr*) * n);
+        new_args[0] = expr_copy(fim);
+        for (size_t i = 1; i < n; i++) new_args[i] = expr_copy(arg->data.function.args[i]);
+        Expr* t = expr_new_function(expr_new_symbol("Times"), new_args, n);
+        free(new_args);
+        return eval_and_free(t);
+    }
+    return NULL;
+}
+
+/*
+ * trig_i_fold:
+ * Rewrites f[I*y] using the Cos/Cosh -- Sin/Sinh -- Tan/Tanh bridge:
+ *   Cos[I y]  -> Cosh[y]          Sec[I y]  -> Sech[y]
+ *   Sin[I y]  -> I Sinh[y]        Csc[I y]  -> -I Csch[y]
+ *   Tan[I y]  -> I Tanh[y]        Cot[I y]  -> -I Coth[y]
+ * `counterpart` is the hyperbolic head to emit. `coeff_kind` selects
+ * the multiplier prepended to the result: 0 = none, +1 = I, -1 = -I.
+ * Returns NULL when `arg` is not of the form I*y. The caller's `res`
+ * is freed by evaluate_step after a non-NULL return.
+ */
+static Expr* trig_i_fold(Expr* arg, const char* counterpart, int coeff_kind) {
+    Expr* y = peel_imaginary_unit(arg);
+    if (!y) return NULL;
+    Expr* a[1] = { y };
+    Expr* inner = expr_new_function(expr_new_symbol(counterpart), a, 1);
+    if (coeff_kind == 0) return inner;
+    /* +I coefficient: Complex[0, 1]; -I coefficient: Complex[0, -1]. */
+    Expr* coeff = make_complex(expr_new_integer(0), expr_new_integer(coeff_kind));
+    return make_times(coeff, inner);
+}
+
+/*
  * get_approx:
  * Tries to get a numeric complex approximation of the expression.
  */
@@ -412,6 +507,12 @@ Expr* builtin_sin(Expr* res) {
 
     { Expr* inv = strip_inverse_call(arg, "ArcSin"); if (inv) return inv; }
 
+    // Sin is odd: Sin[-x] -> -Sin[x]
+    { Expr* f = odd_fold(arg, "Sin"); if (f) return f; }
+
+    // Sin[I y] -> I Sinh[y]
+    { Expr* f = trig_i_fold(arg, "Sinh", +1); if (f) return f; }
+
     // Sin[0] = 0
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     
@@ -444,6 +545,12 @@ Expr* builtin_cos(Expr* res) {
     Expr* arg = res->data.function.args[0];
 
     { Expr* inv = strip_inverse_call(arg, "ArcCos"); if (inv) return inv; }
+
+    // Cos is even: Cos[-x] -> Cos[x]
+    { Expr* f = even_fold(arg, "Cos"); if (f) return f; }
+
+    // Cos[I y] -> Cosh[y]
+    { Expr* f = trig_i_fold(arg, "Cosh", 0); if (f) return f; }
 
     // Cos[0] = 1
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
@@ -478,6 +585,12 @@ Expr* builtin_tan(Expr* res) {
 
     { Expr* inv = strip_inverse_call(arg, "ArcTan"); if (inv) return inv; }
 
+    // Tan is odd: Tan[-x] -> -Tan[x]
+    { Expr* f = odd_fold(arg, "Tan"); if (f) return f; }
+
+    // Tan[I y] -> I Tanh[y]
+    { Expr* f = trig_i_fold(arg, "Tanh", +1); if (f) return f; }
+
     // Tan[0] = 0
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(0);
     
@@ -510,6 +623,12 @@ Expr* builtin_cot(Expr* res) {
     Expr* arg = res->data.function.args[0];
 
     { Expr* inv = strip_inverse_call(arg, "ArcCot"); if (inv) return inv; }
+
+    // Cot is odd: Cot[-x] -> -Cot[x]
+    { Expr* f = odd_fold(arg, "Cot"); if (f) return f; }
+
+    // Cot[I y] -> -I Coth[y]
+    { Expr* f = trig_i_fold(arg, "Coth", -1); if (f) return f; }
 
     // Cot[0] = ComplexInfinity
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");
@@ -544,6 +663,12 @@ Expr* builtin_sec(Expr* res) {
 
     { Expr* inv = strip_inverse_call(arg, "ArcSec"); if (inv) return inv; }
 
+    // Sec is even: Sec[-x] -> Sec[x]
+    { Expr* f = even_fold(arg, "Sec"); if (f) return f; }
+
+    // Sec[I y] -> Sech[y]
+    { Expr* f = trig_i_fold(arg, "Sech", 0); if (f) return f; }
+
     // Sec[0] = 1
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_integer(1);
     
@@ -576,6 +701,12 @@ Expr* builtin_csc(Expr* res) {
     Expr* arg = res->data.function.args[0];
 
     { Expr* inv = strip_inverse_call(arg, "ArcCsc"); if (inv) return inv; }
+
+    // Csc is odd: Csc[-x] -> -Csc[x]
+    { Expr* f = odd_fold(arg, "Csc"); if (f) return f; }
+
+    // Csc[I y] -> -I Csch[y]
+    { Expr* f = trig_i_fold(arg, "Csch", -1); if (f) return f; }
 
     // Csc[0] = ComplexInfinity
     if (arg->type == EXPR_INTEGER && arg->data.integer == 0) return expr_new_symbol("ComplexInfinity");

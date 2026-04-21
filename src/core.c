@@ -72,6 +72,18 @@ void core_init(void) {
     symtab_add_builtin("Prepend", builtin_prepend);
     symtab_add_builtin("AppendTo", builtin_append_to);
     symtab_add_builtin("PrependTo", builtin_prepend_to);
+    symtab_add_builtin("Increment", builtin_increment);
+    symtab_add_builtin("Decrement", builtin_decrement);
+    symtab_add_builtin("PreIncrement", builtin_preincrement);
+    symtab_add_builtin("PreDecrement", builtin_predecrement);
+    symtab_add_builtin("AddTo", builtin_addto);
+    symtab_add_builtin("SubtractFrom", builtin_subtractfrom);
+    symtab_get_def("Increment")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
+    symtab_get_def("Decrement")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
+    symtab_get_def("PreIncrement")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
+    symtab_get_def("PreDecrement")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
+    symtab_get_def("AddTo")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
+    symtab_get_def("SubtractFrom")->attributes |= ATTR_HOLDFIRST | ATTR_PROTECTED;
     symtab_add_builtin("Attributes", builtin_attributes);
     symtab_add_builtin("SetAttributes", builtin_set_attributes);
     symtab_add_builtin("OwnValues", builtin_own_values);
@@ -1177,6 +1189,136 @@ Expr* builtin_level(Expr* res) {
     Expr* list = expr_new_function(expr_new_symbol("List"), results, count);
     free(results);
     return list;
+}
+
+/*
+ * Increment / Decrement / PreIncrement / PreDecrement / AddTo / SubtractFrom
+ *
+ * All six operators follow the same pattern:
+ *   1. Resolve the ultimate symbol that holds the mutable value. For a plain
+ *      symbol argument this is the symbol itself; for a Part[sym, ...]
+ *      argument it is the underlying sym.
+ *   2. If that symbol has no OwnValue, emit an X::rvalue message and leave
+ *      the expression unevaluated (returning NULL from the builtin).
+ *   3. Evaluate the l-value to obtain the current value.
+ *   4. Combine it with the delta (Plus for Increment/AddTo, Plus[v, Times[-1,dx]]
+ *      for Decrement/SubtractFrom) and re-evaluate so list threading, symbolic
+ *      simplification etc. all happen naturally.
+ *   5. Write the new value back via Set, which already knows how to update a
+ *      plain symbol or an indexed Part target.
+ *   6. Return the old value (Increment/Decrement) or the new value
+ *      (PreIncrement/PreDecrement, AddTo, SubtractFrom).
+ */
+
+/* Return the name of the symbol ultimately holding the mutable value for an
+ * l-value used with Increment-family operators. Supports plain symbols and
+ * Part[sym, ...] lvalues. Returns NULL for anything else. */
+static const char* lvalue_symbol_name(Expr* lhs) {
+    if (!lhs) return NULL;
+    if (lhs->type == EXPR_SYMBOL) return lhs->data.symbol;
+    if (lhs->type == EXPR_FUNCTION &&
+        lhs->data.function.head->type == EXPR_SYMBOL &&
+        lhs->data.function.arg_count >= 1 &&
+        strcmp(lhs->data.function.head->data.symbol, "Part") == 0) {
+        return lvalue_symbol_name(lhs->data.function.args[0]);
+    }
+    return NULL;
+}
+
+/* Shared worker. dx is the amount to add (caller owns; we make our own copies).
+ * If negate is true, dx is subtracted instead. If pre is true, the new value
+ * is returned; otherwise the old value is returned. op_name is used only to
+ * compose the X::rvalue diagnostic. */
+static Expr* increment_core(Expr* lhs, Expr* dx, bool negate, bool pre, const char* op_name) {
+    const char* sym = lvalue_symbol_name(lhs);
+    if (!sym || symtab_get_own_values(sym) == NULL) {
+        fprintf(stderr,
+                "%s::rvalue: %s is not a variable with a value, so its value cannot be changed.\n",
+                op_name, sym ? sym : "argument");
+        return NULL;
+    }
+
+    Expr* old_val = evaluate(lhs);
+
+    /* Build Plus[old_val, dx_or_-dx] and evaluate. */
+    Expr* delta_term;
+    if (negate) {
+        Expr** neg_args = malloc(sizeof(Expr*) * 2);
+        neg_args[0] = expr_new_integer(-1);
+        neg_args[1] = expr_copy(dx);
+        delta_term = expr_new_function(expr_new_symbol("Times"), neg_args, 2);
+        free(neg_args);
+    } else {
+        delta_term = expr_copy(dx);
+    }
+    Expr** plus_args = malloc(sizeof(Expr*) * 2);
+    plus_args[0] = expr_copy(old_val);
+    plus_args[1] = delta_term;
+    Expr* plus_expr = expr_new_function(expr_new_symbol("Plus"), plus_args, 2);
+    free(plus_args);
+    Expr* new_val = evaluate(plus_expr);
+    expr_free(plus_expr);
+
+    /* Write the new value back via Set. Set has HoldFirst so the lhs shape
+     * (e.g. Part[list, 2]) is preserved for apply_assignment to handle. */
+    Expr** set_args = malloc(sizeof(Expr*) * 2);
+    set_args[0] = expr_copy(lhs);
+    set_args[1] = expr_copy(new_val);
+    Expr* set_call = expr_new_function(expr_new_symbol("Set"), set_args, 2);
+    free(set_args);
+    Expr* set_result = evaluate(set_call);
+    expr_free(set_call);
+    if (set_result) expr_free(set_result);
+
+    if (pre) {
+        expr_free(old_val);
+        return new_val;
+    } else {
+        expr_free(new_val);
+        return old_val;
+    }
+}
+
+Expr* builtin_increment(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* one = expr_new_integer(1);
+    Expr* out = increment_core(res->data.function.args[0], one, false, false, "Increment");
+    expr_free(one);
+    return out;
+}
+
+Expr* builtin_decrement(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* one = expr_new_integer(1);
+    Expr* out = increment_core(res->data.function.args[0], one, true, false, "Decrement");
+    expr_free(one);
+    return out;
+}
+
+Expr* builtin_preincrement(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* one = expr_new_integer(1);
+    Expr* out = increment_core(res->data.function.args[0], one, false, true, "PreIncrement");
+    expr_free(one);
+    return out;
+}
+
+Expr* builtin_predecrement(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* one = expr_new_integer(1);
+    Expr* out = increment_core(res->data.function.args[0], one, true, true, "PreDecrement");
+    expr_free(one);
+    return out;
+}
+
+Expr* builtin_addto(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    return increment_core(res->data.function.args[0], res->data.function.args[1], false, true, "AddTo");
+}
+
+Expr* builtin_subtractfrom(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 2) return NULL;
+    return increment_core(res->data.function.args[0], res->data.function.args[1], true, true, "SubtractFrom");
 }
 
 Expr* builtin_quotientremainder(Expr* res) {

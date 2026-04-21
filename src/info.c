@@ -180,6 +180,62 @@ void info_init(void) {
         "HoldAllComplete prevents argument evaluation, Sequence flattening inside arguments, Unevaluated wrapper stripping, and application of Evaluate.\n"
         "Evaluate cannot override HoldAllComplete.");
     symtab_set_docstring("Set", "lhs = rhs assigns rhs to lhs.");
+
+    // In-place numeric assignment operators
+    symtab_set_docstring("Increment",
+        "Increment[x] or x++\n"
+        "\tincreases the value of x by 1, returning the old value of x.\n"
+        "\n"
+        "Increment has attribute HoldFirst. In Increment[x], x can be a symbol\n"
+        "or a Part expression referring to an existing value (e.g. list[[2]]++).\n"
+        "Increment threads over list values because Plus is Listable.\n"
+        "If x has no assigned value, Increment::rvalue is emitted and the\n"
+        "expression is left unevaluated.");
+    symtab_set_docstring("Decrement",
+        "Decrement[x] or x--\n"
+        "\tdecreases the value of x by 1, returning the old value of x.\n"
+        "\n"
+        "Decrement has attribute HoldFirst. In Decrement[x], x can be a symbol\n"
+        "or a Part expression referring to an existing value (e.g. list[[2]]--).\n"
+        "If x has no assigned value, Decrement::rvalue is emitted and the\n"
+        "expression is left unevaluated.");
+    symtab_set_docstring("PreIncrement",
+        "PreIncrement[x] or ++x\n"
+        "\tincreases the value of x by 1, returning the new value of x.\n"
+        "\t++x is equivalent to x = x + 1.\n"
+        "\n"
+        "PreIncrement has attribute HoldFirst. In PreIncrement[x], x can be a\n"
+        "symbol or a Part expression referring to an existing value.\n"
+        "If x has no assigned value, PreIncrement::rvalue is emitted and the\n"
+        "expression is left unevaluated.");
+    symtab_set_docstring("PreDecrement",
+        "PreDecrement[x] or --x\n"
+        "\tdecreases the value of x by 1, returning the new value of x.\n"
+        "\t--x is equivalent to x = x - 1.\n"
+        "\n"
+        "PreDecrement has attribute HoldFirst. In PreDecrement[x], x can be a\n"
+        "symbol or a Part expression referring to an existing value.\n"
+        "If x has no assigned value, PreDecrement::rvalue is emitted and the\n"
+        "expression is left unevaluated.");
+    symtab_set_docstring("AddTo",
+        "AddTo[x, dx] or x += dx\n"
+        "\tadds dx to x and returns the new value of x.\n"
+        "\tx += dx is equivalent to x = x + dx.\n"
+        "\n"
+        "AddTo has attribute HoldFirst. The first argument x can be a symbol or\n"
+        "a Part expression referring to an existing value; dx may be a number,\n"
+        "a symbolic expression, or a list (combined element-wise via the Listable\n"
+        "attribute of Plus). If x has no assigned value, AddTo::rvalue is emitted\n"
+        "and the expression is left unevaluated.");
+    symtab_set_docstring("SubtractFrom",
+        "SubtractFrom[x, dx] or x -= dx\n"
+        "\tsubtracts dx from x and returns the new value of x.\n"
+        "\tx -= dx is equivalent to x = x - dx.\n"
+        "\n"
+        "SubtractFrom has attribute HoldFirst. The first argument x can be a\n"
+        "symbol or a Part expression referring to an existing value; dx may be a\n"
+        "number, a symbolic expression, or a list. If x has no assigned value,\n"
+        "SubtractFrom::rvalue is emitted and the expression is left unevaluated.");
     symtab_set_docstring("SetDelayed", "lhs := rhs assigns rhs to lhs, evaluating it only when needed.");
     symtab_set_docstring("Default", "Default[f] gives the default value for arguments of the function f obtained with a _. pattern object.");
     symtab_set_docstring("Optional", "patt:def or Optional[patt,def] is a pattern object that represents an expression of the form patt, which, if omitted, should be replaced by the default value def.");

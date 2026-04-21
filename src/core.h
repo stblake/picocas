@@ -31,6 +31,12 @@ Expr* builtin_bytecount(Expr* res);
 Expr* builtin_information(Expr* res);
 Expr* builtin_evaluate(Expr* res);
 Expr* builtin_releasehold(Expr* res);
+Expr* builtin_increment(Expr* res);
+Expr* builtin_decrement(Expr* res);
+Expr* builtin_preincrement(Expr* res);
+Expr* builtin_predecrement(Expr* res);
+Expr* builtin_addto(Expr* res);
+Expr* builtin_subtractfrom(Expr* res);
 
 // Initialize core builtins
 void core_init(void);

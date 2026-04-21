@@ -31,6 +31,15 @@ bool is_neg_infinity_form(Expr* e);
 // Returns +1, -1, 0 for known signs; 0 for non-numeric or ambiguous.
 int  expr_numeric_sign(Expr* e);
 
+/* expr_is_superficially_negative:
+ * True if `e` can be cheaply rewritten with its sign flipped. Handles:
+ *   - negative Integer/Real/Rational[-n, d]
+ *   - Complex[re, im] where (sign(re) < 0) or (re == 0 and sign(im) < 0)
+ *   - Times[c, ...] whose leading factor c is itself superficially negative
+ * Used by trig/hyperbolic sign-extraction to pull out the sign via
+ * f[-x] = +/- f[x] for even/odd f. `e` is never modified. */
+bool expr_is_superficially_negative(Expr* e);
+
 /* Re-entrant mute for arithmetic warnings (Power::infy, Infinity::indet, ...).
  * Internal probes that evaluate candidate sub-expressions — e.g. Limit — bump
  * this counter while they poke at divergent forms, then decrement on exit.

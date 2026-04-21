@@ -283,7 +283,11 @@ typedef enum {
     OP_FACTORIAL,
     OP_REPEATED,
     OP_REPEATEDNULL,
-    OP_STRINGJOIN
+    OP_STRINGJOIN,
+    OP_INCREMENT,
+    OP_DECREMENT,
+    OP_ADDTO,
+    OP_SUBTRACTFROM
 } OperatorType;
 
 typedef struct {
@@ -355,6 +359,14 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_COLON; def.prec = 140; def.right_assoc = 1; def.head_name = "Optional"; def.len = 1;
     } else if (*pos == '=') {
         def.type = OP_SET; def.prec = 40; def.right_assoc = 1; def.head_name = "Set"; def.len = 1;
+    } else if (strncmp(pos, "++", 2) == 0) {
+        def.type = OP_INCREMENT; def.prec = 660; def.head_name = "Increment"; def.len = 2;
+    } else if (strncmp(pos, "--", 2) == 0) {
+        def.type = OP_DECREMENT; def.prec = 660; def.head_name = "Decrement"; def.len = 2;
+    } else if (strncmp(pos, "+=", 2) == 0) {
+        def.type = OP_ADDTO; def.prec = 40; def.right_assoc = 1; def.head_name = "AddTo"; def.len = 2;
+    } else if (strncmp(pos, "-=", 2) == 0) {
+        def.type = OP_SUBTRACTFROM; def.prec = 40; def.right_assoc = 1; def.head_name = "SubtractFrom"; def.len = 2;
     } else if (*pos == '+') {
         def.type = OP_PLUS; def.prec = 310; def.head_name = "Plus"; def.len = 1;
     } else if (*pos == '-') {
@@ -525,6 +537,18 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
 
     if (strncmp(s->pos, ";;", 2) == 0) {
         left = expr_new_integer(1);
+    } else if (strncmp(s->pos, "++", 2) == 0) {
+        s->pos += 2;
+        Expr* right = parse_expression_prec(s, 660);
+        if (!right) return NULL;
+        Expr* args[1] = { right };
+        left = expr_new_function(expr_new_symbol("PreIncrement"), args, 1);
+    } else if (strncmp(s->pos, "--", 2) == 0) {
+        s->pos += 2;
+        Expr* right = parse_expression_prec(s, 660);
+        if (!right) return NULL;
+        Expr* args[1] = { right };
+        left = expr_new_function(expr_new_symbol("PreDecrement"), args, 1);
     } else if (*s->pos == '-' && !isdigit(s->pos[1]) && !(s->pos[1] == '.' && isdigit(s->pos[2]))) {
         s->pos++;
         // Use a precedence higher than Plus (310) and Times (400)
@@ -600,6 +624,14 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
         } else if (op_def.type == OP_FACTORIAL) {
             Expr* args[1] = { left };
             left = expr_new_function(expr_new_symbol("Factorial"), args, 1);
+            continue;
+        } else if (op_def.type == OP_INCREMENT) {
+            Expr* args[1] = { left };
+            left = expr_new_function(expr_new_symbol("Increment"), args, 1);
+            continue;
+        } else if (op_def.type == OP_DECREMENT) {
+            Expr* args[1] = { left };
+            left = expr_new_function(expr_new_symbol("Decrement"), args, 1);
             continue;
         } else if (op_def.type == OP_REPEATED) {
             Expr* args[1] = { left };

@@ -4892,3 +4892,201 @@ pass can add a Gruntz layer if needed.
     `literal_sign` `Log` arm
   * `src/limit.h` -- unchanged (public interface preserved)
 
+## Trig / hyperbolic argument canonicalisation (2026-04-21)
+
+Forward trigonometric and hyperbolic builtins now canonicalise
+two shapes of argument at evaluation time:
+
+1. **Sign extraction** via even/odd symmetry (`Cos[-2 x] -> Cos[2 x]`,
+   `Sin[-4 x] -> -Sin[4 x]`).
+2. **Imaginary-unit bridge** between trig and hyperbolic heads
+   (`Cosh[I x] -> Cos[x]`, `Sin[x/I] -> -I Sinh[x]`).
+
+Both rewrites are short, syntactic, and fire before the existing
+zero / infinity / `Pi`-multiple / numeric-approximation branches.
+
+### Sign extraction
+
+**Scope.**
+* Even (argument sign dropped): `Cos`, `Sec`, `Cosh`, `Sech`.
+* Odd (argument sign pulled outside as `Times[-1, ...]`):
+  `Sin`, `Tan`, `Cot`, `Csc`, `Sinh`, `Tanh`, `Coth`, `Csch`.
+
+**Trigger -- "superficially negative" arguments.** The new helper
+`expr_is_superficially_negative` in `src/arithmetic.{c,h}` matches:
+
+* a negative numeric literal (`Integer`, `Real`, `BigInt`, or
+  `Rational[-n, d]`);
+* a `Complex[re, im]` whose canonical sign is negative, i.e.
+  `re < 0`, or `re == 0 && im < 0` (catches `-2 I` =
+  `Complex[0, -2]`);
+* a `Times[c, ...]` whose leading factor `c` is itself superficially
+  negative (covers `-k x`, `-1.5 y`, `(-3/2) a`, `-x` =
+  `Times[-1, x]`, and the complex-imaginary variants like
+  `-2 I x` = `Times[Complex[0, -2], x]`).
+
+The shape test is deliberately syntactic: it recognises sign
+extraction that is cheap and obviously valid without invoking the
+full simplifier on symbolic arguments.
+
+**Mechanism.** Each forward builtin runs, immediately after the
+forward/inverse strip, a short-circuit that:
+
+1. Calls `flip_sign(arg)` -- builds `Times[-1, arg]` and invokes the
+   evaluator so nested structure canonicalises:
+   `Times[-1, Complex[0, -2]] -> Complex[0, 2]`;
+   `Times[-1, Times[-k, x]] -> k x`; single-factor cases like
+   `Times[-1, x]` collapse to `x`.
+2. Rebuilds `f[flip_sign(arg)]` (even case) or
+   `Times[-1, f[flip_sign(arg)]]` (odd case).
+3. Returns the new expression -- `res` is freed by `evaluate_step`
+   per the builtin calling convention.
+
+Because the evaluator loop continues until a fixed point, the inner
+re-entry of `f` on the flipped argument picks up any other available
+simplifications (exact rational-`Pi` values, the new imaginary-unit
+bridge, numeric approximation, etc.) in the same top-level evaluation.
+
+### Imaginary-unit bridge
+
+**Identities.** Applied immediately after sign extraction, so the
+leading imaginary coefficient is always canonically positive:
+
+| Trig          | Hyperbolic     |
+|---------------|----------------|
+| `Cos[I y]  -> Cosh[y]` | `Cosh[I y] -> Cos[y]`  |
+| `Sin[I y]  -> I Sinh[y]` | `Sinh[I y] -> I Sin[y]`  |
+| `Tan[I y]  -> I Tanh[y]` | `Tanh[I y] -> I Tan[y]`  |
+| `Cot[I y]  -> -I Coth[y]` | `Coth[I y] -> -I Cot[y]` |
+| `Sec[I y]  -> Sech[y]` | `Sech[I y] -> Sec[y]`    |
+| `Csc[I y]  -> -I Csch[y]` | `Csch[I y] -> -I Csc[y]` |
+
+**Trigger.** The helper `peel_imaginary_unit(arg)` returns the "real
+part" `y` when `arg` is of the form `I y`, i.e.:
+
+* `arg = Complex[0, k]` with `k > 0` (then `y = k`);
+* `arg = Times[Complex[0, k], rest...]` with `k > 0` (then
+  `y = k * rest`, evaluated).
+
+A leading `Complex[0, k]` with `k < 0` never reaches this helper
+because sign extraction canonicalises `k` to positive first, so for
+example `Cos[x/I]` (which parses to `Cos[Times[Complex[0,-1], x]]`)
+first becomes `Cos[I x]` via even-symmetry and then `Cosh[x]` via
+the bridge in the same evaluator cycle.
+
+**Why symmetric coefficients.** The bridge multipliers are the
+same in both directions because `1/I = -I`:
+`Cot[I y] = Cosh[y] / (I Sinh[y]) = -I Coth[y]`, and
+`Coth[I y] = Cos[y] / (I Sin[y]) = -I Cot[y]`.
+
+### Interaction with existing rules
+
+* Exact rational-`Pi` evaluation is unaffected: `Sin[-Pi/3]` becomes
+  `-Sin[Pi/3]` = `-1/2 Sqrt[3]`.
+* Numeric approximation is unaffected: `Sin[-1.5]` evaluates to
+  `-0.997495` (via the `-Sin[1.5]` path).
+* `f[0]` and infinity identities still fire because `0` is neither
+  superficially negative nor pure imaginary.
+* Previously, `Sin[2 x] + 2 Cos[x] // TrigToExp // ExpToTrig` left a
+  residual `(-I) Cosh[(2*I) x] + (-I) Sinh[(2*I) x] + (I) Cosh[(-2*I) x] + (I) Sinh[(-2*I) x]`
+  tangle. Sign extraction canonicalises the `-2 I x` arguments and
+  the bridge collapses the hyperbolic heads back to trig, letting
+  the surrounding `Plus` cancellations fire.
+
+### Files touched
+
+* `src/arithmetic.h`, `src/arithmetic.c` -- new public
+  `expr_is_superficially_negative` helper (reused by both
+  `trig.c` and `hyperbolic.c`; available to future callers).
+* `src/trig.c` -- new static helpers `flip_sign`, `even_fold`,
+  `odd_fold`, `peel_imaginary_unit`, `trig_i_fold`; sign-fold and
+  I-fold short-circuits added to each of `builtin_sin`, `builtin_cos`,
+  `builtin_tan`, `builtin_cot`, `builtin_sec`, `builtin_csc`.
+* `src/hyperbolic.c` -- same helpers (`hyp_i_fold` counterpart);
+  short-circuits added to `builtin_sinh`, `builtin_cosh`,
+  `builtin_tanh`, `builtin_coth`, `builtin_sech`, `builtin_csch`.
+
+
+## Increment / Decrement / AddTo / SubtractFrom
+
+PicoCAS implements the full Mathematica family of in-place numeric
+update operators. The parser recognises `++`, `--`, `+=`, and `-=`
+and rewrites them to named heads; each head is a C built-in with
+attribute `{HoldFirst, Protected}`.
+
+### Operators and heads
+
+| Source form   | Parsed as              | Returns    |
+| ------------- | ---------------------- | ---------- |
+| `x++`         | `Increment[x]`         | old value  |
+| `x--`         | `Decrement[x]`         | old value  |
+| `++x`         | `PreIncrement[x]`      | new value  |
+| `--x`         | `PreDecrement[x]`      | new value  |
+| `x += dx`     | `AddTo[x, dx]`         | new value  |
+| `x -= dx`     | `SubtractFrom[x, dx]`  | new value  |
+
+Postfix `++` / `--` have operator precedence 660 (tighter than `^`,
+`*`, `+`); prefix `++` / `--` use the same precedence for their
+operand, so `++a + 1` parses as `(++a) + 1`. `+=` and `-=` share the
+right-associative precedence of `Set` (40), so `x += y = 2` assigns
+`2` to `y` and then adds it to `x`.
+
+### Semantics
+
+1. The first argument is held (`HoldFirst`) so the identifier is not
+    evaluated before the operator sees it.
+2. The operator resolves the underlying mutable symbol: for a bare
+    symbol that is the symbol itself; for a `Part[sym, ...]` l-value
+    it is the underlying `sym`.
+3. If the target symbol has no `OwnValue`, the operator emits
+    `<Head>::rvalue: <name> is not a variable with a value, so its
+    value cannot be changed.` and returns itself unevaluated, matching
+    Mathematica.
+4. Otherwise the operator evaluates the l-value, combines it with the
+    delta via `Plus` (negating for `Decrement` / `SubtractFrom`), and
+    re-evaluates. Because `Plus` is `Listable`, list-valued targets
+    thread element-wise (`{1,2,3}++` produces `{2,3,4}`, and
+    `{18,19,20} += {20,21,22}` produces `{38,40,42}`).
+5. The new value is written back via `Set`, so indexed updates go
+    through the existing `expr_part_assign` pipeline
+    (`list[[2]]++` mutates only that element).
+6. `Increment` and `Decrement` return the *old* value; the other four
+    return the *new* value.
+
+### Examples
+
+```mathematica
+In[1]:= k = 1; k++
+Out[1]= 1
+In[2]:= k
+Out[2]= 2
+
+In[3]:= v = a; v++; v
+Out[3]= 1 + a
+
+In[4]:= list = {1, 2, 3}; list[[2]]++; list
+Out[4]= {1, 3, 3}
+
+In[5]:= x = {100, 200, 300}; x -= {20, 21, 22}; x
+Out[5]= {80, 179, 278}
+
+In[6]:= y++
+Increment::rvalue: y is not a variable with a value, so its value cannot be changed.
+Out[6]= y++
+```
+
+### Files touched
+
+* `src/parse.c` -- adds `OP_INCREMENT`, `OP_DECREMENT`, `OP_ADDTO`,
+    `OP_SUBTRACTFROM` to the operator table; handles `++` / `--`
+    as both postfix (via the Pratt loop, alongside `!`) and prefix
+    (via the expression-start branch).
+* `src/core.c`, `src/core.h` -- new `builtin_increment`,
+    `builtin_decrement`, `builtin_preincrement`,
+    `builtin_predecrement`, `builtin_addto`, `builtin_subtractfrom`
+    sharing a single `increment_core` helper that performs the
+    resolve / evaluate / update / write-back steps.
+* `src/info.c` -- docstrings for all six heads.
+* `tests/test_increment.c` -- full test coverage of each transcript
+    in the feature request (symbols, numerical, symbolic, list,
+    `Part`, and the `rvalue` path) plus two parser edge cases.
