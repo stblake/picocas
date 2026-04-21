@@ -4,6 +4,7 @@
 #include "times.h"
 #include <math.h>
 #include <complex.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -179,6 +180,96 @@ Expr* builtin_power(Expr* res) {
     Expr* base = res->data.function.args[0];
     Expr* exp = res->data.function.args[1];
 
+    /* Infinity / Indeterminate preprocessing.
+     *
+     * Mathematica semantics for Power (selected):
+     *   Indeterminate ^ x, x ^ Indeterminate          -> Indeterminate
+     *   1 ^ Infinity, 1 ^ -Infinity, 1 ^ ComplexInfinity -> Indeterminate (msg)
+     *   Infinity ^ 0, (-Infinity) ^ 0, ComplexInfinity ^ 0 -> Indeterminate (msg)
+     *   0 ^ Infinity                                   -> 0
+     *   0 ^ -Infinity                                  -> ComplexInfinity (msg)
+     *   0 ^ ComplexInfinity                            -> Indeterminate (msg)
+     *   Infinity ^ Infinity                            -> ComplexInfinity
+     *   Infinity ^ -Infinity                           -> 0
+     *   Infinity ^ n   (n numeric, n > 0)              -> Infinity
+     *   Infinity ^ n   (n numeric, n < 0)              -> 0
+     *   ComplexInfinity ^ n (n numeric, n > 0)         -> ComplexInfinity
+     *   ComplexInfinity ^ n (n numeric, n < 0)         -> 0
+     *
+     * Note: 0^positive and 0^negative for ordinary exponents are still handled
+     * by the existing logic below; only the infinity-flavoured cases are
+     * intercepted here.
+     */
+    {
+        bool b_indet = is_indeterminate_sym(base);
+        bool e_indet = is_indeterminate_sym(exp);
+        if (b_indet || e_indet) return expr_new_symbol("Indeterminate");
+
+        bool b_inf  = is_infinity_sym(base);
+        bool b_ninf = is_neg_infinity_form(base);
+        bool b_cinf = is_complex_infinity_sym(base);
+        bool e_inf  = is_infinity_sym(exp);
+        bool e_ninf = is_neg_infinity_form(exp);
+        bool e_cinf = is_complex_infinity_sym(exp);
+
+        bool base_is_one  = (base->type == EXPR_INTEGER && base->data.integer == 1);
+        bool base_is_zero_lit = (base->type == EXPR_INTEGER && base->data.integer == 0) ||
+                                (base->type == EXPR_REAL && base->data.real == 0.0) ||
+                                (base->type == EXPR_BIGINT && mpz_sgn(base->data.bigint) == 0);
+        bool exp_is_zero_lit  = (exp->type == EXPR_INTEGER && exp->data.integer == 0) ||
+                                (exp->type == EXPR_REAL && exp->data.real == 0.0) ||
+                                (exp->type == EXPR_BIGINT && mpz_sgn(exp->data.bigint) == 0);
+
+        bool base_is_inf = b_inf || b_ninf || b_cinf;
+        bool exp_is_inf  = e_inf || e_ninf || e_cinf;
+
+        if (base_is_one && exp_is_inf) {
+            const char* what = e_inf ? "Infinity" : (e_ninf ? "-Infinity" : "ComplexInfinity");
+            fprintf(stderr,
+                "Infinity::indet: Indeterminate expression 1^%s encountered.\n", what);
+            return expr_new_symbol("Indeterminate");
+        }
+
+        if (base_is_inf && exp_is_zero_lit) {
+            const char* what = b_inf ? "Infinity" : (b_ninf ? "-Infinity" : "ComplexInfinity");
+            fprintf(stderr,
+                "Infinity::indet: Indeterminate expression %s^0 encountered.\n", what);
+            return expr_new_symbol("Indeterminate");
+        }
+
+        if (base_is_zero_lit && e_cinf) {
+            fprintf(stderr,
+                "Infinity::indet: Indeterminate expression 0^ComplexInfinity encountered.\n");
+            return expr_new_symbol("Indeterminate");
+        }
+
+        if (base_is_zero_lit && e_inf) {
+            return expr_new_integer(0);
+        }
+
+        if (base_is_zero_lit && e_ninf) {
+            fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
+            return expr_new_symbol("ComplexInfinity");
+        }
+
+        if (b_inf) {
+            if (e_inf)  return expr_new_symbol("ComplexInfinity");
+            if (e_ninf) return expr_new_integer(0);
+            if (e_cinf) return expr_new_symbol("Indeterminate");
+            int es = expr_numeric_sign(exp);
+            if (es > 0) return expr_new_symbol("Infinity");
+            if (es < 0) return expr_new_integer(0);
+        }
+
+        if (b_cinf) {
+            if (e_inf)  return expr_new_symbol("ComplexInfinity");
+            if (e_ninf) return expr_new_integer(0);
+            int es = expr_numeric_sign(exp);
+            if (es > 0) return expr_new_symbol("ComplexInfinity");
+            if (es < 0) return expr_new_integer(0);
+        }
+    }
+
     if (exp->type == EXPR_INTEGER && exp->data.integer == 0) return expr_new_integer(1);
     if (exp->type == EXPR_INTEGER && exp->data.integer == 1) return expr_copy(base);
     if (base->type == EXPR_INTEGER && base->data.integer == 1) return expr_new_integer(1);
@@ -204,7 +295,7 @@ Expr* builtin_power(Expr* res) {
     }
 
     if (base_is_zero && exp_is_negative) {
-        printf("Power::infy: Infinite expression 1/0 encountered.\n");
+        fprintf(stderr, "Power::infy: Infinite expression 1/0 encountered.\n");
         return expr_new_symbol("ComplexInfinity");
     }
     /* 0^positive -> 0 (includes 0^(1/2) = Sqrt[0] = 0, 0^0.5 = 0, etc.).

@@ -21,6 +21,16 @@ bool is_complex(Expr* e, Expr** re, Expr** im);
 // Create a Complex expression
 Expr* make_complex(Expr* re, Expr* im);
 
+// Infinity / Indeterminate predicates
+bool is_infinity_sym(Expr* e);
+bool is_complex_infinity_sym(Expr* e);
+bool is_indeterminate_sym(Expr* e);
+// True if e == Times[c, Infinity] with c a negative numeric.
+bool is_neg_infinity_form(Expr* e);
+// Sign of a numeric expression (Integer, Real, BigInt, Rational[n,d]).
+// Returns +1, -1, 0 for known signs; 0 for non-numeric or ambiguous.
+int  expr_numeric_sign(Expr* e);
+
 Expr* builtin_divide(Expr* res);
 Expr* builtin_subtract(Expr* res);
 Expr* builtin_complex(Expr* res);

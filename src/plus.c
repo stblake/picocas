@@ -3,11 +3,47 @@
 #include "arithmetic.h"
 #include "complex.h"
 #include "eval.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <gmp.h>
+
+/* Classify a single Plus term for Infinity/Indeterminate handling.
+ * Returns:
+ *    0 = ordinary finite term
+ *    1 = +Infinity (Infinity itself, or Times[c, Infinity, ...] with c > 0)
+ *   -1 = -Infinity (Times[c, Infinity, ...] with c < 0)
+ *    2 = ComplexInfinity (or any Times factor that contains it)
+ *    3 = Indeterminate (or any Times factor that contains it)
+ */
+static int classify_plus_term(Expr* e) {
+    if (is_indeterminate_sym(e)) return 3;
+    if (is_complex_infinity_sym(e)) return 2;
+    if (is_infinity_sym(e)) return 1;
+    if (e->type == EXPR_FUNCTION &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Times") == 0) {
+        size_t ac = e->data.function.arg_count;
+        bool has_inf = false, has_cinf = false, has_indet = false;
+        for (size_t i = 0; i < ac; i++) {
+            Expr* f = e->data.function.args[i];
+            if (is_indeterminate_sym(f)) has_indet = true;
+            else if (is_complex_infinity_sym(f)) has_cinf = true;
+            else if (is_infinity_sym(f)) has_inf = true;
+        }
+        if (has_indet) return 3;
+        if (has_cinf) return 2;
+        if (has_inf) {
+            /* Canonical Times has the numeric coefficient first. */
+            Expr* f0 = e->data.function.args[0];
+            if (expr_numeric_sign(f0) < 0) return -1;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 static bool is_overflow(Expr* e) {
     return e->type == EXPR_FUNCTION && e->data.function.head->type == EXPR_SYMBOL &&
@@ -169,10 +205,50 @@ Expr* make_plus(Expr* a, Expr* b) {
 
 Expr* builtin_plus(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
-    
+
     size_t n = res->data.function.arg_count;
     if (n == 0) return expr_new_integer(0);
     if (n == 1) return expr_copy(res->data.function.args[0]);
+
+    /* Infinity / Indeterminate preprocessing.
+     *
+     * Mathematica semantics for Plus:
+     *   Indeterminate + anything                      -> Indeterminate
+     *   Infinity + (-Infinity)                        -> Indeterminate (with msg)
+     *   ComplexInfinity + ComplexInfinity             -> Indeterminate (with msg)
+     *   ComplexInfinity + (any other infinity)        -> Indeterminate (with msg)
+     *   ComplexInfinity + finite                      -> ComplexInfinity
+     *   Infinity + finite (and no -Infinity)          -> Infinity
+     *   -Infinity + finite (and no +Infinity)         -> -Infinity
+     */
+    {
+        bool has_indet = false;
+        int pos_inf = 0, neg_inf = 0, cinf = 0;
+        for (size_t i = 0; i < n; i++) {
+            int c = classify_plus_term(res->data.function.args[i]);
+            if (c == 3) has_indet = true;
+            else if (c == 1) pos_inf++;
+            else if (c == -1) neg_inf++;
+            else if (c == 2) cinf++;
+        }
+        if (has_indet) return expr_new_symbol("Indeterminate");
+        if (pos_inf > 0 && neg_inf > 0) {
+            fprintf(stderr,
+                "Infinity::indet: Indeterminate expression -Infinity + Infinity encountered.\n");
+            return expr_new_symbol("Indeterminate");
+        }
+        if (cinf > 1 || (cinf > 0 && (pos_inf > 0 || neg_inf > 0))) {
+            fprintf(stderr,
+                "Infinity::indet: Indeterminate expression involving ComplexInfinity encountered.\n");
+            return expr_new_symbol("Indeterminate");
+        }
+        if (cinf == 1) return expr_new_symbol("ComplexInfinity");
+        if (pos_inf > 0) return expr_new_symbol("Infinity");
+        if (neg_inf > 0) {
+            return expr_new_function(expr_new_symbol("Times"),
+                (Expr*[]){ expr_new_integer(-1), expr_new_symbol("Infinity") }, 2);
+        }
+    }
 
     Expr* num_sum = expr_new_integer(0);
     

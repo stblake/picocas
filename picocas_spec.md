@@ -4581,3 +4581,164 @@ domain. The two-argument `ArcTan[x, y]` form is also excluded from
 the `Tan[ArcTan[...]]` rule (guarded by `arg_count == 1`) because
 `Tan[ArcTan[x, y]] = y/x` rather than a single variable.
 
+---
+
+## Infinity, ComplexInfinity, and Indeterminate (2026-04-21)
+
+Arithmetic involving the symbols `Infinity`, `ComplexInfinity`, and
+`Indeterminate` now follows the standard Mathematica rules.
+Previously, `Plus` and `Times` treated `Infinity` as an ordinary
+opaque symbol and folded `Infinity - Infinity` to `0`, `0 * Infinity`
+to `0`, etc. The new behaviour is implemented inline at the top of
+`builtin_plus` (`src/plus.c`), `builtin_times` (`src/times.c`), and
+`builtin_power` (`src/power.c`), with shared predicates exported from
+`arithmetic.h`:
+
+```
+bool is_infinity_sym(Expr*);
+bool is_complex_infinity_sym(Expr*);
+bool is_indeterminate_sym(Expr*);
+bool is_neg_infinity_form(Expr*);   /* Times[c, Infinity] with c<0 */
+int  expr_numeric_sign(Expr*);
+```
+
+### Plus
+
+| Inputs                                  | Result          |
+|-----------------------------------------|-----------------|
+| any term is `Indeterminate`             | `Indeterminate` |
+| `Infinity + (-Infinity)` (any flavour)  | `Indeterminate` (with `Infinity::indet` message) |
+| `ComplexInfinity + ComplexInfinity`     | `Indeterminate` (with `Infinity::indet` message) |
+| `ComplexInfinity + (any other infinity)`| `Indeterminate` |
+| `ComplexInfinity + finite`              | `ComplexInfinity` |
+| `Infinity + finite` (no `-Infinity`)    | `Infinity`      |
+| `-Infinity + finite` (no `+Infinity`)   | `-Infinity` (= `Times[-1, Infinity]`) |
+
+Term classification (`classify_plus_term`) recognises both bare
+`Infinity` and the canonical product form `Times[c, Infinity, ...]`,
+using the sign of the leading numeric factor to distinguish `+` from
+`-`. This means `5 Infinity - 7 Infinity` is correctly recognised as
+`Infinity + (-Infinity)` rather than collapsing to `-2 Infinity`.
+
+### Times
+
+| Inputs                                  | Result          |
+|-----------------------------------------|-----------------|
+| any factor is `Indeterminate`           | `Indeterminate` |
+| `0 * Infinity` or `0 * ComplexInfinity` | `Indeterminate` (with `Infinity::indet` message) |
+| `c * Infinity`        (`c` numeric, `c > 0`) | `Infinity` |
+| `c * Infinity`        (`c` numeric, `c < 0`) | `-Infinity` (`Times[-1, Infinity]`) |
+| `c * ComplexInfinity` (`c` numeric, `c != 0`) | `ComplexInfinity` |
+| `Infinity * Infinity`                   | `Infinity`      |
+| `Infinity * ComplexInfinity`            | `ComplexInfinity` |
+
+If non-numeric symbolic factors are present the simplification is
+skipped and the existing symbolic `Times` machinery runs. Magnitude
+is not preserved when multiplying by an unbounded value -- `-3
+Infinity` reduces to `-Infinity` (= `Times[-1, Infinity]`), not
+`Times[-3, Infinity]`.
+
+### Power
+
+| Inputs                                  | Result          |
+|-----------------------------------------|-----------------|
+| `Indeterminate^x` or `x^Indeterminate`  | `Indeterminate` |
+| `1^Infinity`, `1^-Infinity`, `1^ComplexInfinity` | `Indeterminate` (with `Infinity::indet`) |
+| `Infinity^0`, `(-Infinity)^0`, `ComplexInfinity^0` | `Indeterminate` (with `Infinity::indet`) |
+| `0^Infinity`                            | `0`             |
+| `0^-Infinity`                           | `ComplexInfinity` (with `Power::infy`) |
+| `0^ComplexInfinity`                     | `Indeterminate` (with `Infinity::indet`) |
+| `Infinity^Infinity`                     | `ComplexInfinity` |
+| `Infinity^-Infinity`                    | `0`             |
+| `Infinity^n`        (`n` numeric, `n > 0`)         | `Infinity` |
+| `Infinity^n`        (`n` numeric, `n < 0`)         | `0`        |
+| `ComplexInfinity^n` (`n` numeric, `n > 0`)         | `ComplexInfinity` |
+| `ComplexInfinity^n` (`n` numeric, `n < 0`)         | `0`        |
+
+### Division
+
+`builtin_rational` and `builtin_divide` (`src/arithmetic.c`) emit
+`Power::infy: Infinite expression 1/0 encountered.` when forming a
+rational with zero denominator. `1/0 -> ComplexInfinity` and
+`0/0 -> Indeterminate` (with the additional
+`Infinity::indet: Indeterminate expression 0 ComplexInfinity`
+message).
+
+### Diagnostics
+
+The `Infinity::indet` and `Power::infy` messages are written to
+`stderr` (matching Mathematica's `Message[]` convention of routing
+diagnostics off the value channel) so that programmatic consumers of
+results are not affected.
+
+### Tests
+
+Coverage lives in `tests/test_infinity.c` (binary
+`tests/build/infinity_tests`) and exercises every row of the tables
+above. The limit-test helper `check_equiv` (`tests/test_limit.c`) was
+updated to fall back to printed-form equality when the result is one
+of the infinity flavours, since `Expand[Together[Infinity-Infinity]]`
+now correctly returns `Indeterminate` rather than `0`.
+
+
+## Series inversion correctness fixes (2026-04-21)
+
+Two bugs in `so_inv` (`src/series.c`) caused `Series[1/f, ...]` and
+reciprocal-trig / reciprocal-hyperbolic expansions to emit trailing
+zeros instead of their correct high-order coefficients. Both are now
+fixed.
+
+### 1. Zero-coefficient inflation of the expression-growth guardrail
+
+`so_inv` uses a leaf-count guardrail to cap the number of inversion
+iterations `N` when the input coefficients are large symbolic
+expressions (e.g. polynomials in `Log[2]`, `Log[3]` arising from
+`1/(2^x - 3^x)`). The old leaf-count walk summed over every
+coefficient, including zero ones, which inflated the count for
+sparse polynomials. For `1/(1 + x^2)` at internal order 25 the 23
+zero entries produced `total_leaves = 25`, triggering `N_cap = 6`
+and truncating the result to `1 - x^2 + x^4 + 0 + 0 + ...`.
+
+Fix: the walk now skips zero coefficients. Purely-numeric
+coefficients (Integer, BigInt, Real, Rational, Complex, and
+arithmetic combinations of these) are also skipped, since their size
+does not compound under `simp()` during the recurrence.
+
+### 2. Latent crash when simp()'ing a large flat-Plus of numeric terms
+
+Lifting the cap exposed a separate issue in the Taylor-via-simp path
+inside `so_inv`: when the recurrence built a `Plus` node with 10+
+`Times[Rational, Rational]` terms and passed it to `simp()` in a
+single call, the evaluator could dereference a NULL `Plus` argument
+(reproducible as `Series[1/Sin[x], {x, 0, 9}]` or higher). Rather
+than chase the evaluator bug, `so_inv` now branches:
+
+- **All coefficients purely numeric** (the Sin/Cos/Sinh/Cosh path
+  and polynomial inverses): accumulate `b[k]` with one `simp()` per
+  term. Each partial sum collapses to a single rational via
+  `add_numbers`, so the O(k^2) blowup the batched path was designed
+  to prevent does not occur, and the evaluator never sees a large
+  flat-Plus tree.
+
+- **Otherwise** (symbolic coefficients): retain the batched
+  single-simp-at-end construction that keeps symbolic-constant
+  inversions (like `1/(2^x - 3^x)`) tractable.
+
+### Affected cases, now correct
+
+| Input                              | Old output                                | New output                          |
+|------------------------------------|-------------------------------------------|-------------------------------------|
+| `Series[Csc[x], {x, 0, 5}]`        | last coef `0`                             | `31/15120`                          |
+| `Series[Sec[x], {x, 0, 6}]`        | last coef `0`                             | `61/720`                            |
+| `Series[Sech[x], {x, 0, 6}]`       | last coef `0`                             | `-61/720`                           |
+| `Series[Coth[x], {x, 0, 5}]`       | last coef `1/240`                         | `2/945`                             |
+| `Series[1/(1 + x^2), {x, 0, 12}]`  | truncated after `x^4`                     | full `1 - x^2 + x^4 - ... + x^12`   |
+| `Series[1/(1 - x^2), {x, 0, 12}]`  | truncated after `x^4`                     | full geometric series               |
+| `Series[1/(Exp[x] - 1 - x), ...]`  | truncated after `x^3`                     | full Bernoulli-derived coefficients |
+
+### Tests
+
+All `series_tests`, `simp_tests`, and `distribute_tests` soft-failures
+(printer-cleanup staleness in the latter two, series correctness in
+the first) are resolved. The test suite is now entirely pass-clean:
+59 binaries, 0 hard failures, 0 silent `FAIL:` prints.

@@ -37,7 +37,7 @@ void test_distribute() {
 
     // Find intermediate terms from a direct application of the distributive law:
     assert_eval_eq("Distribute[(-1 + x) (1 + x) (1 - x + x^2) (1 + x + x^2), Plus, Times, List, Times]", 
-        "{-1, x, -1 x^2, -1 x, x^2, -1 x^3, -1 x^2, x^3, -1 x^4, -1 x, x^2, -1 x^3, -1 x^2, x^3, -1 x^4, -1 x^3, x^4, -1 x^5, x, -1 x^2, x^3, x^2, -1 x^3, x^4, x^3, -1 x^4, x^5, x^2, -1 x^3, x^4, x^3, -1 x^4, x^5, x^4, -1 x^5, x^6}", 0);
+        "{-1, x, -x^2, -x, x^2, -x^3, -x^2, x^3, -x^4, -x, x^2, -x^3, -x^2, x^3, -x^4, -x^3, x^4, -x^5, x, -x^2, x^3, x^2, -x^3, x^4, x^3, -x^4, x^5, x^2, -x^3, x^4, x^3, -x^4, x^5, x^4, -x^5, x^6}", 0);
 
     // For pure products, Distribute gives the same results as Expand:
     assert_eval_eq("Distribute[(-1 + x) (1 + x) (1 - x + x^2 - x^3 + x^4) (1 + x + x^2 + x^3 + x^4)]", "-1 + x^10", 0);

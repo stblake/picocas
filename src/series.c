@@ -529,6 +529,32 @@ static int64_t so_leaf_count(Expr* e) {
     return c;
 }
 
+/* A coefficient is "purely numeric" if it is built from integers, bigints,
+ * reals, and the heads Rational/Complex/Times/Plus/Power with numeric
+ * operands. Purely-numeric coefficients don't trigger the symbolic-blowup
+ * problem the guardrail protects against, so so_inv can compute the full N
+ * terms for them regardless of leaf count. */
+static bool so_is_purely_numeric(Expr* e) {
+    if (!e) return true;
+    switch (e->type) {
+        case EXPR_INTEGER: case EXPR_BIGINT: case EXPR_REAL: return true;
+        case EXPR_SYMBOL: case EXPR_STRING: return false;
+        case EXPR_FUNCTION: {
+            Expr* h = e->data.function.head;
+            if (h->type != EXPR_SYMBOL) return false;
+            const char* s = h->data.symbol;
+            if (strcmp(s, "Rational") != 0 && strcmp(s, "Complex") != 0 &&
+                strcmp(s, "Times") != 0 && strcmp(s, "Plus") != 0 &&
+                strcmp(s, "Power") != 0) return false;
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                if (!so_is_purely_numeric(e->data.function.args[i])) return false;
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 static SeriesObj* so_inv(SeriesObj* a_in) {
     SeriesObj* a = so_copy_trimmed(a_in);
     if (a->coef_count == 0) { so_free(a); return NULL; }
@@ -565,8 +591,16 @@ static SeriesObj* so_inv(SeriesObj* a_in) {
      * that only need the leading behaviour (Limit, 1/f fast paths) are
      * unaffected, and callers that need higher-order expansions will see
      * a smaller-than-requested O-term but not a hang. */
+    /* Count leaves in NON-ZERO coefficients only: the guardrail exists to
+     * bound symbolic blowup during the b[k] recurrence (each nonzero a[i]
+     * feeds into O(N) symbolic multiplies). Zero coefficients contribute
+     * nothing to that work but inflate a naive leaf sum for polynomials
+     * with mostly-zero coefficients like 1/(1+x^N). Purely-numeric coefs
+     * also don't grow under simp() so they don't count against the cap. */
     int64_t total_leaves = 0;
     for (size_t i = 0; i < a->coef_count && i < N; i++) {
+        if (is_lit_zero(a->coefs[i])) continue;
+        if (so_is_purely_numeric(a->coefs[i])) continue;
         total_leaves += so_leaf_count(a->coefs[i]);
     }
     size_t N_cap;
@@ -578,9 +612,40 @@ static SeriesObj* so_inv(SeriesObj* a_in) {
     Expr** b = calloc(N, sizeof(Expr*));
     Expr* inv_a0 = simp(mk_power(expr_copy(a->coefs[0]), expr_new_integer(-1)));
     b[0] = expr_copy(inv_a0);
+    /* When every non-zero coefficient of `a` is purely numeric, the b[k]
+     * recurrence stays numeric too, and we can accumulate with per-term simp()
+     * without fearing O(k^2) symbolic blowup. This both avoids a pathology in
+     * the evaluator when it sees a very large flat-Plus tree of numeric
+     * products, and lets so_inv compute the full N b[]-values even for high-
+     * order Laurent inversions (e.g. 1/Sin[x] at order 9+).
+     *
+     * For non-numeric inputs we fall back to the batched path, which exists
+     * to prevent super-linear evaluation time when coefficients are
+     * polynomials in independent symbolic constants like Log[2], Log[3]. */
+    bool coefs_all_numeric = true;
+    for (size_t i = 0; i < a->coef_count; i++) {
+        if (is_lit_zero(a->coefs[i])) continue;
+        if (!so_is_purely_numeric(a->coefs[i])) { coefs_all_numeric = false; break; }
+    }
+
     for (size_t k = 1; k < N; k++) {
-        /* Build the sum as a single flat Plus with all non-zero contributions,
-         * then simp() it exactly once. Two reasons:
+        if (coefs_all_numeric) {
+            Expr* sum = expr_new_integer(0);
+            for (size_t i = 1; i <= k; i++) {
+                if (i >= a->coef_count) break;
+                if (is_lit_zero(a->coefs[i])) continue;
+                if (!b[k - i] || is_lit_zero(b[k - i])) continue;
+                Expr* term = simp(mk_times(expr_copy(a->coefs[i]), expr_copy(b[k - i])));
+                sum = simp(mk_plus(sum, term));
+            }
+            b[k] = simp(mk_times(expr_new_integer(-1),
+                                 mk_times(expr_copy(inv_a0), sum)));
+            if (!b[k]) b[k] = expr_new_integer(0);
+            continue;
+        }
+        /* Batched path for symbolic coefficients: build a single flat Plus
+         * of all non-zero product contributions and simp() it exactly once.
+         * Reasons:
          *   1. Each term simp() call evaluates the partial sum plus a new
          *      product; because PicoCAS's evaluator doesn't fully canonicalize
          *      polynomials in symbolic constants (e.g. Log[2], Log[3]), the
@@ -595,18 +660,18 @@ static SeriesObj* so_inv(SeriesObj* a_in) {
         for (size_t i = 1; i <= k; i++) {
             if (i >= a->coef_count) break;
             if (is_lit_zero(a->coefs[i])) continue;
-            if (is_lit_zero(b[k - i])) continue;
+            if (!b[k - i] || is_lit_zero(b[k - i])) continue;
             parts[pc++] = mk_times(expr_copy(a->coefs[i]), expr_copy(b[k - i]));
         }
         Expr* sum;
         if (pc == 0)      sum = expr_new_integer(0);
         else if (pc == 1) sum = parts[0];
         else              sum = expr_new_function(mk_symbol("Plus"), parts, pc);
-        if (pc > 1) { /* parts was consumed by Plus */ free(parts); parts = NULL; }
-        else { free(parts); }
+        free(parts);
         Expr* neg_over_a0 = mk_times(expr_new_integer(-1),
                                      mk_times(expr_copy(inv_a0), sum));
         b[k] = simp(neg_over_a0);
+        if (!b[k]) b[k] = expr_new_integer(0);
     }
     expr_free(inv_a0);
 

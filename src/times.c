@@ -2,6 +2,7 @@
 #include "arithmetic.h"
 #include "complex.h"
 #include "eval.h"
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -181,6 +182,70 @@ Expr* builtin_times(Expr* res) {
     size_t n = res->data.function.arg_count;
     if (n == 0) return expr_new_integer(1);
     if (n == 1) return expr_copy(res->data.function.args[0]);
+
+    /* Infinity / Indeterminate preprocessing.
+     *
+     * Mathematica semantics for Times:
+     *   Indeterminate * anything            -> Indeterminate
+     *   0 * Infinity, 0 * ComplexInfinity   -> Indeterminate (with message)
+     *   c * Infinity   (c numeric, c > 0)   -> Infinity
+     *   c * Infinity   (c numeric, c < 0)   -> -Infinity (Times[-1, Infinity])
+     *   c * ComplexInfinity (c != 0)        -> ComplexInfinity
+     *   Infinity * Infinity                 -> Infinity
+     *   Infinity * ComplexInfinity          -> ComplexInfinity
+     *
+     * If the product contains symbolic (non-numeric, non-Infinity) factors we
+     * cannot decide the sign and fall through to the normal symbolic handler.
+     */
+    {
+        bool has_indet = false;
+        size_t inf_count = 0;
+        size_t cinf_count = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = res->data.function.args[i];
+            if (is_indeterminate_sym(arg))      { has_indet = true; }
+            else if (is_complex_infinity_sym(arg)) { cinf_count++; }
+            else if (is_infinity_sym(arg))      { inf_count++; }
+        }
+        if (has_indet) return expr_new_symbol("Indeterminate");
+        if (inf_count > 0 || cinf_count > 0) {
+            Expr* coeff = expr_new_integer(1);
+            bool has_symbolic = false;
+            for (size_t i = 0; i < n; i++) {
+                Expr* arg = res->data.function.args[i];
+                if (is_infinity_sym(arg) || is_complex_infinity_sym(arg)) continue;
+                if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL ||
+                    arg->type == EXPR_BIGINT || is_rational(arg, NULL, NULL)) {
+                    Expr* nn = multiply_numbers(coeff, arg);
+                    expr_free(coeff);
+                    coeff = nn;
+                    if (!coeff) { coeff = expr_new_integer(1); has_symbolic = true; break; }
+                    continue;
+                }
+                has_symbolic = true;
+                break;
+            }
+            if (!has_symbolic) {
+                int sign = expr_numeric_sign(coeff);
+                bool is_zero = (coeff->type == EXPR_INTEGER && coeff->data.integer == 0) ||
+                               (coeff->type == EXPR_REAL && coeff->data.real == 0.0);
+                expr_free(coeff);
+                if (is_zero) {
+                    const char* what = (cinf_count > 0) ? "ComplexInfinity" : "Infinity";
+                    fprintf(stderr,
+                        "Infinity::indet: Indeterminate expression 0 %s encountered.\n", what);
+                    return expr_new_symbol("Indeterminate");
+                }
+                if (cinf_count > 0) return expr_new_symbol("ComplexInfinity");
+                /* inf_count > 0, coeff != 0 */
+                if (sign > 0) return expr_new_symbol("Infinity");
+                return expr_new_function(expr_new_symbol("Times"),
+                    (Expr*[]){ expr_new_integer(-1), expr_new_symbol("Infinity") }, 2);
+            }
+            expr_free(coeff);
+            /* fall through: keep symbolic, let the rest run */
+        }
+    }
 
     Expr* num_prod = expr_new_integer(1);
     Expr* complex_val = NULL;

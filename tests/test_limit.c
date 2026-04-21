@@ -20,6 +20,7 @@
 #include "core.h"
 #include "print.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,8 +41,32 @@ static void check(const char* input, const char* expected) {
 }
 
 /* Structural-equality check: accept any spelling that the printer might
- * emit by testing whether (result) - (expected) simplifies to 0. */
+ * emit by testing whether (result) - (expected) simplifies to 0.
+ *
+ * Mathematica's Infinity arithmetic refuses to fold Infinity - Infinity
+ * (it is genuinely Indeterminate), so for results that are exactly an
+ * infinity flavour we fall back to a literal printed-form comparison
+ * rather than the subtractive equivalence check. */
 static void check_equiv(const char* input, const char* expected) {
+    /* First try direct printed-form equality -- this catches Infinity,
+     * -Infinity, ComplexInfinity, Indeterminate, and any other case the
+     * subtractive check cannot distinguish. */
+    Expr* lhs = parse_expression(input);
+    ASSERT_MSG(lhs != NULL, "Failed to parse: %s", input);
+    Expr* lhs_v = evaluate(lhs);
+    char* lhs_s = expr_to_string(lhs_v);
+    Expr* rhs = parse_expression(expected);
+    Expr* rhs_v = rhs ? evaluate(rhs) : NULL;
+    char* rhs_s = rhs_v ? expr_to_string(rhs_v) : NULL;
+    bool literal_match = rhs_s && strcmp(lhs_s, rhs_s) == 0;
+    free(lhs_s);
+    if (rhs_s) free(rhs_s);
+    expr_free(lhs_v);
+    expr_free(lhs);
+    if (rhs_v) expr_free(rhs_v);
+    if (rhs) expr_free(rhs);
+    if (literal_match) return;
+
     char buf[2048];
     snprintf(buf, sizeof(buf), "Expand[Together[(%s) - (%s)]]", input, expected);
     Expr* e = parse_expression(buf);
