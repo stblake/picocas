@@ -239,6 +239,9 @@ target_include_directories(print_tests PRIVATE ../src)
 add_executable(context_tests test_context.c ${COMMON_SRC})
 target_include_directories(context_tests PRIVATE ../src)
 
+add_executable(list_set_tests test_list_set.c ${COMMON_SRC})
+target_include_directories(list_set_tests PRIVATE ../src)
+
 add_executable(random_tests test_random.c ${COMMON_SRC})
 target_include_directories(random_tests PRIVATE ../src)
 

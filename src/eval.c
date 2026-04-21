@@ -220,15 +220,20 @@ static bool apply_assignment(Expr* lhs, Expr* rhs, bool is_delayed) {
             rhs->data.function.head->type == EXPR_SYMBOL &&
             strcmp(rhs->data.function.head->data.symbol, "List") == 0) {
             
-            /* List destructuring: match lengths and recurse */
+            /* List destructuring: match lengths and recurse. Any child that
+             * cannot be assigned (e.g. LHS element is a literal number) fails
+             * the whole destructuring so the caller does not misreport success. */
             if (lhs->data.function.arg_count != rhs->data.function.arg_count) {
                 return false;
             }
-            
+
+            bool all_ok = true;
             for (size_t i = 0; i < lhs->data.function.arg_count; i++) {
-                apply_assignment(lhs->data.function.args[i], rhs->data.function.args[i], is_delayed);
+                if (!apply_assignment(lhs->data.function.args[i], rhs->data.function.args[i], is_delayed)) {
+                    all_ok = false;
+                }
             }
-            return true;
+            return all_ok;
         } else if (lhs->data.function.head->type == EXPR_SYMBOL && strcmp(lhs->data.function.head->data.symbol, "Part") == 0) {
             Expr* expr_part_assign(Expr* lhs, Expr* rhs); // Forward declare or include part.h
             Expr* assigned = expr_part_assign(lhs, rhs);
@@ -472,7 +477,14 @@ Expr* evaluate_step(Expr* e) {
                         /* Only evaluate arguments, not the head, to avoid matching existing rules */
                         Expr** eval_args = malloc(sizeof(Expr*) * lhs->data.function.arg_count);
                         bool is_part = (lhs->data.function.head->type == EXPR_SYMBOL && strcmp(lhs->data.function.head->data.symbol, "Part") == 0);
-                        
+                        /* List destructuring: {a, b, ...} = {...}. Each element that is
+                         * a Symbol is a binding target and must NOT be evaluated (otherwise
+                         * prior OwnValues clobber the targets -- e.g. {a,b}={1,2} then
+                         * {a,b}={3,4} would try to assign to the values 1,2 instead of a,b).
+                         * Non-symbol elements (e.g. a[x] in {a[x], b[y]} = ...) still need
+                         * their inner arguments evaluated so the target pattern is correct. */
+                        bool is_list = (lhs->data.function.head->type == EXPR_SYMBOL && strcmp(lhs->data.function.head->data.symbol, "List") == 0);
+
                         uint32_t lhs_attrs = ATTR_NONE;
                         if (lhs->data.function.head->type == EXPR_SYMBOL) {
                             lhs_attrs = get_attributes(lhs->data.function.head->data.symbol);
@@ -484,9 +496,22 @@ Expr* evaluate_step(Expr* e) {
                             else if ((lhs_attrs & ATTR_HOLDALL) == ATTR_HOLDALL) hold = true;
                             else if (i == 0 && (lhs_attrs & ATTR_HOLDFIRST)) hold = true;
                             else if (i > 0 && (lhs_attrs & ATTR_HOLDREST)) hold = true;
-                            
+
                             if (is_part && i == 0) hold = true; // Hold the first argument of Part
-                            
+
+                            /* In a List-LHS, hold any element that is itself a symbol or
+                             * a nested List (binding targets / nested destructuring). */
+                            if (is_list) {
+                                Expr* child = lhs->data.function.args[i];
+                                if (child->type == EXPR_SYMBOL) {
+                                    hold = true;
+                                } else if (child->type == EXPR_FUNCTION &&
+                                           child->data.function.head->type == EXPR_SYMBOL &&
+                                           strcmp(child->data.function.head->data.symbol, "List") == 0) {
+                                    hold = true;
+                                }
+                            }
+
                             if (hold) {
                                 eval_args[i] = expr_copy(lhs->data.function.args[i]);
                             } else {

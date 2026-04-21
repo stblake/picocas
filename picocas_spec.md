@@ -5265,3 +5265,60 @@ shortening rule.
   of `Context`, `$Context`, `$ContextPath`, `Begin`/`End` round-trip,
   `BeginPackage` path manipulation, and a `Begin["`Private`"]` package
   example.
+
+## Bug fix: List destructuring assignment after prior OwnValues (2026-04-22)
+
+`{a, b, c, d} = {...}` silently no-op'd when the symbols on the LHS
+already held OwnValues. The second destructuring assignment in a session
+like
+
+```mathematica
+{a, b, c, d} = {1, 1, 1, 1};
+{a++, ++b, c--, --d}               (* {1, 2, 1, 0} *)
+{a, b, c, d} = {1, 1, 1, 1};
+{a++, ++b, c--, --d}               (* was {2, 3, 0, -1} *)
+```
+
+returned the mutation applied to the stale post-increment state because
+the second reassignment never actually wrote back to the symbols.
+
+**Root cause.** `Set` has `HoldFirst`, so `List[a,b,c,d]` arrived at the
+`Set` primitive handler unevaluated -- correct so far. But that handler
+then evaluated each LHS argument, gated only by the *head's* Hold
+attributes. Since `List` has no Hold attributes, `a, b, c, d` got
+evaluated to their current values (2, 2, 0, 0). The internal LHS became
+`List[2, 2, 0, 0]`, and `apply_assignment` recursed on each `(int, int)`
+pair, fell through the dispatch (LHS is an integer, not a symbol), and
+returned `false`. A second latent bug compounded the problem: the list-
+destructuring branch of `apply_assignment` ignored the recursive return
+values and always reported success, so `Set` yielded the RHS as if the
+write had happened.
+
+**Fix.** Two targeted changes in `src/eval.c`:
+
+1. In the `Set`/`SetDelayed` LHS-argument evaluation step, when the LHS
+   is a `List`, hold any element that is itself a `Symbol` (a binding
+   target) or a nested `List` (nested destructuring). Non-symbol
+   function-shaped elements such as `a[x]` continue to get their inner
+   arguments evaluated so that `{a[x], b[y]} = {p, q}` still defines
+   `a[val-of-x]` and `b[val-of-y]` (standard Mathematica semantics).
+2. In `apply_assignment`'s list-destructuring branch, AND each child
+   recursion's return value into the overall result, so a literal-LHS
+   child (e.g. `{1, a} = {1, 2}`) no longer lies about succeeding.
+
+**Coverage.** `tests/test_list_set.c` adds ten focused cases:
+
+- Fresh destructuring still works.
+- Reassignment to symbols that already have values.
+- The exact sequence from the bug report (two rounds of
+  `{a,b,c,d}={1,1,1,1}; {a++, ++b, c--, --d}`).
+- Simultaneous swap `{x, y} = {y, x}`.
+- Nested destructuring `{{a, b}, c} = {{10, 20}, 30}`, including
+  reassignment of nested targets.
+- DownValue destructuring `{a[x], b[y]} = {p, q}` with evaluated x, y.
+- Pattern-bearing DownValue destructuring `{a[p_], b[q_]} = {1, 2}`.
+- Length-mismatched RHS leaves targets untouched.
+- Literal-integer LHS element does not silently pretend success.
+- Repeated reassignment smoke test (50 rounds).
+
+All 60 test binaries continue to pass.
