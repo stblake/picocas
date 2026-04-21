@@ -517,6 +517,18 @@ static size_t so_nonzero_count(SeriesObj* s) {
  * after trimming. Handles the exact single-term case without the usual
  * order reduction; otherwise the correction expansion loses 2*nmin of
  * precision against the O-term exponent. */
+/* Local copy of a leaf-count walk so so_inv can estimate input size
+ * without pulling in limit.c's helper. */
+static int64_t so_leaf_count(Expr* e) {
+    if (!e) return 0;
+    if (e->type != EXPR_FUNCTION) return 1;
+    int64_t c = so_leaf_count(e->data.function.head);
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        c += so_leaf_count(e->data.function.args[i]);
+    }
+    return c;
+}
+
 static SeriesObj* so_inv(SeriesObj* a_in) {
     SeriesObj* a = so_copy_trimmed(a_in);
     if (a->coef_count == 0) { so_free(a); return NULL; }
@@ -539,20 +551,62 @@ static SeriesObj* so_inv(SeriesObj* a_in) {
         so_free(a);
         return r;
     }
+    /* Expression-growth guardrail for series inversion with purely symbolic
+     * coefficients (e.g. polynomials in Log[2], Log[3] arising from
+     * 1/(2^x - 3^x)). Each iteration of the b[k] recurrence multiplies
+     * growing expressions, and since PicoCAS's evaluator does not fully
+     * canonicalise polynomials in independent symbolic constants, the
+     * compute time per iteration can grow super-linearly. To keep Series
+     * responsive, we cap N at a limit calibrated from the total input
+     * coefficient size: small-coefficient inputs (numeric or short
+     * symbolic) get the full N, but once the input coefficients are large
+     * symbolic expressions we stop early and return a truncated series.
+     * The result is still a valid leading-term Laurent expansion; callers
+     * that only need the leading behaviour (Limit, 1/f fast paths) are
+     * unaffected, and callers that need higher-order expansions will see
+     * a smaller-than-requested O-term but not a hang. */
+    int64_t total_leaves = 0;
+    for (size_t i = 0; i < a->coef_count && i < N; i++) {
+        total_leaves += so_leaf_count(a->coefs[i]);
+    }
+    size_t N_cap;
+    if (total_leaves <= 4)        N_cap = 64;   /* numeric / trivial coefs */
+    else if (total_leaves <= 20)  N_cap = 16;
+    else if (total_leaves <= 60)  N_cap = 6;
+    else                           N_cap = 4;
+    if (N > N_cap) N = N_cap;
     Expr** b = calloc(N, sizeof(Expr*));
     Expr* inv_a0 = simp(mk_power(expr_copy(a->coefs[0]), expr_new_integer(-1)));
     b[0] = expr_copy(inv_a0);
     for (size_t k = 1; k < N; k++) {
-        Expr* sum = expr_new_integer(0);
+        /* Build the sum as a single flat Plus with all non-zero contributions,
+         * then simp() it exactly once. Two reasons:
+         *   1. Each term simp() call evaluates the partial sum plus a new
+         *      product; because PicoCAS's evaluator doesn't fully canonicalize
+         *      polynomials in symbolic constants (e.g. Log[2], Log[3]), the
+         *      inner-loop simp() can blow up to O(k^2) or worse in time.
+         *   2. A single end-of-loop simp() lets Plus/Times flattening and
+         *      Orderless sorting collapse common sub-expressions in one pass.
+         * This matters for shapes like 1/(2^x - 3^x) where each a_i is a
+         * polynomial in Log[2], Log[3]; the old loop took seconds per k
+         * and never completed past a few iterations. */
+        size_t pc = 0;
+        Expr** parts = calloc(k, sizeof(Expr*));
         for (size_t i = 1; i <= k; i++) {
             if (i >= a->coef_count) break;
             if (is_lit_zero(a->coefs[i])) continue;
             if (is_lit_zero(b[k - i])) continue;
-            Expr* prod = simp(mk_times(expr_copy(a->coefs[i]), expr_copy(b[k - i])));
-            sum = simp(mk_plus(sum, prod));
+            parts[pc++] = mk_times(expr_copy(a->coefs[i]), expr_copy(b[k - i]));
         }
-        Expr* neg = simp(mk_times(expr_new_integer(-1), sum));
-        b[k] = simp(mk_times(expr_copy(inv_a0), neg));
+        Expr* sum;
+        if (pc == 0)      sum = expr_new_integer(0);
+        else if (pc == 1) sum = parts[0];
+        else              sum = expr_new_function(mk_symbol("Plus"), parts, pc);
+        if (pc > 1) { /* parts was consumed by Plus */ free(parts); parts = NULL; }
+        else { free(parts); }
+        Expr* neg_over_a0 = mk_times(expr_new_integer(-1),
+                                     mk_times(expr_copy(inv_a0), sum));
+        b[k] = simp(neg_over_a0);
     }
     expr_free(inv_a0);
 
@@ -1925,6 +1979,32 @@ static bool all_negative_powers_polynomial(Expr* e, Expr* x) {
  * to expand. Terms like c/(a + b*x)^m route through the monomial binomial
  * fast path and produce closed-form coefficients instead of a full Newton
  * inversion over the composite polynomial denominator. */
+/* True iff `e` contains a `Power[base, exp]` with base involving x and
+ * exp that is neither an integer nor a literal rational. Apart does not
+ * handle such subterms (they turn the input into a non-rational
+ * function) and yields 0 for some shapes -- catch them here before
+ * preprocessing. */
+static bool has_non_rational_power_in(Expr* e, Expr* x) {
+    if (!e || e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* base = e->data.function.args[0];
+        Expr* exp  = e->data.function.args[1];
+        if (!expr_free_of(base, x)) {
+            if (exp->type != EXPR_INTEGER) {
+                int64_t p, q;
+                if (!is_rational(exp, &p, &q)) return true;
+            }
+        }
+    }
+    if (has_non_rational_power_in(e->data.function.head, x)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (has_non_rational_power_in(e->data.function.args[i], x)) return true;
+    }
+    return false;
+}
+
 static Expr* try_apart_preprocess(Expr* f, Expr* x) {
     if (!has_negative_power_in(f, x)) return NULL;
     /* Apart is only defined for rational functions. If any negative-power
@@ -1932,6 +2012,10 @@ static Expr* try_apart_preprocess(Expr* f, Expr* x) {
      * a transcendental denominator), bail out rather than risk feeding
      * Apart something it can't cleanly handle. */
     if (!all_negative_powers_polynomial(f, x)) return NULL;
+    /* Also refuse when any `Power[base, symbolic_exp]` with x in base has
+     * a non-integer, non-rational exponent (e.g. x^a). Apart collapses
+     * such inputs to 0 in picocas; better to skip preprocessing. */
+    if (has_non_rational_power_in(f, x)) return NULL;
     Expr* args[2] = { expr_copy(f), expr_copy(x) };
     Expr* call = expr_new_function(mk_symbol("Apart"), args, 2);
     Expr* result = evaluate(call);
@@ -1990,10 +2074,22 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
     /* Factor out x^alpha for symbolic alpha (e.g. Series[x^a Exp[x], ...]).
      * We detect only the top-level Times case; nested occurrences are rare
      * and harder to match Mathematica's output form on. */
+    /* Factor out x^alpha only when the expansion point is 0 or Infinity.
+     * At x0 = 0, `x^alpha` literally is the prefactor (Laurent monomial
+     * with fractional exponent), and at Infinity we substitute x -> 1/u
+     * which turns x^alpha into u^(-alpha), still a clean prefactor. At
+     * any other x0, `x^alpha = (x0 + (x-x0))^alpha = x0^alpha (1 + u/x0)^alpha`
+     * which the binomial kernel can expand exactly, so pulling `x^alpha`
+     * out as a symbolic prefactor would SKIP that expansion and leave
+     * trailing factors (e.g. `(x-1)^-2`) computed at the wrong point. */
     Expr* prefactor = NULL;
     Expr* f_used_for_expand = f_eval;
     Expr* f_body_owned = NULL;
-    {
+    bool at_zero_or_infinity =
+        is_lit_zero(x0_eval) ||
+        (x0_eval->type == EXPR_SYMBOL &&
+         strcmp(x0_eval->data.symbol, "Infinity") == 0);
+    if (at_zero_or_infinity) {
         Expr* body = NULL;
         Expr* pf = try_factor_power_prefactor(f_eval, x, &body);
         if (pf) {
@@ -2093,6 +2189,21 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
             Expr* inv_x = mk_power(expr_copy(x), expr_new_integer(-1));
             expr_free(s->x);
             s->x = inv_x;
+            /* Coefficients computed during expansion may still reference the
+             * internal inverse variable u = $SeriesInvVar$ -- any part of
+             * the input that ended up treated as "constant in u" keeps it
+             * in closed form (Log[x] expands to Log[1/u] -> -Log[u], which
+             * is constant in u and so lives in the coefficient). Substitute
+             * u -> 1/x in every coefficient so $SeriesInvVar$ never leaks
+             * back to the user. simp() normalises 1/(1/x) back to x. */
+            Expr* u_to_inv_x = mk_power(expr_copy(x), expr_new_integer(-1));
+            for (size_t ci = 0; ci < s->coef_count; ci++) {
+                Expr* new_c = replace_all_of(s->coefs[ci], u_sym, u_to_inv_x);
+                Expr* simp_c = simp(new_c);
+                expr_free(s->coefs[ci]);
+                s->coefs[ci] = simp_c;
+            }
+            expr_free(u_to_inv_x);
         }
         result = so_to_expr(s);
         so_free(s);

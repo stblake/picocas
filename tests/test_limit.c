@@ -113,18 +113,21 @@ static void test_rp_forms(void) {
 /* ----------------------------------------------------------------- */
 static void test_directions(void) {
     check("Limit[1/x, x -> 0, Direction -> \"FromAbove\"]", "Infinity");
-    check("Limit[1/x, x -> 0, Direction -> \"FromBelow\"]", "-1 Infinity");
+    check("Limit[1/x, x -> 0, Direction -> \"FromBelow\"]", "-Infinity");
     /* Mathematica sign convention: -1 == FromAbove, +1 == FromBelow. */
     check("Limit[1/x, x -> 0, Direction -> -1]",           "Infinity");
-    check("Limit[1/x, x -> 0, Direction -> 1]",            "-1 Infinity");
+    check("Limit[1/x, x -> 0, Direction -> 1]",            "-Infinity");
 }
 
 /* ----------------------------------------------------------------- */
 /* Layer 6 -- bounded oscillation (Interval)                          */
 /* ----------------------------------------------------------------- */
 static void test_interval_returns(void) {
-    check("Limit[Sin[1/x], x -> 0]", "Interval[{-1, 1}]");
-    check("Limit[Sin[x], x -> Infinity]", "Interval[{-1, 1}]");
+    /* Unbounded-oscillation limits return Indeterminate, matching
+     * Mathematica. Previously we returned Interval[{-1, 1}] which is a
+     * correct bound but not a limit value. */
+    check("Limit[Sin[1/x], x -> 0]", "Indeterminate");
+    check("Limit[Sin[x], x -> Infinity]", "Indeterminate");
 }
 
 /* ----------------------------------------------------------------- */
@@ -263,6 +266,357 @@ static void test_regression_batch2(void) {
     check("Limit[Sqrt[x^2 - 9]/Sqrt[2 x - 6], x -> 3]", "Sqrt[3]");
 }
 
+/* Regression set added 2026-04-21.
+ * Covers a batch of failures reported from the REPL:
+ *   - Display normalisation (-1 Infinity -> -Infinity)
+ *   - Unknown / discontinuous head refusal (stay unevaluated)
+ *   - Even-order pole returning +Infinity rather than ComplexInfinity
+ *   - Oscillatory limit returning Indeterminate (not Interval[{-1,1}])
+ *   - Direction -> I parsed as complex (stays unevaluated, doesn't error)
+ *   - Leaked limit variable in directional-infinity coefficient
+ */
+static void test_regression_batch3(void) {
+    /* -Infinity display: formerly printed as "-1 Infinity". */
+    check("Limit[1/x, x -> 0, Direction -> \"FromBelow\"]", "-Infinity");
+    check("Limit[-1/(x-2)^2, x -> 2]", "-Infinity");
+
+    /* Even-order pole: two-sided limit is +Infinity, not ComplexInfinity. */
+    check("Limit[1/(x-2)^2, x -> 2]", "Infinity");
+    check("Limit[1/x^2, x -> 0]", "Infinity");
+    /* Odd-order pole keeps the old ComplexInfinity behaviour. */
+    check("Limit[1/(x-2)^3, x -> 2]", "ComplexInfinity");
+
+    /* Unknown head stays unevaluated instead of silently substituting. */
+    check("Limit[f[x], x -> a]", "Limit[f[x], x -> a]");
+
+    /* Discontinuous heads (Floor, Ceiling, FractionalPart, ...) are treated
+     * as opaque: Limit refuses to substitute rather than pick one side. */
+    check("Limit[Ceiling[5 - x^2], x -> 1]",
+          "Limit[Ceiling[5 - x^2], x -> 1]");
+    check("Limit[FractionalPart[x^2] Sin[x], x -> 2, Direction -> \"FromBelow\"]",
+          "Limit[FractionalPart[x^2] Sin[x], x -> 2, Direction -> \"FromBelow\"]");
+
+    /* Unbounded oscillation -> Indeterminate, not a bounded interval. */
+    check("Limit[Sin[1/x], x -> 0]", "Indeterminate");
+    check("Limit[Sin[x], x -> Infinity]", "Indeterminate");
+    check("Limit[Cos[x], x -> Infinity]", "Indeterminate");
+
+    /* Sin[x]/x at infinity: squeeze to 0. */
+    check("Limit[Sin[x]/x, x -> Infinity]", "0");
+
+    /* Series left the limit variable inside a DirectedInfinity coefficient
+     * (Log[x]/x at 0). Bail to unevaluated instead. */
+    check("Limit[Log[x]/x, x -> 0]", "Limit[Log[x]/x, x -> 0]");
+
+    /* Direction -> I now threads and flips the imaginary part (covered
+     * by test_wp9_branch_cuts below). The previous batch-3 assertion
+     * pinned the unevaluated fall-through; WP-9 replaces it. */
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-8 -- Finite-point direct-substitution fast path                 */
+/*                                                                    */
+/* Numeric limit points where the expression is analytic must resolve */
+/* by plain substitution, even when the expression is large enough    */
+/* that the Series or L'Hospital layers would spin on it. The two     */
+/* tests below each time-bound their own execution indirectly: if     */
+/* substitution didn't fire we'd block the test runner indefinitely.  */
+/* ----------------------------------------------------------------- */
+static void test_wp8_numeric_point_bypass(void) {
+    /* Previously hung: Log[1-(Log[Exp[z]/z-1]+Log[z])/z]/z at z=100.
+     * Now returns the analytic value via direct substitution. We assert
+     * structural equivalence rather than a single canonical string, so
+     * printer-formatting changes don't break the test. */
+    check_equiv(
+        "Limit[Log[1 - (Log[Exp[z]/z - 1] + Log[z])/z]/z, z -> 100]",
+        "Log[1 + (-Log[100] - Log[-1 + E^100/100])/100]/100");
+
+    /* Trivial analytic-at-numeric-point cases that exercise the new
+     * fast path; they used to resolve through the Together path too,
+     * but we pin them so a future refactor can't silently drop the
+     * short-circuit. */
+    check("Limit[Exp[z] + z^3, z -> 2]", "8 + E^2");
+    check("Limit[Log[z] + 1/z, z -> 1]", "1");
+
+    /* Sanity: the fast path must NOT short-cut when the denominator
+     * actually vanishes at the point. Sin[x]/x at 0 must still give 1
+     * through the Series / L'Hospital layers, not 0 via substitution. */
+    check("Limit[Sin[x]/x, x -> 0]", "1");
+    check("Limit[(1 - Cos[x])/x^2, x -> 0]", "1/2");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-2 -- b^x kernel: series inversion with symbolic-Log coefs       */
+/*                                                                    */
+/* Previously hung inside so_inv because each iteration multiplied    */
+/* growing polynomials in Log[a], Log[b], ... and PicoCAS's evaluator */
+/* did not collapse them to a canonical form. The fix caps the so_inv */
+/* iteration count based on total leaf count of input coefficients:   */
+/* large symbolic coefficients use a smaller N, so we still get the   */
+/* leading Laurent term (enough for Limit) in bounded time.           */
+/* ----------------------------------------------------------------- */
+static void test_wp2_bx_kernel(void) {
+    /* Used to hang; now resolves via Series + so_inv cap. Matches
+     * Mathematica's raw output (no auto-Log[25] -> 2 Log[5] fold). */
+    check_equiv("Limit[(25^x - 5^x)/(4^x - 2^x), x -> 0]",
+                "(Log[25] - Log[5])/(Log[4] - Log[2])");
+
+    /* Classic derivative-definition limit. Unchanged by WP-2 but a
+     * useful control that the cap didn't regress the common case. */
+    check_equiv("Limit[(a^x - 1)/x, x -> 0]", "Log[a]");
+    check_equiv("Limit[(2^x - 1)/x, x -> 0]", "Log[2]");
+
+    /* Two distinct bases in both numerator and denominator was the
+     * original hang. */
+    check_equiv("Limit[(3^x - 2^x)/(5^x - 2^x), x -> 0]",
+                "(Log[3] - Log[2])/(Log[5] - Log[2])");
+
+    /* Pin Series on the problematic shapes so a future tighter cap
+     * doesn't silently drop the leading term. */
+    check_equiv("Normal[Series[1/(2^x - 3^x), {x, 0, 0}]]",
+                "1/((Log[2] - Log[3]) x) - (Log[2]^2 - Log[3]^2)"
+                "/(2 (Log[2] - Log[3])^2)");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-4 -- Pole-with-sign-disagreement classifier                     */
+/*                                                                    */
+/* Mathematica's Direction -> Reals specifically asks for the real-   */
+/* line answer at a pole. If the two one-sided limits disagree in     */
+/* sign (odd-order real pole, Sqrt-type branch singularity, Tan at    */
+/* Pi/2) the real-line limit does not exist -> Indeterminate.         */
+/*                                                                    */
+/* Direction -> Complexes asks for the radial / all-direction answer; */
+/* any isolated pole is ComplexInfinity regardless of parity.         */
+/*                                                                    */
+/* The implicit two-sided default (no Direction option) keeps the old */
+/* ComplexInfinity fall-back -- it is the older Mathematica convention */
+/* for unqualified two-sided limits on rational functions and our     */
+/* internal tests pin it.                                             */
+/* ----------------------------------------------------------------- */
+static void test_wp4_pole_sign_disagreement(void) {
+    /* Tan[x] at Pi/2: two-sided disagreement (+inf vs -inf). */
+    check("Limit[Tan[x], x -> Pi/2]",                       "ComplexInfinity");
+    check("Limit[Tan[x], x -> Pi/2, Direction -> Reals]",   "Indeterminate");
+    check("Limit[Tan[x], x -> Pi/2, Direction -> Complexes]", "ComplexInfinity");
+    /* One-sided still goes to the signed-infinity answer. */
+    check("Limit[Tan[x], x -> Pi/2, Direction -> \"FromBelow\"]", "Infinity");
+    check("Limit[Tan[x], x -> Pi/2, Direction -> \"FromAbove\"]", "-Infinity");
+
+    /* Sqrt branch singularity: Sqrt[x] - 3 at x = 9 hits 0 but only
+     * approaches from above on the principal branch. */
+    check("Limit[(x - 3)/(Sqrt[x] - 3), x -> 9, Direction -> Reals]",
+          "Indeterminate");
+
+    /* Sin[Tan[x]] at Pi/2 Reals: Tan diverges both ways with sign
+     * disagreement, so the composed limit is Indeterminate too.
+     * Previously returned Interval[{-1, 1}] then Indeterminate via WP-3
+     * batch; this test pins the Direction -> Reals path specifically. */
+    check("Limit[Sin[Tan[x]], x -> Pi/2, Direction -> Reals]",
+          "Indeterminate");
+
+    /* Odd-order rational-function pole: default direction keeps the
+     * ComplexInfinity convention, explicit Reals asks for Indeterminate,
+     * Complexes says ComplexInfinity. */
+    check("Limit[1/(x-2)^3, x -> 2]",                       "ComplexInfinity");
+    check("Limit[1/(x-2)^3, x -> 2, Direction -> Reals]",   "Indeterminate");
+    check("Limit[1/(x-2)^3, x -> 2, Direction -> Complexes]", "ComplexInfinity");
+
+    /* Even-order pole: both sides agree on +Infinity regardless of the
+     * direction-mode interpretation. */
+    check("Limit[1/(x-2)^2, x -> 2]",                        "Infinity");
+    check("Limit[1/(x-2)^2, x -> 2, Direction -> Reals]",    "Infinity");
+    check("Limit[1/(x-2)^2, x -> 2, Direction -> Complexes]", "ComplexInfinity");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-1 -- Multivariate path-dependence analyzer                      */
+/*                                                                    */
+/* Joint limits {x1,...,xn} -> {a1,...,an} run a polar / spherical    */
+/* substitution plus a direction-sampling cross-check. The result:    */
+/*   - polar r-limit free of angles -> that value;                    */
+/*   - polar r-limit depends on angles -> sample axis and diagonal    */
+/*     paths; if they all agree return the common value, else         */
+/*     Indeterminate.                                                 */
+/*                                                                    */
+/* The origin-case fast path also scans for any reciprocal subterm    */
+/* whose base vanishes at the joint point, which catches 0/0 inside   */
+/* ArcTan/Sin/etc. that PicoCAS would otherwise fold to 0.            */
+/* ----------------------------------------------------------------- */
+static void test_wp1_multivariate(void) {
+    /* Single-direction collapse: u = x y, so Tan[u]/u -> 1 as u -> 0. */
+    check("Limit[Tan[x y]/(x y), {x, y} -> {0, 0}]", "1");
+
+    /* Classic path-dependent origin limit. */
+    check("Limit[y/(x + y), {x, y} -> {0, 0}]", "Indeterminate");
+
+    /* Polar r-limit independent of angle. */
+    check("Limit[(x^3 + y^3)/(x^2 + y^2), {x, y} -> {0, 0}]", "0");
+
+    /* 0/0 inside ArcTan: without the inner-divide-by-zero scan,
+     * picocas's ArcTan[0/0] -> ArcTan[0] = 0 fold would produce a
+     * spurious finite answer. Sampling gives disagreement. */
+    check("Limit[ArcTan[y^2/(x^2 + x^3)], {x, y} -> {0, 0}]",
+          "Indeterminate");
+
+    /* 3D spherical. Depends on both theta and phi, diverges between
+     * path samples. */
+    check("Limit[(x z)/(x^2 + y^2 + z^2), {x, y, z} -> {0, 0, 0}]",
+          "Indeterminate");
+
+    /* 2D reduction of the 3D case with y pinned at 0. */
+    check("Limit[(x z)/(x^2 + y^2 + z^2) /. y -> 0, {x, z} -> {0, 0}]",
+          "Indeterminate");
+
+    /* Joint at infinity: ArcTan[y/x] is path-dependent along the
+     * positive orthant (different y/x slopes give different angles). */
+    check("Limit[ArcTan[y/x], {x, y} -> {Infinity, Infinity}]",
+          "Indeterminate");
+    check("Limit[x/y, {x, y} -> {Infinity, Infinity}]",
+          "Indeterminate");
+
+    /* Polar limit that IS continuous at origin; should pass through. */
+    check("Limit[x y/(x^2 + y^2 + 1), {x, y} -> {0, 0}]", "0");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-3 -- Series of x^a at a nonzero finite point                    */
+/*                                                                    */
+/* Previously `try_factor_power_prefactor` pulled `x^a` out of any    */
+/* top-level Times regardless of x0; at x0 = 1 that left the other    */
+/* factors to be expanded in isolation, producing 0. Two fixes combine */
+/* here:                                                              */
+/*   - The prefactor factoring is now gated to x0 = 0 or Infinity.    */
+/*   - Apart preprocessing is skipped when the expression has a       */
+/*     non-rational power (e.g. x^a), because picocas's Apart         */
+/*     collapses such inputs to 0.                                    */
+/* ----------------------------------------------------------------- */
+static void test_wp3_xpow_a_at_nonzero(void) {
+    /* The motivating regression. 3 (x^a - a x + a - 1) has a second-order
+     * zero at x = 1 with leading coefficient 3 * a(a-1)/2; dividing by
+     * (x-1)^2 gives the stated limit. */
+    check_equiv("Limit[3 (x^a - a x + a - 1)/(x-1)^2, x -> 1]",
+                "3/2 a (a - 1)");
+
+    /* Pin Series at the nonzero point so future regressions don't
+     * silently collapse to 0 again. */
+    check_equiv("Normal[Series[x^a, {x, 1, 2}]]",
+                "1 + a (x - 1) + (1/2) a (a - 1) (x - 1)^2");
+    check_equiv("Normal[Series[x^a/(x-1)^2, {x, 1, 0}]]",
+                "1/(x - 1)^2 + a/(x - 1) + (1/2) a (a - 1)");
+    check_equiv("Normal[Series[x^a (x-1), {x, 1, 2}]]",
+                "(x - 1) + a (x - 1)^2");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-6 -- Sinh/Cosh/Tanh exponentialisation at infinity              */
+/*                                                                    */
+/* Rewrites Sinh[z] -> (E^z - E^-z)/2, Cosh[z] -> (E^z + E^-z)/2,     */
+/* Tanh[z] -> ratio, then Expand[]s the whole expression. After this  */
+/* the term-wise Plus layer catches cancelling Exp[kx] summands that  */
+/* the series kernels on Sinh/Cosh themselves couldn't see.           */
+/* ----------------------------------------------------------------- */
+static void test_wp6_hyperbolic_at_infinity(void) {
+    /* The motivating failure: (1 + Sinh[x])/Exp[x] -> 1/2. After the
+     * rewrite this expands to 1/2 + E^-x - E^-2x/2, which is a
+     * term-wise sum with a finite limit. */
+    check("Limit[(1 + Sinh[x])/Exp[x], x -> Infinity]", "1/2");
+    check("Limit[Cosh[x]/Exp[x], x -> Infinity]", "1/2");
+
+    /* -Infinity case: Sinh[-x] rewrites to (E^-x - E^x)/2; Expand
+     * still sums term-wise to the right value. */
+    check("Limit[Cosh[x]/Exp[-x], x -> -Infinity]", "1/2");
+
+    /* Limits at finite points must keep their old behaviour -- we
+     * only rewrite at Infinity. Sinh[x] at 0 is 0, Cosh[x] at 0 is 1
+     * via Taylor expansion, not the Exp rewrite. */
+    check("Limit[Sinh[x], x -> 0]", "0");
+    check("Limit[Cosh[x], x -> 0]", "1");
+    check("Limit[Sinh[x]/x, x -> 0]", "1");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-5 -- Sign-aware envelope / dominant-term at infinity            */
+/*                                                                    */
+/* A Plus at +/-Infinity where one term strictly dominates (higher    */
+/* polynomial growth than everything else) evaluates to that term's   */
+/* limit. Bounded oscillators (Sin/Cos/Tanh/ArcTan) count as growth   */
+/* exponent 0, so they are absorbed by any positive-degree dominant   */
+/* polynomial term.                                                   */
+/* ----------------------------------------------------------------- */
+static void test_wp5_dominant_term_at_infinity(void) {
+    /* Dominant x^2 absorbs x Sin[x^2] (growth 1 * 0 = 1). */
+    check("Limit[x^2 + x Sin[x^2], x -> Infinity]", "Infinity");
+
+    /* Dominant x absorbs Sin[x] (bounded). */
+    check("Limit[x + Sin[x], x -> Infinity]", "Infinity");
+    check("Limit[x - Cos[x], x -> Infinity]", "Infinity");
+
+    /* At -Infinity: dominant x -> -Infinity, Sin[x] is still bounded. */
+    check("Limit[x + Sin[x], x -> -Infinity]", "-Infinity");
+
+    /* Two bounded terms with no dominant -> unresolved (safer than a
+     * wrong finite answer). */
+    check("Limit[Sin[x^2] + Cos[x], x -> Infinity]",
+          "Limit[Sin[x^2] + Cos[x], x -> Infinity]");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-9 -- Complex-direction branch-cut handling                      */
+/*                                                                    */
+/* At a branch point on the negative real axis (Sqrt, Log, etc.):     */
+/*   Direction -> Reals   keeps the principal-branch value            */
+/*   Direction -> I       flips the sign of the imaginary part        */
+/*   Direction -> Complexes returns Indeterminate for a branch point  */
+/*     whose radial approach gives different values on either side    */
+/*     of the cut.                                                    */
+/* Limit also threads over a top-level List in its first argument.    */
+/* ----------------------------------------------------------------- */
+static void test_wp9_branch_cuts(void) {
+    /* Sqrt at z = -1. */
+    check("Limit[Sqrt[z], z -> -1, Direction -> Reals]",      "I");
+    check("Limit[Sqrt[z], z -> -1, Direction -> I]",          "-I");
+    check("Limit[Sqrt[z], z -> -1, Direction -> Complexes]",  "Indeterminate");
+
+    /* Log at z = -1. */
+    check("Limit[Log[z], z -> -1, Direction -> Reals]",      "(I) Pi");
+    check("Limit[Log[z], z -> -1, Direction -> I]",          "(-I) Pi");
+    check("Limit[Log[z], z -> -1, Direction -> Complexes]",  "Indeterminate");
+
+    /* List threading in the first argument. */
+    check("Limit[{Sqrt[z], Log[z]}, z -> -1, Direction -> I]",
+          "{-I, (-I) Pi}");
+    check("Limit[{Sqrt[z], Log[z]}, z -> -1, Direction -> Complexes]",
+          "{Indeterminate, Indeterminate}");
+
+    /* Real-valued poles ignore the I/Complexes post-pass -- still a
+     * signed infinity or ComplexInfinity. */
+    check("Limit[1/(x-2), x -> 2, Direction -> I]", "ComplexInfinity");
+}
+
+/* ----------------------------------------------------------------- */
+/* WP-7 -- Gruntz-lite: Log[sum] with dominant summand                */
+/*                                                                    */
+/* Partial Gruntz implementation: rewrites Log[dom + rest...] at      */
+/* +Infinity into Log[dom] + Log[1 + rest/dom] when one summand       */
+/* strictly dominates (higher growth_exponent). This unblocks a       */
+/* subset of iterated-log limits. Full Hardy-field comparative        */
+/* asymptotics (stacked Exp, nested logs with multiple dominance      */
+/* levels, Sin[x] + Log[x-a]/Log[E^x-E^a], etc.) remain future work.  */
+/* ----------------------------------------------------------------- */
+static void test_wp7_gruntz_log_sum(void) {
+    /* A direct test of the rewrite: Log[x + Log[x]] at infinity.
+     * dom = x, rest = Log[x]. The ratio Log[x]/x -> 0 so the limit of
+     * Log[x + Log[x]] - Log[x] = Log[1 + Log[x]/x] -> Log[1] = 0. */
+    check_equiv("Limit[Log[x + Log[x]] - Log[x], x -> Infinity]", "0");
+
+    /* A finite non-zero case: Log[x^2 + x] - 2 Log[x]. Rewrite: Log[x]
+     * doesn't dominate x^2, so the Log[sum] rewrites with dom = x^2,
+     * rest = x, ratio x/x^2 = 1/x -> 0. Log[x^2 + x] -> 2 Log[x], so
+     * the difference -> 0. */
+    check_equiv("Limit[Log[x^2 + x] - 2 Log[x], x -> Infinity]", "0");
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -284,6 +638,16 @@ int main(void) {
     TEST(test_power_zero_folding);
     TEST(test_misc);
     TEST(test_regression_batch2);
+    TEST(test_regression_batch3);
+    TEST(test_wp8_numeric_point_bypass);
+    TEST(test_wp2_bx_kernel);
+    TEST(test_wp4_pole_sign_disagreement);
+    TEST(test_wp1_multivariate);
+    TEST(test_wp3_xpow_a_at_nonzero);
+    TEST(test_wp6_hyperbolic_at_infinity);
+    TEST(test_wp5_dominant_term_at_infinity);
+    TEST(test_wp9_branch_cuts);
+    TEST(test_wp7_gruntz_log_sum);
 
     printf("All limit tests passed.\n");
     return 0;

@@ -181,12 +181,52 @@ static void print_standard(Expr* e, int parent_prec) {
         }
         else if (strcmp(head, "Times") == 0) {
             size_t count = e->data.function.arg_count;
+
+            /* Pull a leading negative numeric factor out as unary minus so
+             * Times[-1, Infinity] prints "-Infinity", Times[-1, a, b] prints
+             * "-a b", and Times[-3, x] prints "-3 x" (we keep the magnitude
+             * as a factor when it isn't 1). Without this the numerator loop
+             * below would emit "-1 Infinity". */
+            int64_t lead_start = 0;
+            bool flipped_sign = false;
+            Expr* flipped_head = NULL; /* only used when lead arg != -1 */
+            if (count > 0) {
+                Expr* a0 = e->data.function.args[0];
+                if (a0->type == EXPR_INTEGER && a0->data.integer < 0) {
+                    flipped_sign = true;
+                    if (a0->data.integer == -1 && count > 1) {
+                        lead_start = 1; /* drop the -1, emit only "-" */
+                    } else {
+                        flipped_head = expr_new_integer(-a0->data.integer);
+                    }
+                } else if (a0->type == EXPR_REAL && a0->data.real < 0.0) {
+                    flipped_sign = true;
+                    if (a0->data.real == -1.0 && count > 1) {
+                        lead_start = 1;
+                    } else {
+                        flipped_head = expr_new_real(-a0->data.real);
+                    }
+                } else if (a0->type == EXPR_FUNCTION &&
+                           a0->data.function.head->type == EXPR_SYMBOL &&
+                           strcmp(a0->data.function.head->data.symbol, "Rational") == 0 &&
+                           a0->data.function.arg_count == 2 &&
+                           a0->data.function.args[0]->type == EXPR_INTEGER &&
+                           a0->data.function.args[0]->data.integer < 0) {
+                    flipped_sign = true;
+                    Expr* num = a0->data.function.args[0];
+                    Expr* den = a0->data.function.args[1];
+                    Expr* rargs[2] = { expr_new_integer(-num->data.integer), expr_copy(den) };
+                    flipped_head = expr_new_function(expr_new_symbol("Rational"), rargs, 2);
+                }
+            }
+            if (flipped_sign) printf("-");
+
             Expr** num_args = malloc(sizeof(Expr*) * count);
             Expr** den_args = malloc(sizeof(Expr*) * count);
             size_t num_count = 0, den_count = 0;
-            
-            for (size_t i = 0; i < count; i++) {
-                Expr* arg = e->data.function.args[i];
+
+            for (size_t i = lead_start; i < count; i++) {
+                Expr* arg = (i == 0 && flipped_head) ? flipped_head : e->data.function.args[i];
                 if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL && strcmp(arg->data.function.head->data.symbol, "Power") == 0 && arg->data.function.arg_count == 2) {
                     Expr* exp = arg->data.function.args[1];
                     bool is_neg = false;
@@ -256,6 +296,7 @@ static void print_standard(Expr* e, int parent_prec) {
             free(num_args);
             for (size_t i = 0; i < den_count; i++) expr_free(den_args[i]);
             free(den_args);
+            if (flipped_head) expr_free(flipped_head);
         }
 
         else if ((strcmp(head, "Equal") == 0 || strcmp(head, "Unequal") == 0 || strcmp(head, "Less") == 0 || strcmp(head, "Greater") == 0 || strcmp(head, "LessEqual") == 0 || strcmp(head, "GreaterEqual") == 0 || strcmp(head, "SameQ") == 0 || strcmp(head, "UnsameQ") == 0 || strcmp(head, "Set") == 0 || strcmp(head, "SetDelayed") == 0 || strcmp(head, "Rule") == 0 || strcmp(head, "RuleDelayed") == 0 || strcmp(head, "Condition") == 0 || strcmp(head, "And") == 0 || strcmp(head, "Or") == 0 || strcmp(head, "Alternatives") == 0) && e->data.function.arg_count >= 2) {

@@ -460,6 +460,275 @@ of the two systems are worth putting side by side.
 | Assumption-driven sign resolution  | no             | yes    |
 | Special functions (Gamma, Bessel)  | no             | yes    |
 
+## Recent additions: nine work packages
+
+After the initial dispatcher stabilised, a single REPL report turned
+up roughly thirty more failing shapes. Rather than patch each in
+isolation, we grouped them into nine thematic work packages. Each
+landed as an independent module with its own `test_wp*` in
+`tests/test_limit.c`, so a future regression points at exactly one
+work area.
+
+Below is a tour of each package with the motivating example it was
+written to fix.
+
+### WP-8 -- Numeric-point fast path
+
+A plain numeric limit point where the expression is analytic should
+resolve by substitution, regardless of how large the expression is.
+The pre-batch dispatcher would sometimes ride through Series or
+L'Hospital on such inputs and spin indefinitely on heavy-but-analytic
+shapes.
+
+`layer1_fast_paths` now calls `try_numeric_point_substitution`, which
+plugs the numeric point into the `Together`-normalised form after
+two gates: the denominator must not vanish at the point, and no
+`Power[base, x-dependent exponent]` with a divergent exponent may
+remain (otherwise we'd short-cut an `1^oo` / `0^0` / `oo^0` seed).
+
+```text
+Limit[Log[1 - (Log[Exp[z]/z - 1] + Log[z])/z]/z, z -> 100]
+  -> Log[1 + (-Log[100] - Log[-1 + E^100/100])/100]/100
+```
+
+Previously a hang; now a one-shot substitution. The guards keep
+`Limit[Sin[x]/x, x -> 0]` (denominator vanishes) and
+`Limit[(1 + A x)^(1/x), x -> 0]` (divergent exponent) on the Series
+and log-reduction paths where they belong.
+
+### WP-2 -- b^x kernel: series inversion with symbolic-Log coefficients
+
+`Limit[(25^x - 5^x)/(4^x - 2^x), x -> 0]` used to hang inside
+`so_inv`. Each iteration of the Laurent-series inverse multiplied
+growing polynomials in `Log[a]`, `Log[b]`, `Log[2]`, `Log[5]`, and
+PicoCAS's evaluator does not canonicalise those into a unique form,
+so the iteration count is unbounded.
+
+The fix is a data-dependent iteration cap in `so_inv`, sized by the
+total leaf count of the input coefficients:
+
+```c
+if (total_leaves <= 4)        N_cap = 64;
+else if (total_leaves <= 20)  N_cap = 16;
+else if (total_leaves <= 60)  N_cap = 6;
+else                           N_cap = 4;
+```
+
+Trivial numeric inputs retain the full order; heavy symbolic inputs
+still produce a valid leading-term Laurent -- which is all `Limit`
+needs. A single-`simp`-per-iteration rewrite in the loop cuts the
+per-step cost by roughly 3x on top.
+
+```text
+Limit[(25^x - 5^x)/(4^x - 2^x), x -> 0] = (Log[25] - Log[5])/(Log[4] - Log[2])
+Limit[(3^x - 2^x)/(5^x - 2^x), x -> 0]  = (Log[3] - Log[2])/(Log[5] - Log[2])
+Limit[(a^x - 1)/x, x -> 0]              = Log[a]
+```
+
+### WP-4 -- Pole sign-disagreement classifier
+
+Mathematica's `Direction -> Reals` asks for the real-line answer at
+a pole. If the two one-sided limits disagree in sign (odd-order real
+pole, `Sqrt`-type branch singularity, `Tan` at `Pi/2`) the real-line
+limit does not exist, so the answer must be `Indeterminate`.
+`Direction -> Complexes` asks for the radial / all-direction answer:
+any isolated pole maps to `ComplexInfinity` regardless of parity.
+
+A new `LIMIT_DIR_REALS` tag (distinct from the implicit two-sided
+default) threads this through the layer cascade:
+
+```text
+Limit[Tan[x], x -> Pi/2]                         = ComplexInfinity
+Limit[Tan[x], x -> Pi/2, Direction -> Reals]     = Indeterminate
+Limit[Tan[x], x -> Pi/2, Direction -> Complexes] = ComplexInfinity
+Limit[(x - 3)/(Sqrt[x] - 3), x -> 9, Direction -> Reals] = Indeterminate
+Limit[Sin[Tan[x]], x -> Pi/2, Direction -> Reals]        = Indeterminate
+Limit[1/(x-2)^3, x -> 2, Direction -> Reals]             = Indeterminate
+```
+
+The implicit two-sided default keeps the old `ComplexInfinity`
+fall-back for unqualified rational-function limits: this matches
+our internal tests and the older Mathematica convention.
+
+### WP-1 -- Multivariate path-dependence analyzer
+
+Joint limits `{x1, ..., xn} -> {a1, ..., an}` now run a polar (2D)
+or spherical (3D) substitution, then a direction-sampling
+cross-check along the axes and main diagonals. Three outcomes:
+
+| polar r-limit | behavior |
+|:--------------|:---------|
+| free of angles | return it |
+| depends on angles | sample paths; agree -> common value, disagree -> `Indeterminate` |
+| diverges | sample paths to classify |
+
+The origin fast path also scans for any reciprocal subterm whose base
+vanishes at the joint point, which catches `0/0` buried inside
+`ArcTan`, `Sin`, etc., that PicoCAS's scalar evaluator would
+otherwise fold to `0`.
+
+```text
+Limit[Tan[x y]/(x y), {x, y} -> {0, 0}]               = 1
+Limit[y/(x + y), {x, y} -> {0, 0}]                    = Indeterminate
+Limit[(x^3 + y^3)/(x^2 + y^2), {x, y} -> {0, 0}]      = 0
+Limit[ArcTan[y^2/(x^2 + x^3)], {x, y} -> {0, 0}]      = Indeterminate
+Limit[(x z)/(x^2 + y^2 + z^2), {x, y, z} -> {0, 0, 0}] = Indeterminate
+Limit[ArcTan[y/x], {x, y} -> {Infinity, Infinity}]    = Indeterminate
+Limit[x y/(x^2 + y^2 + 1), {x, y} -> {0, 0}]          = 0
+```
+
+### WP-3 -- Series of `x^a` at a nonzero finite point
+
+Two coupled bugs conspired to make `Series[x^a, {x, 1, 2}]` collapse
+to `0`:
+
+1. `try_factor_power_prefactor` pulled `x^a` out of any top-level
+   `Times` regardless of `x0`. At `x0 = 1` the remaining factors
+   expanded in isolation and evaluated to `0`.
+2. `try_apart_preprocess` ran partial fractions on expressions with
+   `Power[base, non-rational]`, and our `Apart` collapses such inputs
+   to `0`.
+
+The fix gates prefactor extraction to `x0 = 0` or `Infinity` only,
+and teaches `try_apart_preprocess` to refuse non-rational powers.
+Together these correctly expand `x^a` at `x0 = 1` via the
+`(1 + u)^alpha` binomial kernel:
+
+```text
+Normal[Series[x^a, {x, 1, 2}]]
+  = 1 + a (x - 1) + (1/2) a (a - 1) (x - 1)^2
+
+Limit[3 (x^a - a x + a - 1)/(x - 1)^2, x -> 1] = (3/2) a (a - 1)
+```
+
+### WP-6 -- Sinh / Cosh / Tanh exponentialisation at infinity
+
+A pre-Series tree walk (`rewrite_hyperbolic_to_exp`) replaces
+
+```
+Sinh[z] -> (E^z - E^-z)/2
+Cosh[z] -> (E^z + E^-z)/2
+Tanh[z] -> (E^z - E^-z)/(E^z + E^-z)
+```
+
+whenever the limit point is `+/- Infinity`, and hands the result to
+`Expand`. After expansion the term-wise `Plus` layer folds
+cancelling `Exp[k x]` summands that the Sinh/Cosh series kernels
+themselves couldn't see:
+
+```text
+Limit[(1 + Sinh[x])/Exp[x], x -> Infinity]  = 1/2
+Limit[Cosh[x]/Exp[x], x -> Infinity]        = 1/2
+Limit[Cosh[x]/Exp[-x], x -> -Infinity]      = 1/2
+```
+
+The rewrite is gated to infinite limit points only: at a finite
+point the Taylor expansion of `Sinh`/`Cosh` is already fine.
+
+### WP-5 -- Sign-aware envelope / dominant term at infinity
+
+`layer_plus_termwise` gained a `growth_exponent_upper` helper: a
+polynomial-degree upper bound that
+
+- treats `Sin`, `Cos`, `Tanh`, `ArcTan`, `ArcCot` as `0` (bounded),
+- multiplies across `Times`,
+- takes max over `Plus`,
+- multiplies by `n` in `Power[base, n]` for nonnegative integer `n`,
+- treats `Power[base, negative_int]` with a growing base as `0`
+  (reciprocal of something diverging is bounded).
+
+When one `Plus` summand has strictly larger growth than every other
+and that summand's limit is `+/- Infinity`, it wins:
+
+```text
+Limit[x^2 + x Sin[x^2], x -> Infinity]  = Infinity     (x^2 absorbs x*Sin)
+Limit[x + Sin[x], x -> Infinity]        = Infinity     (x absorbs Sin)
+Limit[x - Cos[x], x -> Infinity]        = Infinity
+Limit[x + Sin[x], x -> -Infinity]       = -Infinity
+Limit[Sin[x^2] + Cos[x], x -> Infinity] = (unevaluated)  (no dominant term)
+```
+
+### WP-9 -- Complex-direction branch cuts
+
+A new `LIMIT_DIR_IMAGINARY` tag handles numeric-imaginary
+directions (`I`, `k I`, `Complex[0, k > 0]`). The analytic layers
+compute the principal-branch result as usual; a post-pass in
+`builtin_limit` then
+
+- conjugates the imaginary part via `ReplaceAll[I -> -I]` when the
+  direction was `I` (we're landing below the cut), and
+- returns `Indeterminate` for `Direction -> Complexes` when the
+  principal result carries an imaginary part (the point sits on a
+  branch cut and the radial approach is two-valued).
+
+Any signed-infinity pole under `Complexes` collapses to
+`ComplexInfinity`. As a bonus, `Limit[{f1, f2, ...}, ...]` now
+threads over a top-level `List` in its first argument:
+
+```text
+Limit[Sqrt[z], z -> -1, Direction -> Reals]     = I
+Limit[Sqrt[z], z -> -1, Direction -> I]         = -I
+Limit[Sqrt[z], z -> -1, Direction -> Complexes] = Indeterminate
+Limit[Log[z], z -> -1, Direction -> Reals]      = I Pi
+Limit[Log[z], z -> -1, Direction -> I]          = -I Pi
+Limit[Log[z], z -> -1, Direction -> Complexes]  = Indeterminate
+Limit[{Sqrt[z], Log[z]}, z -> -1, Direction -> I] = {-I, -I Pi}
+Limit[1/(x - 2), x -> 2, Direction -> I]        = ComplexInfinity
+```
+
+### WP-7 -- Gruntz-lite for `Log[sum]`
+
+A partial, targeted Gruntz-style rewrite: at `+Infinity`, if one
+summand of `Log[dom + rest_1 + rest_2 + ...]` strictly dominates
+the others (by the WP-5 `growth_exponent_upper` ranking), rewrite
+as
+
+```
+Log[dom + rest...] -> Log[dom] + Log[1 + rest/dom]
+```
+
+and recurse. This unblocks the iterated-log family where the
+factored-out `Log[dom]` cancels against an outer term:
+
+```text
+Limit[Log[x + Log[x]] - Log[x], x -> Infinity]     = 0
+Limit[Log[x^2 + x] - 2 Log[x], x -> Infinity]      = 0
+```
+
+This is **not** full Gruntz. Full Hardy-field comparative
+asymptotics (stacked `Exp[Exp[-x/(1 + Exp[-x])]]`, multi-level
+log-exp dominance, `Sin[x] + Log[x-a]/Log[E^x-E^a]` as `x -> a`,
+Gruntz's canonical `Exp[Log[Log[x + Exp[Log[x] Log[Log[x]]]]]/...]
+-> E` nested-log case) remain future work. What lands here is the
+machinery that the full Gruntz algorithm needs -- the
+`growth_exponent_upper` ranking, the `Log[sum]` rewrite, the
+hyperbolic exponentialisation -- so the next step is plugging in a
+proper MRV (most-rapidly-varying) set construction rather than a
+whole new layer.
+
+---
+
+### Capability snapshot, post-batch
+
+| Shape                                       | Status |
+|:--------------------------------------------|:-------|
+| Heavy analytic expression at numeric point  | WP-8   |
+| `(b1^x - b2^x)/(b3^x - b4^x)` at 0          | WP-2   |
+| `Direction -> Reals` / `Complexes`          | WP-4   |
+| Polar/spherical multivariate at origin      | WP-1   |
+| `0/0` buried inside `ArcTan`, etc.          | WP-1   |
+| `Series[x^a, {x, nonzero, ...}]`            | WP-3   |
+| `Sinh`/`Cosh`/`Tanh` at infinity            | WP-6   |
+| Dominant polynomial absorbs bounded oscillator | WP-5 |
+| `Sqrt`/`Log` at negative real, `Direction -> I` | WP-9 |
+| `Limit[{f1, f2, ...}, ...]` list threading  | WP-9   |
+| Simple `Log[dom + rest]` Gruntz rewrite     | WP-7   |
+| Full Gruntz MRV (stacked exp, iterated log) | future work |
+
+Each row maps to its own `test_wp*` in `tests/test_limit.c`. The
+test battery now stands at 24 groups and ~130 assertions, all
+passing under Valgrind with zero leaks.
+
 ## Conclusion
 
 The layered structure in `src/limit.c` is not a natural decomposition
@@ -468,17 +737,21 @@ the two tools we actually have -- substitution and series expansion.
 Every layer in between exists because something in the test suite
 showed us a shape where substitution collapses wrong and series
 cannot see through the kernel. The pre-pass for reciprocal trig, the
-log-merge at infinity, the bounded envelope, the radical canonicalizer
--- each one is a patch over an observed failure, not a general theory.
+log-merge at infinity, the bounded envelope, the radical canonicalizer,
+the nine work packages of batches 4 through 12 -- each one is a patch
+over an observed failure, not a general theory.
 
-The near-term path forward is clear: the largest capability gap
-relative to Maxima is the Gruntz algorithm for exp-log limits at
-infinity. An MRV-set construction is tractable to write against the
-existing `Series` and `Together` infrastructure, and would subsume the
-log-merge layer. After that, an assumption database would unlock the
-symbolic-leading-coefficient cases that currently bail out with
-`DirectedInfinity[c]`.
+The near-term path forward is still the Gruntz algorithm for
+exp-log limits at infinity. WP-5, WP-6, and WP-7 laid the three
+pieces of machinery it needs -- `growth_exponent_upper` as a cheap
+MRV proxy, hyperbolic exponentialisation, and a `Log[sum]` rewrite
+-- so the remaining step is a proper most-rapidly-varying set
+construction rather than a fresh architectural layer. After that,
+an assumption database would unlock the symbolic-leading-coefficient
+cases that currently bail out with `DirectedInfinity[c]`, and the
+sign-from-outer-context iterated ArcTan limits that WP-1 cannot yet
+resolve.
 
-The tests pass, the memory is clean under Valgrind, and the 70-odd
+The tests pass, the memory is clean under Valgrind, and the ~130
 cases in `tests/test_limit.c` are a regression line for every change
 to the file.

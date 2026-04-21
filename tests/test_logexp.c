@@ -16,7 +16,7 @@ void test_logexp_forward() {
     } cases[] = {
         {"Log[E]", "1"},
         {"Log[1]", "0"},
-        {"Log[0]", "-1 Infinity"},
+        {"Log[0]", "-Infinity"},
         {"Log[Infinity]", "Infinity"},
         {"Log[2, 8]", "3"},
         {"Log[b, b]", "1"},

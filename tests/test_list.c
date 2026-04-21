@@ -17,7 +17,7 @@ void test_min() {
         {"Min[{4, 1, 7, 2}]", "1"},
         {"Min[{{-1, 0, 1, 2}, {0, 2, 4, 6}, {-3, -2, -1, 0}}]", "-3"},
         {"Min[Infinity, 5]", "5"},
-        {"Min[-1 * Infinity, 5]", "-1 Infinity"},
+        {"Min[-1 * Infinity, 5]", "-Infinity"},
         {"Min[{a, b}, {c, d}]", "Min[a, b, c, d]"},
         {"Min[]", "Infinity"},
         {"Min[x, 3, 5]", "Min[3, x]"},
@@ -47,7 +47,7 @@ void test_max() {
         {"Max[{4, 1, 7, 2}]", "7"},
         {"Max[Infinity, 5]", "Infinity"},
         {"Max[-1 * Infinity, 5]", "5"},
-        {"Max[]", "-1 Infinity"},
+        {"Max[]", "-Infinity"},
         {"Max[x, 3, 5]", "Max[5, x]"},
         {"Max[x, x]", "x"}
     };

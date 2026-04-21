@@ -79,6 +79,18 @@
 #define LIMIT_DIR_FROMABOVE  1
 #define LIMIT_DIR_FROMBELOW (-1)
 #define LIMIT_DIR_COMPLEX    2
+/* LIMIT_DIR_REALS is the *explicit* real-line two-sided mode. It differs
+ * from the implicit TWOSIDED default at sign-disagreement poles: where
+ * TWOSIDED returns ComplexInfinity (matching the complex-plane fall-back
+ * Mathematica used for unflagged two-sided limits on rational functions),
+ * Direction -> Reals asks for the on-reals answer, which is Indeterminate
+ * because the one-sided limits disagree in sign. */
+#define LIMIT_DIR_REALS      3
+/* Approach along +I direction (upper-half-plane): Direction -> I tells
+ * us to pick the "other" branch at a branch cut on the negative real
+ * axis. For Sqrt and Log the sign of the imaginary part flips relative
+ * to the principal branch. */
+#define LIMIT_DIR_IMAGINARY  4
 
 /* ---------------------------------------------------------------------- */
 /* LimitCtx -- threaded through the pipeline                               */
@@ -206,6 +218,58 @@ static bool expr_contains(Expr* e, Expr* target) {
 
 static bool free_of(Expr* e, Expr* target) { return !expr_contains(e, target); }
 
+/* A function head is "known" if it has a C builtin, OwnValues, or DownValues
+ * in the symbol table. Anything else (e.g. FractionalPart when that module
+ * is not implemented; user symbol `f` with no definition) is treated as
+ * opaque: we cannot assume continuity, so Limit refuses to substitute a
+ * limit point into it. We additionally treat a curated list of
+ * discontinuous heads (Floor, Ceiling, Sign, ...) as opaque even when a
+ * builtin exists, because plain substitution would silently pick one
+ * side's value at a jump and produce a wrong-looking "clean" answer. */
+static bool is_discontinuous_head(const char* name) {
+    return strcmp(name, "Floor") == 0
+        || strcmp(name, "Ceiling") == 0
+        || strcmp(name, "Round") == 0
+        || strcmp(name, "FractionalPart") == 0
+        || strcmp(name, "IntegerPart") == 0
+        || strcmp(name, "Sign") == 0
+        || strcmp(name, "UnitStep") == 0
+        || strcmp(name, "HeavisideTheta") == 0
+        || strcmp(name, "KroneckerDelta") == 0
+        || strcmp(name, "DiscreteDelta") == 0
+        || strcmp(name, "Piecewise") == 0
+        || strcmp(name, "Boole") == 0
+        || strcmp(name, "Mod") == 0
+        || strcmp(name, "Quotient") == 0;
+}
+
+static bool is_known_head_symbol(const char* name) {
+    if (is_discontinuous_head(name)) return false;
+    SymbolDef* def = symtab_get_def(name);
+    return def->builtin_func || def->down_values || def->own_values;
+}
+
+/* True iff `e` applies an opaque head to any sub-expression containing `x`.
+ * Used by the top-level dispatcher to bail out for shapes like f[x] or
+ * FractionalPart[x^2] Sin[x] where no layer has a hope of making progress
+ * and returning a symbolic value would be unsafe. */
+static bool contains_opaque_head_over(Expr* e, Expr* x) {
+    if (!e || e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head->type == EXPR_SYMBOL) {
+        const char* name = e->data.function.head->data.symbol;
+        if (!is_known_head_symbol(name)) {
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                if (expr_contains(e->data.function.args[i], x)) return true;
+            }
+        }
+    }
+    if (contains_opaque_head_over(e->data.function.head, x)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_opaque_head_over(e->data.function.args[i], x)) return true;
+    }
+    return false;
+}
+
 /* Leaf count (used for L'Hospital complexity-growth guardrail). */
 static int64_t leaf_count(Expr* e) {
     if (!e) return 0;
@@ -247,6 +311,8 @@ static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx);
 static Expr* rewrite_reciprocal_trig(Expr* e);
 static Expr* magnitude_upper_bound(Expr* e, Expr* x);
 static bool  contains_bounded_head(Expr* e);
+#define LIMIT_UNKNOWN_GROWTH INT64_MAX
+static int64_t growth_exponent_upper(Expr* e, Expr* x);
 
 /* ---------------------------------------------------------------------- */
 /* Reciprocal trig normalization                                           */
@@ -258,6 +324,66 @@ static bool  contains_bounded_head(Expr* e);
 /* whereas the equivalent `0 / Sin[0] = 0/0` survives as an indeterminate */
 /* 0/0 form that Series / L'Hospital can actually handle.                  */
 /* ---------------------------------------------------------------------- */
+/* ---------------------------------------------------------------------- */
+/* Hyperbolic -> exponential rewrite for limits at Infinity                */
+/*                                                                         */
+/* Sinh[z]   = (E^z - E^-z) / 2                                            */
+/* Cosh[z]   = (E^z + E^-z) / 2                                            */
+/* Tanh[z]   = (E^z - E^-z) / (E^z + E^-z)                                 */
+/*                                                                         */
+/* Rewriting these before the Series layer matters at Infinity, where the */
+/* Exp form exposes the dominant E^z factor while the Sinh/Cosh form is   */
+/* asymptotically opaque. Concretely it resolves (1 + Sinh[x])/Exp[x] at  */
+/* Infinity to 1/2: after the rewrite the numerator becomes               */
+/* 1 + E^x/2 - E^-x/2 and division by E^x cancels to E^-x + 1/2 - ...,    */
+/* which the termwise-Plus layer then folds to 1/2.                       */
+/* ---------------------------------------------------------------------- */
+static Expr* rewrite_hyperbolic_to_exp(Expr* e) {
+    if (!e) return NULL;
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+
+    size_t n = e->data.function.arg_count;
+    if (e->data.function.head->type == EXPR_SYMBOL && n == 1) {
+        const char* hn = e->data.function.head->data.symbol;
+        Expr* z = rewrite_hyperbolic_to_exp(e->data.function.args[0]);
+        if (strcmp(hn, "Sinh") == 0) {
+            /* (E^z - E^-z)/2 */
+            Expr* ez  = mk_fn1("Exp", expr_copy(z));
+            Expr* enz = mk_fn1("Exp", mk_neg(expr_copy(z)));
+            expr_free(z);
+            Expr* diff = mk_fn2("Plus", ez, mk_neg(enz));
+            return mk_fn2("Times", mk_fn2("Power", mk_int(2), mk_int(-1)), diff);
+        }
+        if (strcmp(hn, "Cosh") == 0) {
+            Expr* ez  = mk_fn1("Exp", expr_copy(z));
+            Expr* enz = mk_fn1("Exp", mk_neg(expr_copy(z)));
+            expr_free(z);
+            Expr* sum = mk_fn2("Plus", ez, enz);
+            return mk_fn2("Times", mk_fn2("Power", mk_int(2), mk_int(-1)), sum);
+        }
+        if (strcmp(hn, "Tanh") == 0) {
+            Expr* ez1 = mk_fn1("Exp", expr_copy(z));
+            Expr* enz1 = mk_fn1("Exp", mk_neg(expr_copy(z)));
+            Expr* num = mk_fn2("Plus", ez1, mk_neg(enz1));
+            Expr* ez2 = mk_fn1("Exp", expr_copy(z));
+            Expr* enz2 = mk_fn1("Exp", mk_neg(expr_copy(z)));
+            expr_free(z);
+            Expr* den = mk_fn2("Plus", ez2, enz2);
+            return mk_fn2("Times", num, mk_fn2("Power", den, mk_int(-1)));
+        }
+        expr_free(z);
+    }
+
+    Expr* head = rewrite_hyperbolic_to_exp(e->data.function.head);
+    Expr** args = (Expr**)malloc(n * sizeof(Expr*));
+    for (size_t i = 0; i < n; i++) {
+        args[i] = rewrite_hyperbolic_to_exp(e->data.function.args[i]);
+    }
+    Expr* out = expr_new_function(head, args, n);
+    free(args);
+    return out;
+}
+
 static Expr* rewrite_reciprocal_trig(Expr* e) {
     if (!e) return NULL;
     if (e->type != EXPR_FUNCTION) return expr_copy(e);
@@ -420,11 +546,31 @@ static Expr* magnitude_upper_bound(Expr* e, Expr* x) {
 /* provides the Direction-option parser.                                   */
 /* ---------------------------------------------------------------------- */
 
+/* True iff `e` is a literal imaginary unit or a purely imaginary constant
+ * (e.g. I, 2 I, -I, Complex[0, k]). Such values as a Direction argument
+ * select approach along the imaginary axis, which we currently route
+ * through LIMIT_DIR_COMPLEX. */
+static bool is_imaginary_direction(Expr* e) {
+    if (is_sym(e, "I")) return true;
+    if (has_head(e, "Complex") && e->data.function.arg_count == 2) {
+        Expr* re = e->data.function.args[0];
+        return (re->type == EXPR_INTEGER && re->data.integer == 0) ||
+               (re->type == EXPR_REAL && re->data.real == 0.0);
+    }
+    if (has_head(e, "Times")) {
+        /* k * I, -I, etc. */
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            if (is_imaginary_direction(e->data.function.args[i])) return true;
+        }
+    }
+    return false;
+}
+
 /* Translate a user-facing Direction value to the internal direction tag.
  * Returns true on success; false for an unrecognised / symbolic value.    */
 static bool parse_direction(Expr* dir, int* out) {
     if (!dir) { *out = LIMIT_DIR_TWOSIDED; return true; }
-    if (is_sym(dir, "Reals"))     { *out = LIMIT_DIR_TWOSIDED;  return true; }
+    if (is_sym(dir, "Reals"))     { *out = LIMIT_DIR_REALS;     return true; }
     if (is_sym(dir, "TwoSided"))  { *out = LIMIT_DIR_TWOSIDED;  return true; }
     if (is_sym(dir, "Complexes")) { *out = LIMIT_DIR_COMPLEX;   return true; }
     if (dir->type == EXPR_STRING) {
@@ -440,6 +586,11 @@ static bool parse_direction(Expr* dir, int* out) {
         if (dir->data.integer == -1) { *out = LIMIT_DIR_FROMABOVE; return true; }
         if (dir->data.integer == +1) { *out = LIMIT_DIR_FROMBELOW; return true; }
     }
+    /* Imaginary direction (I, k I for positive k, Complex[0, positive]):
+     * approach the branch point from the upper half plane. Tagged with
+     * LIMIT_DIR_IMAGINARY so the branch-cut post-pass in builtin_limit
+     * can flip the imaginary part for Sqrt/Log etc. */
+    if (is_imaginary_direction(dir)) { *out = LIMIT_DIR_IMAGINARY; return true; }
     return false;
 }
 
@@ -518,6 +669,93 @@ static bool has_var_in_exponent(Expr* e, Expr* x) {
     return false;
 }
 
+/* True iff `e` is a numeric literal (integer, bigint, real, or Rational).
+ * Such a limit point is "plain old number": if substituting it produces a
+ * finite value with no residual variable, the expression is analytic
+ * there and we can return the substituted value directly, skipping the
+ * expensive Together / Numerator / Denominator pipeline used by the
+ * generic continuous-substitution path. */
+static bool is_numeric_literal_point(Expr* e) {
+    if (!e) return false;
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL ||
+        e->type == EXPR_BIGINT) return true;
+    if (has_head(e, "Rational") && e->data.function.arg_count == 2) return true;
+    /* A symbolic `Times[-1, <numeric>]` (e.g. user wrote `-5`) is also a
+     * numeric literal once evaluated; the caller has already evaluated
+     * the point, so we only need to recognise the canonical forms. */
+    if (has_head(e, "Times") && e->data.function.arg_count == 2 &&
+        e->data.function.args[0]->type == EXPR_INTEGER &&
+        e->data.function.args[0]->data.integer == -1) {
+        return is_numeric_literal_point(e->data.function.args[1]);
+    }
+    return false;
+}
+
+/* Cheap fast path: if the limit point is a plain numeric literal and a
+ * single substitution + evaluate produces a clean result (not divergent,
+ * no residual limit variable), return it. This avoids ever running
+ * Together on expressions like `Log[1 - (Log[Exp[z]/z - 1] + Log[z])/z]/z`
+ * at z = 100, where Together's sub-expression normalisation can spin in
+ * the evaluator even though the input is analytic at the point. */
+/* True iff `e` contains a `Power[base, exp]` subterm whose exponent
+ * diverges when the limit point is substituted. Divergent exponents are
+ * the classic 1^inf / 0^0 / inf^0 indeterminate seeds, and PicoCAS
+ * arithmetic folds them to "clean" (but wrong) values -- we must refuse
+ * the direct-substitution fast path in that case. */
+static bool has_divergent_exponent_at(Expr* e, Expr* x, Expr* point) {
+    if (!e || e->type != EXPR_FUNCTION) return false;
+    if (has_head(e, "Power") && e->data.function.arg_count == 2) {
+        Expr* exp = e->data.function.args[1];
+        if (expr_contains(exp, x)) {
+            Expr* exp_at = subst_eval(exp, x, point);
+            bool bad = is_divergent(exp_at);
+            expr_free(exp_at);
+            if (bad) return true;
+        }
+    }
+    if (has_divergent_exponent_at(e->data.function.head, x, point)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (has_divergent_exponent_at(e->data.function.args[i], x, point)) return true;
+    }
+    return false;
+}
+
+static Expr* try_numeric_point_substitution(Expr* f, LimitCtx* ctx) {
+    if (!is_numeric_literal_point(ctx->point)) return NULL;
+
+    /* Refuse when any Power[_, exp] has x in the exponent AND exp diverges
+     * at the point. That's the 1^inf / 0^0 / inf^0 indeterminate family
+     * that PicoCAS's arithmetic silently folds to a plausible-looking but
+     * wrong answer (e.g. 1^ComplexInfinity -> 1). */
+    if (has_divergent_exponent_at(f, ctx->x, ctx->point)) return NULL;
+
+    /* Denominator-at-point zero check. If Together's denominator vanishes
+     * at the point we have a potential 0/0 or non-zero/0 shape; either
+     * way, direct substitution is unsafe -- defer. */
+    Expr* tog = simp(mk_fn1("Together", expr_copy(f)));
+    Expr* den = simp(mk_fn1("Denominator", expr_copy(tog)));
+    Expr* den_at = subst_eval(den, ctx->x, ctx->point);
+    expr_free(den);
+    bool den_bad = is_lit_zero(den_at) || is_divergent(den_at);
+    expr_free(den_at);
+    if (den_bad) { expr_free(tog); return NULL; }
+
+    /* Substitute into the *Together-normalised* form. This matters when
+     * the cancel-first form has a non-zero denominator at the point while
+     * the original has a 0/0 shape that PicoCAS's arithmetic folds to 0.
+     * Example: (r Sin[t])/(r (Cos[t]+Sin[t])) at r = 0 -- Together
+     * cancels the r and we get Sin[t]/(Cos[t]+Sin[t]) without the 0/0
+     * trap. */
+    Expr* sub = subst_eval(tog, ctx->x, ctx->point);
+    expr_free(tog);
+    if (!sub) return NULL;
+    if (is_divergent(sub) || expr_contains(sub, ctx->x)) {
+        expr_free(sub);
+        return NULL;
+    }
+    return sub;
+}
+
 static Expr* try_continuous_substitution(Expr* f, LimitCtx* ctx) {
     /* Skip for non-finite limit points; those need a different path. */
     if (is_infinity_sym(ctx->point) || is_neg_infinity(ctx->point) ||
@@ -579,8 +817,16 @@ static Expr* layer1_fast_paths(Expr* f, LimitCtx* ctx) {
     /* f is exactly the variable: answer is the target point. */
     if (expr_eq(f, ctx->x)) return expr_copy(ctx->point);
 
-    /* f == Rule for unevaluated Direction propagation shouldn't happen
-     * at this stage; fall through otherwise. */
+    /* Layer 1a: cheap numeric-point substitution. Skips Together entirely,
+     * so expressions that happen to be analytic at a numeric point return
+     * in microseconds even if Together would have triggered a pathological
+     * evaluator loop. */
+    Expr* r = try_numeric_point_substitution(f, ctx);
+    if (r) return r;
+
+    /* Layer 1b: generic continuous substitution via Together +
+     * Numerator/Denominator zero-check. Handles non-literal points and
+     * shapes where the naive substitution would emit Power::infy. */
     return try_continuous_substitution(f, ctx);
 }
 
@@ -683,9 +929,16 @@ static Expr* read_leading_term_limit(Expr* s, LimitCtx* ctx) {
          * we only answer if the direction is FromAbove. */
         int coef_sign = literal_sign(leading_coef);
         if (coef_sign == 0) {
-            /* Unknown sign -- return directional infinity as a symbolic
-             * answer: the evaluator's canonicalisation will reduce
-             * DirectedInfinity[c] if c is obviously constant. */
+            /* Unknown sign -- only meaningful when the coefficient is a
+             * pure constant (no residual limit variable). If x survived
+             * into the coefficient (e.g. Log[x] in Log[x]/x at x=0), a
+             * `DirectedInfinity[Log[x]]` answer is misleading; bail so the
+             * remaining layers get a shot. */
+            if (expr_contains(leading_coef, ctx->x)) {
+                expr_free(leading_coef);
+                if (prefactor) expr_free(prefactor);
+                return NULL;
+            }
             result = mk_fn1("DirectedInfinity", leading_coef);
         } else {
             int side_factor = +1;
@@ -700,13 +953,35 @@ static Expr* read_leading_term_limit(Expr* s, LimitCtx* ctx) {
                     return NULL;
                 }
             } else if (ctx->dir == LIMIT_DIR_TWOSIDED) {
-                /* Both sides must agree; for odd integer exponent they
-                 * disagree -> ComplexInfinity. */
+                /* Default (un-qualified) two-sided: for an odd-order integer
+                 * pole the two one-sided limits disagree in sign. Pick the
+                 * complex-plane fall-back (ComplexInfinity). For non-integer
+                 * exponents (sqrt-type), the negative side is off the real
+                 * line anyway and we bail to let the caller retry with a
+                 * sharper layer. */
                 if (den == 1 && (leading_num % 2 != 0)) {
                     expr_free(leading_coef);
                     result = mk_sym("ComplexInfinity");
                     goto apply_prefactor;
                 }
+            } else if (ctx->dir == LIMIT_DIR_REALS) {
+                /* Explicit Direction -> Reals. Unlike the default TWOSIDED
+                 * mode, this specifically asks for the real-line answer: a
+                 * pole with disagreeing signs on the two sides has no real
+                 * limit, so return Indeterminate. Non-integer exponents hit
+                 * a branch cut on the negative side; also Indeterminate. */
+                if (den != 1 || (leading_num % 2 != 0)) {
+                    expr_free(leading_coef);
+                    result = mk_sym("Indeterminate");
+                    goto apply_prefactor;
+                }
+            } else if (ctx->dir == LIMIT_DIR_COMPLEX) {
+                /* Direction -> Complexes asks for the radial / all-
+                 * direction answer. Any isolated pole (integer or
+                 * fractional order) is ComplexInfinity. */
+                expr_free(leading_coef);
+                result = mk_sym("ComplexInfinity");
+                goto apply_prefactor;
             }
             expr_free(leading_coef);
             result = signed_infinity(coef_sign * side_factor);
@@ -887,18 +1162,13 @@ static Expr* layer3_rational(Expr* f, LimitCtx* ctx) {
         /* 0/0 -- let the series / L'Hospital layers handle it. */
         result = NULL;
     } else {
-        /* 0 in denominator, nonzero numerator: direction-dependent
-         * infinity. We give a conservative answer: if the direction is
-         * one-sided we compute the sign through series; otherwise use
-         * ComplexInfinity (matches `1/(x-a)` at x=a with default direction
-         * where the two sides disagree). */
-        int nsign = literal_sign(num_at);
-        if (ctx->dir == LIMIT_DIR_TWOSIDED && nsign != 0) {
-            result = mk_sym("ComplexInfinity");
-        } else {
-            /* Defer to series layer for a signed infinity answer. */
-            result = NULL;
-        }
+        /* 0 in denominator, nonzero numerator: the pole's order parity
+         * determines the answer. Defer to the series layer unconditionally
+         * -- it inspects the leading exponent and produces Infinity for an
+         * even-order pole (e.g. 1/(x-2)^2 -> +Infinity) and ComplexInfinity
+         * for an odd-order pole with a two-sided direction. */
+        (void)num_at;
+        result = NULL;
     }
     expr_free(num_at); expr_free(den_at);
 
@@ -1078,13 +1348,13 @@ static Expr* layer6_bounded(Expr* f, LimitCtx* ctx) {
     Expr* inner = f->data.function.args[0];
     if (free_of(inner, ctx->x)) return NULL; /* handled elsewhere */
 
-    /* Probe by substitution. If the inner expression yields a clean finite
-     * value, the continuous-substitution path would have already fired and
-     * we would never be here. So inner is expected to diverge. Produce
-     * Interval[{-1, 1}]. */
-    Expr* list = expr_new_function(mk_sym("List"),
-                                   (Expr*[]){ mk_int(-1), mk_int(1) }, 2);
-    return mk_fn1("Interval", list);
+    /* An unbounded-oscillation at the limit point does not converge. The
+     * earlier Interval[{-1,1}] return was useful as a bound but it wasn't
+     * a *limit* -- Mathematica returns Indeterminate in these shapes
+     * (Sin[1/x] at 0, Sin[x] at Infinity). Match that behaviour: the caller
+     * only reaches this layer after the squeeze / substitution / Series
+     * paths have already failed, so we know the oscillation is real. */
+    return mk_sym("Indeterminate");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1207,6 +1477,90 @@ static Expr* layer_log_merge(Expr* f, LimitCtx* ctx) {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Gruntz-lite: Log of a sum where one summand dominates                   */
+/*                                                                         */
+/* For `Log[a + b + ...]` at +Infinity where one summand dominates the    */
+/* rest (strictly larger growth_exponent), rewrite as                      */
+/*   Log[dom * (1 + rest/dom)] = Log[dom] + Log[1 + rest/dom]              */
+/* and recurse. The `rest/dom` terms go to 0 so `Log[1 + small]` folds to  */
+/* its Taylor series `small + ...`. Handles the iterated-log shapes that  */
+/* the generic Series / L'Hospital layers can't peel.                     */
+/* ---------------------------------------------------------------------- */
+static Expr* layer_log_sum_gruntz(Expr* f, LimitCtx* ctx) {
+    if (!is_infinity_sym(ctx->point)) return NULL;
+    if (!has_head(f, "Log") || f->data.function.arg_count != 1) return NULL;
+    Expr* inner = f->data.function.args[0];
+    if (!has_head(inner, "Plus")) return NULL;
+    size_t n = inner->data.function.arg_count;
+    if (n < 2) return NULL;
+
+    /* Find the unique dominant summand by growth_exponent. */
+    int64_t max_g = 0;
+    int max_idx = -1;
+    int max_count = 0;
+    bool unknown_seen = false;
+    for (size_t i = 0; i < n; i++) {
+        int64_t g = growth_exponent_upper(inner->data.function.args[i], ctx->x);
+        if (g == LIMIT_UNKNOWN_GROWTH) { unknown_seen = true; break; }
+        if (max_idx < 0 || g > max_g) { max_g = g; max_idx = (int)i; max_count = 1; }
+        else if (g == max_g) max_count++;
+    }
+    if (unknown_seen || max_count != 1 || max_g <= 0) return NULL;
+
+    /* Build rest = Plus of the other summands; then the rewrite
+     * Log[dom + rest] = Log[dom] + Log[1 + rest/dom]. Recurse via the
+     * outer dispatcher so Log-of-finite, Series, etc. can fold the
+     * Log[1 + rest/dom] term (which goes to 0). */
+    Expr* dom = expr_copy(inner->data.function.args[max_idx]);
+    size_t rc = n - 1;
+    Expr** rest_args = calloc(rc, sizeof(Expr*));
+    size_t k = 0;
+    for (size_t i = 0; i < n; i++) {
+        if ((int)i == max_idx) continue;
+        rest_args[k++] = expr_copy(inner->data.function.args[i]);
+    }
+    Expr* rest;
+    if (rc == 1) { rest = rest_args[0]; free(rest_args); }
+    else { rest = expr_new_function(mk_sym("Plus"), rest_args, rc); free(rest_args); }
+
+    Expr* ratio = simp(mk_fn2("Times", rest,
+                              mk_fn2("Power", expr_copy(dom), mk_int(-1))));
+    Expr* log1p = mk_fn1("Log", mk_fn2("Plus", mk_int(1), ratio));
+    Expr* log_dom = mk_fn1("Log", dom);
+    Expr* rewritten = simp(mk_fn2("Plus", log_dom, log1p));
+
+    LimitCtx sub = *ctx; sub.depth += 1;
+    Expr* r = compute_limit(rewritten, &sub);
+    expr_free(rewritten);
+    return r;
+}
+
+/* Higher-level Gruntz shortcut: when the OUTER expression is a quotient
+ * and both numerator and denominator have top-level Log[sum] shapes at
+ * +Infinity, running `layer_log_sum_gruntz` on each side and letting
+ * the termwise layer pick up the asymptotic cancellation produces the
+ * iterated-log limits. This is called from the top dispatcher before
+ * the generic Series layer. */
+static Expr* layer_gruntz_iterated_log(Expr* f, LimitCtx* ctx) {
+    if (!is_infinity_sym(ctx->point)) return NULL;
+    if (!has_head(f, "Times") && !has_head(f, "Log")) return NULL;
+
+    /* Walk f and apply the Log[sum] rewrite to every eligible Log[sum]
+     * subexpression. ReplaceAll-style traversal driven by
+     * layer_log_sum_gruntz can't be expressed directly, so we emulate
+     * a one-level rewrite by computing the limit of the transformed
+     * expression: if any rewrite fires and the result is determinate,
+     * we win; otherwise we bail. */
+    /* Simpler: only attempt when f has the specific shape Log[sum]
+     * multiplied by something free-of-x, or Log[sum] directly. */
+    if (has_head(f, "Log")) {
+        Expr* r = layer_log_sum_gruntz(f, ctx);
+        if (r) return r;
+    }
+    return NULL;
+}
+
+/* ---------------------------------------------------------------------- */
 /* Layer -- Log of an expression with a finite non-zero limit              */
 /*                                                                         */
 /* If f = Log[g] and Limit[g] is a finite value c, return Log[c]. The      */
@@ -1228,13 +1582,123 @@ static Expr* layer_log_of_finite(Expr* f, LimitCtx* ctx) {
     return simp(mk_fn1("Log", lim_g));
 }
 
+/* Upper bound on the growth exponent of `e` viewed as a function of x
+ * as x -> Infinity. Returns 0 for constants and bounded heads
+ * (Sin, Cos, Tanh, ArcTan, ArcCot of anything), 1 for x, and adds /
+ * multiplies through Plus/Times/Power. Returns INT64_MAX to signal "I
+ * don't know" -- the caller must then refuse. Used by the dominant-term
+ * classifier for Plus at infinity: a term with strictly larger growth
+ * than everything else drives the sum to its own limit. */
+static int64_t growth_exponent_upper(Expr* e, Expr* x) {
+    if (!e) return 0;
+    if (free_of(e, x)) return 0;
+    if (expr_eq(e, x)) return 1;
+    if (e->type != EXPR_FUNCTION) return LIMIT_UNKNOWN_GROWTH;
+
+    /* Bounded heads. */
+    if (has_head(e, "Sin") || has_head(e, "Cos") || has_head(e, "Tanh") ||
+        has_head(e, "ArcTan") || has_head(e, "ArcCot")) {
+        return 0;
+    }
+
+    if (has_head(e, "Plus")) {
+        int64_t m = 0;
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            int64_t g = growth_exponent_upper(e->data.function.args[i], x);
+            if (g == LIMIT_UNKNOWN_GROWTH) return LIMIT_UNKNOWN_GROWTH;
+            if (g > m) m = g;
+        }
+        return m;
+    }
+    if (has_head(e, "Times")) {
+        int64_t total = 0;
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            int64_t g = growth_exponent_upper(e->data.function.args[i], x);
+            if (g == LIMIT_UNKNOWN_GROWTH) return LIMIT_UNKNOWN_GROWTH;
+            total += g;
+        }
+        return total;
+    }
+    if (has_head(e, "Power") && e->data.function.arg_count == 2) {
+        Expr* b = e->data.function.args[0];
+        Expr* p = e->data.function.args[1];
+        if (p->type == EXPR_INTEGER && p->data.integer >= 0) {
+            int64_t g = growth_exponent_upper(b, x);
+            if (g == LIMIT_UNKNOWN_GROWTH) return LIMIT_UNKNOWN_GROWTH;
+            return g * p->data.integer;
+        }
+        if (p->type == EXPR_INTEGER && p->data.integer < 0) {
+            /* Negative-power term: treat as bounded (<= const) when the
+             * base diverges. Conservative: if base is polynomial in x
+             * with positive growth, then 1/base -> 0, safely < any
+             * diverging term. */
+            int64_t g = growth_exponent_upper(b, x);
+            if (g > 0 && g != LIMIT_UNKNOWN_GROWTH) return 0;
+        }
+    }
+
+    /* Log at infinity is sub-polynomial -- treat as 0 for ordering but
+     * we don't know if it ever wins against a positive polynomial
+     * degree. Conservative: return 0 so Log[x] alongside x is clearly
+     * dominated by x. */
+    if (has_head(e, "Log") && e->data.function.arg_count == 1) {
+        int64_t g = growth_exponent_upper(e->data.function.args[0], x);
+        if (g > 0 && g != LIMIT_UNKNOWN_GROWTH) return 0;
+    }
+
+    return LIMIT_UNKNOWN_GROWTH;
+}
+
+/* True iff `e` is structurally bounded over the reals: every reachable
+ * sub-expression's magnitude is dominated by a constant, via the family
+ * |Sin|, |Cos|, |Tanh|, |ArcTan|, |ArcCot| <= const, products of
+ * bounded things, sums of bounded things, constants. A non-exhaustive
+ * but conservative check -- used by the dominant-term Plus layer to
+ * allow a clean Infinity answer when one term diverges and the others
+ * are merely bounded (not convergent). */
+static bool is_structurally_bounded(Expr* e, Expr* x) {
+    if (!e) return true;
+    if (free_of(e, x)) return true;   /* constant in x */
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL ||
+        e->type == EXPR_BIGINT || e->type == EXPR_STRING) return true;
+    if (e->type == EXPR_SYMBOL) return !expr_eq(e, x);
+    if (e->type != EXPR_FUNCTION) return false;
+
+    /* Heads that are bounded regardless of argument. */
+    if (has_head(e, "Sin") || has_head(e, "Cos") || has_head(e, "Tanh") ||
+        has_head(e, "ArcTan") || has_head(e, "ArcCot")) {
+        return true;
+    }
+
+    /* Plus / Times of bounded things is bounded. */
+    if (has_head(e, "Plus") || has_head(e, "Times")) {
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            if (!is_structurally_bounded(e->data.function.args[i], x)) return false;
+        }
+        return true;
+    }
+    /* Power[bounded, constant_non_negative_int]. */
+    if (has_head(e, "Power") && e->data.function.arg_count == 2) {
+        Expr* b = e->data.function.args[0];
+        Expr* p = e->data.function.args[1];
+        if (p->type == EXPR_INTEGER && p->data.integer >= 0) {
+            return is_structurally_bounded(b, x);
+        }
+    }
+    return false;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Layer -- Term-wise sum at infinity                                      */
 /*                                                                         */
-/* For a Plus at ±Infinity, compute each term's limit. If every term has   */
-/* a finite (non-divergent) limit, the overall limit is the sum. Refuses   */
-/* (returns NULL) the moment any term is divergent or unresolved; the      */
-/* remaining layers then see the original shape unchanged.                 */
+/* For a Plus at ±Infinity, compute each term's limit.                     */
+/*   - If every term has a finite limit, return the sum.                   */
+/*   - If exactly one term has a +Infinity / -Infinity limit and the       */
+/*     remaining terms are structurally bounded (Sin/Cos/Tanh/ArcTan       */
+/*     applied to anything) or have finite limits, the dominant term       */
+/*     wins: return its limit. This is the `x^2 + x Sin[x^2]` -> Infinity */
+/*     and `x + Sin[x]` -> Infinity family.                                */
+/*   - Otherwise refuse (NULL).                                            */
 /* ---------------------------------------------------------------------- */
 static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx) {
     if (!has_head(f, "Plus")) return NULL;
@@ -1242,8 +1706,35 @@ static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx) {
     size_t n = f->data.function.arg_count;
     if (n == 0) return NULL;
 
+    /* First, try the growth-exponent dominant-term shortcut. If one
+     * term has strictly larger growth than every other term and its
+     * individual limit is +/- Infinity, return that -- every other
+     * term is at most O(x^(lower)) which the dominant absorbs. */
+    int64_t max_g = 0;
+    int max_idx = -1;
+    int max_count = 0;
+    bool unknown_seen = false;
+    for (size_t i = 0; i < n; i++) {
+        int64_t g = growth_exponent_upper(f->data.function.args[i], ctx->x);
+        if (g == LIMIT_UNKNOWN_GROWTH) { unknown_seen = true; break; }
+        if (max_idx < 0 || g > max_g) { max_g = g; max_idx = (int)i; max_count = 1; }
+        else if (g == max_g) max_count++;
+    }
+    if (!unknown_seen && max_idx >= 0 && max_count == 1 && max_g > 0) {
+        LimitCtx sub = *ctx; sub.depth += 1;
+        Expr* lim_dom = compute_limit(f->data.function.args[max_idx], &sub);
+        if (lim_dom && (is_infinity_sym(lim_dom) || is_neg_infinity(lim_dom))) {
+            return lim_dom;
+        }
+        if (lim_dom) expr_free(lim_dom);
+    }
+
     Expr** terms = malloc(sizeof(Expr*) * n);
     for (size_t i = 0; i < n; i++) terms[i] = NULL;
+
+    int dominant_count = 0;
+    int dominant_idx = -1;
+    Expr* dominant_lim = NULL;
 
     for (size_t i = 0; i < n; i++) {
         Expr* t = f->data.function.args[i];
@@ -1253,13 +1744,63 @@ static Expr* layer_plus_termwise(Expr* f, LimitCtx* ctx) {
         }
         LimitCtx sub = *ctx; sub.depth += 1;
         Expr* lim_t = compute_limit(t, &sub);
-        if (!lim_t || is_divergent(lim_t) || expr_contains(lim_t, ctx->x)) {
-            if (lim_t) expr_free(lim_t);
-            for (size_t j = 0; j < n; j++) if (terms[j]) expr_free(terms[j]);
-            free(terms);
-            return NULL;
+        /* Three outcomes for the term: finite (keep), ±Infinity
+         * (potential dominant), or bounded-but-unresolved (admissible
+         * alongside a single dominant term). */
+        bool is_pos_inf = lim_t && is_infinity_sym(lim_t);
+        bool is_neg_inf = lim_t && is_neg_infinity(lim_t);
+        bool is_signed_inf = is_pos_inf || is_neg_inf;
+        bool ok_finite = lim_t && !is_divergent(lim_t) &&
+                         !expr_contains(lim_t, ctx->x);
+        if (is_signed_inf) {
+            dominant_count++;
+            dominant_idx = (int)i;
+            if (dominant_lim) expr_free(dominant_lim);
+            dominant_lim = lim_t;
+            continue;
         }
-        terms[i] = lim_t;
+        if (ok_finite) { terms[i] = lim_t; continue; }
+        /* Unresolved or non-signed-infinity divergent. Accept as
+         * structurally-bounded only if we have a dominant term elsewhere
+         * -- we don't know the actual limit value, but its magnitude is
+         * capped, so it doesn't change the dominant term's infinity. */
+        if (lim_t) expr_free(lim_t);
+        if (is_structurally_bounded(t, ctx->x)) {
+            /* Placeholder only usable if a dominant term eventually
+             * appears. Tag via a negative dominant_count signal. */
+            terms[i] = mk_int(0);
+            dominant_idx = -1000;  /* flag: saw a placeholder */
+            continue;
+        }
+        /* Can't classify -> bail. */
+        for (size_t j = 0; j < n; j++) if (terms[j]) expr_free(terms[j]);
+        if (dominant_lim) expr_free(dominant_lim);
+        free(terms);
+        return NULL;
+    }
+
+    if (dominant_count == 1) {
+        /* Dominant-term win: ignore the finite / bounded terms. */
+        for (size_t j = 0; j < n; j++) if (terms[j]) expr_free(terms[j]);
+        free(terms);
+        (void)dominant_idx;
+        return dominant_lim;
+    }
+    if (dominant_count > 1) {
+        /* Two or more ±Infinity; we'd have to rank them. Not handled
+         * here; let later layers try. */
+        for (size_t j = 0; j < n; j++) if (terms[j]) expr_free(terms[j]);
+        if (dominant_lim) expr_free(dominant_lim);
+        free(terms);
+        return NULL;
+    }
+    /* dominant_count == 0: normal termwise sum. But if we had a
+     * bounded-unresolved placeholder and no dominant term actually
+     * fired, the sum is not valid -- bail. */
+    if (dominant_idx == -1000) {
+        for (size_t j = 0; j < n; j++) if (terms[j]) expr_free(terms[j]);
+        free(terms);
+        return NULL;
     }
     Expr* sum = expr_new_function(expr_new_symbol("Plus"), terms, n);
     free(terms);
@@ -1273,10 +1814,33 @@ static Expr* compute_limit(Expr* f_in, LimitCtx* ctx) {
     if (ctx->depth >= LIMIT_MAX_DEPTH) return NULL;
     ctx->depth++;
 
+    /* Refuse early if f applies an undefined/opaque head to anything
+     * involving the limit variable. Without a continuity assumption we
+     * cannot simplify `f[x]` to `f[a]`, and none of the analytic layers
+     * (Series, L'Hospital, log reduction) can make progress either. */
+    if (contains_opaque_head_over(f_in, ctx->x)) {
+        ctx->depth--;
+        return NULL;
+    }
+
     /* Normalize reciprocal trig up-front. This is cheap (one tree walk +
      * one evaluate) and rescues the continuous-substitution path on
      * shapes like x Csc[x], x Cot[a x], Sec[2x] (1 - Tan[x]), etc. */
     Expr* rewritten = rewrite_reciprocal_trig(f_in);
+
+    /* At Infinity the Sinh/Cosh/Tanh series kernels are misleading
+     * because their leading behaviour is dominated by a single Exp term.
+     * Rewrite them in exponential form so Series can see the dominant
+     * growth and the term-wise Plus layer can cancel decaying tails.
+     * We also Expand so shapes like `E^(-x) (1 + (E^x - E^-x)/2)` fold
+     * into `1/2 - E^(-2x)/2 + E^(-x)`, which the term-wise Plus layer
+     * can directly sum (each summand has a finite limit). */
+    if (is_infinity_sym(ctx->point) || is_neg_infinity(ctx->point)) {
+        Expr* r2 = rewrite_hyperbolic_to_exp(rewritten);
+        expr_free(rewritten);
+        rewritten = simp(mk_fn1("Expand", r2));
+    }
+
     Expr* f = simp(rewritten);
 
     Expr* r = NULL;
@@ -1296,6 +1860,10 @@ static Expr* compute_limit(Expr* f_in, LimitCtx* ctx) {
     /* Log[g(x)] at infinity when g has a finite inner limit. Runs before
      * Series because Series can miss Log[1 + decay] at infinity shapes. */
     r = layer_log_of_finite(f, ctx);
+    if (r) { expr_free(f); ctx->depth--; return r; }
+
+    /* Gruntz-lite: Log[sum] at Infinity with a unique dominant summand. */
+    r = layer_gruntz_iterated_log(f, ctx);
     if (r) { expr_free(f); ctx->depth--; return r; }
 
     /* Log + linear merge at infinity for shapes like -x + Log[2 + E^x],
@@ -1387,20 +1955,213 @@ static Expr* run_iterated(Expr* f, Expr* rule_list, int dir, int depth) {
     return current;
 }
 
-/* Handle Limit[f, {x1,...,xn} -> {a1,...,an}] as a joint limit via the
- * simple "joint continuous substitution" fast path. We first perform the
- * same Together-based denominator check used by the single-variable
- * fast path so that 0/0 shapes do not silently collapse to 0 through
- * PicoCAS's aggressive arithmetic folding. Anything more sophisticated
- * (polar substitution, path-dependence heuristics) is future work --
- * those cases leave the expression unevaluated here. */
-static Expr* run_multivariate(Expr* f, Expr* vars, Expr* points) {
+/* ---------------------------------------------------------------------- */
+/* Multivariate limits: polar/spherical path-dependence analysis           */
+/* ---------------------------------------------------------------------- */
+/* All points are {0,0,...} or all are {Infinity,Infinity,...}. The
+ * n-dimensional joint limit gets an (n-1)-parameter angular substitution
+ * and we compute the resulting single-variable limit in r. If the answer
+ * is free of the angles, that IS the joint limit. If it depends on
+ * angles, we sample a handful of axis and diagonal directions; if they
+ * all agree we return that value, otherwise we return Indeterminate.  */
+
+/* True iff every entry of `points` matches `val` in canonical form
+ * (integer 0 for origin, or the Infinity symbol for +Infinity). */
+static bool all_points_are(Expr* points, int kind) {
+    for (size_t i = 0; i < points->data.function.arg_count; i++) {
+        Expr* p = points->data.function.args[i];
+        if (kind == 0) {
+            if (!is_lit_zero(p)) return false;
+        } else {
+            if (!is_infinity_sym(p)) return false;
+        }
+    }
+    return true;
+}
+
+/* Compute Limit[f_polar, r -> r0, Direction -> "FromAbove"]. r is a
+ * fresh symbol; r0 is 0 (origin) or Infinity. Returns a new Expr* or
+ * NULL if the inner limit cannot be resolved. */
+static Expr* limit_r_fromabove(Expr* f_polar, Expr* r_sym, int kind) {
+    Expr* point = (kind == 0) ? mk_int(0) : mk_sym("Infinity");
+    LimitCtx sub = { r_sym, point, LIMIT_DIR_FROMABOVE, 0 };
+    Expr* res = compute_limit(f_polar, &sub);
+    expr_free(point);
+    return res;
+}
+
+/* For every multi-argument angle substitution we make, check that the
+ * substituted `f` is free of the original variables. PicoCAS's
+ * ReplaceAll doesn't recurse through evaluation so we always simp().
+ *
+ * Order of substitution matters: we must replace all variables
+ * simultaneously rather than one at a time, otherwise e.g. replacing
+ * `x -> r Cos[t]` then `y -> r Sin[t]` would leave the expression
+ * referencing the fresh `r` and `t` while `y` has only just vanished.
+ * We ReplaceAll with a list of rules. */
+static Expr* subst_all(Expr* f, Expr** vars, Expr** vals, size_t n) {
+    Expr** rules = calloc(n, sizeof(Expr*));
+    for (size_t i = 0; i < n; i++) {
+        rules[i] = mk_fn2("Rule", expr_copy(vars[i]), expr_copy(vals[i]));
+    }
+    Expr* rule_list = expr_new_function(mk_sym("List"), rules, n);
+    free(rules);
+    Expr* ra = mk_fn2("ReplaceAll", expr_copy(f), rule_list);
+    return simp(ra);
+}
+
+/* Polar substitution at origin or infinity for 2D. Returns the r-limit
+ * result as an expression in `angle_sym`, or NULL. */
+static Expr* polar_2d_limit(Expr* f, Expr** vars, int kind,
+                            Expr* r_sym, Expr* t_sym) {
+    /* x = r Cos[t], y = r Sin[t] */
+    Expr* rcos = simp(mk_times(expr_copy(r_sym), mk_fn1("Cos", expr_copy(t_sym))));
+    Expr* rsin = simp(mk_times(expr_copy(r_sym), mk_fn1("Sin", expr_copy(t_sym))));
+    Expr* vals[2] = { rcos, rsin };
+    Expr* f_polar = subst_all(f, vars, vals, 2);
+    expr_free(rcos); expr_free(rsin);
+
+    Expr* rlim = limit_r_fromabove(f_polar, r_sym, kind);
+    expr_free(f_polar);
+    return rlim;
+}
+
+/* Spherical substitution for 3D joint limits at the origin. */
+static Expr* polar_3d_limit(Expr* f, Expr** vars, int kind,
+                            Expr* r_sym, Expr* t_sym, Expr* p_sym) {
+    /* x = r Sin[p] Cos[t], y = r Sin[p] Sin[t], z = r Cos[p] */
+    Expr* sp = mk_fn1("Sin", expr_copy(p_sym));
+    Expr* cp = mk_fn1("Cos", expr_copy(p_sym));
+    Expr* ct = mk_fn1("Cos", expr_copy(t_sym));
+    Expr* st = mk_fn1("Sin", expr_copy(t_sym));
+    Expr* vx = simp(mk_times(expr_copy(r_sym), mk_times(expr_copy(sp), expr_copy(ct))));
+    Expr* vy = simp(mk_times(expr_copy(r_sym), mk_times(expr_copy(sp), expr_copy(st))));
+    Expr* vz = simp(mk_times(expr_copy(r_sym), expr_copy(cp)));
+    expr_free(sp); expr_free(cp); expr_free(ct); expr_free(st);
+    Expr* vals[3] = { vx, vy, vz };
+    Expr* f_sph = subst_all(f, vars, vals, 3);
+    expr_free(vx); expr_free(vy); expr_free(vz);
+
+    Expr* rlim = limit_r_fromabove(f_sph, r_sym, kind);
+    expr_free(f_sph);
+    return rlim;
+}
+
+/* Sample a handful of concrete directions and return Indeterminate if
+ * they disagree, the common value if they all match, or NULL if we
+ * cannot resolve. Used as a backstop when the polar r-limit depends on
+ * the angle parameters. */
+static Expr* sample_joint_limit(Expr* f, Expr** vars, size_t n, int kind) {
+    /* Direction vectors. For kind=0 (origin) each coordinate can move
+     * alone (axis directions) or together (diagonals) because "fixing at
+     * 0" is meaningful -- a coordinate that's exactly zero while the
+     * others approach zero is the canonical axis limit. For kind=1
+     * (infinity) every coordinate must actually approach +Infinity, so
+     * we only emit directions with all-positive entries: the all-ones
+     * direction plus a couple of skewed diagonals (2,1,1...) and
+     * (1,2,1...). */
+    int max_dirs = 10;
+    int (*dirs)[3] = calloc(max_dirs, sizeof(*dirs));
+    int nd = 0;
+    if (kind == 0) {
+        for (size_t i = 0; i < n && nd < max_dirs; i++) {
+            for (size_t j = 0; j < n; j++) dirs[nd][j] = (j == i) ? 1 : 0;
+            nd++;
+        }
+        if (n == 2 && nd + 2 <= max_dirs) {
+            dirs[nd][0] = 1; dirs[nd][1] = 1; nd++;
+            dirs[nd][0] = 1; dirs[nd][1] = -1; nd++;
+        }
+        if (n == 3 && nd + 2 <= max_dirs) {
+            dirs[nd][0] = 1; dirs[nd][1] = 1; dirs[nd][2] = 1; nd++;
+            dirs[nd][0] = 1; dirs[nd][1] = 1; dirs[nd][2] = -1; nd++;
+        }
+    } else {
+        /* kind == 1: all-positive directions. */
+        for (size_t j = 0; j < n; j++) dirs[nd][j] = 1;
+        nd++;
+        for (size_t i = 0; i < n && nd < max_dirs; i++) {
+            for (size_t j = 0; j < n; j++) dirs[nd][j] = (j == i) ? 2 : 1;
+            nd++;
+        }
+    }
+
+    /* Pick a fresh scalar parameter. */
+    Expr* t_sym = mk_sym("$LimitPathT$");
+    Expr* values[3] = { NULL, NULL, NULL };
+
+    Expr* common = NULL;
+    bool ok = true;
+    for (int d = 0; d < nd && ok; d++) {
+        for (size_t j = 0; j < n; j++) {
+            int c = dirs[d][j];
+            Expr* v;
+            if (c == 0 && kind == 0) {
+                /* Pin this coordinate at 0; the path approaches the
+                 * origin only along the other axis. */
+                v = mk_int(0);
+            } else {
+                /* x_j = c * t. Origin: t -> 0+. Infinity: t -> Infinity
+                 * (all c values are positive by construction above). */
+                v = simp(mk_times(mk_int(c), expr_copy(t_sym)));
+            }
+            values[j] = v;
+        }
+        bool skip = false;
+        for (size_t j = 0; j < n; j++) if (!values[j]) { skip = true; break; }
+        if (!skip) {
+            Expr* f_path = subst_all(f, vars, values, n);
+            Expr* point = (kind == 0) ? mk_int(0) : mk_sym("Infinity");
+            LimitCtx sub = { t_sym, point, LIMIT_DIR_FROMABOVE, 0 };
+            Expr* v = compute_limit(f_path, &sub);
+            expr_free(point);
+            expr_free(f_path);
+            if (!v) ok = false;
+            else {
+                if (!common) common = v;
+                else {
+                    if (!expr_eq(v, common)) {
+                        expr_free(common);
+                        free(dirs);
+                        for (size_t j = 0; j < n; j++) if (values[j]) expr_free(values[j]);
+                        expr_free(v); expr_free(t_sym);
+                        return mk_sym("Indeterminate");
+                    }
+                    expr_free(v);
+                }
+            }
+        }
+        for (size_t j = 0; j < n; j++) {
+            if (values[j]) expr_free(values[j]);
+            values[j] = NULL;
+        }
+    }
+    free(dirs);
+    expr_free(t_sym);
+    if (!ok) { if (common) expr_free(common); return NULL; }
+    return common;
+}
+
+/* Handle Limit[f, {x1,...,xn} -> {a1,...,an}] as a joint limit. */
+static Expr* run_multivariate(Expr* f_in, Expr* vars, Expr* points) {
     if (!has_head(vars, "List") || !has_head(points, "List")) return NULL;
     size_t n = vars->data.function.arg_count;
     if (n != points->data.function.arg_count) return NULL;
+    if (n < 2) return NULL;
 
-    /* Validate that every variable appears free of any other variable
-     * that could fold things away prematurely -- cheap sanity check. */
+    /* Limit is HoldAll, so any user-defined `f[x, y]` reaches us
+     * unexpanded. Run one evaluation pass so subsequent structural
+     * checks see the real expression tree (e.g. so the 0/0 scan can
+     * find Power[x^2 + x^3, -1] inside an ArcTan). */
+    Expr* f = simp(expr_copy(f_in));
+
+    /* Simple substitution fast path: only trust it when no sub-expression
+     * risks a 0/0 fold. PicoCAS's arithmetic eagerly folds 0/0 to 0 at
+     * Sin, ArcTan, and other non-rational heads; for those cases we MUST
+     * go through the path-dependence analysis even if the top-level
+     * Together denominator looks safe. Walking the tree for any
+     * `Power[base, negative]` whose base vanishes at the joint point
+     * catches the ArcTan[y^2/(x^2 + x^3)]-style 0/0. */
     Expr* tog = simp(mk_fn1("Together", expr_copy(f)));
     Expr* den = simp(mk_fn1("Denominator", expr_copy(tog)));
     Expr* den_at = expr_copy(den);
@@ -1412,28 +2173,190 @@ static Expr* run_multivariate(Expr* f, Expr* vars, Expr* points) {
     }
     bool den_bad = is_lit_zero(den_at) || is_divergent(den_at);
     expr_free(den); expr_free(tog); expr_free(den_at);
-    if (den_bad) return NULL;
-
-    Expr* cur = expr_copy(f);
-    for (size_t i = 0; i < n; i++) {
-        Expr* s = subst_eval(cur, vars->data.function.args[i],
-                                  points->data.function.args[i]);
-        expr_free(cur);
-        cur = s;
+    /* Also refuse when any reciprocal sub-term's base vanishes. */
+    bool inner_div_by_zero = false;
+    if (!den_bad) {
+        /* Recursive walk: find Power[b, k] with k negative OR 0 after
+         * substitution, and check if b at the point is 0. */
+        Expr* probe = expr_copy(f);
+        for (size_t i = 0; i < n; i++) {
+            Expr* next = subst_eval(probe, vars->data.function.args[i],
+                                           points->data.function.args[i]);
+            expr_free(probe);
+            probe = next;
+        }
+        /* is_divergent on the *substituted* original catches any
+         * ComplexInfinity / Indeterminate the evaluator produced; that's
+         * a reliable signal of an internal 0/0 even when the outer form
+         * folded to a plausible finite value. */
+        if (is_divergent(probe)) inner_div_by_zero = true;
+        else {
+            /* Evaluate every reciprocal base at the point and see if any
+             * goes to 0. */
+            Expr* probe2 = expr_copy(f);
+            /* lazy stack-based scan */
+            Expr* stack[64]; int top = 0; stack[top++] = probe2;
+            while (top > 0 && !inner_div_by_zero) {
+                Expr* e = stack[--top];
+                if (e->type == EXPR_FUNCTION) {
+                    if (has_head(e, "Power") && e->data.function.arg_count == 2) {
+                        Expr* exp = e->data.function.args[1];
+                        bool is_neg = false;
+                        if (exp->type == EXPR_INTEGER && exp->data.integer < 0) is_neg = true;
+                        else if (has_head(exp, "Times") && exp->data.function.arg_count > 0 &&
+                                 exp->data.function.args[0]->type == EXPR_INTEGER &&
+                                 exp->data.function.args[0]->data.integer < 0) is_neg = true;
+                        if (is_neg) {
+                            Expr* b = expr_copy(e->data.function.args[0]);
+                            for (size_t i = 0; i < n; i++) {
+                                Expr* nb = subst_eval(b, vars->data.function.args[i],
+                                                         points->data.function.args[i]);
+                                expr_free(b); b = nb;
+                            }
+                            if (is_lit_zero(b)) inner_div_by_zero = true;
+                            expr_free(b);
+                        }
+                    }
+                    for (size_t i = 0; i < e->data.function.arg_count && top < 60; i++) {
+                        stack[top++] = e->data.function.args[i];
+                    }
+                    if (top < 60) stack[top++] = e->data.function.head;
+                }
+            }
+            expr_free(probe2);
+        }
+        expr_free(probe);
     }
-    if (is_divergent(cur)) { expr_free(cur); return NULL; }
+    /* The simple-substitution shortcut is only safe at finite points. At
+     * Infinity, PicoCAS's arithmetic folds Infinity/Infinity into path-
+     * dependent shortcut values (e.g. ArcTan[y/x] /. x,y -> Infinity
+     * yields Pi/4 via Infinity/Infinity -> 1 -> ArcTan[1]) that hide the
+     * genuine path-dependence. Gate the fast path to the origin case. */
+    bool all_finite = true;
     for (size_t i = 0; i < n; i++) {
-        if (expr_contains(cur, vars->data.function.args[i])) {
-            expr_free(cur);
-            return NULL;
+        Expr* p = points->data.function.args[i];
+        if (is_infinity_sym(p) || is_neg_infinity(p) || is_complex_infinity(p)) {
+            all_finite = false; break;
         }
     }
-    return cur;
+    if (all_finite && !den_bad && !inner_div_by_zero) {
+        Expr* cur = expr_copy(f);
+        for (size_t i = 0; i < n; i++) {
+            Expr* s = subst_eval(cur, vars->data.function.args[i],
+                                      points->data.function.args[i]);
+            expr_free(cur);
+            cur = s;
+        }
+        bool bad_residual = false;
+        for (size_t i = 0; i < n; i++) {
+            if (expr_contains(cur, vars->data.function.args[i])) {
+                bad_residual = true; break;
+            }
+        }
+        if (!is_divergent(cur) && !bad_residual) { expr_free(f); return cur; }
+        expr_free(cur);
+    }
+
+    /* Path-dependence analysis via polar / spherical substitution.
+     * We only handle the two canonical cases:
+     *   - all points are 0 (joint limit at origin)
+     *   - all points are +Infinity (joint limit at infinity along the
+     *     positive orthant)
+     * Mixed cases (x -> 0, y -> Infinity) stay unevaluated for now;
+     * they're rare in practice and usually need a change of variables
+     * from the user side anyway. */
+    int kind;
+    if (all_points_are(points, 0))      kind = 0;
+    else if (all_points_are(points, 1)) kind = 1;
+    else { expr_free(f); return NULL; }
+
+    Expr** vars_arr = calloc(n, sizeof(Expr*));
+    for (size_t i = 0; i < n; i++) vars_arr[i] = vars->data.function.args[i];
+
+    Expr* r_sym = mk_sym("$LimitPolarR$");
+    Expr* t_sym = mk_sym("$LimitPolarTheta$");
+    Expr* result = NULL;
+
+    if (n == 2) {
+        Expr* rlim = polar_2d_limit(f, vars_arr, kind, r_sym, t_sym);
+        if (rlim) {
+            if (!expr_contains(rlim, t_sym) && !expr_contains(rlim, r_sym) &&
+                !is_divergent(rlim)) {
+                result = rlim;
+            } else {
+                expr_free(rlim);
+                /* r-limit depends on theta or failed -> sample directions. */
+                result = sample_joint_limit(f, vars_arr, n, kind);
+            }
+        } else {
+            result = sample_joint_limit(f, vars_arr, n, kind);
+        }
+    } else if (n == 3) {
+        Expr* p_sym = mk_sym("$LimitPolarPhi$");
+        Expr* rlim = polar_3d_limit(f, vars_arr, kind, r_sym, t_sym, p_sym);
+        if (rlim) {
+            if (!expr_contains(rlim, t_sym) && !expr_contains(rlim, p_sym) &&
+                !expr_contains(rlim, r_sym) && !is_divergent(rlim)) {
+                result = rlim;
+            } else {
+                expr_free(rlim);
+                result = sample_joint_limit(f, vars_arr, n, kind);
+            }
+        } else {
+            result = sample_joint_limit(f, vars_arr, n, kind);
+        }
+        expr_free(p_sym);
+    } else {
+        /* n >= 4: skip polar, just sample. */
+        result = sample_joint_limit(f, vars_arr, n, kind);
+    }
+
+    free(vars_arr);
+    expr_free(r_sym); expr_free(t_sym);
+    expr_free(f);
+    return result;
 }
 
 /* ---------------------------------------------------------------------- */
 /* Public entry point                                                      */
 /* ---------------------------------------------------------------------- */
+/* True iff `e` structurally contains the imaginary unit I -- as a bare
+ * Symbol "I", as Complex[a, b] with b != 0, or nested inside any
+ * function-call / Plus / Times children. Used by the branch-cut
+ * post-pass to tell whether the principal-branch result actually
+ * picked up an imaginary part. */
+static bool contains_imaginary_unit(Expr* e) {
+    if (!e) return false;
+    if (e->type == EXPR_SYMBOL) return strcmp(e->data.symbol, "I") == 0;
+    if (e->type == EXPR_FUNCTION) {
+        if (has_head(e, "Complex") && e->data.function.arg_count == 2) {
+            Expr* im = e->data.function.args[1];
+            if (im->type == EXPR_INTEGER) return im->data.integer != 0;
+            if (im->type == EXPR_REAL)    return im->data.real != 0.0;
+            return true;
+        }
+        if (contains_imaginary_unit(e->data.function.head)) return true;
+        for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            if (contains_imaginary_unit(e->data.function.args[i])) return true;
+        }
+    }
+    return false;
+}
+
+/* Conjugate the imaginary part of a closed-form result. PicoCAS's
+ * `Conjugate` evaluator only folds for some forms (e.g. Complex[a, b]
+ * literals) but leaves generic expressions like `I * Pi` unfolded, so
+ * we implement this via ReplaceAll[I -> -I]. That substitution gives
+ * exact complex-conjugation for any expression whose only non-real
+ * content is the imaginary unit symbol, which covers Sqrt/Log branch
+ * values at a negative real point. */
+static Expr* conjugate_imaginary(Expr* e) {
+    Expr* neg_i = mk_neg(mk_sym("I"));
+    Expr* rule = mk_fn2("Rule", mk_sym("I"), neg_i);
+    Expr* ra   = mk_fn2("ReplaceAll", expr_copy(e), rule);
+    return simp(ra);
+}
+
 Expr* builtin_limit(Expr* res) {
     /* Contract: the evaluator frees `res` on a non-NULL return (see
      * src/eval.c); we must not free it ourselves. Return NULL to leave
@@ -1444,6 +2367,30 @@ Expr* builtin_limit(Expr* res) {
 
     Expr* f   = res->data.function.args[0];
     Expr* spec= res->data.function.args[1];
+
+    /* Thread over a top-level List in the first argument. Mathematica's
+     * Limit is effectively listable on its first argument (with
+     * HoldAll), so Limit[{a, b}, x -> c] maps to {Limit[a, x -> c],
+     * Limit[b, x -> c]} with the options forwarded unchanged. */
+    if (has_head(f, "List")) {
+        size_t k = f->data.function.arg_count;
+        Expr** results = calloc(k, sizeof(Expr*));
+        for (size_t i = 0; i < k; i++) {
+            size_t nargs = res->data.function.arg_count;
+            Expr** new_args = calloc(nargs, sizeof(Expr*));
+            new_args[0] = expr_copy(f->data.function.args[i]);
+            for (size_t j = 1; j < nargs; j++) {
+                new_args[j] = expr_copy(res->data.function.args[j]);
+            }
+            Expr* call = expr_new_function(mk_sym("Limit"), new_args, nargs);
+            free(new_args);
+            results[i] = evaluate(call);
+            /* evaluate already freed `call`'s internal tree. */
+        }
+        Expr* out = expr_new_function(mk_sym("List"), results, k);
+        free(results);
+        return out;
+    }
 
     /* Collect option args (positions 2..argc-1). */
     Expr** opts = (argc > 2) ? &res->data.function.args[2] : NULL;
@@ -1466,8 +2413,49 @@ Expr* builtin_limit(Expr* res) {
         }
         Expr *var, *point;
         split_rule(spec, &var, &point);
-        LimitCtx ctx = { var, point, dir, 0 };
-        return compute_limit(f, &ctx);
+        /* Compute the base (principal-branch) limit first. The complex
+         * directions (LIMIT_DIR_IMAGINARY, LIMIT_DIR_COMPLEX) are
+         * routed through LIMIT_DIR_TWOSIDED for the analytic layers --
+         * they mostly only affect the branch-cut post-pass below, not
+         * the series / L'Hospital computation itself. */
+        int inner_dir = dir;
+        if (inner_dir == LIMIT_DIR_IMAGINARY || inner_dir == LIMIT_DIR_COMPLEX) {
+            inner_dir = LIMIT_DIR_TWOSIDED;
+        }
+        LimitCtx ctx = { var, point, inner_dir, 0 };
+        Expr* base = compute_limit(f, &ctx);
+        if (!base) return NULL;
+
+        /* Branch-cut post-pass:
+         *   Direction -> I        flips the imaginary part (the "other"
+         *                         branch of Sqrt/Log at z = negative real)
+         *   Direction -> Complexes returns Indeterminate when the base
+         *                         result has a non-zero imaginary part
+         *                         (the radial limit disagrees between
+         *                         approach directions on either side of
+         *                         the branch cut). Poles continue to
+         *                         return ComplexInfinity via Layer 2. */
+        if (dir == LIMIT_DIR_IMAGINARY && contains_imaginary_unit(base)) {
+            Expr* flipped = conjugate_imaginary(base);
+            expr_free(base);
+            return flipped;
+        }
+        if (dir == LIMIT_DIR_COMPLEX) {
+            /* Radial approach interpretation: any pole is ComplexInfinity
+             * regardless of parity, and a branch-point value that picked
+             * up an imaginary part is Indeterminate. Finite real results
+             * pass through unchanged (they are the same from every
+             * complex approach direction). */
+            if (is_infinity_sym(base) || is_neg_infinity(base)) {
+                expr_free(base);
+                return mk_sym("ComplexInfinity");
+            }
+            if (contains_imaginary_unit(base) && !is_complex_infinity(base)) {
+                expr_free(base);
+                return mk_sym("Indeterminate");
+            }
+        }
+        return base;
     }
 
     /* --- Form B: Limit[f, {x1 -> a1, ..., xn -> an}] iterated --- */

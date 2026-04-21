@@ -1094,6 +1094,47 @@ static void test_apart_at_infinity(void) {
         "SeriesData[Power[x, -1], 0, List[0, 1, 0, 1, 0, 1], 1, 7, 1]");
 }
 
+/* Regression: Series at Infinity must not leak the internal inverse
+ * variable $SeriesInvVar$ back to the user. Before the fix, Log[x] at
+ * Infinity kept its coefficient as Log[$SeriesInvVar$] because the
+ * inverse substitution was only applied to SeriesObj::x, not to the
+ * coefficients. The fix substitutes u -> 1/x across every coefficient
+ * after the expansion completes. We test two shapes:
+ *   - Series[Log[x], ...]: the entire Log[x] is "constant in u" inside
+ *     the expansion so it survives as a coefficient.
+ *   - A Limit transcript that previously printed $SeriesInvVar$
+ *     verbatim; now the same input simply doesn't mention it.
+ */
+static void test_series_infinity_no_inv_var_leak(void) {
+    setup_full();
+    /* Grep-style check: the OutputForm must not contain the internal
+     * variable name. We compare full form to keep the assertion stable
+     * across printer changes. */
+    const char* inputs[] = {
+        "Series[Log[x], {x, Infinity, 2}]",
+        "Series[Log[Log[x]], {x, Infinity, 2}]",
+        "Series[1/x + Log[x], {x, Infinity, 2}]",
+        "Limit[(Log[Log[x] + Log[Log[x]]] - Log[Log[x]])"
+        "/Log[Log[x] + Log[Log[Log[x]]]] Log[x], x -> Infinity]",
+        NULL
+    };
+    for (int i = 0; inputs[i]; i++) {
+        Expr* e = parse_expression(inputs[i]);
+        ASSERT_MSG(e != NULL, "Failed to parse: %s", inputs[i]);
+        Expr* v = evaluate(e);
+        char* got_std  = expr_to_string(v);
+        char* got_full = expr_to_string_fullform(v);
+        ASSERT_MSG(strstr(got_std,  "$SeriesInvVar$") == NULL,
+                   "InvVar leak in %s: %s", inputs[i], got_std);
+        ASSERT_MSG(strstr(got_full, "$SeriesInvVar$") == NULL,
+                   "InvVar leak in %s (FullForm): %s", inputs[i], got_full);
+        free(got_std);
+        free(got_full);
+        expr_free(e);
+        expr_free(v);
+    }
+}
+
 /* Puiseux expansion at branch points for ArcSin / ArcCos at x = ±1.
  * ArcSin[x] at x=1: Pi/2 - I*Sqrt[2]*Sqrt[x-1] + O[x-1]^(3/2). The trailing
  * zero coefficient at exp 1 is retained in SeriesData; it drops from the
@@ -1213,6 +1254,9 @@ int main(void) {
     TEST(test_apart_nonrational_denominator_guard);
     TEST(test_apart_at_nonzero_point);
     TEST(test_apart_at_infinity);
+
+    /* Regression: no $SeriesInvVar$ leakage for Series at Infinity. */
+    TEST(test_series_infinity_no_inv_var_leak);
 
     printf("All series tests passed.\n");
     return 0;
