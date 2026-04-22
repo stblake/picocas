@@ -159,14 +159,31 @@ static void print_standard(Expr* e, int parent_prec) {
             bool re_zero = (re->type == EXPR_INTEGER && re->data.integer == 0);
             bool im_one = (im->type == EXPR_INTEGER && im->data.integer == 1);
             bool im_minus_one = (im->type == EXPR_INTEGER && im->data.integer == -1);
-            if (!re_zero) { 
-                print_standard(re, 310); 
-                if (im_minus_one) printf(" - ");
-                else printf(" + "); 
-            } else if (im_minus_one) {
+
+            bool im_neg = im_minus_one;
+            Expr* im_abs = NULL;
+            int64_t rn, rd;
+            if (!im_neg) {
+                if (im->type == EXPR_INTEGER && im->data.integer < 0) {
+                    im_neg = true;
+                    im_abs = expr_new_integer(-im->data.integer);
+                } else if (im->type == EXPR_REAL && im->data.real < 0.0) {
+                    im_neg = true;
+                    im_abs = expr_new_real(-im->data.real);
+                } else if (is_rational(im, &rn, &rd) && rn < 0) {
+                    im_neg = true;
+                    im_abs = make_rational(-rn, rd);
+                }
+            }
+
+            if (!re_zero) {
+                print_standard(re, 310);
+                printf(im_neg ? " - " : " + ");
+            } else if (im_neg) {
                 printf("-");
             }
             if (im_one || im_minus_one) printf("I");
+            else if (im_abs) { print_standard(im_abs, 400); printf("*I"); expr_free(im_abs); }
             else { print_standard(im, 400); printf("*I"); }
         }
         else if (strcmp(head, "Power") == 0 && e->data.function.arg_count == 2) {
