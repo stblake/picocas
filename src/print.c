@@ -19,6 +19,7 @@
 
 static void print_standard(Expr* e, int parent_prec);
 static void print_series_data(Expr* e, int parent_prec);
+static void print_tex(Expr* e, int parent_prec);
 
 /*
  * When non-zero, print_standard renders heads like SeriesData using their
@@ -136,6 +137,9 @@ static void print_standard(Expr* e, int parent_prec) {
         
         if (strcmp(head, "FullForm") == 0 && e->data.function.arg_count == 1) {
             expr_print_fullform(e->data.function.args[0]);
+        }
+        else if (strcmp(head, "TeXForm") == 0 && e->data.function.arg_count == 1) {
+            print_tex(e->data.function.args[0], 0);
         }
         else if (strcmp(head, "InputForm") == 0 && e->data.function.arg_count == 1) {
             g_inputform_depth++;
@@ -536,6 +540,11 @@ Expr* builtin_inputform(Expr* res) {
     return NULL; // Unevaluated wrapper
 }
 
+Expr* builtin_texform(Expr* res) {
+    (void)res;
+    return NULL; // Unevaluated wrapper; rendering happens in print_standard
+}
+
 /*
  * Pretty-prints SeriesData[x, x0, {a0, ..., a_{k-1}}, nmin, nmax, den] as
  *     a0 + a1 (x-x0) + ... + a_{k-1} (x-x0)^((nmin+k-1)/den) + O[x-x0]^(nmax/den).
@@ -700,4 +709,466 @@ static void print_series_data(Expr* e, int parent_prec) {
     print_standard(sum, parent_prec);
     expr_free(sum);
     expr_free(base);
+}
+
+/* ===================== TeXForm renderer =====================
+ *
+ * Renders an Expr as AMS-LaTeX-compatible TeX. TeXForm[expr] in
+ * print_standard dispatches here. Precedence uses the same numeric
+ * levels as get_expr_prec so parens are inserted consistently.
+ * Single-character symbol names are emitted bare (italicised by TeX
+ * default math mode); multi-character names are wrapped in \text{}.
+ */
+
+/* Emit a number in TeX form (integers, reals, bigints, mpfr). */
+static void print_tex_number(Expr* e) {
+    switch (e->type) {
+        case EXPR_INTEGER: printf("%" PRId64, e->data.integer); break;
+        case EXPR_REAL: {
+            char buf[64];
+            snprintf(buf, sizeof(buf), "%g", e->data.real);
+            if (strchr(buf, '.') == NULL && strchr(buf, 'e') == NULL && strchr(buf, 'E') == NULL) printf("%s.", buf);
+            else printf("%s", buf);
+            break;
+        }
+        case EXPR_BIGINT: {
+            char* s = mpz_get_str(NULL, 10, e->data.bigint);
+            printf("%s", s);
+            free(s);
+            break;
+        }
+#ifdef USE_MPFR
+        case EXPR_MPFR: {
+            long digits = (long)ceil((double)mpfr_get_prec(e->data.mpfr) / 3.3219280948873626);
+            if (digits < 1) digits = 1;
+            char* buf = NULL;
+            int len = mpfr_asprintf(&buf, "%.*Rg", (int)digits, e->data.mpfr);
+            if (len >= 0 && buf) { printf("%s", buf); mpfr_free_str(buf); }
+            break;
+        }
+#endif
+        default: expr_print_fullform(e); break;
+    }
+}
+
+static void print_tex_symbol(const char* raw_name) {
+    const char* name = context_display_name(raw_name);
+    if (strcmp(name, "Pi") == 0)              { printf("\\pi "); return; }
+    if (strcmp(name, "E") == 0)               { printf("e"); return; }
+    if (strcmp(name, "I") == 0)               { printf("i"); return; }
+    if (strcmp(name, "Infinity") == 0)        { printf("\\infty "); return; }
+    if (strcmp(name, "ComplexInfinity") == 0) { printf("\\tilde{\\infty }"); return; }
+    if (strcmp(name, "Indeterminate") == 0)   { printf("\\text{Indeterminate}"); return; }
+    if (strcmp(name, "EulerGamma") == 0)      { printf("\\gamma "); return; }
+    if (strcmp(name, "GoldenRatio") == 0)     { printf("\\phi "); return; }
+    if (strcmp(name, "Catalan") == 0)         { printf("C"); return; }
+    if (strcmp(name, "Degree") == 0)          { printf("{}^{\\circ }"); return; }
+    if (strcmp(name, "True") == 0)            { printf("\\text{True}"); return; }
+    if (strcmp(name, "False") == 0)           { printf("\\text{False}"); return; }
+    if (strcmp(name, "Null") == 0)            { printf("\\text{Null}"); return; }
+    size_t len = strlen(name);
+    if (len == 1) printf("%s", name);
+    else printf("\\text{%s}", name);
+}
+
+/* Looks up a trig/hyperbolic head and returns its TeX command and
+ * whether it's an inverse variant. Returns false if the head is not a
+ * standard trig/hyperbolic function. */
+static bool tex_trig_lookup(const char* h, const char** tex, bool* inv) {
+    static const struct { const char* head; const char* tex; bool inv; } table[] = {
+        {"Sin",  "\\sin",  false}, {"Cos",  "\\cos",  false},
+        {"Tan",  "\\tan",  false}, {"Cot",  "\\cot",  false},
+        {"Sec",  "\\sec",  false}, {"Csc",  "\\csc",  false},
+        {"Sinh", "\\sinh", false}, {"Cosh", "\\cosh", false},
+        {"Tanh", "\\tanh", false}, {"Coth", "\\coth", false},
+        {"Sech", "\\text{sech}", false}, {"Csch", "\\text{csch}", false},
+        {"ArcSin", "\\sin", true}, {"ArcCos", "\\cos", true},
+        {"ArcTan", "\\tan", true}, {"ArcCot", "\\cot", true},
+        {"ArcSec", "\\sec", true}, {"ArcCsc", "\\csc", true},
+        {"ArcSinh","\\sinh", true}, {"ArcCosh","\\cosh", true},
+        {"ArcTanh","\\tanh", true}, {"ArcCoth","\\coth", true},
+        {"ArcSech","\\text{sech}", true}, {"ArcCsch","\\text{csch}", true},
+    };
+    size_t n = sizeof(table) / sizeof(table[0]);
+    for (size_t i = 0; i < n; i++) {
+        if (strcmp(h, table[i].head) == 0) {
+            *tex = table[i].tex;
+            *inv = table[i].inv;
+            return true;
+        }
+    }
+    return false;
+}
+
+/* Maps a named head to a TeX symbol when the function is to be rendered
+ * like f(x). Returns NULL if the head should use its default name. */
+static const char* tex_function_name(const char* h) {
+    if (strcmp(h, "Log") == 0)      return "\\log ";
+    if (strcmp(h, "Exp") == 0)      return "\\exp ";
+    if (strcmp(h, "Sqrt") == 0)     return NULL; /* handled via \sqrt{} */
+    if (strcmp(h, "Abs") == 0)      return NULL; /* handled via |...|  */
+    if (strcmp(h, "Floor") == 0)    return NULL; /* handled via \lfloor */
+    if (strcmp(h, "Ceiling") == 0)  return NULL; /* handled via \lceil  */
+    if (strcmp(h, "Gamma") == 0)    return "\\Gamma ";
+    if (strcmp(h, "Re") == 0)       return "\\Re ";
+    if (strcmp(h, "Im") == 0)       return "\\Im ";
+    if (strcmp(h, "Conjugate") == 0)return NULL; /* handled via \overline */
+    return NULL;
+}
+
+/* Emits a comma-separated argument list wrapped in (...). */
+static void print_tex_args_parens(Expr* e, size_t start) {
+    printf("(");
+    for (size_t i = start; i < e->data.function.arg_count; i++) {
+        if (i > start) printf(",");
+        print_tex(e->data.function.args[i], 0);
+    }
+    printf(")");
+}
+
+/* Detects whether `im` is a negative numeric, and if so produces a
+ * freshly-owned Expr holding its absolute value (caller must free). */
+static bool tex_extract_negative(Expr* im, Expr** abs_out) {
+    int64_t rn, rd;
+    if (im->type == EXPR_INTEGER && im->data.integer < 0) {
+        *abs_out = expr_new_integer(-im->data.integer);
+        return true;
+    }
+    if (im->type == EXPR_REAL && im->data.real < 0.0) {
+        *abs_out = expr_new_real(-im->data.real);
+        return true;
+    }
+    if (is_rational(im, &rn, &rd) && rn < 0) {
+        *abs_out = make_rational(-rn, rd);
+        return true;
+    }
+    return false;
+}
+
+static void print_tex(Expr* e, int parent_prec) {
+    if (!e) { printf("\\text{Null}"); return; }
+
+    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || e->type == EXPR_BIGINT
+#ifdef USE_MPFR
+        || e->type == EXPR_MPFR
+#endif
+    ) {
+        print_tex_number(e);
+        return;
+    }
+    if (e->type == EXPR_SYMBOL) { print_tex_symbol(e->data.symbol); return; }
+    if (e->type == EXPR_STRING) { printf("\\text{\"%s\"}", e->data.string); return; }
+    if (e->type != EXPR_FUNCTION) return;
+
+    int my_prec = get_expr_prec(e);
+    bool need_parens = (my_prec < parent_prec);
+    if (need_parens) printf("\\left(");
+
+    Expr* head_expr = e->data.function.head;
+    if (head_expr->type == EXPR_SYMBOL) {
+        const char* head = head_expr->data.symbol;
+        size_t argc = e->data.function.arg_count;
+
+        if (strcmp(head, "Rational") == 0 && argc == 2) {
+            printf("\\frac{");
+            print_tex(e->data.function.args[0], 0);
+            printf("}{");
+            print_tex(e->data.function.args[1], 0);
+            printf("}");
+        }
+        else if (strcmp(head, "Complex") == 0 && argc == 2) {
+            Expr* re = e->data.function.args[0];
+            Expr* im = e->data.function.args[1];
+            bool re_zero = (re->type == EXPR_INTEGER && re->data.integer == 0);
+            bool im_one = (im->type == EXPR_INTEGER && im->data.integer == 1);
+            bool im_minus_one = (im->type == EXPR_INTEGER && im->data.integer == -1);
+            Expr* im_abs = NULL;
+            bool im_neg = im_minus_one;
+            if (!im_neg) im_neg = tex_extract_negative(im, &im_abs);
+            if (!re_zero) {
+                print_tex(re, 310);
+                printf(im_neg ? "-" : "+");
+            } else if (im_neg) {
+                printf("-");
+            }
+            if (im_one || im_minus_one) printf("i");
+            else if (im_abs) { print_tex(im_abs, 400); printf(" i"); expr_free(im_abs); }
+            else { print_tex(im, 400); printf(" i"); }
+        }
+        else if (strcmp(head, "Sqrt") == 0 && argc == 1) {
+            printf("\\sqrt{");
+            print_tex(e->data.function.args[0], 0);
+            printf("}");
+        }
+        else if (strcmp(head, "Abs") == 0 && argc == 1) {
+            printf("\\left| ");
+            print_tex(e->data.function.args[0], 0);
+            printf("\\right| ");
+        }
+        else if (strcmp(head, "Floor") == 0 && argc == 1) {
+            printf("\\left\\lfloor ");
+            print_tex(e->data.function.args[0], 0);
+            printf("\\right\\rfloor ");
+        }
+        else if (strcmp(head, "Ceiling") == 0 && argc == 1) {
+            printf("\\left\\lceil ");
+            print_tex(e->data.function.args[0], 0);
+            printf("\\right\\rceil ");
+        }
+        else if (strcmp(head, "Conjugate") == 0 && argc == 1) {
+            printf("\\overline{");
+            print_tex(e->data.function.args[0], 0);
+            printf("}");
+        }
+        else if (strcmp(head, "Power") == 0 && argc == 2) {
+            Expr* base = e->data.function.args[0];
+            Expr* exp = e->data.function.args[1];
+            int64_t n, d;
+            /* Negative exponent -> 1/base^|exp| with \frac */
+            bool exp_neg = false;
+            Expr* pos_exp = NULL;
+            if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+                exp_neg = true; pos_exp = expr_new_integer(-exp->data.integer);
+            } else if (is_rational(exp, &n, &d) && n < 0) {
+                exp_neg = true; pos_exp = make_rational(-n, d);
+            } else if (exp->type == EXPR_REAL && exp->data.real < 0.0) {
+                exp_neg = true; pos_exp = expr_new_real(-exp->data.real);
+            }
+            if (exp_neg) {
+                printf("\\frac{1}{");
+                if (pos_exp->type == EXPR_INTEGER && pos_exp->data.integer == 1) {
+                    print_tex(base, 0);
+                } else {
+                    Expr* pargs[2] = { expr_copy(base), expr_copy(pos_exp) };
+                    Expr* tmp = expr_new_function(expr_new_symbol("Power"), pargs, 2);
+                    print_tex(tmp, 0);
+                    expr_free(tmp);
+                }
+                printf("}");
+                expr_free(pos_exp);
+            } else if (is_rational(exp, &n, &d) && n == 1 && d == 2) {
+                printf("\\sqrt{");
+                print_tex(base, 0);
+                printf("}");
+            } else if (is_rational(exp, &n, &d) && n == 1 && d > 2) {
+                printf("\\sqrt[%" PRId64 "]{", d);
+                print_tex(base, 0);
+                printf("}");
+            } else {
+                print_tex(base, 600); /* force parens for compound bases */
+                printf("^{");
+                print_tex(exp, 0);
+                printf("}");
+            }
+        }
+        else if (strcmp(head, "Times") == 0) {
+            size_t count = argc;
+            int64_t lead_start = 0;
+            bool flipped_sign = false;
+            Expr* flipped_head = NULL;
+            if (count > 0) {
+                Expr* a0 = e->data.function.args[0];
+                if (a0->type == EXPR_INTEGER && a0->data.integer < 0) {
+                    flipped_sign = true;
+                    if (a0->data.integer == -1 && count > 1) lead_start = 1;
+                    else flipped_head = expr_new_integer(-a0->data.integer);
+                } else if (a0->type == EXPR_REAL && a0->data.real < 0.0) {
+                    flipped_sign = true;
+                    if (a0->data.real == -1.0 && count > 1) lead_start = 1;
+                    else flipped_head = expr_new_real(-a0->data.real);
+                } else {
+                    int64_t rn, rd;
+                    if (is_rational(a0, &rn, &rd) && rn < 0) {
+                        flipped_sign = true;
+                        flipped_head = make_rational(-rn, rd);
+                    }
+                }
+            }
+            if (flipped_sign) printf("-");
+
+            /* Collect numerator / denominator via negative-exponent Powers,
+             * matching print_standard so a/b renders as \frac{a}{b}. */
+            Expr** num_args = malloc(sizeof(Expr*) * count);
+            Expr** den_args = malloc(sizeof(Expr*) * count);
+            size_t num_count = 0, den_count = 0;
+            for (size_t i = (size_t)lead_start; i < count; i++) {
+                Expr* arg = (i == 0 && flipped_head) ? flipped_head : e->data.function.args[i];
+                bool den_ok = false;
+                if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL
+                    && strcmp(arg->data.function.head->data.symbol, "Power") == 0
+                    && arg->data.function.arg_count == 2) {
+                    Expr* exp = arg->data.function.args[1];
+                    int64_t n, d;
+                    Expr* pos_exp = NULL;
+                    bool neg = false;
+                    if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+                        neg = true; pos_exp = expr_new_integer(-exp->data.integer);
+                    } else if (is_rational(exp, &n, &d) && n < 0) {
+                        neg = true; pos_exp = make_rational(-n, d);
+                    } else if (exp->type == EXPR_REAL && exp->data.real < 0.0) {
+                        neg = true; pos_exp = expr_new_real(-exp->data.real);
+                    }
+                    if (neg) {
+                        if (pos_exp->type == EXPR_INTEGER && pos_exp->data.integer == 1) {
+                            den_args[den_count++] = expr_copy(arg->data.function.args[0]);
+                            expr_free(pos_exp);
+                        } else {
+                            Expr* p_args[2] = { expr_copy(arg->data.function.args[0]), pos_exp };
+                            den_args[den_count++] = expr_new_function(expr_new_symbol("Power"), p_args, 2);
+                        }
+                        den_ok = true;
+                    }
+                }
+                if (!den_ok) num_args[num_count++] = expr_copy(arg);
+            }
+
+            if (den_count == 0) {
+                for (size_t i = 0; i < num_count; i++) {
+                    if (i > 0) printf(" ");
+                    print_tex(num_args[i], 400);
+                }
+            } else {
+                printf("\\frac{");
+                if (num_count == 0) { printf("1"); }
+                else {
+                    for (size_t i = 0; i < num_count; i++) {
+                        if (i > 0) printf(" ");
+                        print_tex(num_args[i], 0);
+                    }
+                }
+                printf("}{");
+                for (size_t i = 0; i < den_count; i++) {
+                    if (i > 0) printf(" ");
+                    print_tex(den_args[i], 0);
+                }
+                printf("}");
+            }
+            for (size_t i = 0; i < num_count; i++) expr_free(num_args[i]);
+            for (size_t i = 0; i < den_count; i++) expr_free(den_args[i]);
+            free(num_args);
+            free(den_args);
+            if (flipped_head) expr_free(flipped_head);
+        }
+        else if (strcmp(head, "Plus") == 0) {
+            for (size_t i = 0; i < argc; i++) {
+                Expr* arg = e->data.function.args[i];
+                bool is_neg = false;
+                Expr* to_print = arg;
+                Expr* owned = NULL;
+
+                if (arg->type == EXPR_INTEGER && arg->data.integer < 0) {
+                    is_neg = true; owned = expr_new_integer(-arg->data.integer); to_print = owned;
+                } else if (arg->type == EXPR_REAL && arg->data.real < 0.0) {
+                    is_neg = true; owned = expr_new_real(-arg->data.real); to_print = owned;
+                } else if (arg->type == EXPR_FUNCTION && arg->data.function.head->type == EXPR_SYMBOL
+                           && strcmp(arg->data.function.head->data.symbol, "Times") == 0
+                           && arg->data.function.arg_count > 0) {
+                    Expr* f0 = arg->data.function.args[0];
+                    if (f0->type == EXPR_INTEGER && f0->data.integer < 0) {
+                        is_neg = true;
+                        owned = expr_copy(arg);
+                        owned->data.function.args[0]->data.integer = -f0->data.integer;
+                        if (owned->data.function.args[0]->data.integer == 1 && owned->data.function.arg_count > 1) {
+                            Expr** na = malloc(sizeof(Expr*) * (owned->data.function.arg_count - 1));
+                            for (size_t k = 1; k < owned->data.function.arg_count; k++) na[k-1] = expr_copy(owned->data.function.args[k]);
+                            Expr* t = expr_new_function(expr_new_symbol("Times"), na, owned->data.function.arg_count - 1);
+                            expr_free(owned); owned = t; free(na);
+                        }
+                        to_print = owned;
+                    } else if (f0->type == EXPR_REAL && f0->data.real < 0.0) {
+                        is_neg = true;
+                        owned = expr_copy(arg);
+                        owned->data.function.args[0]->data.real = -f0->data.real;
+                        to_print = owned;
+                    } else {
+                        int64_t rn, rd;
+                        if (is_rational(f0, &rn, &rd) && rn < 0) {
+                            is_neg = true;
+                            owned = expr_copy(arg);
+                            Expr* new_rat = make_rational(-rn, rd);
+                            expr_free(owned->data.function.args[0]);
+                            owned->data.function.args[0] = new_rat;
+                            to_print = owned;
+                        }
+                    }
+                } else {
+                    int64_t rn, rd;
+                    if (is_rational(arg, &rn, &rd) && rn < 0) {
+                        is_neg = true; owned = make_rational(-rn, rd); to_print = owned;
+                    }
+                }
+
+                if (i > 0) printf(is_neg ? "-" : "+");
+                else if (is_neg) printf("-");
+
+                print_tex(to_print, 310);
+                if (owned) expr_free(owned);
+            }
+        }
+        else if (strcmp(head, "List") == 0) {
+            printf("\\{");
+            for (size_t i = 0; i < argc; i++) {
+                if (i > 0) printf(",");
+                print_tex(e->data.function.args[i], 0);
+            }
+            printf("\\}");
+        }
+        else if ((strcmp(head, "Equal") == 0 || strcmp(head, "Unequal") == 0
+                  || strcmp(head, "Less") == 0 || strcmp(head, "Greater") == 0
+                  || strcmp(head, "LessEqual") == 0 || strcmp(head, "GreaterEqual") == 0
+                  || strcmp(head, "SameQ") == 0 || strcmp(head, "UnsameQ") == 0
+                  || strcmp(head, "Rule") == 0 || strcmp(head, "RuleDelayed") == 0
+                  || strcmp(head, "Set") == 0 || strcmp(head, "SetDelayed") == 0
+                  || strcmp(head, "And") == 0 || strcmp(head, "Or") == 0) && argc >= 2) {
+            const char* op = "";
+            if (strcmp(head, "Equal") == 0) op = "=";
+            else if (strcmp(head, "Unequal") == 0) op = "\\neq ";
+            else if (strcmp(head, "Less") == 0) op = "<";
+            else if (strcmp(head, "Greater") == 0) op = ">";
+            else if (strcmp(head, "LessEqual") == 0) op = "\\leq ";
+            else if (strcmp(head, "GreaterEqual") == 0) op = "\\geq ";
+            else if (strcmp(head, "SameQ") == 0) op = "\\equiv ";
+            else if (strcmp(head, "UnsameQ") == 0) op = "\\not\\equiv ";
+            else if (strcmp(head, "Rule") == 0 || strcmp(head, "RuleDelayed") == 0) op = "\\to ";
+            else if (strcmp(head, "Set") == 0) op = "=";
+            else if (strcmp(head, "SetDelayed") == 0) op = ":=";
+            else if (strcmp(head, "And") == 0) op = "\\land ";
+            else if (strcmp(head, "Or") == 0)  op = "\\lor ";
+            for (size_t i = 0; i < argc; i++) {
+                if (i > 0) printf("%s", op);
+                print_tex(e->data.function.args[i], my_prec);
+            }
+        }
+        else if (strcmp(head, "Not") == 0 && argc == 1) {
+            printf("\\neg ");
+            print_tex(e->data.function.args[0], 1000);
+        }
+        else {
+            const char* tex_fn = NULL;
+            bool is_inv = false;
+            if (tex_trig_lookup(head, &tex_fn, &is_inv) && argc == 1) {
+                /* \sin(x) or \sin ^{-1}(x) */
+                printf("%s", tex_fn);
+                if (is_inv) printf(" ^{-1}");
+                print_tex_args_parens(e, 0);
+            } else {
+                const char* named = tex_function_name(head);
+                if (named) {
+                    printf("%s", named);
+                    print_tex_args_parens(e, 0);
+                } else {
+                    /* Generic: f(a, b). Head gets symbol treatment so single-
+                     * char heads render italic, multi-char heads use \text{}. */
+                    print_tex(head_expr, 1000);
+                    print_tex_args_parens(e, 0);
+                }
+            }
+        }
+    } else {
+        /* Non-symbol head: render as (head)(args...). */
+        print_tex(head_expr, 1000);
+        print_tex_args_parens(e, 0);
+    }
+
+    if (need_parens) printf("\\right)");
 }

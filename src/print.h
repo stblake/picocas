@@ -11,6 +11,7 @@ char* expr_to_string_fullform(Expr* e);
 Expr* builtin_print(Expr* res);
 Expr* builtin_fullform(Expr* res);
 Expr* builtin_inputform(Expr* res);
+Expr* builtin_texform(Expr* res);
 
 
 #endif // PRINT_H

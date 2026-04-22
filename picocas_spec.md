@@ -5513,3 +5513,57 @@ ArcSin[3.]  : 1.5708 + 1.76275 I  ->  1.5708 - 1.76275 I
 ArcCos[3.]  : 0 - 1.76275 I       ->  0 + 1.76275 I
 ArcTanh[3.] : 0.346574 + Pi/2 I   ->  0.346574 - Pi/2 I
 ```
+## TeXForm (2026-04-22)
+
+`TeXForm[expr]` prints `expr` as AMS-LaTeX-compatible TeX. When an
+expression evaluates to `TeXForm[expr]`, only the TeX rendering appears
+in the output — the `TeXForm` wrapper itself is not printed. `TeXForm`
+has attribute `Protected`.
+
+Conventions, matching Mathematica:
+
+- Single-character symbol names render bare (italic by TeX default):
+  `TeXForm[x]` -> `x`. Multi-character names render in roman via
+  `\text{...}`: `TeXForm[foo]` -> `\text{foo}`.
+- Mathematical constants: `Pi` -> `\pi`, `E` -> `e`, `I` -> `i`,
+  `Infinity` -> `\infty`, `Degree` -> `{}^{\circ}`, `EulerGamma` ->
+  `\gamma`, `GoldenRatio` -> `\phi`.
+- Rational and Divide denominators render via `\frac{}{}`. The `Times`
+  printer splits negative-exponent factors into a denominator.
+- `Power[a, 1/2]` -> `\sqrt{a}`, `Power[a, 1/n]` -> `\sqrt[n]{a}`,
+  general `Power` -> `a^{b}`.
+- `Sqrt`, `Abs`, `Floor`, `Ceiling`, `Conjugate` render with their
+  dedicated TeX constructs (`\sqrt`, `|...|`, `\lfloor...\rfloor`,
+  `\lceil...\rceil`, `\overline{}`).
+- Trig and hyperbolic functions render using their standard TeX macros
+  (`\sin`, `\cos`, ..., `\sinh`, ..., plus `\text{sech}` / `\text{csch}`
+  which have no standard macro). Inverse variants (`ArcSin`, `ArcTanh`,
+  etc.) render as `\sin ^{-1}(x)` / `\tanh ^{-1}(x)`.
+- `Log` -> `\log`, `Exp` -> `\exp`, `Gamma` -> `\Gamma`, `Re` -> `\Re`,
+  `Im` -> `\Im`.
+- `List` -> `\{a,b,c\}`. Comparisons map to `=`, `\neq`, `<`, `>`,
+  `\leq`, `\geq`, `\equiv`, `\not\equiv`. `Rule` -> `\to`. `And` ->
+  `\land`, `Or` -> `\lor`, `Not` -> `\neg`.
+- Unknown heads render as `head(args...)` (the head follows the same
+  single-char / multi-char italic/roman rule as symbols).
+
+Implementation lives in `src/print.c` as `print_tex()`; registration
+and attributes in `src/core.c`; docstring in `src/info.c`. Parenthesisation
+reuses `get_expr_prec` so the TeX output agrees structurally with the
+standard printer.
+
+Examples:
+
+```
+TeXForm[1/2]               -> \frac{1}{2}
+TeXForm[3 + 4 I]           -> 3+4 i
+TeXForm[-3 x]              -> -3 x
+TeXForm[Sqrt[x]]           -> \sqrt{x}
+TeXForm[x^(1/3)]           -> \sqrt[3]{x}
+TeXForm[a/b]               -> \frac{a}{b}
+TeXForm[Sin[x]]            -> \sin(x)
+TeXForm[ArcSin[x]]         -> \sin ^{-1}(x)
+TeXForm[Sin[x]/(1+Cos[x])] -> \frac{\sin(x)}{1+\cos(x)}
+TeXForm[(a+b)^2]           -> \left(a+b\right)^{2}
+```
+

@@ -279,6 +279,7 @@ void core_init(void) {
     symtab_add_builtin("Print", builtin_print);
     symtab_add_builtin("FullForm", builtin_fullform);
     symtab_add_builtin("InputForm", builtin_inputform);
+    symtab_add_builtin("TeXForm", builtin_texform);
     symtab_add_builtin("Information", builtin_information);
     symtab_add_builtin("Evaluate", builtin_evaluate);
     symtab_get_def("Evaluate")->attributes |= ATTR_PROTECTED;
@@ -304,6 +305,7 @@ void core_init(void) {
     symtab_get_def("Print")->attributes |= ATTR_PROTECTED;
     symtab_get_def("FullForm")->attributes |= ATTR_PROTECTED;
     symtab_get_def("InputForm")->attributes |= ATTR_PROTECTED;
+    symtab_get_def("TeXForm")->attributes |= ATTR_PROTECTED;
     symtab_get_def("HoldForm")->attributes |= ATTR_HOLDALL | ATTR_PROTECTED;
 
     facint_init();
