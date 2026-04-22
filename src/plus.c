@@ -222,6 +222,20 @@ Expr* builtin_plus(Expr* res) {
     if (n == 0) return expr_new_integer(0);
     if (n == 1) return expr_copy(res->data.function.args[0]);
 
+    /* Inexact contagion: if any summand is an inexact Real/MPFR,
+     * numericalize exact numeric parts in-place so `1. + Pi` collapses to
+     * `4.14159` instead of staying as a frozen `1. + Pi` Plus. */
+    {
+        Expr** numed = numeric_contagion_args(res->data.function.args, n);
+        if (numed) {
+            for (size_t i = 0; i < n; i++) {
+                expr_free(res->data.function.args[i]);
+                res->data.function.args[i] = numed[i];
+            }
+            free(numed);
+        }
+    }
+
     /* Infinity / Indeterminate preprocessing.
      *
      * Mathematica semantics for Plus:

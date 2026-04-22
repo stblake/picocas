@@ -476,6 +476,90 @@ Expr* numericalize(const Expr* e, NumericSpec spec) {
 }
 
 /* ------------------------------------------------------------------------
+ *  Inexact contagion
+ *
+ *  Mathematica's Plus / Times numericalize exact parts (Pi, E, Sqrt[2], …)
+ *  whenever any other summand / factor is inexact. Without this rule the
+ *  user sees `1. Pi` frozen as `1. Pi` instead of `3.14159`. The helper
+ *  below is shared so Plus and Times stay in sync and future numeric
+ *  heads can opt in with one call.
+ * ---------------------------------------------------------------------- */
+
+static bool arg_is_inexact(const Expr* e) {
+    if (!e) return false;
+    if (e->type == EXPR_REAL) return true;
+#ifdef USE_MPFR
+    if (e->type == EXPR_MPFR) return true;
+    if (expr_max_mpfr_prec(e) > 0) return true;
+#endif
+    Expr *re, *im;
+    if (is_complex((Expr*)e, &re, &im)) {
+        if (re && re->type == EXPR_REAL) return true;
+        if (im && im->type == EXPR_REAL) return true;
+    }
+    return false;
+}
+
+/* True iff the inexact content of `e` is machine precision — i.e. there
+ * is an EXPR_REAL somewhere (possibly inside Complex[...]) and no MPFR
+ * value alongside. MachinePrecision wins contagion: mixing `1.` (double)
+ * with `1.0`50` (MPFR) must collapse to machine, not preserve 50 digits. */
+static bool arg_has_machine_real(const Expr* e) {
+    if (!e) return false;
+    if (e->type == EXPR_REAL) return true;
+    Expr *re, *im;
+    if (is_complex((Expr*)e, &re, &im)) {
+        if (re && re->type == EXPR_REAL) return true;
+        if (im && im->type == EXPR_REAL) return true;
+    }
+    return false;
+}
+
+Expr** numeric_contagion_args(Expr* const* args, size_t n) {
+    if (!args || n == 0) return NULL;
+
+    bool any_inexact = false;
+    bool any_machine = false;
+#ifdef USE_MPFR
+    long min_mpfr_prec = 0;  /* 0 = not yet observed */
+#endif
+    for (size_t i = 0; i < n; i++) {
+        if (arg_is_inexact(args[i])) {
+            any_inexact = true;
+            if (arg_has_machine_real(args[i])) any_machine = true;
+#ifdef USE_MPFR
+            long p = expr_max_mpfr_prec(args[i]);
+            if (p > 0 && (min_mpfr_prec == 0 || p < min_mpfr_prec)) {
+                min_mpfr_prec = p;
+            }
+#endif
+        }
+    }
+    if (!any_inexact) return NULL;
+
+    /* Precision contagion follows Mathematica: the *lowest* precision
+     * among inexact operands wins. MachinePrecision is the floor — any
+     * EXPR_REAL collapses the result to machine even alongside MPFR
+     * values carrying more digits. With only MPFR operands, pick the
+     * minimum MPFR precision so e.g. 1.0`50 + 1.0`20 lands at 20 digits
+     * rather than preserving the 50-digit operand. */
+    NumericSpec spec = numeric_machine_spec();
+#ifdef USE_MPFR
+    if (!any_machine && min_mpfr_prec > 0) {
+        spec.mode = NUMERIC_MODE_MPFR;
+        spec.bits = min_mpfr_prec;
+    }
+#endif
+
+    Expr** out = (Expr**)malloc(sizeof(Expr*) * n);
+    if (!out) return NULL;
+    for (size_t i = 0; i < n; i++) {
+        out[i] = numericalize(args[i], spec);
+    }
+    return out;
+}
+
+/* ------------------------------------------------------------------------
  *  Precision argument parsing
  *
  *  N[expr]                   → machine precision

@@ -125,6 +125,45 @@ static void test_machineprecision_is_protected(void) {
 /* ------------------------------------------------------------------------
  *  Phase 2: arbitrary-precision N[], precision literals, Precision/Accuracy
  * ---------------------------------------------------------------------- */
+static void test_inexact_contagion(void) {
+    /* Inexact contagion in Plus and Times: when any summand/factor is a
+     * Real, exact numeric constants (Pi, E, Sqrt[2], …) are numericalized
+     * in-place instead of staying as frozen Times/Plus expressions. */
+    assert_eval_eq("1. Pi",       "3.14159", 0);
+    assert_eval_eq("1. + Pi",     "4.14159", 0);
+    assert_eval_eq("1. E",        "2.71828", 0);
+    assert_eval_eq("1. Sqrt[2]",  "1.41421", 0);
+    assert_eval_eq("1. Sin[1]",   "0.841471", 0);
+    assert_eval_eq("1. x Pi",     "3.14159 x", 0);
+    /* No contagion when every arg is exact. */
+    assert_eval_eq("2 Pi",   "2 Pi",   0);
+    assert_eval_eq("1 + Pi", "1 + Pi", 0);
+    /* Symbolic factors stay symbolic — Pi was the only exact numeric. */
+    assert_eval_eq("1. x", "1.0 x", 0);
+
+#ifdef USE_MPFR
+    /* Precision contagion — the *lowest* precision among inexact args
+     * wins. MachinePrecision is the floor; any Real collapses the
+     * combination to machine even alongside higher-precision MPFR. */
+    assert_eval_eq("1.0`50 Pi + 1.", "4.14159", 0);
+    assert_eval_eq("Precision[1.0`50 Pi + 1.]", "MachinePrecision", 0);
+    assert_eval_eq("1.0`50 + 1.", "2.0", 0);
+    assert_eval_eq("Precision[1.0`50 + 1.]", "MachinePrecision", 0);
+
+    /* Two MPFR operands — min precision wins, not max. 1.0`50 + 1.0`20
+     * used to preserve 50 digits; now lands at 20. */
+    assert_eval_startswith("1.0`50 Pi + 1.0`20", "4.14159265358979323846");
+    assert_eval_startswith("Precision[1.0`50 Pi + 1.0`20]", "20.");
+    assert_eval_startswith("Precision[1.0`30 1.0`50]",     "30.");
+
+    /* Single MPFR (or multiple at the same precision) — no lower peer,
+     * precision is preserved. */
+    assert_eval_startswith("1.0`50 Pi",
+                           "3.14159265358979323846264338327950288419");
+    assert_eval_startswith("Precision[1.0`50 Pi]", "50.");
+#endif
+}
+
 #ifdef USE_MPFR
 
 static void test_n_prec_constants(void) {
@@ -240,6 +279,7 @@ int main(void) {
     TEST(test_n_two_arg_fallback);
     TEST(test_n_bad_precision_arg);
     TEST(test_machineprecision_is_protected);
+    TEST(test_inexact_contagion);
 
 #ifdef USE_MPFR
     TEST(test_n_prec_constants);

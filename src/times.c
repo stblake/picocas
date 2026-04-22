@@ -190,6 +190,21 @@ Expr* builtin_times(Expr* res) {
     if (n == 0) return expr_new_integer(1);
     if (n == 1) return expr_copy(res->data.function.args[0]);
 
+    /* Inexact contagion: if any factor is an inexact Real/MPFR, numericalize
+     * exact numeric parts in-place (Pi -> 3.14159, Sqrt[2] -> 1.41421, ...).
+     * This is what turns `1. Pi` into `3.14159` instead of leaving it as a
+     * frozen `1. Pi` Times. */
+    {
+        Expr** numed = numeric_contagion_args(res->data.function.args, n);
+        if (numed) {
+            for (size_t i = 0; i < n; i++) {
+                expr_free(res->data.function.args[i]);
+                res->data.function.args[i] = numed[i];
+            }
+            free(numed);
+        }
+    }
+
     /* Infinity / Indeterminate preprocessing.
      *
      * Mathematica semantics for Times:

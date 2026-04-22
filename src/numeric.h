@@ -159,6 +159,19 @@ bool get_approx_mpfr(const Expr* e,
                      bool* is_inexact);
 #endif
 
+/* Mathematica inexact-contagion pre-pass for Plus / Times / other numeric
+ * heads. Scans `args[0..n]` for any inexact numeric leaf (Real, MPFR, or
+ * Complex[...] containing one). If found, returns a freshly allocated
+ * array of `n` Expr* where each entry is numericalize(args[i]) at the
+ * maximum MPFR precision observed among the inexact args (or machine
+ * precision if only EXPR_REAL inexactness is present). This is how
+ * `1. Pi` collapses to `3.14159` — the Pi is numericalized in-line.
+ *
+ * Returns NULL if no arg is inexact; the caller should then proceed with
+ * the original arg list. The returned array and all its elements are
+ * caller-owned (free each with expr_free and the array with free()). */
+Expr** numeric_contagion_args(Expr* const* args, size_t n);
+
 /* Builtin entry points */
 Expr* builtin_n(Expr* res);
 

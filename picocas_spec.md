@@ -5446,3 +5446,50 @@ New shared helpers in `numeric.c`:
 
 A new `assert_eval_startswith` helper in `tests/test_utils.h` tolerates
 last-bit rounding noise in long MPFR strings.
+
+## Inexact contagion in Plus / Times (2026-04-22)
+
+Mathematica's numeric contagion rule is now applied inside `Plus` and
+`Times`: when any summand (or factor) is inexact — an `EXPR_REAL`, an
+`EXPR_MPFR`, or a `Complex[...]` containing one — every remaining
+argument is run through `numericalize` before the usual folding. This
+converts exact numeric leaves (Pi, E, EulerGamma, Catalan, GoldenRatio,
+Degree, Rational, and expressions like `Sqrt[2]` or `Sin[1]` that
+numericalize cleanly) into their numeric values so the inexact
+coefficient can actually collapse against them.
+
+Behavior:
+
+```
+1. Pi        (* 3.14159 — previously 1. Pi *)
+1. + Pi      (* 4.14159 *)
+1. E         (* 2.71828 *)
+1. Sqrt[2]   (* 1.41421 *)
+1. Sin[1]    (* 0.841471 *)
+1. x Pi      (* 3.14159 x — symbolic x stays symbolic *)
+1. x         (* 1.0 x — no exact numeric to numericalize *)
+2 Pi         (* 2 Pi — no inexact arg, no contagion *)
+1 + Pi       (* 1 + Pi *)
+```
+
+Precision selection mirrors Mathematica: the *lowest* precision among
+inexact operands wins. `MachinePrecision` is the floor — any `EXPR_REAL`
+(a machine double) collapses the combination to machine precision even
+alongside MPFR values with more digits. Between two MPFR operands, the
+smaller precision wins rather than the larger, so `1.0\`50 + 1.0\`20`
+lands at 20 digits instead of preserving the 50-digit operand. So:
+
+```
+1.0`50 Pi             (* 3.14159… — pure MPFR, 50-digit *)
+Precision[%]          (* 50.272 *)
+1.0`50 Pi + 1.0`20    (* 4.14159… — 20 digits wins *)
+Precision[%]          (* 20.169 *)
+1.0`50 Pi + 1.        (* 4.14159 — machine wins *)
+Precision[%]          (* MachinePrecision *)
+1.0`50 + 1.           (* 2.0 — machine *)
+```
+
+New public helper `numeric_contagion_args` in `numeric.h` encapsulates
+the scan + rewrite so future numeric heads can opt in with one call.
+
+Regression coverage in `tests/test_numeric.c::test_inexact_contagion`.
