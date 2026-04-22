@@ -5493,3 +5493,23 @@ New public helper `numeric_contagion_args` in `numeric.h` encapsulates
 the scan + rewrite so future numeric heads can opt in with one call.
 
 Regression coverage in `tests/test_numeric.c::test_inexact_contagion`.
+
+## Bug fix: Inverse trig/tanh branch-cut sign for real x > 1 (2026-04-22)
+
+`ArcSin[x]`, `ArcCos[x]`, and `ArcTanh[x]` for inexact real `x > 1`
+returned the wrong sign on the imaginary part relative to Mathematica.
+Root cause: C99 `casin`, `cacos`, `catanh` for an input `x + 0i` land on
+the upper side of the `(1, infinity)` branch cut, while Mathematica uses
+the lower side. The `(-infinity, -1)` cut already agrees between the two
+conventions (verified numerically on macOS libc), so the fix is scoped
+to `creal(c) > 1.0 && cimag(c) == 0.0`, where we negate `cimag(s)` after
+calling the C function. ArcSin/ArcCos live in `src/trig.c`; ArcTanh in
+`src/hyperbolic.c`. Complex-argument and `|x| < 1` cases are untouched.
+
+Before → After for `x = 3.0`:
+
+```
+ArcSin[3.]  : 1.5708 + 1.76275 I  ->  1.5708 - 1.76275 I
+ArcCos[3.]  : 0 - 1.76275 I       ->  0 + 1.76275 I
+ArcTanh[3.] : 0.346574 + Pi/2 I   ->  0.346574 - Pi/2 I
+```

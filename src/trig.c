@@ -929,7 +929,12 @@ Expr* builtin_arcsin(Expr* res) {
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casin(c);
         if (cimag(c) == 0.0 && creal(c) >= -1.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
-        return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+        double im = cimag(s);
+        /* On the (1,inf) branch cut, C99 casin(x+0i) lands on the upper side
+         * while Mathematica uses the lower side; flip imag for real x>1.
+         * The (-inf,-1) cut already agrees between the two conventions. */
+        if (cimag(c) == 0.0 && creal(c) > 1.0) im = -im;
+        return make_complex(expr_new_real(creal(s)), expr_new_real(im));
     }
     return NULL;
 }
@@ -960,7 +965,11 @@ Expr* builtin_arccos(Expr* res) {
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacos(c);
         if (cimag(c) == 0.0 && creal(c) >= -1.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
-        return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+        double im = cimag(s);
+        /* C99 cacos(x+0i) for x>1 returns -i*acosh(x); Mathematica returns
+         * +i*acosh(x). The x<-1 cut already agrees. */
+        if (cimag(c) == 0.0 && creal(c) > 1.0) im = -im;
+        return make_complex(expr_new_real(creal(s)), expr_new_real(im));
     }
     return NULL;
 }

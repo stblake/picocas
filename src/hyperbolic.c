@@ -459,7 +459,11 @@ Expr* builtin_arctanh(Expr* res) {
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = catanh(c);
         if (cimag(c) == 0.0 && creal(c) > -1.0 && creal(c) < 1.0) return expr_new_real(creal(s));
-        return make_complex(expr_new_real(creal(s)), expr_new_real(cimag(s)));
+        double im = cimag(s);
+        /* C99 catanh(x+0i) for x>1 lands on the +iPi/2 side of the branch cut;
+         * Mathematica uses -iPi/2. The x<-1 cut already agrees. */
+        if (cimag(c) == 0.0 && creal(c) > 1.0) im = -im;
+        return make_complex(expr_new_real(creal(s)), expr_new_real(im));
     }
     return NULL;
 }
