@@ -9,6 +9,33 @@
 #include "arithmetic.h"
 #include "complex.h"
 #include "times.h"
+#include "numeric.h"
+
+#ifdef USE_MPFR
+/* Reciprocal-input helpers for ArcCoth, ArcSech, ArcCsch. Each computes
+ * f(1/x) in MPFR. */
+static int mpfr_atanh_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_atanh(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+static int mpfr_acosh_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_acosh(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+static int mpfr_asinh_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_asinh(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+#endif
 
 void hyperbolic_init(void) {
     symtab_add_builtin("Sinh", builtin_sinh);
@@ -196,6 +223,12 @@ Expr* builtin_sinh(Expr* res) {
         return expr_new_function(expr_new_symbol("Times"), args, 2);
     }
 
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_sinh);
+        if (r) return r;
+    }
+#endif
     double complex c;
     bool inexact = false;
     if (get_approx(arg, &c, &inexact) && inexact) {
@@ -223,6 +256,12 @@ Expr* builtin_cosh(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_cosh);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ccosh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -249,6 +288,12 @@ Expr* builtin_tanh(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_tanh);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ctanh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -275,6 +320,12 @@ Expr* builtin_coth(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_coth);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / ctanh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -300,6 +351,12 @@ Expr* builtin_sech(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_sech);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / ccosh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -325,6 +382,12 @@ Expr* builtin_csch(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_csch);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = 1.0 / csinh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -342,6 +405,12 @@ Expr* builtin_arcsinh(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_asinh);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casinh(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -359,6 +428,12 @@ Expr* builtin_arccosh(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_acosh);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacosh(c);
         if (cimag(c) == 0.0 && creal(c) >= 1.0) return expr_new_real(creal(s));
@@ -375,6 +450,12 @@ Expr* builtin_arctanh(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_atanh);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = catanh(c);
         if (cimag(c) == 0.0 && creal(c) > -1.0 && creal(c) < 1.0) return expr_new_real(creal(s));
@@ -391,6 +472,12 @@ Expr* builtin_arccoth(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_atanh_recip_op);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = catanh(1.0 / c);
         if (cimag(c) == 0.0 && (creal(c) > 1.0 || creal(c) < -1.0)) return expr_new_real(creal(s));
@@ -407,6 +494,12 @@ Expr* builtin_arcsech(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_acosh_recip_op);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = cacosh(1.0 / c);
         if (cimag(c) == 0.0 && creal(c) > 0.0 && creal(c) <= 1.0) return expr_new_real(creal(s));
@@ -423,6 +516,12 @@ Expr* builtin_arccsch(Expr* res) {
 
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_asinh_recip_op);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = casinh(1.0 / c);
         if (cimag(c) == 0.0 && creal(c) != 0.0) return expr_new_real(creal(s));

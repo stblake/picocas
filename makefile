@@ -1,4 +1,5 @@
 USE_ECM ?= 1
+USE_MPFR ?= 1
 
 CC = gcc
 CFLAGS = -O3 -std=c99 -Wall -Wextra -g -I./src -I/usr/local/include
@@ -11,6 +12,16 @@ ECM_TARGET = src/external/ecm/.libs/libecm.a
 else
 CFLAGS += -DNO_ECM
 ECM_TARGET =
+endif
+
+# Arbitrary-precision reals (MPFR) — enables N[expr, prec], Precision/
+# Accuracy/SetPrecision/SetAccuracy, and `3.98`50` precision literals.
+# Disable with `USE_MPFR=0` to build without the MPFR dependency; the
+# machine-precision path continues to work with a runtime warning on the
+# unsupported operations.
+ifeq ($(USE_MPFR), 1)
+CFLAGS  += -DUSE_MPFR
+LDFLAGS += -lmpfr
 endif
 
 ifneq ($(wildcard /opt/homebrew/include),)

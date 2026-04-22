@@ -84,10 +84,117 @@ static Expr* parse_symbol(ParserState* s) {
     return out;
 }
 
-// Parses numbers (integers, reals, scientific notation)
+/* Parse an optional Mathematica-style precision / accuracy suffix
+ * appended to a numeric literal. Returns the kind of suffix found:
+ *    0 = no suffix             (leave `value` as-is)
+ *    1 = single backtick       (`n or bare `)
+ *    2 = double backtick       (``n)
+ * and, when a numeric precision follows, stores its value in *out_digits.
+ * *has_digits is set to true if a digit value was consumed.
+ *
+ * Disambiguation from the context-separator use of backtick:
+ * a precision suffix is only recognized when the character after the
+ * backtick(s) is a digit, `.`, `+`, or `-`, or (for a single bare-`
+ * with no digit) a non-identifier character. A backtick immediately
+ * followed by a letter / underscore / `$` is treated as a context
+ * separator and left for the identifier parser to handle — we do NOT
+ * consume it here. */
+static int parse_precision_suffix(ParserState* s, double* out_digits, bool* has_digits) {
+    *has_digits = false;
+    if (*s->pos != '`') return 0;
+
+    /* Peek: is this a precision suffix or a context separator? */
+    const char* look = s->pos + 1;
+    int bt_count = 1;
+    if (*look == '`') { bt_count = 2; look++; }
+
+    /* A context-separator backtick would be followed by an identifier
+     * character. Precision markers are followed by a digit/./+/-, or (for
+     * the bare single-backtick form) end-of-number. */
+    bool looks_like_number = (isdigit((unsigned char)*look) || *look == '.'
+                              || *look == '+' || *look == '-');
+    bool looks_like_context = (isalpha((unsigned char)*look) || *look == '_'
+                               || *look == '$');
+
+    if (looks_like_context) return 0;  /* leave for identifier parser */
+
+    if (bt_count == 2 && !looks_like_number) {
+        /* Double backtick MUST be followed by an accuracy value. */
+        return 0;
+    }
+
+    /* Consume the backtick(s). */
+    s->pos += bt_count;
+
+    if (looks_like_number) {
+        char* end;
+        double v = strtod(s->pos, &end);
+        if (end != s->pos) {
+            s->pos = end;
+            *out_digits = v;
+            *has_digits = true;
+        }
+    }
+    return bt_count;
+}
+
+/* Build an MPFR Expr from a mantissa string `mantissa_str` at the
+ * requested `digits` of Mathematica-style precision. `accuracy_mode`
+ * means `digits` is accuracy instead of precision — bits must be
+ * derived from both the requested accuracy and the value's magnitude.
+ *
+ * In a USE_MPFR=0 build this function emits a one-shot warning and
+ * returns an EXPR_REAL constructed via strtod. */
+static Expr* build_precision_literal(const char* mantissa_str, double digits,
+                                     bool accuracy_mode) {
+#ifdef USE_MPFR
+    /* Convert digits → bits. For precision mode, bits = ceil(d * log2(10)).
+     * For accuracy mode the precision needed is approximately
+     *     bits ≈ ceil((d + log10|value|) * log2(10))
+     * We first parse the value at a generous precision to measure its
+     * magnitude, then re-round at the final precision. */
+    long bits_prec;
+    if (accuracy_mode) {
+        /* Parse once to find magnitude. */
+        mpfr_t tmp; mpfr_init2(tmp, 128);
+        mpfr_set_str(tmp, mantissa_str, 10, MPFR_RNDN);
+        double log10_abs = 0.0;
+        if (!mpfr_zero_p(tmp)) {
+            mpfr_t abs_t; mpfr_init2(abs_t, 128);
+            mpfr_abs(abs_t, tmp, MPFR_RNDN);
+            log10_abs = floor(log10(mpfr_get_d(abs_t, MPFR_RNDN)));
+            mpfr_clear(abs_t);
+        }
+        double total_digits = digits + log10_abs + 1.0;
+        if (total_digits < 1.0) total_digits = 1.0;
+        bits_prec = (long)ceil(total_digits * 3.3219280948873626);
+        mpfr_clear(tmp);
+    } else {
+        if (digits < 1.0) digits = 1.0;
+        bits_prec = (long)ceil(digits * 3.3219280948873626);
+    }
+    if (bits_prec < 2) bits_prec = 2;
+    return expr_new_mpfr_from_str(mantissa_str, (mpfr_prec_t)bits_prec);
+#else
+    (void)accuracy_mode; (void)digits;
+    static bool warned = false;
+    if (!warned) {
+        fprintf(stderr,
+                "parser: precision literal ignored (USE_MPFR=0); using "
+                "machine precision.\n");
+        warned = true;
+    }
+    char* end;
+    double dval = strtod(mantissa_str, &end);
+    return expr_new_real(dval);
+#endif
+}
+
+// Parses numbers (integers, reals, scientific notation), plus optional
+// Mathematica-style precision/accuracy suffix (`n, ``n).
 static Expr* parse_number(ParserState* s) {
     char* end;
-    
+
     // Check if it's potentially a real number
     int is_real = 0;
     const char* p = s->pos;
@@ -97,11 +204,17 @@ static Expr* parse_number(ParserState* s) {
         is_real = 1;
     }
 
+    /* Snapshot the mantissa text — used if a precision suffix follows,
+     * so we can feed an exact string to MPFR rather than losing bits via
+     * a double round-trip. */
+    const char* mantissa_start = s->pos;
+    Expr* result;
+
     if (is_real) {
         double dval = strtod(s->pos, &end);
         if (end == s->pos) return NULL;
         s->pos = end;
-        return expr_new_real(dval);
+        result = expr_new_real(dval);
     } else {
         const char* start = s->pos;
         int negative = 0;
@@ -136,7 +249,6 @@ static Expr* parse_number(ParserState* s) {
 
         s->pos = current;
 
-        Expr* result;
         if (digit_len > 19) {
             // More digits than INT64_MAX (19 digits) — skip strtoll, go straight to bigint
             result = expr_new_bigint_from_str(num_str);
@@ -147,8 +259,65 @@ static Expr* parse_number(ParserState* s) {
             result = (errno == ERANGE) ? expr_new_bigint_from_str(num_str) : expr_new_integer((int64_t)llval);
         }
         if (heap_buf) free(heap_buf);
-        return result;
     }
+
+    /* Optional precision / accuracy suffix. `3.14`50` → 50-digit MPFR,
+     * `3.14``49` → 49-digit accuracy, `3`30` → integer 3 at 30 digits. */
+    {
+        double suffix_digits = 0.0;
+        bool has_digits = false;
+        int kind = parse_precision_suffix(s, &suffix_digits, &has_digits);
+        if (kind != 0) {
+            const char* mantissa_end = mantissa_start;
+            /* Walk forward to end of the mantissa text we already consumed.
+             * We recognize: optional sign, digits, optional '.', digits,
+             * optional exponent. This mirrors the pre-suffix scan above. */
+            if (*mantissa_end == '+' || *mantissa_end == '-') mantissa_end++;
+            while (isdigit((unsigned char)*mantissa_end)) mantissa_end++;
+            if (*mantissa_end == '.') {
+                mantissa_end++;
+                while (isdigit((unsigned char)*mantissa_end)) mantissa_end++;
+            }
+            if (*mantissa_end == 'e' || *mantissa_end == 'E') {
+                mantissa_end++;
+                if (*mantissa_end == '+' || *mantissa_end == '-') mantissa_end++;
+                while (isdigit((unsigned char)*mantissa_end)) mantissa_end++;
+            }
+            size_t mlen = (size_t)(mantissa_end - mantissa_start);
+            char mbuf[128];
+            char* mheap = NULL;
+            char* mstr = mbuf;
+            if (mlen + 1 > sizeof(mbuf)) {
+                mheap = malloc(mlen + 1);
+                mstr = mheap;
+            }
+            memcpy(mstr, mantissa_start, mlen);
+            mstr[mlen] = '\0';
+
+            /* Default precision when no number follows a single backtick:
+             * treat as MachinePrecision (leave the existing real/integer
+             * untouched — this is the `3.14` form). */
+            Expr* replacement = NULL;
+            if (kind == 1 && !has_digits) {
+                /* Bare `: force machine precision. If we parsed an integer,
+                 * promote to EXPR_REAL so the printer shows a dot. */
+                if (result && result->type != EXPR_REAL) {
+                    double dval = strtod(mstr, &end);
+                    replacement = expr_new_real(dval);
+                }
+            } else if (has_digits) {
+                replacement = build_precision_literal(mstr, suffix_digits,
+                                                     /*accuracy_mode=*/(kind == 2));
+            }
+            if (mheap) free(mheap);
+            if (replacement) {
+                expr_free(result);
+                result = replacement;
+            }
+        }
+    }
+
+    return result;
 }
 
 // Parses quoted strings ("text")

@@ -1,0 +1,613 @@
+/* PicoCAS — numeric evaluation implementation.
+ *
+ * See numeric.h for the module-level overview and extensibility notes.
+ *
+ * This file implements `N[expr]` / `N[expr, prec]`. Phase 1 targets
+ * machine-precision IEEE doubles; Phase 2 (gated behind USE_MPFR) adds
+ * MPFR arbitrary precision. Phase-2 extension points are marked with
+ * an inline "Phase 2" marker so the eventual additions are obvious.
+ */
+
+#include "numeric.h"
+
+#include "arithmetic.h"
+#include "attr.h"
+#include "eval.h"
+#include "symtab.h"
+
+#include <limits.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+/* ------------------------------------------------------------------------
+ *  Precision unit conversion
+ *
+ *  Mathematica talks about decimal digits of precision; MPFR talks about
+ *  binary bits. The ratio is log2(10) ≈ 3.3219280948873626. We round up on
+ *  conversion so the stored value always carries at least the requested
+ *  information content.
+ * ---------------------------------------------------------------------- */
+
+static const double LOG2_10 = 3.3219280948873626;
+
+long numeric_digits_to_bits(double digits) {
+    if (digits <= 0.0) return 1;
+    return (long)ceil(digits * LOG2_10);
+}
+
+double numeric_bits_to_digits(long bits) {
+    if (bits <= 0) return 0.0;
+    return (double)bits / LOG2_10;
+}
+
+/* ------------------------------------------------------------------------
+ *  Constants registry
+ *
+ *  To add a new named constant: append a row to `kConstants` below. The
+ *  machine value is the double you want `N[Name]` to produce. The optional
+ *  `mpfr_fill` callback (Phase 2) writes the constant at arbitrary
+ *  precision; leave NULL if no MPFR implementation exists yet.
+ *
+ *  Passing through unevaluated symbols (Infinity, True, etc.) is handled
+ *  by the default path in `numericalize` — they are simply not listed here.
+ * ---------------------------------------------------------------------- */
+
+#ifdef USE_MPFR
+#include <mpfr.h>
+typedef void (*NumericMpfrFill)(mpfr_t out, mpfr_prec_t bits);
+#else
+typedef void (*NumericMpfrFill)(void);  /* placeholder for ABI stability */
+#endif
+
+typedef struct {
+    const char*      name;
+    double           machine_value;
+    NumericMpfrFill  mpfr_fill;     /* NULL if not implemented */
+} NumericConstant;
+
+/* Forward declarations for future MPFR fillers. Not implemented in Phase 1. */
+/* Phase 2 */
+#ifdef USE_MPFR
+static void fill_mpfr_pi(mpfr_t out, mpfr_prec_t bits);
+static void fill_mpfr_e (mpfr_t out, mpfr_prec_t bits);
+static void fill_mpfr_eulergamma(mpfr_t out, mpfr_prec_t bits);
+static void fill_mpfr_catalan(mpfr_t out, mpfr_prec_t bits);
+static void fill_mpfr_goldenratio(mpfr_t out, mpfr_prec_t bits);
+static void fill_mpfr_degree(mpfr_t out, mpfr_prec_t bits);
+#define MPFR_FILL(fn) fn
+#else
+#define MPFR_FILL(fn) NULL
+#endif
+
+static const NumericConstant kConstants[] = {
+    { "Pi",          M_PI,                                       MPFR_FILL(fill_mpfr_pi)          },
+    { "E",           M_E,                                        MPFR_FILL(fill_mpfr_e)           },
+    { "EulerGamma",  0.5772156649015328606065120900824024310421, MPFR_FILL(fill_mpfr_eulergamma)  },
+    { "Catalan",     0.9159655941772190150546035149323841107741, MPFR_FILL(fill_mpfr_catalan)     },
+    { "GoldenRatio", 1.6180339887498948482045868343656381177203, MPFR_FILL(fill_mpfr_goldenratio) },
+    { "Degree",      M_PI / 180.0,                               MPFR_FILL(fill_mpfr_degree)      },
+};
+static const size_t kConstantCount = sizeof(kConstants) / sizeof(kConstants[0]);
+
+static const NumericConstant* find_constant(const char* name) {
+    if (!name) return NULL;
+    for (size_t i = 0; i < kConstantCount; ++i) {
+        if (strcmp(kConstants[i].name, name) == 0) return &kConstants[i];
+    }
+    return NULL;
+}
+
+bool numeric_constant_machine_value(const char* name, double* out) {
+    const NumericConstant* c = find_constant(name);
+    if (!c) return false;
+    if (out) *out = c->machine_value;
+    return true;
+}
+
+#ifdef USE_MPFR
+/* ------------------------------------------------------------------------
+ *  MPFR propagation helpers used by Plus/Times/Power/trig/hyperbolic/log.
+ *
+ *  These keep each builtin's per-function code focused on the math; the
+ *  precision arithmetic and type juggling is centralized here.
+ * ---------------------------------------------------------------------- */
+
+/* Max precision of the MPFR values contained in `e`, or 0 if `e` carries
+ * none. Descends through Complex[...] so that e.g. Complex[3.14`50, 0]
+ * contributes 50 digits. */
+static long expr_max_mpfr_prec(const Expr* e) {
+    if (!e) return 0;
+    if (e->type == EXPR_MPFR) return (long)mpfr_get_prec(e->data.mpfr);
+    if (e->type == EXPR_FUNCTION) {
+        Expr *re, *im;
+        if (is_complex((Expr*)e, &re, &im)) {
+            long a = expr_max_mpfr_prec(re);
+            long b = expr_max_mpfr_prec(im);
+            return a > b ? a : b;
+        }
+    }
+    return 0;
+}
+
+long numeric_combined_bits(const Expr* a, const Expr* b, long default_bits) {
+    long pa = expr_max_mpfr_prec(a);
+    long pb = expr_max_mpfr_prec(b);
+    long m  = pa > pb ? pa : pb;
+    if (m <= 0) m = default_bits;
+    if (m <= 0) m = 53;  /* safety floor: IEEE double precision */
+    return m;
+}
+
+bool numeric_any_mpfr(const Expr* a, const Expr* b) {
+    return expr_max_mpfr_prec(a) > 0 || expr_max_mpfr_prec(b) > 0;
+}
+
+typedef int (*MpfrBinaryOp)(mpfr_t, const mpfr_t, const mpfr_t, mpfr_rnd_t);
+
+/* Generic MPFR binary dispatcher. Handles the common shape: extract real
+ * MPFR operands from `a` and `b`, apply `op`, return a fresh EXPR_MPFR.
+ * Returns NULL if either operand isn't a pure real (Complex → caller
+ * handles separately). */
+static Expr* mpfr_binop(const Expr* a, const Expr* b, long default_bits,
+                        MpfrBinaryOp op) {
+    long bits = numeric_combined_bits(a, b, default_bits);
+    mpfr_t ra, ia, rb, ib, out;
+    mpfr_init2(ra, bits);  mpfr_init2(ia, bits);
+    mpfr_init2(rb, bits);  mpfr_init2(ib, bits);
+    bool ok_a = get_approx_mpfr(a, ra, ia, NULL);
+    bool ok_b = get_approx_mpfr(b, rb, ib, NULL);
+    if (!ok_a || !ok_b || !mpfr_zero_p(ia) || !mpfr_zero_p(ib)) {
+        mpfr_clear(ra); mpfr_clear(ia);
+        mpfr_clear(rb); mpfr_clear(ib);
+        return NULL;
+    }
+    mpfr_init2(out, bits);
+    op(out, ra, rb, MPFR_RNDN);
+    mpfr_clear(ra); mpfr_clear(ia);
+    mpfr_clear(rb); mpfr_clear(ib);
+    return expr_new_mpfr_move(out);
+}
+
+Expr* numeric_mpfr_add(const Expr* a, const Expr* b, long default_bits) {
+    return mpfr_binop(a, b, default_bits, mpfr_add);
+}
+Expr* numeric_mpfr_sub(const Expr* a, const Expr* b, long default_bits) {
+    return mpfr_binop(a, b, default_bits, mpfr_sub);
+}
+Expr* numeric_mpfr_mul(const Expr* a, const Expr* b, long default_bits) {
+    return mpfr_binop(a, b, default_bits, mpfr_mul);
+}
+Expr* numeric_mpfr_div(const Expr* a, const Expr* b, long default_bits) {
+    return mpfr_binop(a, b, default_bits, mpfr_div);
+}
+Expr* numeric_mpfr_pow(const Expr* a, const Expr* b, long default_bits) {
+    return mpfr_binop(a, b, default_bits, mpfr_pow);
+}
+
+bool numeric_expr_is_mpfr(const Expr* e) {
+    return expr_max_mpfr_prec(e) > 0;
+}
+
+Expr* numeric_mpfr_apply_unary(const Expr* e, long default_bits, MpfrUnaryOp op) {
+    long bits = numeric_combined_bits(e, NULL, default_bits);
+    mpfr_t r, i, out;
+    mpfr_init2(r, bits);
+    mpfr_init2(i, bits);
+    bool ok = get_approx_mpfr(e, r, i, NULL);
+    if (!ok || !mpfr_zero_p(i)) {
+        mpfr_clear(r); mpfr_clear(i);
+        return NULL;
+    }
+    mpfr_init2(out, bits);
+    op(out, r, MPFR_RNDN);
+    mpfr_clear(r); mpfr_clear(i);
+    return expr_new_mpfr_move(out);
+}
+
+bool numeric_constant_mpfr_value(const char* name, mpfr_t out, long bits) {
+    const NumericConstant* c = find_constant(name);
+    if (!c || !c->mpfr_fill) return false;
+    c->mpfr_fill(out, bits);
+    return true;
+}
+
+/* ------------------------------------------------------------------------
+ *  get_approx_mpfr — shared helper for MPFR-aware per-function builtins.
+ *
+ *  Models the existing `get_approx` pattern (see e.g. trig.c:158) but
+ *  fills MPFR reals instead of a double complex. Precision is inherited
+ *  from the caller's already-initialized `re` / `im`.
+ * ---------------------------------------------------------------------- */
+bool get_approx_mpfr(const Expr* e, mpfr_t re, mpfr_t im, bool* is_inexact) {
+    if (!e) return false;
+    bool inexact_local = false;
+    if (!is_inexact) is_inexact = &inexact_local;
+
+    switch (e->type) {
+        case EXPR_INTEGER:
+            mpfr_set_si(re, (long)e->data.integer, MPFR_RNDN);
+            mpfr_set_zero(im, +1);
+            return true;
+        case EXPR_BIGINT:
+            mpfr_set_z(re, e->data.bigint, MPFR_RNDN);
+            mpfr_set_zero(im, +1);
+            return true;
+        case EXPR_REAL:
+            mpfr_set_d(re, e->data.real, MPFR_RNDN);
+            mpfr_set_zero(im, +1);
+            *is_inexact = true;
+            return true;
+        case EXPR_MPFR:
+            mpfr_set(re, e->data.mpfr, MPFR_RNDN);
+            mpfr_set_zero(im, +1);
+            *is_inexact = true;
+            return true;
+        case EXPR_FUNCTION: {
+            int64_t n, d;
+            if (is_rational((Expr*)e, &n, &d)) {
+                mpfr_set_si(re, (long)n, MPFR_RNDN);
+                mpfr_div_si(re, re, (long)d, MPFR_RNDN);
+                mpfr_set_zero(im, +1);
+                return true;
+            }
+            Expr *rpart, *ipart;
+            if (is_complex((Expr*)e, &rpart, &ipart)) {
+                /* Allocate scratch MPFRs at the requested precision. */
+                mpfr_prec_t p = mpfr_get_prec(re);
+                mpfr_t scratch_r, scratch_i;
+                mpfr_init2(scratch_r, p);
+                mpfr_init2(scratch_i, p);
+                bool ok_r = get_approx_mpfr(rpart, re, scratch_i, is_inexact);
+                if (!ok_r || mpfr_zero_p(scratch_i) == 0) {
+                    /* A nested Complex in the real component is rare; we
+                     * don't try to simplify it here and return failure
+                     * rather than producing a wrong answer. */
+                    mpfr_clear(scratch_r);
+                    mpfr_clear(scratch_i);
+                    return false;
+                }
+                bool ok_i = get_approx_mpfr(ipart, im, scratch_r, is_inexact);
+                mpfr_clear(scratch_r);
+                mpfr_clear(scratch_i);
+                return ok_i;
+            }
+            return false;
+        }
+        default:
+            return false;
+    }
+}
+#endif
+
+/* ------------------------------------------------------------------------
+ *  Hold-form detection
+ *
+ *  N preserves Hold / HoldForm / Unevaluated wrappers — their job is to
+ *  block evaluation, and that applies to N just as it does to ordinary
+ *  rewriting.
+ * ---------------------------------------------------------------------- */
+static bool is_hold_head(const Expr* head) {
+    if (!head || head->type != EXPR_SYMBOL) return false;
+    const char* s = head->data.symbol;
+    return strcmp(s, "HoldForm")    == 0
+        || strcmp(s, "Hold")        == 0
+        || strcmp(s, "HoldComplete") == 0
+        || strcmp(s, "HoldPattern") == 0
+        || strcmp(s, "Unevaluated") == 0;
+}
+
+/* ------------------------------------------------------------------------
+ *  Leaf conversion
+ *
+ *  Turn a concrete numeric leaf into a `NumericMode`-appropriate value.
+ *  Phase 1 always returns EXPR_REAL. Phase 2 will produce EXPR_MPFR when
+ *  spec.mode == NUMERIC_MODE_MPFR.
+ * ---------------------------------------------------------------------- */
+
+static Expr* leaf_from_double(double v, NumericSpec spec) {
+#ifdef USE_MPFR
+    if (spec.mode == NUMERIC_MODE_MPFR) {
+        return expr_new_mpfr_from_d(v, spec.bits);
+    }
+#else
+    (void)spec;
+#endif
+    return expr_new_real(v);
+}
+
+static Expr* leaf_from_integer(int64_t v, NumericSpec spec) {
+#ifdef USE_MPFR
+    if (spec.mode == NUMERIC_MODE_MPFR) {
+        /* long may be 32 bits on some platforms; use a path that carries
+         * the full int64 range through the mpz_t bridge. */
+        if (v >= (int64_t)LONG_MIN && v <= (int64_t)LONG_MAX) {
+            return expr_new_mpfr_from_si((long)v, spec.bits);
+        }
+        mpz_t tmp;
+        mpz_init_set_si(tmp, (long)(v >> 32));
+        mpz_mul_2exp(tmp, tmp, 32);
+        mpz_add_ui(tmp, tmp, (unsigned long)(v & 0xFFFFFFFFu));
+        Expr* e = expr_new_mpfr_from_mpz(tmp, spec.bits);
+        mpz_clear(tmp);
+        return e;
+    }
+#endif
+    return leaf_from_double((double)v, spec);
+}
+
+static Expr* leaf_from_bigint(const mpz_t v, NumericSpec spec) {
+#ifdef USE_MPFR
+    if (spec.mode == NUMERIC_MODE_MPFR) {
+        return expr_new_mpfr_from_mpz(v, spec.bits);
+    }
+#endif
+    return leaf_from_double(mpz_get_d(v), spec);
+}
+
+/* ------------------------------------------------------------------------
+ *  Symbol numericalization
+ *
+ *  A recognized constant → its numeric value.
+ *  Anything else (Infinity, True, user symbols) → a fresh copy.
+ * ---------------------------------------------------------------------- */
+static Expr* numericalize_symbol(const Expr* e, NumericSpec spec) {
+    const NumericConstant* c = find_constant(e->data.symbol);
+    if (c) {
+#ifdef USE_MPFR
+        if (spec.mode == NUMERIC_MODE_MPFR && c->mpfr_fill) {
+            mpfr_t tmp;
+            mpfr_init2(tmp, spec.bits);
+            c->mpfr_fill(tmp, spec.bits);
+            return expr_new_mpfr_move(tmp);
+        }
+#endif
+        return leaf_from_double(c->machine_value, spec);
+    }
+    return expr_copy((Expr*)e);
+}
+
+/* ------------------------------------------------------------------------
+ *  Function numericalization
+ *
+ *  - Rational[n, d] and Complex[re, im] are handled directly for speed and
+ *    to keep Complex[N[a], N[b]] structurally intact.
+ *  - Hold-like heads pass through unchanged.
+ *  - Everything else: numericalize each argument, rebuild, re-evaluate.
+ *
+ *  The re-evaluation step is critical — it is how Sin[1.0] actually
+ *  invokes `csin`, how Plus[2.0, 3.0] collapses to 5.0, and how any future
+ *  MPFR/GSL-aware per-function code gets reached.
+ * ---------------------------------------------------------------------- */
+/* Forward declaration — the non-static definition follows below, since
+ * `numericalize` is part of the public module API (declared in numeric.h). */
+
+static Expr* numericalize_function(const Expr* e, NumericSpec spec) {
+    /* Rational[n, d] → direct numeric quotient. Compute at full target
+     * precision; a plain (double)n/d loses bits beyond 1e-15 and would
+     * destroy the request for e.g. N[1/3, 40]. */
+    int64_t rn, rd;
+    if (is_rational((Expr*)e, &rn, &rd)) {
+#ifdef USE_MPFR
+        if (spec.mode == NUMERIC_MODE_MPFR) {
+            Expr* r = expr_new_mpfr_from_si((long)rn, spec.bits);
+            if (r) mpfr_div_si(r->data.mpfr, r->data.mpfr, (long)rd, MPFR_RNDN);
+            return r;
+        }
+#endif
+        return leaf_from_double((double)rn / (double)rd, spec);
+    }
+
+    /* Complex[re, im] → numericalize components, rebuild via make_complex,
+     * which normalizes (im == 0 → return the real component). */
+    Expr *re, *im;
+    if (is_complex((Expr*)e, &re, &im)) {
+        Expr* nre = numericalize(re, spec);
+        Expr* nim = numericalize(im, spec);
+        return make_complex(nre, nim);
+    }
+
+    /* Hold-forms: return a plain deep copy. */
+    if (is_hold_head(e->data.function.head)) {
+        return expr_copy((Expr*)e);
+    }
+
+    /* General function f[a, b, ...] — rebuild with numericalized args, then
+     * feed the result to the evaluator to trigger any numeric fast paths in
+     * the per-function builtins (e.g. trig.c's csin, power.c's cpow). */
+    const size_t n = e->data.function.arg_count;
+    Expr* new_head = numericalize(e->data.function.head, spec);
+
+    Expr** new_args = (Expr**)malloc(n * sizeof(Expr*));
+    if (!new_args) {
+        /* Out-of-memory: return an uncomputed copy rather than crash. */
+        expr_free(new_head);
+        return expr_copy((Expr*)e);
+    }
+    for (size_t i = 0; i < n; ++i) {
+        new_args[i] = numericalize(e->data.function.args[i], spec);
+    }
+    Expr* rebuilt = expr_new_function(new_head, new_args, n);
+    free(new_args);  /* expr_new_function copies the pointer list. */
+
+    /* eval_and_free consumes `rebuilt` and returns a fresh evaluated Expr. */
+    return eval_and_free(rebuilt);
+}
+
+/* ------------------------------------------------------------------------
+ *  Top-level dispatch
+ * ---------------------------------------------------------------------- */
+Expr* numericalize(const Expr* e, NumericSpec spec) {
+    if (!e) return NULL;
+    switch (e->type) {
+        case EXPR_INTEGER: return leaf_from_integer(e->data.integer, spec);
+        case EXPR_BIGINT:  return leaf_from_bigint(e->data.bigint, spec);
+        case EXPR_REAL:
+#ifdef USE_MPFR
+            if (spec.mode == NUMERIC_MODE_MPFR) {
+                /* Promote double to MPFR at the requested precision.
+                 * The value is exact to 53 bits; bits beyond are zero.
+                 * This matches Mathematica's "pad zero" promotion. */
+                return expr_new_mpfr_from_d(e->data.real, spec.bits);
+            }
+#endif
+            return expr_new_real(e->data.real);
+        case EXPR_STRING:  return expr_copy((Expr*)e);
+        case EXPR_SYMBOL:  return numericalize_symbol(e, spec);
+        case EXPR_FUNCTION: return numericalize_function(e, spec);
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+            if (spec.mode == NUMERIC_MODE_MACHINE) {
+                /* Down-convert to machine precision. */
+                return expr_new_real(mpfr_get_d(e->data.mpfr, MPFR_RNDN));
+            }
+            /* MPFR → MPFR: if precision differs, re-round; otherwise copy. */
+            if ((long)mpfr_get_prec(e->data.mpfr) == spec.bits) {
+                return expr_new_mpfr_copy(e->data.mpfr);
+            }
+            {
+                Expr* r = expr_new_mpfr_bits(spec.bits);
+                if (r) mpfr_set(r->data.mpfr, e->data.mpfr, MPFR_RNDN);
+                return r;
+            }
+#endif
+    }
+    return expr_copy((Expr*)e);
+}
+
+/* ------------------------------------------------------------------------
+ *  Precision argument parsing
+ *
+ *  N[expr]                   → machine precision
+ *  N[expr, MachinePrecision] → machine precision
+ *  N[expr, n] with Integer n → MPFR at n decimal digits (Phase 2)
+ *
+ *  Returns true on success and fills *out_spec. If the precision value is
+ *  symbolic or non-numeric, returns false and the caller should keep the
+ *  expression unevaluated (builtin returns NULL).
+ * ---------------------------------------------------------------------- */
+static bool parse_precision_arg(const Expr* prec, NumericSpec* out_spec) {
+    /* MachinePrecision symbol → machine mode. */
+    if (prec->type == EXPR_SYMBOL
+        && strcmp(prec->data.symbol, "MachinePrecision") == 0) {
+        *out_spec = numeric_machine_spec();
+        return true;
+    }
+
+    /* Numeric prec → MPFR when available, otherwise warn + fall back. */
+    int64_t rn, rd;
+    double digits = 0.0;
+    if (prec->type == EXPR_INTEGER) {
+        digits = (double)prec->data.integer;
+    } else if (prec->type == EXPR_REAL) {
+        digits = prec->data.real;
+    } else if (is_rational((Expr*)prec, &rn, &rd)) {
+        digits = (double)rn / (double)rd;
+    } else {
+        return false;  /* symbolic / unknown — keep unevaluated */
+    }
+
+    if (digits <= 0.0) return false;
+
+#ifdef USE_MPFR
+    out_spec->mode = NUMERIC_MODE_MPFR;
+    out_spec->bits = numeric_digits_to_bits(digits);
+    return true;
+#else
+    /* Phase 1 fallback: emit a one-shot warning, then use machine. */
+    static bool warned = false;
+    if (!warned) {
+        fprintf(stderr,
+                "N::prec: arbitrary precision unavailable in this build "
+                "(USE_MPFR=0); using machine precision.\n");
+        warned = true;
+    }
+    *out_spec = numeric_machine_spec();
+    return true;
+#endif
+}
+
+/* ------------------------------------------------------------------------
+ *  Builtin: N
+ * ---------------------------------------------------------------------- */
+Expr* builtin_n(Expr* res) {
+    if (!res || res->type != EXPR_FUNCTION) return NULL;
+    const size_t argc = res->data.function.arg_count;
+    if (argc < 1 || argc > 2) return NULL;
+
+    NumericSpec spec = numeric_machine_spec();
+    if (argc == 2) {
+        if (!parse_precision_arg(res->data.function.args[1], &spec)) {
+            return NULL;  /* non-numeric precision → remain unevaluated */
+        }
+    }
+
+    /* Ownership: PicoCAS evaluator frees `res` after a non-NULL return
+     * (see eval.c around the builtin dispatch site), so we must NOT free
+     * it ourselves. Returning NULL means "keep `res` unevaluated" — the
+     * evaluator retains ownership in that path. */
+    return numericalize(res->data.function.args[0], spec);
+}
+
+/* ------------------------------------------------------------------------
+ *  Phase-2 MPFR fillers (stubs — implemented alongside the EXPR_MPFR work).
+ * ---------------------------------------------------------------------- */
+#ifdef USE_MPFR
+static void fill_mpfr_pi(mpfr_t out, mpfr_prec_t bits) {
+    mpfr_set_prec(out, bits);
+    mpfr_const_pi(out, MPFR_RNDN);
+}
+static void fill_mpfr_e(mpfr_t out, mpfr_prec_t bits) {
+    mpfr_set_prec(out, bits);
+    mpfr_t one; mpfr_init2(one, bits); mpfr_set_ui(one, 1, MPFR_RNDN);
+    mpfr_exp(out, one, MPFR_RNDN);
+    mpfr_clear(one);
+}
+static void fill_mpfr_eulergamma(mpfr_t out, mpfr_prec_t bits) {
+    mpfr_set_prec(out, bits);
+    mpfr_const_euler(out, MPFR_RNDN);
+}
+static void fill_mpfr_catalan(mpfr_t out, mpfr_prec_t bits) {
+    mpfr_set_prec(out, bits);
+    mpfr_const_catalan(out, MPFR_RNDN);
+}
+static void fill_mpfr_goldenratio(mpfr_t out, mpfr_prec_t bits) {
+    /* phi = (1 + sqrt(5)) / 2. Compute at bits + 20 guard then round. */
+    mpfr_prec_t guard = bits + 20;
+    mpfr_t tmp; mpfr_init2(tmp, guard);
+    mpfr_set_ui(tmp, 5, MPFR_RNDN);
+    mpfr_sqrt(tmp, tmp, MPFR_RNDN);
+    mpfr_add_ui(tmp, tmp, 1, MPFR_RNDN);
+    mpfr_div_ui(tmp, tmp, 2, MPFR_RNDN);
+    mpfr_set_prec(out, bits);
+    mpfr_set(out, tmp, MPFR_RNDN);
+    mpfr_clear(tmp);
+}
+static void fill_mpfr_degree(mpfr_t out, mpfr_prec_t bits) {
+    mpfr_prec_t guard = bits + 10;
+    mpfr_t pi; mpfr_init2(pi, guard);
+    mpfr_const_pi(pi, MPFR_RNDN);
+    mpfr_set_prec(out, bits);
+    mpfr_div_ui(out, pi, 180, MPFR_RNDN);
+    mpfr_clear(pi);
+}
+#endif /* USE_MPFR */
+
+/* ------------------------------------------------------------------------
+ *  Registration
+ * ---------------------------------------------------------------------- */
+void numeric_init(void) {
+    symtab_add_builtin("N", builtin_n);
+    symtab_get_def("N")->attributes |= ATTR_PROTECTED | ATTR_LISTABLE;
+    symtab_set_docstring("N",
+        "N[expr]\n"
+        "\tGives a machine-precision numerical approximation of expr.\n"
+        "N[expr, n]\n"
+        "\tGives a numerical approximation to n decimal digits. Requires\n"
+        "\ta USE_MPFR build; without it, a warning is emitted and machine\n"
+        "\tprecision is used.\n");
+
+    /* MachinePrecision is a reserved name — mark it protected so users
+     * can't accidentally overwrite it. */
+    symtab_get_def("MachinePrecision")->attributes |= ATTR_PROTECTED;
+}

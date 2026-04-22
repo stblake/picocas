@@ -3,6 +3,7 @@
 #include "arithmetic.h"
 #include "complex.h"
 #include "eval.h"
+#include "numeric.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -60,7 +61,7 @@ static void get_coeff_base(Expr* e, Expr** coeff, Expr** base, bool* allocated_b
         return;
     }
 
-    if (e->type == EXPR_INTEGER || e->type == EXPR_REAL || e->type == EXPR_BIGINT || is_rational(e, NULL, NULL) || is_complex(e, NULL, NULL)) {
+    if (expr_is_numeric_like(e) || is_complex(e, NULL, NULL)) {
         *coeff = expr_copy(e);
         *base = NULL;
         return;
@@ -69,7 +70,7 @@ static void get_coeff_base(Expr* e, Expr** coeff, Expr** base, bool* allocated_b
     if (e->type == EXPR_FUNCTION && strcmp(e->data.function.head->data.symbol, "Times") == 0) {
         if (e->data.function.arg_count >= 2) {
             Expr* first = e->data.function.args[0];
-            if (first->type == EXPR_INTEGER || first->type == EXPR_REAL || first->type == EXPR_BIGINT || is_rational(first, NULL, NULL) || is_complex(first, NULL, NULL)) {
+            if (expr_is_numeric_like(first) || is_complex(first, NULL, NULL)) {
                 *coeff = expr_copy(first);
                 if (e->data.function.arg_count == 2) {
                     *base = e->data.function.args[1];
@@ -93,6 +94,17 @@ static void get_coeff_base(Expr* e, Expr** coeff, Expr** base, bool* allocated_b
 
 static Expr* add_numbers(Expr* a, Expr* b) {
     if (is_overflow(a) || is_overflow(b)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+
+#ifdef USE_MPFR
+    /* MPFR path: if either operand carries arbitrary precision, fold
+     * through MPFR so precision is preserved (and, for Complex-of-MPFR,
+     * the Complex case below handles real/imag separately). */
+    if (numeric_any_mpfr(a, b) && !is_complex(a, NULL, NULL) && !is_complex(b, NULL, NULL)) {
+        Expr* r = numeric_mpfr_add(a, b, 0);
+        if (r) return r;
+        /* Fall through if the operand structure wasn't purely real. */
+    }
+#endif
 
     Expr *re1 = NULL, *im1 = NULL, *re2 = NULL, *im2 = NULL;
     bool a_comp = is_complex(a, &re1, &im1);

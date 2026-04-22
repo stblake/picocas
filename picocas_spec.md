@@ -5322,3 +5322,127 @@ write had happened.
 - Repeated reassignment smoke test (50 rounds).
 
 All 60 test binaries continue to pass.
+
+
+## Numeric evaluation: `N`, precision literals, `Precision`/`Accuracy`/`SetPrecision`/`SetAccuracy`
+
+PicoCAS now has a full numeric-evaluation pipeline covering both
+machine-precision (IEEE double) and arbitrary-precision (MPFR) reals.
+The work lives in `src/numeric.c`, `src/numeric.h`, `src/precision.c`,
+`src/precision.h`; MPFR support is gated behind the `USE_MPFR=1`
+makefile flag (default on), mirroring the existing `USE_ECM=1` pattern.
+
+### Builtins
+
+| Function                | Attributes                    | Description |
+|-------------------------|-------------------------------|-------------|
+| `N[expr]`               | `Protected, Listable`         | Machine-precision numerical approximation of `expr`. |
+| `N[expr, n]`            | `Protected, Listable`         | Approximation to `n` decimal digits (requires `USE_MPFR=1`). |
+| `MachinePrecision`      | `Protected`                   | Symbol representing IEEE-double precision (≈ 15.95 digits). |
+| `Precision[x]`          | `Protected, Listable`         | Returns `Infinity`, `MachinePrecision`, or decimal-digit precision of `x`. |
+| `Accuracy[x]`           | `Protected, Listable`         | Decimal digits of accuracy — `Precision[x] − Log10[Abs[x]]`. Zero / exact → `Infinity`. |
+| `SetPrecision[x, n]`    | `Protected, Listable`         | Walk `x` re-rounding inexact reals and promoting exact values to `n`-digit MPFR. |
+| `SetAccuracy[x, n]`     | `Protected, Listable`         | Like `SetPrecision` but interprets `n` as digits of accuracy. |
+
+### Numeric constants
+
+`N` recognizes and promotes the following symbols:
+`Pi`, `E`, `EulerGamma`, `Catalan`, `GoldenRatio`, `Degree`. Machine
+values use `<math.h>` macros where available; MPFR values use
+`mpfr_const_pi`, `mpfr_const_euler`, `mpfr_const_catalan`, and
+`mpfr_exp`/`mpfr_sqrt` for derived constants. To add a new constant,
+append a row to the `kConstants` table in `src/numeric.c`.
+
+### Precision literals
+
+A numeric literal may carry a trailing precision or accuracy suffix,
+matching Mathematica syntax:
+
+| Literal        | Meaning                                             |
+|----------------|-----------------------------------------------------|
+| `` 3.14 ``     | machine-precision double                            |
+| `` 3.14`50 ``  | MPFR real, 50-digit *precision*                     |
+| `` 3.14``49 `` | MPFR real, 49-digit *accuracy*                      |
+| `` 3`30 ``     | integer widened to MPFR at 30-digit precision       |
+
+The parser (`src/parse.c:parse_number`) disambiguates the
+precision-marker backtick from the context-separator backtick by
+requiring a digit/`.`/`+`/`-` to follow — an identifier character after
+the backtick leaves it alone for the context parser.
+
+### Architecture
+
+`N` does not reimplement the numeric math — it walks the expression
+tree replacing *leaves* (integers, rationals, named constants) with
+their numeric values, rebuilds, and re-evaluates. The existing Plus,
+Times, Power, Sin, Cos, Exp, Log, etc. builtins then take the numeric
+fast path naturally. This "descend + re-evaluate" strategy keeps
+`src/numeric.c` small and puts each function's numeric implementation
+in its owning module.
+
+MPFR-aware paths were added to:
+
+- `src/plus.c`, `src/times.c`, `src/power.c` — use `numeric_mpfr_add`,
+  `numeric_mpfr_mul`, `numeric_mpfr_pow` from `numeric.c`.
+- `src/trig.c`, `src/hyperbolic.c` — each builtin calls
+  `numeric_mpfr_apply_unary(arg, 0, mpfr_sin)` (etc.) when any argument
+  carries MPFR precision.
+- `src/logexp.c` — `Log`, `Exp` via `mpfr_log`, `mpfr_exp`.
+
+New shared helpers in `numeric.c`:
+
+- `numericalize(expr, spec)` — recursive walker used by `N`,
+  `SetPrecision`, and `SetAccuracy`.
+- `get_approx_mpfr(e, re, im, *inexact)` — extracts an MPFR approximation
+  of any real or complex numeric Expr, used by the transcendental builtins.
+- `numeric_mpfr_{add,sub,mul,div,pow}(a, b, default_bits)` — binary ops
+  that produce EXPR_MPFR at `max(prec_a, prec_b, default_bits)`.
+- `numeric_mpfr_apply_unary(e, default_bits, op)` — generic unary
+  dispatch; used by the transcendental branches.
+- `numeric_any_mpfr(a, b)`, `numeric_expr_is_mpfr(e)` — cheap guards.
+- `numeric_digits_to_bits` / `numeric_bits_to_digits` — decimal ↔ binary
+  precision conversion (ratio `log₂10`).
+
+### Extending the system
+
+- **A new constant** (e.g. `Glaisher`): append one row to `kConstants`
+  in `src/numeric.c`. Provide a `double` machine value and an optional
+  MPFR filler function.
+- **A new numeric backend** (e.g. GSL for special functions, libquadmath
+  for `__float128`): extend `NumericMode` in `src/numeric.h` and add the
+  per-op branches; each transcendental builtin's existing per-module MPFR
+  branch is the natural template for a GSL branch. No central dispatcher
+  is required because `N` drives the backend through the evaluator.
+- **A new special function** (e.g. `BesselJ`, `Gamma`, `Zeta`): add the
+  numeric branch directly to that function's builtin. `N` will reach it
+  automatically after numericalizing arguments, because the function is
+  invoked through the re-evaluation step of `numericalize`.
+
+### Known limitations (Phase 2 v1)
+
+- **Display doesn't pad trailing zeros** for declared precision. A
+  literal like `` 3.98`50 `` prints as `3.979999…9` (full 50 digits of
+  the closest binary representation) rather than `3.98000…0`. Mathematica
+  tracks "declared precision" separately from the bit-level value; we
+  print bit-accurate decimals. Value semantics are otherwise identical.
+- **Complex MPFR** is not implemented. `Power` with MPC-style complex
+  operands falls back to double-complex `cpow`. A future step would
+  link MPC for complex arbitrary precision.
+- **Significance arithmetic** uses `max(prec)` of inputs for each
+  operation's output precision. Mathematica's precision-degradation
+  rules (precision decreases through lossy operations) are deferred.
+
+### Test coverage
+
+`tests/test_numeric.c` exercises:
+
+- Phase 1: leaf conversion, constants, unknown symbols, descent + re-evaluate
+  semantics, Listable threading, Complex, Hold preservation, bad precision
+  args, `MachinePrecision` protection.
+- Phase 2 (compile-time-gated by `USE_MPFR`): `N[…, prec]` for Pi, E,
+  Sqrt, Sin, Cos, Log, Exp, Sinh, Tanh, ArcTan, rational and mixed
+  expressions; `Precision[]`, `Accuracy[]`, `SetPrecision[]`,
+  `SetAccuracy[]`; precision-literal parsing; Listable precision.
+
+A new `assert_eval_startswith` helper in `tests/test_utils.h` tolerates
+last-bit rounding noise in long MPFR strings.

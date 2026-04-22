@@ -11,12 +11,41 @@
 #include "complex.h"
 #include "symtab.h"
 #include "eval.h"
+#include "numeric.h"
 #include <math.h>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 #include <string.h>
 #include <stdint.h>
+
+#ifdef USE_MPFR
+/* MPFR helpers for the reciprocal-input inverses ArcCot, ArcSec, ArcCsc.
+ * Each computes f(1/x) at the input's precision. Exposed as
+ * MpfrUnaryOp-compatible function pointers so we can reuse
+ * numeric_mpfr_apply_unary below. */
+static int mpfr_atan_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_atan(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+static int mpfr_acos_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_acos(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+static int mpfr_asin_recip_op(mpfr_t out, const mpfr_t in, mpfr_rnd_t rnd) {
+    mpfr_t tmp; mpfr_init2(tmp, mpfr_get_prec(in));
+    mpfr_ui_div(tmp, 1, in, rnd);
+    int r = mpfr_asin(out, tmp, rnd);
+    mpfr_clear(tmp);
+    return r;
+}
+#endif
 
 /* Helper function to construct Sqrt[n] as Power[n, 1/2] */
 static Expr* make_sqrt(int64_t n) {
@@ -523,6 +552,12 @@ Expr* builtin_sin(Expr* res) {
         if (exact) return exact;
     }
     
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_sin);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;
@@ -565,6 +600,12 @@ Expr* builtin_cos(Expr* res) {
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_cos);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &c, &inexact) && inexact) {
         double complex s = ccos(c);
         if (cimag(c) == 0.0) return expr_new_real(creal(s));
@@ -604,6 +645,12 @@ Expr* builtin_tan(Expr* res) {
     // Approximate numerical evaluation
     double complex cplx;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_tan);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = catan(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
@@ -643,6 +690,12 @@ Expr* builtin_cot(Expr* res) {
     // Approximate numerical evaluation
     double complex cplx;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_cot);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / ctan(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
@@ -682,6 +735,12 @@ Expr* builtin_sec(Expr* res) {
     // Approximate numerical evaluation
     double complex cplx;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_sec);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / ccos(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
@@ -721,6 +780,12 @@ Expr* builtin_csc(Expr* res) {
     // Approximate numerical evaluation
     double complex cplx;
     bool inexact = false;
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_csc);
+        if (r) return r;
+    }
+#endif
     if (get_approx(arg, &cplx, &inexact) && inexact) {
         double complex s = 1.0 / csin(cplx);
         if (cimag(cplx) == 0.0) return expr_new_real(creal(s));
@@ -851,7 +916,13 @@ Expr* builtin_arcsin(Expr* res) {
     // Attempt exact inverse evaluation
     Expr* exact = exact_arcsin(arg);
     if (exact) return exact;
-    
+
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_asin);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation - only if input is already inexact
     double complex c;
     bool inexact = false;
@@ -876,7 +947,13 @@ Expr* builtin_arccos(Expr* res) {
     // Attempt exact inverse evaluation
     Expr* exact = exact_arccos(arg);
     if (exact) return exact;
-    
+
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_acos);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation - only if input is already inexact
     double complex c;
     bool inexact = false;
@@ -905,7 +982,13 @@ Expr* builtin_arctan(Expr* res) {
         // Attempt exact inverse evaluation
         Expr* exact = exact_arctan(arg);
         if (exact) return exact;
-        
+
+#ifdef USE_MPFR
+        if (numeric_expr_is_mpfr(arg)) {
+            Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_atan);
+            if (r) return r;
+        }
+#endif
         // Approximate numerical evaluation - only if input is already inexact
         double complex c;
         bool inexact = false;
@@ -943,6 +1026,27 @@ Expr* builtin_arctan(Expr* res) {
             }
         }
         
+#ifdef USE_MPFR
+        /* MPFR two-argument ArcTan[x, y] for real inputs (either carrying
+         * MPFR precision). Uses mpfr_atan2. */
+        if (numeric_expr_is_mpfr(x) || numeric_expr_is_mpfr(y)) {
+            long bits = numeric_combined_bits(x, y, 0);
+            mpfr_t rx, ix, ry, iy, out;
+            mpfr_init2(rx, bits); mpfr_init2(ix, bits);
+            mpfr_init2(ry, bits); mpfr_init2(iy, bits);
+            bool ok_x = get_approx_mpfr(x, rx, ix, NULL);
+            bool ok_y = get_approx_mpfr(y, ry, iy, NULL);
+            if (ok_x && ok_y && mpfr_zero_p(ix) && mpfr_zero_p(iy)) {
+                mpfr_init2(out, bits);
+                mpfr_atan2(out, ry, rx, MPFR_RNDN);
+                mpfr_clear(rx); mpfr_clear(ix);
+                mpfr_clear(ry); mpfr_clear(iy);
+                return expr_new_mpfr_move(out);
+            }
+            mpfr_clear(rx); mpfr_clear(ix);
+            mpfr_clear(ry); mpfr_clear(iy);
+        }
+#endif
         // Approximate numerical evaluation using atan2 for strictly real inputs
         double complex cx, cy;
         if ((x->type == EXPR_REAL || y->type == EXPR_REAL) && get_approx(x, &cx, NULL) && get_approx(y, &cy, NULL)) {
@@ -967,7 +1071,13 @@ Expr* builtin_arccot(Expr* res) {
     // Attempt exact inverse evaluation
     Expr* exact = exact_arccot(arg);
     if (exact) return exact;
-    
+
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_atan_recip_op);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;
@@ -993,7 +1103,13 @@ Expr* builtin_arcsec(Expr* res) {
     // Attempt exact inverse evaluation
     Expr* exact = exact_arcsec(arg);
     if (exact) return exact;
-    
+
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_acos_recip_op);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;
@@ -1019,7 +1135,13 @@ Expr* builtin_arccsc(Expr* res) {
     // Attempt exact inverse evaluation
     Expr* exact = exact_arccsc(arg);
     if (exact) return exact;
-    
+
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(arg)) {
+        Expr* r = numeric_mpfr_apply_unary(arg, 0, mpfr_asin_recip_op);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;

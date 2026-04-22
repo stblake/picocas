@@ -537,7 +537,11 @@ static int64_t so_leaf_count(Expr* e) {
 static bool so_is_purely_numeric(Expr* e) {
     if (!e) return true;
     switch (e->type) {
-        case EXPR_INTEGER: case EXPR_BIGINT: case EXPR_REAL: return true;
+        case EXPR_INTEGER: case EXPR_BIGINT: case EXPR_REAL:
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+#endif
+            return true;
         case EXPR_SYMBOL: case EXPR_STRING: return false;
         case EXPR_FUNCTION: {
             Expr* h = e->data.function.head;

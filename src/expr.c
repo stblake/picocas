@@ -103,6 +103,60 @@ Expr* expr_new_bigint_from_str(const char* str) {
     return e;
 }
 
+#ifdef USE_MPFR
+/* MPFR constructors. All allocate an Expr and initialize the payload
+ * `mpfr_t` at the requested precision; the caller owns the result and
+ * should free it with `expr_free`, which calls `mpfr_clear`. */
+Expr* expr_new_mpfr_bits(mpfr_prec_t bits) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) return NULL;
+    e->type = EXPR_MPFR;
+    mpfr_init2(e->data.mpfr, bits);
+    mpfr_set_zero(e->data.mpfr, +1);
+    return e;
+}
+Expr* expr_new_mpfr_from_d(double v, mpfr_prec_t bits) {
+    Expr* e = expr_new_mpfr_bits(bits);
+    if (e) mpfr_set_d(e->data.mpfr, v, MPFR_RNDN);
+    return e;
+}
+Expr* expr_new_mpfr_from_si(long v, mpfr_prec_t bits) {
+    Expr* e = expr_new_mpfr_bits(bits);
+    if (e) mpfr_set_si(e->data.mpfr, v, MPFR_RNDN);
+    return e;
+}
+Expr* expr_new_mpfr_from_mpz(const mpz_t z, mpfr_prec_t bits) {
+    Expr* e = expr_new_mpfr_bits(bits);
+    if (e) mpfr_set_z(e->data.mpfr, z, MPFR_RNDN);
+    return e;
+}
+Expr* expr_new_mpfr_from_str(const char* str, mpfr_prec_t bits) {
+    Expr* e = expr_new_mpfr_bits(bits);
+    if (!e) return NULL;
+    if (mpfr_set_str(e->data.mpfr, str, 10, MPFR_RNDN) != 0) {
+        mpfr_clear(e->data.mpfr);
+        free(e);
+        return NULL;
+    }
+    return e;
+}
+Expr* expr_new_mpfr_move(mpfr_t src) {
+    Expr* e = malloc(sizeof(Expr));
+    if (!e) { mpfr_clear(src); return NULL; }
+    e->type = EXPR_MPFR;
+    /* mpfr_t is an array-type alias for __mpfr_struct[1]; `memcpy` moves
+     * the header — MPFR's documentation (mpfr_swap, GMP's mpz semantics)
+     * sanctions this as long as the source is then treated as uninit. */
+    memcpy(e->data.mpfr, src, sizeof(e->data.mpfr));
+    return e;
+}
+Expr* expr_new_mpfr_copy(const mpfr_t src) {
+    Expr* e = expr_new_mpfr_bits(mpfr_get_prec(src));
+    if (e) mpfr_set(e->data.mpfr, src, MPFR_RNDN);
+    return e;
+}
+#endif
+
 void expr_to_mpz(const Expr* e, mpz_t out) {
     if (e->type == EXPR_INTEGER) {
         mpz_init_set_si(out, e->data.integer);
@@ -113,6 +167,31 @@ void expr_to_mpz(const Expr* e, mpz_t out) {
 
 bool expr_is_integer_like(const Expr* e) {
     return e && (e->type == EXPR_INTEGER || e->type == EXPR_BIGINT);
+}
+
+bool expr_is_numeric_like(const Expr* e) {
+    if (!e) return false;
+    switch (e->type) {
+        case EXPR_INTEGER:
+        case EXPR_BIGINT:
+        case EXPR_REAL:
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+#endif
+            return true;
+        case EXPR_FUNCTION:
+            /* Rational[n,d] and Complex[re,im] with numeric components. */
+            if (is_rational((Expr*)e, NULL, NULL)) return true;
+            {
+                Expr *re, *im;
+                if (is_complex((Expr*)e, &re, &im)) {
+                    return expr_is_numeric_like(re) && expr_is_numeric_like(im);
+                }
+            }
+            return false;
+        default:
+            return false;
+    }
 }
 
 Expr* expr_bigint_normalize(Expr* e) {
@@ -147,6 +226,11 @@ void expr_free(Expr* e) {
         case EXPR_BIGINT:
             mpz_clear(e->data.bigint);
             break;
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+            mpfr_clear(e->data.mpfr);
+            break;
+#endif
         default:
             break;
     }
@@ -192,10 +276,16 @@ Expr* expr_copy(Expr* e) {
         case EXPR_BIGINT:
             mpz_init_set(copy->data.bigint, e->data.bigint);
             break;
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+            mpfr_init2(copy->data.mpfr, mpfr_get_prec(e->data.mpfr));
+            mpfr_set(copy->data.mpfr, e->data.mpfr, MPFR_RNDN);
+            break;
+#endif
         default:
             break;
     }
-    
+
     return copy;
 }
 
@@ -237,12 +327,23 @@ bool expr_eq(const Expr* a, const Expr* b) {
         }
         case EXPR_BIGINT:
             return mpz_cmp(a->data.bigint, b->data.bigint) == 0;
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+            /* Equal iff same precision AND same value (matches SameQ
+             * semantics: 1.`20 and 1.`30 are not SameQ even though
+             * their values agree). */
+            if (mpfr_get_prec(a->data.mpfr) != mpfr_get_prec(b->data.mpfr)) return false;
+            return mpfr_equal_p(a->data.mpfr, b->data.mpfr) != 0;
+#endif
     }
     return false;
 }
 
 static int get_canonical_rank(const Expr* e) {
     if (e->type == EXPR_INTEGER || e->type == EXPR_BIGINT || e->type == EXPR_REAL || is_rational((Expr*)e, NULL, NULL)) return 0;
+#ifdef USE_MPFR
+    if (e->type == EXPR_MPFR) return 0;
+#endif
     if (is_complex((Expr*)e, NULL, NULL)) return 1;
     if (e->type == EXPR_STRING) return 2;
     if (e->type == EXPR_SYMBOL) return 3;
@@ -253,6 +354,9 @@ static double get_numeric_value(const Expr* e) {
     if (e->type == EXPR_INTEGER) return (double)e->data.integer;
     if (e->type == EXPR_BIGINT) return mpz_get_d(e->data.bigint);
     if (e->type == EXPR_REAL) return e->data.real;
+#ifdef USE_MPFR
+    if (e->type == EXPR_MPFR) return mpfr_get_d(e->data.mpfr, MPFR_RNDN);
+#endif
     int64_t n, d;
     if (is_rational((Expr*)e, &n, &d)) return (double)n / d;
     return 0;
@@ -474,6 +578,19 @@ uint64_t expr_hash(const Expr* e) {
             }
             break;
         }
+#ifdef USE_MPFR
+        case EXPR_MPFR: {
+            /* Hash precision + IEEE double approximation. Not perfectly
+             * collision-free across precisions with equal double value,
+             * but it's a hash, not an equality. */
+            h ^= (uint64_t)mpfr_get_prec(e->data.mpfr);
+            h *= prime;
+            double d = mpfr_get_d(e->data.mpfr, MPFR_RNDN);
+            uint64_t v; memcpy(&v, &d, 8);
+            h ^= v; h *= prime;
+            break;
+        }
+#endif
     }
     return h;
 }

@@ -28,6 +28,26 @@ static inline void assert_eval_eq(const char* input, const char* expected, int i
     expr_free(evaluated);
 }
 
+/* Like assert_eval_eq but only requires that the printed result *starts
+ * with* the expected prefix. Useful for arbitrary-precision outputs whose
+ * low-order digits depend on exact bit-level rounding. */
+static inline void assert_eval_startswith(const char* input, const char* prefix) {
+    struct Expr* parsed = parse_expression(input);
+    assert(parsed != NULL);
+    struct Expr* evaluated = evaluate(parsed);
+    expr_free(parsed);
+    char* str = expr_to_string(evaluated);
+    size_t plen = strlen(prefix);
+    int ok = (strncmp(str, prefix, plen) == 0);
+    if (!ok) {
+        fprintf(stderr, "FAIL: %s\n  Expected prefix: %s\n  Actual:          %s\n",
+                input, prefix, str);
+    }
+    assert(ok);
+    free(str);
+    expr_free(evaluated);
+}
+
 #define TEST(name) printf("Running test: %s\n", #name); name()
 #define ASSERT(cond) assert(cond)
 #define ASSERT_STR_EQ(a, b) assert(strcmp(a, b) == 0)

@@ -7,6 +7,7 @@
 #include "eval.h"
 #include "arithmetic.h"
 #include "complex.h"
+#include "numeric.h"
 
 /*
  * logexp_init:
@@ -206,6 +207,23 @@ Expr* builtin_log(Expr* res) {
             }
         }
 
+#ifdef USE_MPFR
+        if (numeric_expr_is_mpfr(z)) {
+            /* Log is real only for z > 0; for z <= 0 we must fall through
+             * to the double-complex path (no complex MPFR yet). */
+            long bits = numeric_combined_bits(z, NULL, 0);
+            mpfr_t rr, ii;
+            mpfr_init2(rr, bits); mpfr_init2(ii, bits);
+            bool ok = get_approx_mpfr(z, rr, ii, NULL);
+            if (ok && mpfr_zero_p(ii) && mpfr_sgn(rr) > 0) {
+                mpfr_t out; mpfr_init2(out, bits);
+                mpfr_log(out, rr, MPFR_RNDN);
+                mpfr_clear(rr); mpfr_clear(ii);
+                return expr_new_mpfr_move(out);
+            }
+            mpfr_clear(rr); mpfr_clear(ii);
+        }
+#endif
         // Approximate numerical evaluation
         double complex c;
         bool inexact = false;
@@ -352,6 +370,12 @@ Expr* builtin_exp(Expr* res) {
         }
     }
 
+#ifdef USE_MPFR
+    if (numeric_expr_is_mpfr(z)) {
+        Expr* r = numeric_mpfr_apply_unary(z, 0, mpfr_exp);
+        if (r) return r;
+    }
+#endif
     // Approximate numerical evaluation
     double complex c;
     bool inexact = false;

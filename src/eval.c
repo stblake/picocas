@@ -335,6 +335,9 @@ Expr* evaluate_step(Expr* e) {
         case EXPR_REAL:
         case EXPR_STRING:
         case EXPR_BIGINT:
+#ifdef USE_MPFR
+        case EXPR_MPFR:
+#endif
             return expr_copy(e);
             
         case EXPR_SYMBOL: {

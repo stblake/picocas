@@ -2,6 +2,7 @@
 #include "power.h"
 #include "arithmetic.h"
 #include "times.h"
+#include "numeric.h"
 #include <math.h>
 #include <complex.h>
 #include <stdio.h>
@@ -315,14 +316,50 @@ Expr* builtin_power(Expr* res) {
     bool base_comp = is_complex(base, &re_b, &im_b);
     bool exp_comp = is_complex(exp, &re_e, &im_e);
 
-    if (base_comp || exp_comp || base->type == EXPR_REAL || exp->type == EXPR_REAL || base->type == EXPR_BIGINT || exp->type == EXPR_BIGINT) {
-        bool base_num = (base->type == EXPR_INTEGER || base->type == EXPR_REAL || base->type == EXPR_BIGINT || is_rational(base, NULL, NULL) || base_comp);
-        bool exp_num = (exp->type == EXPR_INTEGER || exp->type == EXPR_REAL || exp->type == EXPR_BIGINT || is_rational(exp, NULL, NULL) || exp_comp);
+    if (base_comp || exp_comp ||
+        base->type == EXPR_REAL || exp->type == EXPR_REAL ||
+        base->type == EXPR_BIGINT || exp->type == EXPR_BIGINT
+#ifdef USE_MPFR
+        || base->type == EXPR_MPFR || exp->type == EXPR_MPFR
+#endif
+        ) {
+        bool base_num = expr_is_numeric_like(base) || base_comp;
+        bool exp_num  = expr_is_numeric_like(exp)  || exp_comp;
 
         if (base_num && exp_num) {
-            bool has_real = (base->type == EXPR_REAL || exp->type == EXPR_REAL || 
-                            (base_comp && (re_b->type == EXPR_REAL || im_b->type == EXPR_REAL)) || 
+#ifdef USE_MPFR
+            /* MPFR real-valued power: fast path when both sides are real
+             * and at least one carries MPFR precision. The complex case
+             * (negative base with fractional exponent, or Complex operands)
+             * still falls through to the cpow path below — true MPC
+             * complex arithmetic is out of scope for Phase 2. */
+            if (!base_comp && !exp_comp && numeric_any_mpfr(base, exp)) {
+                /* Only take the real MPFR path when the result is real:
+                 * base > 0 OR exponent is an integer. */
+                Expr *b_re_check = base;
+                bool base_nonneg = (b_re_check->type == EXPR_INTEGER && b_re_check->data.integer >= 0)
+                                   || (b_re_check->type == EXPR_REAL && b_re_check->data.real >= 0.0)
+                                   || (b_re_check->type == EXPR_BIGINT && mpz_sgn(b_re_check->data.bigint) >= 0)
+                                   || (b_re_check->type == EXPR_MPFR && mpfr_sgn(b_re_check->data.mpfr) >= 0);
+                int64_t en, ed;
+                bool exp_is_int = (exp->type == EXPR_INTEGER || exp->type == EXPR_BIGINT
+                                   || (is_rational(exp, &en, &ed) && ed == 1));
+                if (base_nonneg || exp_is_int) {
+                    Expr* r = numeric_mpfr_pow(base, exp, 0);
+                    if (r) return r;
+                }
+            }
+#endif
+            bool has_real = (base->type == EXPR_REAL || exp->type == EXPR_REAL ||
+                            (base_comp && (re_b->type == EXPR_REAL || im_b->type == EXPR_REAL)) ||
                             (exp_comp && (re_e->type == EXPR_REAL || im_e->type == EXPR_REAL)));
+#ifdef USE_MPFR
+            if (!has_real) {
+                /* Treat an MPFR operand as "real" for the double-complex
+                 * fallback path too. */
+                has_real = (base->type == EXPR_MPFR || exp->type == EXPR_MPFR);
+            }
+#endif
             if (has_real) {
                 double vbase_re = 0, vbase_im = 0, vexp_re = 0, vexp_im = 0;
                 int64_t n, d;

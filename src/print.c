@@ -90,6 +90,32 @@ void expr_print_fullform(Expr* e) {
             free(str);
             break;
         }
+#ifdef USE_MPFR
+        case EXPR_MPFR: {
+            /* Print with decimal-digit precision matching the value's
+             * stored binary precision. `%.*Rg` uses the `g` style (drops
+             * trailing zeros) so most common values print cleanly; we
+             * append ".0" for integer-valued outputs for consistency
+             * with EXPR_REAL formatting (e.g. 3. → 3.0). */
+            long digits = (long)ceil((double)mpfr_get_prec(e->data.mpfr)
+                                     / 3.3219280948873626);
+            if (digits < 1) digits = 1;
+            char* buf = NULL;
+            int len = mpfr_asprintf(&buf, "%.*Rg", (int)digits, e->data.mpfr);
+            if (len >= 0 && buf) {
+                printf("%s", buf);
+                if (strchr(buf, '.') == NULL && strchr(buf, 'e') == NULL
+                    && strchr(buf, 'E') == NULL && strchr(buf, 'n') == NULL
+                    && strchr(buf, 'i') == NULL /* nan / inf */) {
+                    printf(".0");
+                }
+                mpfr_free_str(buf);
+            } else {
+                printf("<mpfr print error>");
+            }
+            break;
+        }
+#endif
     }
 }
 

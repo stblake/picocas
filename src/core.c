@@ -48,6 +48,8 @@
 #include "deriv.h"
 #include "limit.h"
 #include "context.h"
+#include "numeric.h"
+#include "precision.h"
 
 void core_init(void) {
     /* Context system must come first: the parser calls context_resolve_name
@@ -344,6 +346,8 @@ void core_init(void) {
     series_init();
     deriv_init();
     limit_init();
+    numeric_init();
+    precision_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {

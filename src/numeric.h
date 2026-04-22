@@ -1,0 +1,169 @@
+/* PicoCAS — numeric evaluation (N[], SetPrecision, …)
+ *
+ * This module implements numeric approximation of symbolic expressions.
+ * The public entry point is `N[expr]` and `N[expr, prec]`. Phase 1 supports
+ * machine-precision doubles; Phase 2 adds MPFR arbitrary precision behind
+ * the `USE_MPFR` compile flag.
+ *
+ * Design overview
+ * ---------------
+ * `N` does NOT reimplement numeric math. Its job is to replace *leaves*
+ * (integers, rationals, named constants like Pi/E/EulerGamma) with their
+ * numeric equivalents and then hand the rebuilt expression back to the
+ * evaluator. The existing builtins — Plus/Times/Power/Sin/Cos/Exp/Log —
+ * already take the numeric fast path whenever they see a numeric argument,
+ * so re-evaluation naturally produces a numeric result.
+ *
+ * This "descend + re-evaluate" strategy keeps `numeric.c` small and places
+ * the numeric-math responsibility in the modules that own each function.
+ *
+ * Extensibility
+ * -------------
+ * • New constants (e.g. `Glaisher`): append to `kConstants` in numeric.c.
+ * • New backends (e.g. GSL for special functions, libquadmath for
+ *   __float128): extend `NumericMode` below and thread through
+ *   `numericalize`. Each per-function numeric branch (in trig.c, logexp.c,
+ *   etc.) is the natural place to hook in backend-specific calls — no
+ *   central dispatcher is needed.
+ * • New special functions (e.g. `BesselJ`, `Gamma`, `Zeta`): add their
+ *   numeric branch to the function's own builtin (as Sin already does for
+ *   `csin`). `N` will drive it automatically because the evaluator reaches
+ *   that builtin after we rebuild with numericalized arguments.
+ */
+#ifndef NUMERIC_H
+#define NUMERIC_H
+
+#include "expr.h"
+#include <stdbool.h>
+
+/* Evaluation backends. MACHINE uses IEEE 754 doubles; MPFR uses
+ * arbitrary-precision reals (Phase 2). Additional backends (e.g. GSL,
+ * __float128) would be appended here. */
+typedef enum {
+    NUMERIC_MODE_MACHINE = 0
+#ifdef USE_MPFR
+    , NUMERIC_MODE_MPFR
+#endif
+} NumericMode;
+
+/* A precision request. For MACHINE, `bits` is ignored. For MPFR, `bits` is
+ * the target precision in binary bits (MPFR's native unit). Converters
+ * below bridge the Mathematica-style decimal-digit specification. */
+typedef struct {
+    NumericMode mode;
+    long bits;
+} NumericSpec;
+
+/* Machine precision in decimal digits. Matches Mathematica's
+ * `$MachinePrecision` (= Log10[2^53]). */
+#define NUMERIC_MACHINE_PRECISION_DIGITS 15.954589770191003
+
+/* Digit / bit conversions for MPFR precision. Both round up so the target
+ * carries at least the requested amount of information. */
+long numeric_digits_to_bits(double digits);
+double numeric_bits_to_digits(long bits);
+
+/* Make a default-machine spec. */
+static inline NumericSpec numeric_machine_spec(void) {
+    NumericSpec s;
+    s.mode = NUMERIC_MODE_MACHINE;
+    s.bits = 0;
+    return s;
+}
+
+/* Numericalize an expression under `spec`, returning a *newly allocated*
+ * Expr tree. The input `e` is read-only and not consumed by this function.
+ *
+ * Semantics (matching Mathematica):
+ *   - Exact numeric leaves (Integer, BigInt, Rational) → numeric value.
+ *   - Inexact numeric leaves (Real; MPFR in Phase 2) → re-rounded to spec.
+ *   - Known constants (Pi, E, EulerGamma, Catalan, GoldenRatio, Degree)
+ *     → their numeric value at the requested precision.
+ *   - Unknown symbols → returned unchanged (Mathematica's N[x] = x).
+ *   - Hold / HoldForm / Unevaluated → returned unchanged.
+ *   - Complex[re, im] → recursively numericalize components.
+ *   - Rational[n, d] → direct (double)n/d (or MPFR equivalent).
+ *   - Any other function f[a, b, …] → f[N[a], N[b], …] then re-evaluate.
+ *
+ * Ownership: returned Expr* is owned by the caller. */
+Expr* numericalize(const Expr* e, NumericSpec spec);
+
+/* Look up a named constant (Pi, E, …). Returns true and fills *out if the
+ * symbol is a recognized numeric constant; false otherwise. Exposed so the
+ * Phase-2 MPFR path can implement its own constant fill while sharing the
+ * registry. */
+bool numeric_constant_machine_value(const char* name, double* out);
+
+#ifdef USE_MPFR
+/* The target precision (in bits) for combining two numeric expressions.
+ * If either operand is an MPFR value, we use the max of their precisions;
+ * otherwise the caller's `default_bits` is used. Exact inputs (Integer,
+ * Rational) contribute no precision and accept the ambient precision. */
+long numeric_combined_bits(const Expr* a, const Expr* b, long default_bits);
+
+/* Binary MPFR-level numeric operators. Each returns a freshly allocated
+ * EXPR_MPFR (real-valued) on success, or NULL if either input is not
+ * representable as a real MPFR value (e.g. it's a Complex[...] or symbolic).
+ * Caller must free the return with expr_free.
+ *
+ * The output precision is `numeric_combined_bits(a, b, default_bits)`.
+ * These helpers are used by Plus, Times, Power, and the transcendental
+ * builtins to take the arbitrary-precision numeric path when any operand
+ * carries MPFR precision. */
+Expr* numeric_mpfr_add (const Expr* a, const Expr* b, long default_bits);
+Expr* numeric_mpfr_sub (const Expr* a, const Expr* b, long default_bits);
+Expr* numeric_mpfr_mul (const Expr* a, const Expr* b, long default_bits);
+Expr* numeric_mpfr_div (const Expr* a, const Expr* b, long default_bits);
+Expr* numeric_mpfr_pow (const Expr* a, const Expr* b, long default_bits);
+
+/* Apply an MPFR unary real function to `e`. Returns a fresh EXPR_MPFR,
+ * or NULL if `e` isn't a real-valued MPFR-promotable number (e.g. it's
+ * complex or symbolic). Used by Sin/Cos/Tan/Sinh/Cosh/Log/Exp/…
+ *
+ * Output precision is `max(mpfr_prec in e, default_bits)`. */
+typedef int (*MpfrUnaryOp)(mpfr_t, const mpfr_t, mpfr_rnd_t);
+Expr* numeric_mpfr_apply_unary(const Expr* e, long default_bits, MpfrUnaryOp op);
+
+/* Convenience: true iff `e` should trigger the MPFR numeric path (carries
+ * any MPFR subvalue). */
+bool numeric_expr_is_mpfr(const Expr* e);
+
+/* True iff any of a or b is an EXPR_MPFR — trigger for the MPFR code
+ * paths in plus/times/power. Complex-of-MPFR is also detected so that
+ * MPFR propagation happens through the Complex wrapper. */
+bool numeric_any_mpfr(const Expr* a, const Expr* b);
+
+/* Fill the recognized constant `name` into `out` at `bits` precision.
+ * Returns true if the name is a known numeric constant, false otherwise.
+ * `out` must be a valid (initialized) mpfr_t on entry; its precision is
+ * reset to `bits` before filling. */
+bool numeric_constant_mpfr_value(const char* name, mpfr_t out, long bits);
+
+/* Extract an MPFR approximation of `e` into `(re, im)`.
+ *
+ * The caller must have already `mpfr_init2`'d both `re` and `im` to the
+ * desired output precision. `re` and `im` are written with the real and
+ * imaginary components of the value. Returns true if extraction was
+ * possible (i.e. `e` is some kind of numeric or Complex-of-numerics), and
+ * sets *is_inexact according to whether any input was inexact (EXPR_REAL
+ * or EXPR_MPFR — "inexact" in the Mathematica sense).
+ *
+ * Exact inputs (Integer, BigInt, Rational) are converted at the target
+ * precision. Complex[re, im] recurses on components.
+ *
+ * When `e` is unrecognized (symbolic, or a non-numeric function), returns
+ * false without touching `re` or `im`.
+ */
+bool get_approx_mpfr(const Expr* e,
+                     mpfr_t re, mpfr_t im,
+                     bool* is_inexact);
+#endif
+
+/* Builtin entry points */
+Expr* builtin_n(Expr* res);
+
+/* Registers N (and, in Phase 2, Precision/Accuracy/SetPrecision/SetAccuracy
+ * and MachinePrecision) with the symbol table. */
+void numeric_init(void);
+
+#endif /* NUMERIC_H */

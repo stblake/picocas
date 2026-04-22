@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.10)
 project(picocas_tests)
 
 option(USE_ECM "Use ECM library for factorisation" ON)
+option(USE_MPFR "Use MPFR for arbitrary-precision reals (N[expr, prec])" ON)
+
+if(USE_MPFR)
+    add_compile_definitions(USE_MPFR)
+    link_libraries(mpfr)
+endif()
 
 include_directories(/usr/local/include)
 if(USE_ECM)
@@ -81,6 +87,8 @@ set(COMMON_SRC
     ../src/deriv.c
     ../src/limit.c
     ../src/context.c
+    ../src/numeric.c
+    ../src/precision.c
 )
 
 add_executable(expr_tests test_expr.c test_part.c ${COMMON_SRC})
@@ -278,6 +286,9 @@ target_include_directories(infinity_tests PRIVATE ../src)
 add_executable(increment_tests test_increment.c ${COMMON_SRC})
 target_include_directories(increment_tests PRIVATE ../src)
 
+add_executable(numeric_tests test_numeric.c ${COMMON_SRC})
+target_include_directories(numeric_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -337,6 +348,7 @@ if(USE_ECM)
     add_dependencies(radical_fusion_tests build_ecm)
     add_dependencies(infinity_tests build_ecm)
     add_dependencies(increment_tests build_ecm)
+    add_dependencies(numeric_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

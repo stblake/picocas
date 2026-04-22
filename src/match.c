@@ -439,6 +439,15 @@ static bool match_internal(Expr* expr, Expr* pattern, MatchEnv* env, ParentMatch
             case EXPR_BIGINT:
                 if (mpz_cmp(expr->data.bigint, pattern->data.bigint) == 0) return call_parent(env, parent);
                 return false;
+#ifdef USE_MPFR
+            case EXPR_MPFR:
+                /* Match identical-precision MPFR values bit-for-bit. */
+                if (mpfr_get_prec(expr->data.mpfr) == mpfr_get_prec(pattern->data.mpfr)
+                    && mpfr_equal_p(expr->data.mpfr, pattern->data.mpfr)) {
+                    return call_parent(env, parent);
+                }
+                return false;
+#endif
             case EXPR_FUNCTION: {
                 size_t saved_env_count = env->count;
                 if (match_internal(expr->data.function.head, pattern->data.function.head, env, NULL)) {

@@ -2,6 +2,7 @@
 #include "arithmetic.h"
 #include "complex.h"
 #include "eval.h"
+#include "numeric.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -49,6 +50,12 @@ static int rational_sign(Expr* e) {
 
 static Expr* multiply_numbers(Expr* a, Expr* b) {
     if (is_overflow(a) || is_overflow(b)) return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
+#ifdef USE_MPFR
+    if (numeric_any_mpfr(a, b) && !is_complex(a, NULL, NULL) && !is_complex(b, NULL, NULL)) {
+        Expr* r = numeric_mpfr_mul(a, b, 0);
+        if (r) return r;
+    }
+#endif
     if (a->type == EXPR_REAL || b->type == EXPR_REAL) {
         double va = 0.0, vb = 0.0;
         int64_t n, d;
@@ -262,7 +269,7 @@ Expr* builtin_times(Expr* res) {
             free(groups); return expr_new_function(expr_new_symbol("Overflow"), NULL, 0);
         }
 
-        if (arg->type == EXPR_INTEGER || arg->type == EXPR_REAL || arg->type == EXPR_BIGINT || is_rational(arg, NULL, NULL)) {
+        if (expr_is_numeric_like(arg) && !is_complex(arg, NULL, NULL)) {
             Expr* next = multiply_numbers(num_prod, arg); expr_free(num_prod); num_prod = next;
         } else if (is_complex(arg, NULL, NULL) || (arg->type == EXPR_SYMBOL && strcmp(arg->data.symbol, "I") == 0)) {
             Expr* c_arg;
