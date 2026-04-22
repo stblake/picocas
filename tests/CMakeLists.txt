@@ -59,7 +59,7 @@ set(COMMON_SRC
     ../src/patterns.c
     ../src/patterns.c
     ../src/replace.c
-    ${CMAKE_SOURCE_DIR}/../src/simp.c
+    ${CMAKE_SOURCE_DIR}/../src/trigsimp.c
     ../src/complex.c
     ../src/trig.c
     ../src/hyperbolic.c
@@ -130,8 +130,7 @@ add_executable(patterns_tests test_patterns.c ${COMMON_SRC})
 target_link_libraries(patterns_tests m)
 target_include_directories(patterns_tests PRIVATE ../src)
 
-add_executable(replace_tests test_replace.c
-    ${CMAKE_SOURCE_DIR}/../src/simp.c ${COMMON_SRC})
+add_executable(replace_tests test_replace.c ${COMMON_SRC})
 target_include_directories(replace_tests PRIVATE ../src)
 
 add_executable(core_tests test_core.c ${COMMON_SRC})
@@ -368,3 +367,13 @@ else()
     target_link_libraries(distribute_tests gmp m)
 endif()
 add_test(NAME distribute_tests COMMAND distribute_tests)
+
+add_executable(trigexpand_tests test_trigexpand.c ${COMMON_SRC})
+target_include_directories(trigexpand_tests PRIVATE ../src)
+if(USE_ECM)
+    target_link_libraries(trigexpand_tests gmp m ${CMAKE_SOURCE_DIR}/../src/external/ecm/.libs/libecm.a)
+    add_dependencies(trigexpand_tests build_ecm)
+else()
+    target_link_libraries(trigexpand_tests gmp m)
+endif()
+add_test(NAME trigexpand_tests COMMAND trigexpand_tests)

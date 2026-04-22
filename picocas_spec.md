@@ -2968,6 +2968,81 @@ Out[2]= 2 I ArcTan[x]
 In[3]:= ExpToTrig[Exp[I x] == -1]
 Out[3]= Cos[x] + I Sin[x] == -1
 ```
+
+#### TrigExpand
+Expands trigonometric functions in `expr` by splitting up sums and integer
+multiples that appear in arguments of circular and hyperbolic trigonometric
+functions.
+- `TrigExpand[expr]`
+
+**Features**:
+- `Listable`, `Protected`.
+- Operates on both circular (`Sin`, `Cos`, `Tan`, `Cot`, `Sec`, `Csc`) and
+  hyperbolic (`Sinh`, `Cosh`, `Tanh`, `Coth`, `Sech`, `Csch`) functions.
+- Applies angle-addition formulas to `Sin[a + b + …]`, `Cos[a + b + …]`,
+  `Sinh[a + b + …]`, `Cosh[a + b + …]` to a fixed point.
+- Applies multiple-angle reductions to `Sin[n x]`, `Cos[n x]`, `Sinh[n x]`,
+  `Cosh[n x]` for integer `n`, recursively reducing to `Sin[x]` / `Cos[x]` /
+  `Sinh[x]` / `Cosh[x]`.
+- `Tan`, `Cot`, `Sec`, `Csc` (and `Tanh`, `Coth`, `Sech`, `Csch`) with sum or
+  integer-multiple arguments are rewritten as ratios of `Sin`/`Cos`
+  (resp. `Sinh`/`Cosh`) and then expanded.
+- Distributes products over sums via `Expand` so the result is a flat sum of
+  monomials.
+- Applies the Pythagorean identities `Sin[x]^2 + Cos[x]^2 -> 1` and
+  `Cosh[x]^2 - Sinh[x]^2 -> 1` as a final reduction pass, including powers of
+  both identities for any integer `n >= 1`:
+    - `Sin[n x]^2 + Cos[n x]^2` expands to `(Sin[x]^2 + Cos[x]^2)^n` and
+      collapses to `1` via a Factor-based reduction.
+    - `Cosh[n x]^2 - Sinh[n x]^2` factors as
+      `(Cosh[x] + Sinh[x])^n (Cosh[x] - Sinh[x])^n` and collapses to `1`.
+  Negated and scalar-weighted forms (e.g. `-Sin[n x]^2 - Cos[n x]^2`,
+  `-5 (Sin[n x]^2 + Cos[n x]^2)`, `Sinh[n x]^2 - Cosh[n x]^2`) collapse to the
+  expected signed constant — the Pythagorean rules match both possible signs
+  that `Factor` may emerge with and allow an arbitrary remainder of factors in
+  the surrounding `Times`. Expressions that contain a denominator (any
+  `Power[_, negative_Integer]` subterm) skip the Factor pass so that canonical
+  forms such as `(2 Cos[x] Sin[x])/(Cos[x]^2 - Sin[x]^2)` are preserved.
+- Automatically threads over lists (via `Listable`), as well as equations,
+  inequalities (`Equal`, `Unequal`, `Less`, `LessEqual`, `Greater`,
+  `GreaterEqual`, `SameQ`, `UnsameQ`), and logic functions (`And`, `Or`,
+  `Not`, `Xor`, `Implies`).
+
+```mathematica
+In[1]:= TrigExpand[Sin[2 x]]
+Out[1]= 2 Cos[x] Sin[x]
+
+In[2]:= TrigExpand[Sin[x + y]]
+Out[2]= Cos[x] Sin[y] + Cos[y] Sin[x]
+
+In[3]:= TrigExpand[Sin[3 x]]
+Out[3]= 3 Cos[x]^2 Sin[x] - Sin[x]^3
+
+In[4]:= TrigExpand[Cos[x + y + z]]
+Out[4]= -Cos[x] Sin[y] Sin[z] - Cos[y] Sin[x] Sin[z] - Cos[z] Sin[x] Sin[y] + Cos[x] Cos[y] Cos[z]
+
+In[5]:= TrigExpand[Sin[x]^2 + Cos[x]^2]
+Out[5]= 1
+
+In[5b]:= TrigExpand[Sin[4 x]^2 + Cos[4 x]^2]
+Out[5b]= 1
+
+In[6]:= TrigExpand[Sinh[4 x]]
+Out[6]= 4 Cosh[x] Sinh[x]^3 + 4 Cosh[x]^3 Sinh[x]
+
+In[7]:= TrigExpand[Cosh[x - y]]
+Out[7]= -Sinh[x] Sinh[y] + Cosh[x] Cosh[y]
+
+In[8]:= TrigExpand[Tanh[2 t]]
+Out[8]= (2 Cosh[t] Sinh[t])/(Cosh[t]^2 + Sinh[t]^2)
+
+In[9]:= TrigExpand[{Tan[2 x], Sinh[x + y]}]
+Out[9]= {(2 Cos[x] Sin[x])/(Cos[x]^2 - Sin[x]^2), Cosh[x] Sinh[y] + Cosh[y] Sinh[x]}
+
+In[10]:= TrigExpand[1 < Cos[x + y] < 2]
+Out[10]= 1 < -Sin[x] Sin[y] + Cos[x] Cos[y] < 2
+```
+
 #### Piecewise and Rounding Functions
 `Floor`, `Ceiling`, `Round`, `IntegerPart`, `FractionalPart`.
 
@@ -5513,6 +5588,8 @@ ArcSin[3.]  : 1.5708 + 1.76275 I  ->  1.5708 - 1.76275 I
 ArcCos[3.]  : 0 - 1.76275 I       ->  0 + 1.76275 I
 ArcTanh[3.] : 0.346574 + Pi/2 I   ->  0.346574 - Pi/2 I
 ```
+
+
 ## TeXForm (2026-04-22)
 
 `TeXForm[expr]` prints `expr` as AMS-LaTeX-compatible TeX. When an
@@ -5567,3 +5644,46 @@ TeXForm[Sin[x]/(1+Cos[x])] -> \frac{\sin(x)}{1+\cos(x)}
 TeXForm[(a+b)^2]           -> \left(a+b\right)^{2}
 ```
 
+## TrigExpand and trigsimp module (2026-04-22)
+
+Added `TrigExpand[expr]`, which expands circular and hyperbolic trigonometric
+functions by splitting up sums and integer multiples that appear in their
+arguments. See the `TrigExpand` section above for the full feature list.
+
+At the same time the previous `simp.c` / `simp.h` module was renamed to
+`trigsimp.c` / `trigsimp.h`, and now hosts all three trig-rewriting builtins:
+
+- `TrigToExp`  — rewrite trig / inverse-trig in terms of `Exp` / `Log`.
+- `ExpToTrig`  — rewrite `Exp` / `Log` back into trig / inverse-trig.
+- `TrigExpand` — expand trig sums and integer multiples into products and
+  powers of the base `Sin`/`Cos`/`Sinh`/`Cosh` functions.
+
+All three are registered with `Listable` and `Protected` attributes and have
+docstrings in `info.c`. The `core.c` initialization chain now calls
+`trigsimp_init()` in place of the old `simp_init()`.
+
+Unit tests live in `tests/test_trigexpand.c` (new) and `tests/test_simp.c`
+(existing TrigToExp / ExpToTrig coverage).
+
+### Pythagorean collapse for any integer multiple and sign (2026-04-22)
+
+Extended the Pythagorean reduction pass so that every integer multiple of the
+identity collapses regardless of sign or scalar weight. The previous
+implementation only matched the canonical positive form, so inputs like
+`Sinh[4 x]^2 - Cosh[4 x]^2`, `-Sin[4 x]^2 - Cos[4 x]^2`, and
+`-5 Sin[4 x]^2 - 5 Cos[4 x]^2` came back in fully-expanded polynomial form.
+
+`Factor` does not produce a canonical sign for these expressions — depending on
+the input it may emerge as `(Sin^2 + Cos^2)^n`, `(-Sin^2 - Cos^2)^n` wrapped in
+a separate `-1`, `(Cosh + Sinh)^n (Cosh - Sinh)^n`, or `(Cosh + Sinh)^n
+(-Cosh + Sinh)^n`. The reduction rules now enumerate both signs and admit an
+arbitrary remainder of `Times` factors (via `r___`) so scalar coefficients and
+stray `-1`s factored out by `Factor` survive. The final `Expand` reabsorbs the
+remainder, producing the expected signed constant (e.g. `-5`).
+
+New tests in `tests/test_trigexpand.c`:
+
+- `test_trigexpand_pythagorean` grew cases for negative-integer multiples,
+  sign-flipped sums, and scalar-weighted Pythagorean collapses.
+- `test_trigexpand_hyperbolic_pythagorean` covers `Cosh[n x]^2 - Sinh[n x]^2`,
+  its sign-flipped form, even-parity arguments, and scalar-weighted variants.

@@ -125,6 +125,14 @@ void info_init(void) {
     symtab_set_docstring("Log", "Log[z] gives the natural logarithm of z. Log[b, z] gives the logarithm to base b.");
     symtab_set_docstring("Exp", "Exp[z] gives the exponential of z.");
 
+    // Trig simplification / conversion
+    symtab_set_docstring("TrigToExp",
+        "TrigToExp[expr]\n\trewrites circular and hyperbolic trigonometric functions (and their\n\tinverses) in expr in terms of exponentials and logarithms.");
+    symtab_set_docstring("ExpToTrig",
+        "ExpToTrig[expr]\n\trewrites exponentials and logarithms in expr in terms of circular and\n\thyperbolic trigonometric functions when possible.");
+    symtab_set_docstring("TrigExpand",
+        "TrigExpand[expr]\n\texpands out trigonometric functions in expr.\n\tTrigExpand operates on both circular and hyperbolic functions.\n\tTrigExpand splits up sums and integer multiples that appear in arguments of\n\ttrigonometric functions, and then expands out products of trigonometric\n\tfunctions into sums of powers, using trigonometric identities when possible.\n\tTrigExpand automatically threads over lists, as well as equations,\n\tinequalities, and logic functions.");
+
     // Piecewise / Rounding
     symtab_set_docstring("Floor", "Floor[x] gives the greatest integer less than or equal to x.");
     symtab_set_docstring("Ceiling", "Ceiling[x] gives the smallest integer greater than or equal to x.");
