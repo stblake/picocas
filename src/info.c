@@ -132,6 +132,8 @@ void info_init(void) {
         "ExpToTrig[expr]\n\trewrites exponentials and logarithms in expr in terms of circular and\n\thyperbolic trigonometric functions when possible.");
     symtab_set_docstring("TrigExpand",
         "TrigExpand[expr]\n\texpands out trigonometric functions in expr.\n\tTrigExpand operates on both circular and hyperbolic functions.\n\tTrigExpand splits up sums and integer multiples that appear in arguments of\n\ttrigonometric functions, and then expands out products of trigonometric\n\tfunctions into sums of powers, using trigonometric identities when possible.\n\tTrigExpand automatically threads over lists, as well as equations,\n\tinequalities, and logic functions.");
+    symtab_set_docstring("TrigFactor",
+        "TrigFactor[expr]\n\tfactors trigonometric functions in expr.\n\tTrigFactor operates on both circular and hyperbolic functions.\n\tTrigFactor factors polynomials in trigonometric functions and collapses\n\tPythagorean, angle-addition, and double-angle identities where possible,\n\tbroadly acting as the inverse of TrigExpand.\n\tTrigFactor automatically threads over lists, as well as equations,\n\tinequalities, and logic functions.");
 
     // Piecewise / Rounding
     symtab_set_docstring("Floor", "Floor[x] gives the greatest integer less than or equal to x.");

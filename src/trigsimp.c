@@ -24,6 +24,10 @@ static Expr* exp_to_trig_simp = NULL;
 static Expr* trig_expand_rules = NULL;
 static Expr* trig_expand_pythag = NULL;
 
+static Expr* trig_factor_to_sincos = NULL;
+static Expr* trig_factor_identities = NULL;
+static Expr* trig_factor_from_sincos = NULL;
+
 Expr* builtin_exptotrig(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
     Expr* arg = res->data.function.args[0];
@@ -87,6 +91,127 @@ static int trigexpand_threads_over(const char* name) {
            strcmp(name, "Xor") == 0 ||
            strcmp(name, "Implies") == 0;
 }
+
+/*
+ * Detect whether the input contains a Pythagorean-eligible squared structure
+ * of the form Sin[a]^k together with Cos[a]^k (or the hyperbolic analog
+ * Sinh[a]^k together with Cosh[a]^k) for some k >= 2 with the same argument
+ * a. The Factor-based Pythagorean collapse pass below only produces useful
+ * work when the input has this shape; without this guard, Factor on a
+ * multivariate non-Pythagorean expansion (e.g. TrigExpand[Sin[2 x + 3 y]]
+ * after expansion becomes a 4-variable polynomial in Cos[x], Sin[x], Cos[y],
+ * Sin[y]) becomes prohibitively slow.
+ */
+#define TRIG_PAIR_CAP 64
+typedef struct {
+    int kinds[TRIG_PAIR_CAP];   /* 0=Sin, 1=Cos, 2=Sinh, 3=Cosh */
+    const Expr* args[TRIG_PAIR_CAP];
+    size_t count;
+    int overflow;
+} TrigSquareList;
+
+static int trig_pair_kind(const char* name) {
+    if (strcmp(name, "Sin") == 0)  return 0;
+    if (strcmp(name, "Cos") == 0)  return 1;
+    if (strcmp(name, "Sinh") == 0) return 2;
+    if (strcmp(name, "Cosh") == 0) return 3;
+    return -1;
+}
+
+static void collect_trig_squares(const Expr* e, TrigSquareList* L) {
+    if (!e || L->overflow) return;
+    if (e->type != EXPR_FUNCTION) return;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        const Expr* base = e->data.function.args[0];
+        const Expr* exp  = e->data.function.args[1];
+        if (base->type == EXPR_FUNCTION &&
+            base->data.function.head &&
+            base->data.function.head->type == EXPR_SYMBOL &&
+            base->data.function.arg_count == 1 &&
+            exp->type == EXPR_INTEGER && exp->data.integer >= 2) {
+            int k = trig_pair_kind(base->data.function.head->data.symbol);
+            if (k >= 0) {
+                if (L->count < TRIG_PAIR_CAP) {
+                    L->kinds[L->count] = k;
+                    L->args[L->count]  = base->data.function.args[0];
+                    L->count++;
+                } else {
+                    L->overflow = 1;
+                }
+            }
+        }
+    }
+    collect_trig_squares(e->data.function.head, L);
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        collect_trig_squares(e->data.function.args[i], L);
+    }
+}
+
+static int input_has_pythag_pair(const Expr* e) {
+    TrigSquareList L = {{0}, {0}, 0, 0};
+    collect_trig_squares(e, &L);
+    /* Conservatively run Factor when the buffer overflowed -- the input is
+     * complex enough that we cannot cheaply rule out a Pythagorean pair. */
+    if (L.overflow) return 1;
+    for (size_t i = 0; i < L.count; i++) {
+        for (size_t j = i + 1; j < L.count; j++) {
+            int ki = L.kinds[i], kj = L.kinds[j];
+            int circ = (ki == 0 && kj == 1) || (ki == 1 && kj == 0);
+            int hyp  = (ki == 2 && kj == 3) || (ki == 3 && kj == 2);
+            if ((circ || hyp) && expr_eq((Expr*)L.args[i], (Expr*)L.args[j])) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*
+ * Count the number of distinct trig atoms (Sin/Cos/Sinh/Cosh applied to a
+ * specific argument) that appear at integer power >= 2 anywhere in the
+ * expression. Two atoms are considered the same if they have the same head
+ * (Sin/Cos/Sinh/Cosh) and structurally equal arguments.
+ *
+ * This is used as a proxy for the cost of running Factor: heuristic_factor's
+ * factor_roots routine probes O(v_count * num_high_deg_vars * 10) trial
+ * divisions, each of which is itself an expensive multivariate polynomial
+ * GCD. With more than two distinct trig atoms appearing at squared-or-higher
+ * degree, the polynomial Factor sees is dense enough in trig "variables" that
+ * the trial divisions run prohibitively slowly without producing useful
+ * factorizations (since the polynomial is irreducible over Z without the
+ * Sin^2 + Cos^2 = 1 identity).
+ */
+static size_t count_distinct_squared_trig_atoms(const Expr* e) {
+    TrigSquareList L = {{0}, {0}, 0, 0};
+    collect_trig_squares(e, &L);
+    /* Conservative on overflow: report a high count so callers skip Factor. */
+    if (L.overflow) return TRIG_PAIR_CAP;
+    size_t distinct = 0;
+    for (size_t i = 0; i < L.count; i++) {
+        int already_seen = 0;
+        for (size_t j = 0; j < i; j++) {
+            if (L.kinds[i] == L.kinds[j] &&
+                expr_eq((Expr*)L.args[i], (Expr*)L.args[j])) {
+                already_seen = 1;
+                break;
+            }
+        }
+        if (!already_seen) distinct++;
+    }
+    return distinct;
+}
+
+/*
+ * Threshold above which Factor's multivariate cost becomes prohibitive on
+ * trig expansions. With <= 2 distinct squared trig atoms (the typical
+ * Sin[x]/Cos[x] or Sinh[x]/Cosh[x] pair plus at most one extra), Factor stays
+ * tractable; beyond that the multivariate polynomial densifies and Factor's
+ * trial-division loop in factor_roots stalls.
+ */
+#define TRIG_FACTOR_ATOM_THRESHOLD 2
 
 /*
  * Test whether an expression tree contains any Power[_, n] subterm with a
@@ -162,8 +287,18 @@ Expr* builtin_trigexpand(Expr* res) {
      * instead of 2 Cos Sin / (Cos^2 - Sin^2)). Skip the Factor-based pass for
      * such expressions and only run the direct-sum Pythagorean rules.
      */
+    /* Skip the Factor pass entirely when the input has no Pythagorean-eligible
+     * squared structure -- Factor on a multivariate non-Pythagorean expansion
+     * (e.g. TrigExpand[Sin[2 x + 3 y]]) is prohibitively slow and would not
+     * have produced any useful collapse. Also skip when the expanded form has
+     * more than two distinct squared trig atoms; even if a Pythagorean pair
+     * exists structurally, Factor on the resulting multivariate polynomial
+     * stalls without producing any useful collapse (e.g. TrigFactor's Path B
+     * may invoke TrigExpand on an already-expanded form like the polynomial
+     * for Sin[2 x + 3 y]). */
     Expr* reduced;
-    if (has_reciprocal_power(expanded)) {
+    if (has_reciprocal_power(expanded) || !input_has_pythag_pair(arg) ||
+        count_distinct_squared_trig_atoms(expanded) > TRIG_FACTOR_ATOM_THRESHOLD) {
         Expr* pyth_args[2] = { expanded, expr_copy(trig_expand_pythag) };
         Expr* pyth_expr = expr_new_function(expr_new_symbol("ReplaceRepeated"), pyth_args, 2);
         reduced = evaluate(pyth_expr);
@@ -188,6 +323,163 @@ Expr* builtin_trigexpand(Expr* res) {
     expr_free(final_expr);
 
     return result;
+}
+
+/*
+ * Count the total number of atomic leaves (integers, reals, symbols, strings,
+ * bigints) in an expression tree. Used as a complexity measure when choosing
+ * between alternative TrigFactor results.
+ */
+static size_t trigfactor_leaf_count(const Expr* e) {
+    if (!e) return 0;
+    if (e->type != EXPR_FUNCTION) return 1;
+    size_t total = trigfactor_leaf_count(e->data.function.head);
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        total += trigfactor_leaf_count(e->data.function.args[i]);
+    }
+    return total;
+}
+
+/*
+ * Core TrigFactor pipeline (see builtin_trigfactor for the overall design).
+ * Takes ownership of `input` and returns a new Expr*.
+ */
+static Expr* trigfactor_run_pipeline(Expr* input) {
+    /* Rewrite reciprocal heads as Sin/Cos ratios. */
+    Expr* ts_args[2] = { input, expr_copy(trig_factor_to_sincos) };
+    Expr* ts_expr = expr_new_function(expr_new_symbol("ReplaceRepeated"), ts_args, 2);
+    Expr* sincos = evaluate(ts_expr);
+    expr_free(ts_expr);
+
+    /* Combine over a common denominator. */
+    Expr* tog_args[1] = { sincos };
+    Expr* tog_expr = expr_new_function(expr_new_symbol("Together"), tog_args, 1);
+    Expr* togethered = evaluate(tog_expr);
+    expr_free(tog_expr);
+
+    /* Factor -- picocas Factor treats trig atoms as polynomial variables.
+     * Skip Factor when the polynomial has more than two distinct squared trig
+     * atoms: with that many high-degree multivariate variables, Factor's
+     * trial-division loop in factor_roots stalls (e.g. on the polynomial that
+     * TrigExpand produces for Sin[2 x + 3 y]) and would not produce a useful
+     * factorization regardless. The identity rules applied below still match
+     * Pythagorean structure that survives in the post-Together factored form
+     * (e.g. (Sin[x]^2 + Cos[x]^2)(Cosh[y]^2 - Sinh[y]^2) collapses to 1
+     * directly via the Times-context identity rules). */
+    Expr* factored;
+    if (count_distinct_squared_trig_atoms(togethered) > TRIG_FACTOR_ATOM_THRESHOLD) {
+        factored = togethered;
+    } else {
+        Expr* fac_args[1] = { togethered };
+        Expr* fac_expr = expr_new_function(expr_new_symbol("Factor"), fac_args, 1);
+        factored = evaluate(fac_expr);
+        expr_free(fac_expr);
+    }
+
+    /* Apply identity collapse rules to a fixed point. */
+    Expr* id_args[2] = { factored, expr_copy(trig_factor_identities) };
+    Expr* id_expr = expr_new_function(expr_new_symbol("ReplaceRepeated"), id_args, 2);
+    Expr* collapsed = evaluate(id_expr);
+    expr_free(id_expr);
+
+    /* Restore Tan/Sec/Cot/Csc (and hyperbolic analogs). */
+    Expr* fs_args[2] = { collapsed, expr_copy(trig_factor_from_sincos) };
+    Expr* fs_expr = expr_new_function(expr_new_symbol("ReplaceRepeated"), fs_args, 2);
+    Expr* result = evaluate(fs_expr);
+    expr_free(fs_expr);
+
+    return result;
+}
+
+/*
+ * TrigFactor -- factor trigonometric expressions.
+ *
+ * TrigFactor is broadly the functional inverse of TrigExpand for the
+ * structural identities that both support. It combines sums of trig
+ * products into angle-sum forms, collapses Pythagorean identities in both
+ * circular and hyperbolic form, recognises the reverse of the double-angle
+ * identities, and factors polynomial structure over the trig atoms.
+ *
+ * Two parallel paths are tried and the shorter result (by leaf count) is
+ * returned:
+ *
+ *   Path A   -- run the core pipeline on the original expression. This
+ *               preserves angle-sum structure such as Cos[x+y] and is the
+ *               preferred route for expressions like Sin[x+y]^2 + Tan[x+y]
+ *               where expanding the angle-sum would make the result much
+ *               larger.
+ *   Path B   -- first apply TrigExpand to the argument, then run the core
+ *               pipeline. This catches cancellations that only become
+ *               visible after the angle-sum is expanded, e.g.
+ *               Cos[x+y] + Sin[x] Sin[y] -> Cos[x] Cos[y].
+ *
+ * The core pipeline itself:
+ *   1. Rewrite reciprocal heads (Tan, Cot, Sec, Csc and their hyperbolic
+ *      analogs) in terms of Sin/Cos/Sinh/Cosh so Factor sees the full
+ *      polynomial structure.
+ *   2. Together to combine over a common denominator.
+ *   3. Factor the rational.
+ *   4. Apply identity collapse rules: Pythagorean sums, reverse
+ *      angle-addition, reverse double-angle, and factored-form Pythagorean
+ *      identities that arise from Factor.
+ *   5. Re-collapse Sin[x]/Cos[x] (and friends) back to Tan[x] etc. so
+ *      surface-form reciprocals survive the round-trip.
+ *
+ * Threading over equations, inequalities, and logic heads is applied before
+ * the pipeline (List threading is delivered by ATTR_LISTABLE).
+ */
+Expr* builtin_trigfactor(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    Expr* arg = res->data.function.args[0];
+
+    /* 1. Thread over equations, inequalities, and logic heads. Listable is
+     * handled automatically by the attribute system. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head &&
+        arg->data.function.head->type == EXPR_SYMBOL &&
+        trigexpand_threads_over(arg->data.function.head->data.symbol)) {
+        size_t n = arg->data.function.arg_count;
+        Expr** new_args = (Expr**)calloc(n, sizeof(Expr*));
+        if (!new_args) return NULL;
+        for (size_t i = 0; i < n; i++) {
+            Expr* inner[1] = { expr_copy(arg->data.function.args[i]) };
+            Expr* wrap = expr_new_function(expr_new_symbol("TrigFactor"), inner, 1);
+            new_args[i] = evaluate(wrap);
+            expr_free(wrap);
+        }
+        return expr_new_function(expr_copy(arg->data.function.head), new_args, n);
+    }
+
+    /* Path A: pipeline applied to the argument as-is. */
+    Expr* result_a = trigfactor_run_pipeline(expr_copy(arg));
+
+    /* If Path A changed the expression at all, trust that result and skip
+     * Path B. Path B (which TrigExpand-expands the input) can be expensive
+     * for expressions with angle-sum arguments -- e.g. Sin[x+y]^2 + Tan[x+y]
+     * blows up into a multivariate rational that Factor has to reduce over
+     * many terms. Path B is only valuable when Path A was unproductive,
+     * because TrigExpand may then expose cancellations (for example,
+     * Cos[x+y] + Sin[x] Sin[y] -> Cos[x] Cos[y]). */
+    if (!expr_eq(result_a, arg)) {
+        return result_a;
+    }
+
+    /* Path B: apply TrigExpand first, then run the pipeline. */
+    Expr* te_args[1] = { expr_copy(arg) };
+    Expr* te_expr = expr_new_function(expr_new_symbol("TrigExpand"), te_args, 1);
+    Expr* expanded = evaluate(te_expr);
+    expr_free(te_expr);
+    Expr* result_b = trigfactor_run_pipeline(expanded);
+
+    /* Keep Path B only if it actually produced a simpler expression than
+     * Path A (which in this branch equals the input). This protects against
+     * the TrigExpand round-trip blowing the expression up. */
+    if (trigfactor_leaf_count(result_b) < trigfactor_leaf_count(result_a)) {
+        expr_free(result_a);
+        return result_b;
+    }
+    expr_free(result_b);
+    return result_a;
 }
 
 void trigsimp_init(void) {
@@ -331,6 +623,128 @@ void trigsimp_init(void) {
 
     trig_expand_pythag = parse_expression(pythag_str);
 
+    /*
+     * TrigFactor rules.
+     *
+     * Split into three phases so we can control ordering precisely:
+     *   to_sincos    -- rewrite Tan/Cot/Sec/Csc (and hyperbolic) as Sin/Cos
+     *                   ratios before polynomial factoring,
+     *   identities   -- Pythagorean collapse, reverse angle-addition, reverse
+     *                   double-angle, and factored-form Pythagorean collapses
+     *                   that arise from Factor,
+     *   from_sincos  -- restore reciprocal trig on the output so Tan, Sec,
+     *                   Tanh, Sech etc. are preserved in the factored form.
+     */
+    const char* to_sincos_str = "{ "
+        "Tan[x_]  :> Sin[x] / Cos[x], "
+        "Cot[x_]  :> Cos[x] / Sin[x], "
+        "Sec[x_]  :> 1 / Cos[x], "
+        "Csc[x_]  :> 1 / Sin[x], "
+        "Tanh[x_] :> Sinh[x] / Cosh[x], "
+        "Coth[x_] :> Cosh[x] / Sinh[x], "
+        "Sech[x_] :> 1 / Cosh[x], "
+        "Csch[x_] :> 1 / Sinh[x] "
+    "}";
+    trig_factor_to_sincos = parse_expression(to_sincos_str);
+
+    /*
+     * Identity rules. The tail patterns (r___ in Plus, r___ in Times) let each
+     * rule fire inside a larger sum or product without requiring the sum /
+     * product to match exactly. Orderless attributes on Plus and Times handle
+     * the permutation search.
+     *
+     * Pythagorean collapses (circular Sin^2 + Cos^2 = 1, hyperbolic
+     * Cosh^2 - Sinh^2 = 1) appear in both directions because Factor may
+     * emerge with either sign depending on which way the leading coefficient
+     * went.
+     *
+     * Factored forms:
+     *   (Cos - Sin)(Cos + Sin) = Cos^2 - Sin^2   = Cos[2x]
+     *   (Cosh - 1)(Cosh + 1)   = Cosh^2 - 1      = Sinh^2
+     *   (Cosh - Sinh)(Cosh + Sinh) = Cosh^2 - Sinh^2 = 1
+     *
+     * Reverse angle-addition and reverse double-angle fire inside a larger
+     * sum so that mixed expressions such as
+     *   Sin[a]Cos[b] + Cos[a]Sin[b] + extra_term
+     * collapse to Sin[a + b] + extra_term cleanly.
+     */
+    const char* identities_str = "{ "
+        /* Pythagorean identities (Plus context, with optional coefficient). */
+        "a_. Sin[x_]^2 + a_. Cos[x_]^2 + r___ :> a + r, "
+        "a_. Cosh[x_]^2 - a_. Sinh[x_]^2 + r___ :> a + r, "
+        "-a_. Cosh[x_]^2 + a_. Sinh[x_]^2 + r___ :> -a + r, "
+        /* Pythagorean identities (Times/factored context). */
+        "(Sin[x_]^2 + Cos[x_]^2) r___ :> 1 r, "
+        "(Cosh[x_]^2 - Sinh[x_]^2) r___ :> 1 r, "
+        "(-Cosh[x_]^2 + Sinh[x_]^2) r___ :> -1 r, "
+        /* (Cosh + Sinh)(Cosh - Sinh) = 1 and variant with leading sign. */
+        "(Cosh[x_] - Sinh[x_]) (Cosh[x_] + Sinh[x_]) r___ :> 1 r, "
+        "(-Cosh[x_] + Sinh[x_]) (Cosh[x_] + Sinh[x_]) r___ :> -1 r, "
+        /* (Cosh + 1)(Cosh - 1) = Sinh^2 -- appears from Factor[Cosh^2 - 1]. */
+        "(-1 + Cosh[x_]) (1 + Cosh[x_]) r___ :> Sinh[x]^2 r, "
+        "(1 - Cosh[x_]) (1 + Cosh[x_]) r___ :> -Sinh[x]^2 r, "
+        /* (Cos - Sin)(Cos + Sin) = Cos[2x] -- from Factor[Cos^2 - Sin^2]. */
+        "(Cos[x_] - Sin[x_]) (Cos[x_] + Sin[x_]) r___ :> Cos[2 x] r, "
+        "(-Cos[x_] + Sin[x_]) (Cos[x_] + Sin[x_]) r___ :> -Cos[2 x] r, "
+        /* Reverse angle-addition (circular). */
+        "Sin[a_] Cos[b_] + Cos[a_] Sin[b_] + r___ :> Sin[a + b] + r, "
+        "-Sin[a_] Cos[b_] - Cos[a_] Sin[b_] + r___ :> -Sin[a + b] + r, "
+        "Sin[a_] Cos[b_] - Cos[a_] Sin[b_] + r___ :> Sin[a - b] + r, "
+        "-Sin[a_] Cos[b_] + Cos[a_] Sin[b_] + r___ :> -Sin[a - b] + r, "
+        "Cos[a_] Cos[b_] - Sin[a_] Sin[b_] + r___ :> Cos[a + b] + r, "
+        "-Cos[a_] Cos[b_] + Sin[a_] Sin[b_] + r___ :> -Cos[a + b] + r, "
+        "Cos[a_] Cos[b_] + Sin[a_] Sin[b_] + r___ :> Cos[a - b] + r, "
+        /* Reverse angle-addition (hyperbolic). */
+        "Sinh[a_] Cosh[b_] + Cosh[a_] Sinh[b_] + r___ :> Sinh[a + b] + r, "
+        "-Sinh[a_] Cosh[b_] - Cosh[a_] Sinh[b_] + r___ :> -Sinh[a + b] + r, "
+        "Sinh[a_] Cosh[b_] - Cosh[a_] Sinh[b_] + r___ :> Sinh[a - b] + r, "
+        "-Sinh[a_] Cosh[b_] + Cosh[a_] Sinh[b_] + r___ :> -Sinh[a - b] + r, "
+        "Cosh[a_] Cosh[b_] + Sinh[a_] Sinh[b_] + r___ :> Cosh[a + b] + r, "
+        "-Cosh[a_] Cosh[b_] - Sinh[a_] Sinh[b_] + r___ :> -Cosh[a + b] + r, "
+        "Cosh[a_] Cosh[b_] - Sinh[a_] Sinh[b_] + r___ :> Cosh[a - b] + r, "
+        /* Reverse double-angle (Plus contexts). */
+        "Cos[x_]^2 - Sin[x_]^2 + r___ :> Cos[2 x] + r, "
+        "-Cos[x_]^2 + Sin[x_]^2 + r___ :> -Cos[2 x] + r, "
+        "Cosh[x_]^2 + Sinh[x_]^2 + r___ :> Cosh[2 x] + r, "
+        "-Cosh[x_]^2 - Sinh[x_]^2 + r___ :> -Cosh[2 x] + r, "
+        /* Reverse double-angle (Times contexts -- 2 Sin Cos = Sin[2x]). */
+        "2 Sin[x_] Cos[x_] r___ :> Sin[2 x] r, "
+        "-2 Sin[x_] Cos[x_] r___ :> -Sin[2 x] r, "
+        "2 Sinh[x_] Cosh[x_] r___ :> Sinh[2 x] r, "
+        "-2 Sinh[x_] Cosh[x_] r___ :> -Sinh[2 x] r "
+    "}";
+    trig_factor_identities = parse_expression(identities_str);
+
+    /*
+     * from_sincos: restore Tan/Sec/Cot/Csc (and hyperbolic analogs) from the
+     * Sin/Cos ratio form. The higher-power rules (Sin^n Cos^-n) must appear
+     * before the degree-1 rules so ReplaceRepeated chooses the most specific
+     * match first.
+     */
+    const char* from_sincos_str = "{ "
+        /* Sin/Cos ratio -> Tan/Cot (must precede the bare reciprocal rules
+         * below so a ratio never matches as a bare Sec/Csc factor). */
+        "Sin[x_]^2 Cos[x_]^(-2) r___ :> Tan[x]^2 r, "
+        "Cos[x_]^2 Sin[x_]^(-2) r___ :> Cot[x]^2 r, "
+        "Sin[x_]   Cos[x_]^(-1) r___ :> Tan[x] r, "
+        "Cos[x_]   Sin[x_]^(-1) r___ :> Cot[x] r, "
+        "Sinh[x_]^2 Cosh[x_]^(-2) r___ :> Tanh[x]^2 r, "
+        "Cosh[x_]^2 Sinh[x_]^(-2) r___ :> Coth[x]^2 r, "
+        "Sinh[x_]   Cosh[x_]^(-1) r___ :> Tanh[x] r, "
+        "Cosh[x_]   Sinh[x_]^(-1) r___ :> Coth[x] r, "
+        /* Bare reciprocal -> Sec/Csc. The r___ tail is required so factors
+         * can exist alongside without gating the rewrite. */
+        "Cos[x_]^(-2) r___ :> Sec[x]^2 r, "
+        "Sin[x_]^(-2) r___ :> Csc[x]^2 r, "
+        "Cos[x_]^(-1) r___ :> Sec[x] r, "
+        "Sin[x_]^(-1) r___ :> Csc[x] r, "
+        "Cosh[x_]^(-2) r___ :> Sech[x]^2 r, "
+        "Sinh[x_]^(-2) r___ :> Csch[x]^2 r, "
+        "Cosh[x_]^(-1) r___ :> Sech[x] r, "
+        "Sinh[x_]^(-1) r___ :> Csch[x] r "
+    "}";
+    trig_factor_from_sincos = parse_expression(from_sincos_str);
+
     symtab_add_builtin("ExpToTrig", builtin_exptotrig);
     symtab_get_def("ExpToTrig")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
 
@@ -339,4 +753,7 @@ void trigsimp_init(void) {
 
     symtab_add_builtin("TrigExpand", builtin_trigexpand);
     symtab_get_def("TrigExpand")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
+
+    symtab_add_builtin("TrigFactor", builtin_trigfactor);
+    symtab_get_def("TrigFactor")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
 }

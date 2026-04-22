@@ -3003,6 +3003,16 @@ functions.
   the surrounding `Times`. Expressions that contain a denominator (any
   `Power[_, negative_Integer]` subterm) skip the Factor pass so that canonical
   forms such as `(2 Cos[x] Sin[x])/(Cos[x]^2 - Sin[x]^2)` are preserved.
+  Inputs without a Pythagorean-eligible squared structure (no pair
+  `Sin[a]^k`/`Cos[a]^k` or `Sinh[a]^k`/`Cosh[a]^k` with the same argument and
+  `k >= 2`) likewise skip the Factor pass; the multivariate polynomials that
+  multi-angle expansions such as `TrigExpand[Sin[2 x + 3 y]]` produce would
+  otherwise make `Factor` prohibitively slow without yielding any collapse.
+  The Factor pass is also skipped when the expanded form contains more than
+  two distinct squared trigonometric atoms (e.g. `Cos[x]^2`, `Sin[x]^2`,
+  `Cos[y]^2`, `Sin[y]^2` together): even if a Pythagorean pair is structurally
+  present, `Factor` on the resulting dense multivariate polynomial stalls
+  without producing a useful collapse.
 - Automatically threads over lists (via `Listable`), as well as equations,
   inequalities (`Equal`, `Unequal`, `Less`, `LessEqual`, `Greater`,
   `GreaterEqual`, `SameQ`, `UnsameQ`), and logic functions (`And`, `Or`,
@@ -3041,6 +3051,99 @@ Out[9]= {(2 Cos[x] Sin[x])/(Cos[x]^2 - Sin[x]^2), Cosh[x] Sinh[y] + Cosh[y] Sinh
 
 In[10]:= TrigExpand[1 < Cos[x + y] < 2]
 Out[10]= 1 < -Sin[x] Sin[y] + Cos[x] Cos[y] < 2
+```
+
+#### TrigFactor
+Factors trigonometric functions in `expr`. Broadly the functional inverse of
+`TrigExpand`: combines sums of trigonometric products into angle-sum forms,
+collapses Pythagorean identities (both circular and hyperbolic), recognises
+the reverse of the double-angle identities, and factors polynomial structure
+over the trigonometric atoms.
+- `TrigFactor[expr]`
+
+**Features**:
+- `Listable`, `Protected`.
+- Operates on both circular (`Sin`, `Cos`, `Tan`, `Cot`, `Sec`, `Csc`) and
+  hyperbolic (`Sinh`, `Cosh`, `Tanh`, `Coth`, `Sech`, `Csch`) functions.
+- Pipeline:
+  1. Rewrite reciprocal heads (`Tan`, `Cot`, `Sec`, `Csc`, and their
+     hyperbolic analogs) as `Sin`/`Cos`/`Sinh`/`Cosh` ratios so that `Factor`
+     sees the full polynomial structure.
+  2. Combine into a single rational via `Together`.
+  3. Run `Factor` on the resulting rational; trigonometric atoms are treated
+     as independent polynomial variables. The `Factor` pass is skipped when
+     the post-`Together` form contains more than two distinct squared
+     trigonometric atoms (e.g. `Sin[x]^2`, `Cos[x]^2`, `Sinh[y]^2`,
+     `Cosh[y]^2` together): on such dense multivariate polynomials Factor's
+     trial-division loop stalls without producing a useful factorization, and
+     the identity rules in step 4 still match Pythagorean structure that
+     survives in the post-`Together` factored form (e.g.
+     `(Sin[x]^2 + Cos[x]^2)(Cosh[y]^2 - Sinh[y]^2)` collapses directly to
+     `1` via the `Times`-context Pythagorean rules).
+  4. Apply identity collapse rules via `ReplaceRepeated`: Pythagorean
+     identities (`Sin^2 + Cos^2 -> 1`, `Cosh^2 - Sinh^2 -> 1`, with and
+     without arbitrary coefficients), reverse angle-addition
+     (`Sin[a]Cos[b] ± Cos[a]Sin[b] -> Sin[a ± b]`,
+     `Cos[a]Cos[b] ± Sin[a]Sin[b] -> Cos[a ∓ b]`, and hyperbolic analogs),
+     reverse double-angle (`2 Sin Cos -> Sin[2x]`,
+     `Cos^2 - Sin^2 -> Cos[2x]`, `Cosh^2 + Sinh^2 -> Cosh[2x]`), and
+     factored-form variants such as `(Cos - Sin)(Cos + Sin) -> Cos[2x]`,
+     `(Cosh - 1)(Cosh + 1) -> Sinh^2`, and
+     `(Cosh - Sinh)(Cosh + Sinh) -> 1` that arise naturally from `Factor`.
+  5. Restore `Tan`/`Cot`/`Sec`/`Csc` (and hyperbolic analogs) from the
+     `Sin`/`Cos` ratio form so reciprocal heads survive the round-trip.
+- Two paths are tried: the primary pipeline (preserves angle-sum structure)
+  and a fallback that `TrigExpand`s the argument first (catches
+  cancellations that only become visible after the angle-sum is expanded,
+  e.g. `Cos[x + y] + Sin[x] Sin[y] -> Cos[x] Cos[y]`). The fallback runs
+  only when the primary pipeline leaves the expression unchanged, so
+  structurally productive inputs (e.g. `Sin[x + y]^2 + Tan[x + y]`) avoid
+  the expensive expanded-rational path. The final result is the smaller of
+  the two by leaf count; ties favour the primary pipeline.
+- Automatically threads over lists (via `Listable`), as well as equations,
+  inequalities (`Equal`, `Unequal`, `Less`, `LessEqual`, `Greater`,
+  `GreaterEqual`, `SameQ`, `UnsameQ`), and logic functions (`And`, `Or`,
+  `Not`, `Xor`, `Implies`).
+
+```mathematica
+In[1]:= TrigFactor[Sin[x]^2 + Cos[x]^2]
+Out[1]= 1
+
+In[2]:= TrigFactor[Cosh[x]^2 - Sinh[x]^2]
+Out[2]= 1
+
+In[3]:= TrigFactor[2 Sin[x] Cos[x]]
+Out[3]= Sin[2 x]
+
+In[4]:= TrigFactor[Cos[x]^2 - Sin[x]^2]
+Out[4]= Cos[2 x]
+
+In[5]:= TrigFactor[Sin[a] Cos[b] + Cos[a] Sin[b]]
+Out[5]= Sin[a + b]
+
+In[6]:= TrigFactor[Cos[a] Cos[b] + Sin[a] Sin[b]]
+Out[6]= Cos[a - b]
+
+In[7]:= TrigFactor[Sin[x]^2 + Tan[x]^2]
+Out[7]= Tan[x]^2 (1 + Cos[x]^2)
+
+In[8]:= TrigFactor[Cosh[x]^2 - Cosh[x]^4]
+Out[8]= -Cosh[x]^2 Sinh[x]^2
+
+In[9]:= TrigFactor[Sin[x+y]^2 + Tan[x+y]]
+Out[9]= Tan[x + y] (1 + Cos[x + y] Sin[x + y])
+
+In[10]:= TrigFactor[Cos[x + y] + Sin[x] Sin[y]]
+Out[10]= Cos[x] Cos[y]
+
+In[11]:= TrigFactor[Cos[x]^4 - Sin[x]^4]
+Out[11]= Cos[2 x]
+
+In[12]:= TrigFactor[{Sin[x]^2 + Cos[x]^2, 2 Sinh[x] Cosh[x]}]
+Out[12]= {1, Sinh[2 x]}
+
+In[13]:= TrigFactor[Sin[x]^2 + Cos[x]^2 == 1]
+Out[13]= True
 ```
 
 #### Piecewise and Rounding Functions
@@ -5687,3 +5790,66 @@ New tests in `tests/test_trigexpand.c`:
   sign-flipped sums, and scalar-weighted Pythagorean collapses.
 - `test_trigexpand_hyperbolic_pythagorean` covers `Cosh[n x]^2 - Sinh[n x]^2`,
   its sign-flipped form, even-parity arguments, and scalar-weighted variants.
+
+## TrigFactor (2026-04-22)
+
+Added `TrigFactor[expr]` in `src/trigsimp.c`, which factors trigonometric
+functions in `expr` and acts broadly as the functional inverse of
+`TrigExpand`. See the `TrigFactor` section above for the complete feature
+list.
+
+`TrigFactor` is registered with `Listable` and `Protected` attributes, and
+its docstring lives in `src/info.c` alongside `TrigExpand` / `TrigToExp` /
+`ExpToTrig`. Initialization is driven from `trigsimp_init()` (which is
+already called by `core_init()`).
+
+### Design highlights
+
+- Reciprocal heads (`Tan`, `Cot`, `Sec`, `Csc` and their hyperbolic analogs)
+  are rewritten as `Sin`/`Cos` / `Sinh`/`Cosh` ratios before the polynomial
+  factoring pass so `Factor` sees the full structure.
+- Identity collapses fire via `ReplaceRepeated`: Pythagorean (both directions
+  and with arbitrary optional coefficients), reverse angle-addition in both
+  circular and hyperbolic form, reverse double-angle, and factored-form
+  variants that `Factor` naturally produces such as
+  `(Cos - Sin)(Cos + Sin) -> Cos[2 x]`, `(Cosh - 1)(Cosh + 1) -> Sinh^2`,
+  and `(Cosh - Sinh)(Cosh + Sinh) -> 1`.
+- A second pass restores `Tan`, `Sec`, `Cot`, `Csc` (and hyperbolic analogs)
+  from `Sin`/`Cos` ratio form so reciprocal heads survive.
+- Two paths are evaluated:
+  - Path A runs the pipeline on the original expression; it preserves
+    angle-sum structure (for example `Sin[x + y]^2 + Tan[x + y]` factors
+    cleanly as `Tan[x + y] (1 + Cos[x + y] Sin[x + y])`).
+  - Path B first applies `TrigExpand`, then runs the pipeline. This catches
+    cancellations that only become visible after angle-sums are distributed
+    (for example `Cos[x + y] + Sin[x] Sin[y] -> Cos[x] Cos[y]`).
+  Path B runs only when Path A left the expression unchanged. This avoids
+  blowing up on inputs like `Sin[x + y]^2 + Tan[x + y]` where
+  `TrigExpand` produces a large multivariate rational that `Factor` would
+  otherwise struggle with. When both paths run, the smaller result by leaf
+  count wins, with ties resolved in favour of Path A to preserve angle-sum
+  structure.
+- Threads automatically over lists (via `Listable`), equations,
+  inequalities, and logic heads, matching `TrigExpand`.
+
+### Tests
+
+Unit tests live in `tests/test_trigfactor.c` and cover:
+
+- Pythagorean identities (circular and hyperbolic), with and without
+  arbitrary coefficients, and iterated across independent variable pairs.
+- Reverse double-angle reductions for both `Sin`/`Cos` and `Sinh`/`Cosh`.
+- Reverse angle-addition identities in both circular and hyperbolic form.
+- The `Cos[x + y] + Sin[x] Sin[y] -> Cos[x] Cos[y]` cancellation that
+  requires Path B.
+- `Tan`/`Sec` expressions (including `Sin[x]^2 + Tan[x]^2`,
+  `Tan[x + y] Cos[x + y]`, and `Sec[x] Cos[x]`).
+- Polynomial factorizations such as `Cos[x]^4 - Sin[x]^4 -> Cos[2 x]` and
+  `Cosh[x]^2 - Cosh[x]^4 -> -Cosh[x]^2 Sinh[x]^2`.
+- Round-tripping: `TrigFactor[TrigExpand[Sin[x + y]]] -> Sin[x + y]` and
+  analogous inverses for `Cos`, `Sinh`, `Cosh`, and integer multiples.
+- Reciprocal trig passing through unchanged (`Tan[x] -> Tan[x]`,
+  `Sec[x]^2 -> Sec[x]^2`, etc.).
+- Atomic inputs and numeric folding.
+- Threading over `List`, `Equal`, `Unequal`, `Less`, `Greater`, `And`,
+  `Not`, including compound inequalities.
