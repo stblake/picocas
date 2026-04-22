@@ -634,6 +634,127 @@ Expr* builtin_dt(Expr* res) {
 }
 
 /* ---------------------------------------------------------------------- */
+/* Reduce Derivative[n1,...,nm][Function[...]] to a plain Function[body']  */
+/* ---------------------------------------------------------------------- */
+
+/* Build a fresh Slot[i] expression. */
+static Expr* make_slot(int64_t i) {
+    Expr* idx[1] = { mk_int(i) };
+    return expr_new_function(mk_sym("Slot"), idx, 1);
+}
+
+/* See deriv.h for the contract. */
+Expr* derivative_of_pure_function(Expr* deriv_head, Expr* pure_fn) {
+    if (!deriv_head || !pure_fn) return NULL;
+    if (deriv_head->type != EXPR_FUNCTION) return NULL;
+    if (!is_sym(deriv_head->data.function.head, "Derivative")) return NULL;
+    size_t m = deriv_head->data.function.arg_count;
+    if (m == 0) return NULL;
+
+    /* All derivative orders must be nonnegative integers. */
+    int64_t* orders = malloc(sizeof(int64_t) * m);
+    for (size_t i = 0; i < m; i++) {
+        Expr* oi = deriv_head->data.function.args[i];
+        if (oi->type != EXPR_INTEGER || oi->data.integer < 0) {
+            free(orders);
+            return NULL;
+        }
+        orders[i] = oi->data.integer;
+    }
+
+    if (pure_fn->type != EXPR_FUNCTION ||
+        !is_sym(pure_fn->data.function.head, "Function")) {
+        free(orders);
+        return NULL;
+    }
+
+    size_t fargc = pure_fn->data.function.arg_count;
+    if (fargc == 0) { free(orders); return NULL; }
+
+    /* Determine body and the variables to differentiate with respect to.
+     * For each supported Function signature we identify m variables
+     * (matching the arity of Derivative) and remember whether the rebuilt
+     * Function preserves the original parameter/attribute shape. */
+    Expr* body = NULL;
+    Expr** vars = malloc(sizeof(Expr*) * m);
+    bool slot_form = false;
+
+    if (fargc == 1) {
+        /* Function[body]: slot form. Differentiate wrt Slot[1..m]. */
+        body = pure_fn->data.function.args[0];
+        for (size_t i = 0; i < m; i++) vars[i] = make_slot((int64_t)(i + 1));
+        slot_form = true;
+    } else {
+        /* Function[params, body, ...]. */
+        Expr* params = pure_fn->data.function.args[0];
+        body = pure_fn->data.function.args[1];
+
+        if (params->type == EXPR_SYMBOL &&
+            strcmp(params->data.symbol, "Null") == 0) {
+            /* Function[Null, body, attrs]: slot form with attributes. */
+            for (size_t i = 0; i < m; i++) vars[i] = make_slot((int64_t)(i + 1));
+        } else if (params->type == EXPR_SYMBOL) {
+            /* Function[x, body]: single named parameter. Only Derivative[n]
+             * (m == 1) is meaningful here. */
+            if (m != 1) { free(vars); free(orders); return NULL; }
+            vars[0] = expr_copy(params);
+        } else if (params->type == EXPR_FUNCTION &&
+                   is_sym(params->data.function.head, "List")) {
+            /* Function[{x1,...,xk}, body]: arity of Derivative must match. */
+            size_t k = params->data.function.arg_count;
+            if (k != m) { free(vars); free(orders); return NULL; }
+            for (size_t i = 0; i < m; i++) {
+                vars[i] = expr_copy(params->data.function.args[i]);
+            }
+        } else {
+            free(vars);
+            free(orders);
+            return NULL;
+        }
+    }
+
+    /* Apply each partial derivative sequentially, simplifying between
+     * iterations so subsequent passes can see a reduced expression. */
+    Expr* current = expr_copy(body);
+    for (size_t i = 0; i < m; i++) {
+        for (int64_t k = 0; k < orders[i]; k++) {
+            Expr* d = compute_deriv(current, vars[i]);
+            expr_free(current);
+            if (!d) {
+                for (size_t j = 0; j < m; j++) expr_free(vars[j]);
+                free(vars);
+                free(orders);
+                return NULL;
+            }
+            current = evaluate(d);
+            expr_free(d);
+        }
+    }
+
+    for (size_t j = 0; j < m; j++) expr_free(vars[j]);
+    free(vars);
+    free(orders);
+
+    /* Rebuild a Function with the original parameter/attribute shape but
+     * the differentiated body. */
+    if (slot_form) {
+        Expr* fn_args[1] = { current };
+        return expr_new_function(mk_sym("Function"), fn_args, 1);
+    }
+
+    size_t new_argc = fargc;
+    Expr** new_args = malloc(sizeof(Expr*) * new_argc);
+    new_args[0] = expr_copy(pure_fn->data.function.args[0]);
+    new_args[1] = current;
+    for (size_t i = 2; i < new_argc; i++) {
+        new_args[i] = expr_copy(pure_fn->data.function.args[i]);
+    }
+    Expr* out = expr_new_function(mk_sym("Function"), new_args, new_argc);
+    free(new_args);
+    return out;
+}
+
+/* ---------------------------------------------------------------------- */
 /* Builtin: Derivative                                                     */
 /* ---------------------------------------------------------------------- */
 

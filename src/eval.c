@@ -13,6 +13,7 @@
 #include "core.h"
 #include "purefunc.h"
 #include "print.h"
+#include "deriv.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -550,12 +551,27 @@ Expr* evaluate_step(Expr* e) {
                 }
             } else if (head->type == EXPR_FUNCTION && head->data.function.head->type == EXPR_SYMBOL &&
                        strcmp(head->data.function.head->data.symbol, "Function") == 0) {
-                
+
                 /* 7. Apply Pure Function */
                 Expr* applied = apply_pure_function(head, res->data.function.args, res->data.function.arg_count);
                 if (applied) {
                     expr_free(res);
                     return applied;
+                }
+            } else if (head->type == EXPR_FUNCTION && head->data.function.head->type == EXPR_SYMBOL &&
+                       strcmp(head->data.function.head->data.symbol, "Derivative") == 0 &&
+                       res->data.function.arg_count == 1 &&
+                       res->data.function.args[0]->type == EXPR_FUNCTION &&
+                       res->data.function.args[0]->data.function.head->type == EXPR_SYMBOL &&
+                       strcmp(res->data.function.args[0]->data.function.head->data.symbol, "Function") == 0) {
+                /* 7b. Derivative[n1,...,nm][Function[...]] reduces to a new
+                 * Function whose body has been differentiated. Without this
+                 * step, f'[x] for a pure-function f would remain stuck as
+                 * Derivative[1][Function[...]][x]. */
+                Expr* reduced = derivative_of_pure_function(head, res->data.function.args[0]);
+                if (reduced) {
+                    expr_free(res);
+                    return reduced;
                 }
             }
             

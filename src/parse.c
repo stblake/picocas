@@ -462,7 +462,8 @@ typedef enum {
     OP_INCREMENT,
     OP_DECREMENT,
     OP_ADDTO,
-    OP_SUBTRACTFROM
+    OP_SUBTRACTFROM,
+    OP_DERIVATIVE
 } OperatorType;
 
 typedef struct {
@@ -566,8 +567,10 @@ static OperatorDef get_operator(const char* pos) {
         def.type = OP_CALL; def.prec = 1000; def.len = 1;
     } else if (*pos == '!' && pos[1] != '=') {
         def.type = OP_FACTORIAL; def.prec = 710; def.head_name = "Factorial"; def.len = 1;
+    } else if (*pos == '\'') {
+        def.type = OP_DERIVATIVE; def.prec = 670; def.head_name = "Derivative"; def.len = 1;
     }
-    
+
     return def;
 }
 
@@ -799,6 +802,15 @@ static Expr* parse_expression_prec(ParserState* s, int min_prec) {
         } else if (op_def.type == OP_FACTORIAL) {
             Expr* args[1] = { left };
             left = expr_new_function(expr_new_symbol("Factorial"), args, 1);
+            continue;
+        } else if (op_def.type == OP_DERIVATIVE) {
+            /* Collapse consecutive apostrophes: f'''  ->  Derivative[3][f]. */
+            int n = 1;
+            while (*s->pos == '\'') { n++; s->pos++; }
+            Expr* order_args[1] = { expr_new_integer(n) };
+            Expr* deriv_head = expr_new_function(expr_new_symbol("Derivative"), order_args, 1);
+            Expr* f_args[1] = { left };
+            left = expr_new_function(deriv_head, f_args, 1);
             continue;
         } else if (op_def.type == OP_INCREMENT) {
             Expr* args[1] = { left };

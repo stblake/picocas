@@ -38,4 +38,21 @@ Expr* builtin_d(Expr* res);
 Expr* builtin_dt(Expr* res);
 Expr* builtin_derivative(Expr* res);
 
+/* Reduce Derivative[n1,...,nm][Function[...]] to an equivalent Function[body']
+ * whose body has been differentiated in place.
+ *
+ *   deriv_head  -- the Derivative[n1,...,nm] head (must have arity >= 1,
+ *                  all arguments must be nonnegative integers)
+ *   pure_fn     -- the Function[...] expression being wrapped
+ *
+ * Supports all Function signatures handled by apply_pure_function:
+ *   Function[body]              (slot form,  differentiate wrt Slot[i])
+ *   Function[Null, body, attrs] (slot form with attributes)
+ *   Function[x, body]           (single named parameter)
+ *   Function[{x1,...}, body]    (named parameter list)
+ *
+ * Returns a fresh Function[...] expression on success or NULL if the shape
+ * is not supported. The input expressions are NOT consumed. */
+Expr* derivative_of_pure_function(Expr* deriv_head, Expr* pure_fn);
+
 #endif /* PICOCAS_DERIV_H */
