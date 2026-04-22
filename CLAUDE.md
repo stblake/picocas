@@ -24,6 +24,13 @@ After any change or improvement to the system is made, a summary of the features
     - Avoid `strdup`, `strndup`, `asprintf`, `getline`, `fileno`, `popen`, etc. without guarded fallbacks — these are not in C99.
     - Avoid GNU/BSD extensions (e.g., nested functions, statement expressions, `__attribute__` without a portability guard).
     - Darwin (macOS) headers often expose POSIX symbols implicitly that Linux glibc hides under `-std=c99`. Test any new system-header usage on both platforms, or include the correct feature-test macros / headers explicitly.
+    - `<math.h>` constants `M_PI`, `M_E`, `M_PI_2`, `M_LN2`, etc. are POSIX, NOT C99. glibc hides them under `-std=c99` (macOS exposes them anyway, masking the bug). When a new file needs one, add a guarded fallback right after `#include <math.h>`, matching the pattern already used in `src/trig.c` and `src/numeric.c`:
+        ```c
+        #ifndef M_PI
+        #define M_PI 3.14159265358979323846
+        #endif
+        ```
+      Do NOT use `#define _USE_MATH_DEFINES` — that is an MSVC/Windows mechanism and has no effect on glibc.
 
 <!-- code-review-graph MCP tools -->
 ## MCP Tools: code-review-graph
