@@ -1237,16 +1237,31 @@ static UPolyList factor_zassenhaus(UPoly* P) {
 
 Expr* bz_factor_to_expr(Expr* P, Expr* var) {
     if (P->type != EXPR_FUNCTION) return expr_copy(P);
-    
+
     int deg = get_degree_poly(P, var);
     if (deg <= 0) return expr_copy(P);
-    
+
     UPoly* up = upoly_new(deg);
+    int non_integer_seen = 0;
     for (int i = 0; i <= deg; i++) {
         Expr* c = get_coeff(P, var, i);
-        if (c->type == EXPR_INTEGER) up->c[i] = c->data.integer;
-        else up->c[i] = 0;
+        if (c->type == EXPR_INTEGER) {
+            up->c[i] = c->data.integer;
+        } else {
+            /* Non-integer coefficient (e.g. Gaussian rational like 2 I, or
+             * any other symbolic / rational / complex factor). The integer
+             * Zassenhaus factoring routine below operates only on Z[var];
+             * silently coercing the coefficient to 0 produces a structurally
+             * different polynomial and yields a wrong factorization. Bail
+             * out and leave P unfactored at this layer instead. */
+            non_integer_seen = 1;
+            up->c[i] = 0;
+        }
         expr_free(c);
+    }
+    if (non_integer_seen) {
+        upoly_free(up);
+        return expr_copy(P);
     }
     
     UPolyList factors = factor_zassenhaus(up);

@@ -327,9 +327,9 @@ void core_init(void) {
     iter_init();
     complex_init();
     trig_init();
+    hyperbolic_init();
     void trigsimp_init(void);
     trigsimp_init();
-    hyperbolic_init();
     logexp_init();
     piecewise_init();
     attr_init();

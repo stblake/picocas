@@ -543,13 +543,19 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
             Expr* p_sym = bind_sym;
             Expr* inner_p = opt_pat;
             if (!p_sym) is_pattern(opt_pat, &p_sym, &inner_p);
+            bool consistent = true;
             if (p_sym && p_sym->type == EXPR_SYMBOL) {
-                env_set(env, p_sym->data.symbol, def_val);
+                Expr* existing = env_get(env, p_sym->data.symbol);
+                if (existing) {
+                    if (!expr_eq(existing, def_val)) consistent = false;
+                } else {
+                    env_set(env, p_sym->data.symbol, def_val);
+                }
             }
             expr_free(def_val);
 
 
-            if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+            if (consistent && match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
             }
             env_rollback(env, saved_env_count);
@@ -731,13 +737,25 @@ static bool match_args_internal(Expr** exprs, size_t n_exprs, Expr** pats, size_
             Expr* p_sym = bind_sym;
             Expr* inner_p = opt_pat;
             if (!p_sym) is_pattern(opt_pat, &p_sym, &inner_p);
+            bool consistent = true;
             if (p_sym && p_sym->type == EXPR_SYMBOL) {
-                env_set(env, p_sym->data.symbol, def_val);
+                Expr* existing = env_get(env, p_sym->data.symbol);
+                if (existing) {
+                    /* Don't overwrite an existing binding for this name; the
+                     * Optional fallback can only commit to the default value if
+                     * it is consistent with what is already bound. Otherwise the
+                     * pattern would produce inconsistent bindings such as
+                     * `a_. Sin[x_]^2 + a_. Cos[x_]^2` matching `Sin[x]^2 -
+                     * Cos[x]^2` with one a=1 and another a=-1. */
+                    if (!expr_eq(existing, def_val)) consistent = false;
+                } else {
+                    env_set(env, p_sym->data.symbol, def_val);
+                }
             }
             expr_free(def_val);
 
 
-            if (match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
+            if (consistent && match_args_internal(exprs, n_exprs, pats + 1, n_pats - 1, env, condition, pat_head, total_pats, parent)) {
                 return true;
             }
             env_rollback(env, saved_env_count);

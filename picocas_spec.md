@@ -5853,3 +5853,105 @@ Unit tests live in `tests/test_trigfactor.c` and cover:
 - Atomic inputs and numeric folding.
 - Threading over `List`, `Equal`, `Unequal`, `Less`, `Greater`, `And`,
   `Not`, including compound inequalities.
+
+## Pattern matcher: Optional consistency fix (2026-04-28)
+
+Fixed a bug in `src/match.c` where the `Optional` fallback path at the end
+of `match_args_internal` would unconditionally overwrite an existing
+binding for the pattern variable with the Optional default. This produced
+inconsistent bindings for patterns like
+`a_. Sin[x_]^2 + a_. Cos[x_]^2 + r___`, where the matcher would bind
+`a` to `-1` from one term and then quietly overwrite it with the Optional
+default `1` when matching the other term, allowing a rule keyed on equal
+coefficients to fire on `Sin[x]^2 - Cos[x]^2` (with two different
+implicit coefficients). After the fix, the Optional fallback only takes
+the default-value path if any existing binding for the variable is
+structurally equal to the default; otherwise the path fails and the
+matcher backtracks.
+
+This change tightens the matcher to match Mathematica semantics. It
+restores correctness for rules in `trig_factor_identities` that use
+`a_.` to capture a shared coefficient across multiple Pythagorean or
+double-angle terms, and was necessary for the
+`TrigFactor[Cosh[x + y]/(Sin[x]^2 - Cos[x]^2) + 1/Sinh[x]]` regression.
+
+## TrigFactor: linear-combination factoring (2026-04-28)
+
+Added a rule to `trig_factor_identities` that factors any sum
+`a Sin[x] + b Cos[x]` (with optional unit-default coefficients and
+arbitrary trailing terms) into the auxiliary-angle form
+`Sqrt[a^2 + b^2] Sin[x + ArcTan[a, b]]` when both `a` and `b` are
+numeric. The `NumberQ` guard prevents the rule from firing on symbolic
+coefficients, where the result would not be simpler than the input.
+Examples:
+
+- `TrigFactor[Sin[x] + Cos[x]] -> Sqrt[2] Sin[Pi/4 + x]`
+- `TrigFactor[3 Sin[x] + 4 Cos[x]] -> 5 Sin[x + ArcTan[3, 4]]`
+- `TrigFactor[-Sin[x] - Cos[x]] -> Sqrt[2] Sin[-3 Pi/4 + x]`
+
+The two-argument `ArcTan[a, b]` is used to handle the quadrant
+correctly so the resulting phase is consistent for any sign of `a` or
+`b`.
+
+## TrigExpand: inverse-trig compositions (2026-04-28)
+
+Added rewrite rules to the TrigExpand rule set in `src/trigsimp.c` that
+reduce compositions of a forward trig (or hyperbolic) function with a
+different inverse to their algebraic form. For example:
+
+- `Cos[ArcSin[x]] -> Sqrt[1 - x^2]`
+- `Sin[ArcCos[x]] -> Sqrt[1 - x^2]`
+- `Tan[ArcSin[x]] -> x / Sqrt[1 - x^2]`
+- `Sin[ArcTan[x]] -> x / Sqrt[1 + x^2]`
+- `Cosh[ArcSinh[x]] -> Sqrt[1 + x^2]`
+- `Sinh[ArcTanh[x]] -> x / Sqrt[1 - x^2]`
+- ... and the analogous rules for the remaining circular and hyperbolic
+  forward/inverse pairs (`ArcCot`, `ArcSec`, `ArcCsc`, `ArcCosh`,
+  `ArcTanh`).
+
+The rules use the principal real-branch identity for each composition.
+This mirrors the behaviour of Mathematica's `TrigExpand`. Effect on the
+canonical addition example:
+
+- `TrigExpand[Sin[ArcSin[t] + ArcSin[v]]]` now returns
+  `t Sqrt[1 - v^2] + v Sqrt[1 - t^2]` (the cross-terms `Cos[ArcSin[v]]`
+  and `Cos[ArcSin[t]]` are reduced via the new rules), where previously
+  the result was left as `t Cos[ArcSin[v]] + v Cos[ArcSin[t]]`.
+
+## Parser: dynamic argument buffers (2026-04-28)
+
+Replaced the fixed `Expr* args[64]` and `Expr* elements[64]` stack
+arrays in `src/parse.c` (`parse_function` and `parse_list`) with
+dynamically-grown heap buffers. The previous fixed-size arrays
+silently overflowed the stack when a list literal contained more than
+64 elements, triggering a stack-canary abort during initialisation
+once the trigsimp rule lists grew past that bound. The new buffers
+double in capacity as needed.
+
+## Factor: integer-coefficient guard for Gaussian inputs (2026-04-28)
+
+In `bz_factor_to_expr` (`src/facpoly.c`), the integer Zassenhaus
+factoring routine previously coerced any non-`EXPR_INTEGER` coefficient
+to `0`, which silently produced a polynomial with the wrong shape.
+For example, `Factor[t^2 + 2 I t - 1]` returned `(-1 + t)(1 + t)` --
+i.e. `t^2 - 1` -- because the imaginary middle coefficient `2 I` was
+zeroed out. After the fix, `bz_factor_to_expr` detects any non-integer
+coefficient and bails out, returning the polynomial unfactored at this
+layer. PicoCAS does not implement factoring over the Gaussian rationals
+`Z[i]`; this guard ensures that, when it cannot factor the input, it
+returns a mathematically equivalent expression rather than a wrong
+factorization.
+
+## Known limitations (2026-04-28)
+
+- `TrigExpand` does not currently implement power-reduction identities
+  (e.g. `Sin[x]^2 -> (1 - Cos[2 x])/2`). Mathematica's
+  `TrigExpand[Sin[x]^2 + Tan[x]^2]` produces an extensively rewritten
+  form using such identities; PicoCAS leaves the input unchanged.
+  Adding power-reduction safely requires careful loop-prevention design
+  because the existing multiple-angle rules
+  (`Cos[2 x] -> Cos[x]^2 - Sin[x]^2`) form a cycle with the inverse
+  identities.
+- `Factor` does not factor over `Z[i]` (the Gaussian rationals). When
+  Gaussian coefficients appear, the polynomial is returned unfactored
+  rather than incorrectly factored over `Z`.

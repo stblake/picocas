@@ -347,67 +347,89 @@ static Expr* parse_string(ParserState* s) {
 // Parses lists: {1,2,3}
 static Expr* parse_list(ParserState* s) {
     s->pos++;  // Skip '{'
-    Expr* elements[64];  // Practical maximum
+    /* Dynamic buffer: lists may have arbitrarily many elements (e.g. the
+     * trigsimp rule lists exceed 60 entries). Grow as needed rather than
+     * relying on a fixed stack-allocated array. */
+    size_t cap = 16;
+    Expr** elements = malloc(cap * sizeof(Expr*));
     size_t count = 0;
-    
+
     while (*s->pos && *s->pos != '}') {
         skip_whitespace(s);
         if (*s->pos == ',') s->pos++;
-        
+
         Expr* elem = parse_expression_state(s);
         if (!elem) {
             while (count--) expr_free(elements[count]);
+            free(elements);
             return NULL;
+        }
+        if (count >= cap) {
+            cap *= 2;
+            elements = realloc(elements, cap * sizeof(Expr*));
         }
         elements[count++] = elem;
     }
-    
+
     if (*s->pos != '}') {
         fprintf(stderr, "Expected '}' to close list\n");
         while (count--) expr_free(elements[count]);
+        free(elements);
         return NULL;
     }
     s->pos++;  // Skip '}'
-    
+
     // Create List[...] expression
     Expr* list = expr_new_function(expr_new_symbol("List"), elements, count);
+    free(elements);
     return list;
 }
 
 // Parses functions: f[x,y]
 static Expr* parse_function(ParserState* s, Expr* head) {
     s->pos++;  // Skip '['
-    Expr* args[64];  // Practical maximum
+    /* Dynamic buffer: function calls may have arbitrarily many args. */
+    size_t cap = 16;
+    Expr** args = malloc(cap * sizeof(Expr*));
     size_t count = 0;
-    
+
     while (*s->pos && *s->pos != ']') {
         skip_whitespace(s);
         if (*s->pos == ',') s->pos++;
-        
+
         Expr* arg = parse_expression_state(s);
         if (!arg) {
             while (count--) expr_free(args[count]);
+            free(args);
             return NULL;
+        }
+        if (count >= cap) {
+            cap *= 2;
+            args = realloc(args, cap * sizeof(Expr*));
         }
         args[count++] = arg;
     }
-    
+
     if (*s->pos != ']') {
         fprintf(stderr, "Expected ']' to close function\n");
         while (count--) expr_free(args[count]);
+        free(args);
         return NULL;
     }
     s->pos++;  // Skip ']'
-    
+
     if (head && head->type == EXPR_SYMBOL && strcmp(head->data.symbol, "Sqrt") == 0 && count == 1) {
         expr_free(head);
         Expr* rat_args[2] = { expr_new_integer(1), expr_new_integer(2) };
         Expr* half = expr_new_function(expr_new_symbol("Rational"), rat_args, 2);
         Expr* pow_args[2] = { args[0], half };
-        return expr_new_function(expr_new_symbol("Power"), pow_args, 2);
+        Expr* result = expr_new_function(expr_new_symbol("Power"), pow_args, 2);
+        free(args);
+        return result;
     }
-    
+
     Expr* func = expr_new_function(head, args, count);
+    free(args);
     return func;
 }
 

@@ -584,7 +584,58 @@ void trigsimp_init(void) {
         "Tanh[n_Integer x_] /; n > 1 :> Sinh[n x] / Cosh[n x], "
         "Coth[n_Integer x_] /; n > 1 :> Cosh[n x] / Sinh[n x], "
         "Sech[n_Integer x_] /; n > 1 :> 1 / Cosh[n x], "
-        "Csch[n_Integer x_] /; n > 1 :> 1 / Sinh[n x] "
+        "Csch[n_Integer x_] /; n > 1 :> 1 / Sinh[n x], "
+        /* Inverse-trig compositions. After angle-addition expansion of
+         * something like Sin[ArcSin[t] + ArcSin[v]], the residual cross-terms
+         * Cos[ArcSin[v]] should reduce to Sqrt[1 - v^2] (and so on) so the
+         * result is a polynomial expression in t, v rather than a mixed
+         * inverse-trig form. */
+        "Cos[ArcSin[x_]] :> Sqrt[1 - x^2], "
+        "Sin[ArcCos[x_]] :> Sqrt[1 - x^2], "
+        "Tan[ArcSin[x_]] :> x / Sqrt[1 - x^2], "
+        "Cot[ArcSin[x_]] :> Sqrt[1 - x^2] / x, "
+        "Sec[ArcSin[x_]] :> 1 / Sqrt[1 - x^2], "
+        "Csc[ArcSin[x_]] :> 1 / x, "
+        "Tan[ArcCos[x_]] :> Sqrt[1 - x^2] / x, "
+        "Cot[ArcCos[x_]] :> x / Sqrt[1 - x^2], "
+        "Sec[ArcCos[x_]] :> 1 / x, "
+        "Csc[ArcCos[x_]] :> 1 / Sqrt[1 - x^2], "
+        "Sin[ArcTan[x_]] :> x / Sqrt[1 + x^2], "
+        "Cos[ArcTan[x_]] :> 1 / Sqrt[1 + x^2], "
+        "Cot[ArcTan[x_]] :> 1 / x, "
+        "Sec[ArcTan[x_]] :> Sqrt[1 + x^2], "
+        "Csc[ArcTan[x_]] :> Sqrt[1 + x^2] / x, "
+        "Sin[ArcCot[x_]] :> 1 / Sqrt[1 + x^2], "
+        "Cos[ArcCot[x_]] :> x / Sqrt[1 + x^2], "
+        "Tan[ArcCot[x_]] :> 1 / x, "
+        "Sec[ArcCot[x_]] :> Sqrt[1 + x^2] / x, "
+        "Csc[ArcCot[x_]] :> Sqrt[1 + x^2], "
+        "Sin[ArcSec[x_]] :> Sqrt[1 - 1/x^2], "
+        "Cos[ArcSec[x_]] :> 1 / x, "
+        "Tan[ArcSec[x_]] :> Sqrt[x^2 - 1], "
+        "Cot[ArcSec[x_]] :> 1 / Sqrt[x^2 - 1], "
+        "Csc[ArcSec[x_]] :> 1 / Sqrt[1 - 1/x^2], "
+        "Sin[ArcCsc[x_]] :> 1 / x, "
+        "Cos[ArcCsc[x_]] :> Sqrt[1 - 1/x^2], "
+        "Tan[ArcCsc[x_]] :> 1 / Sqrt[x^2 - 1], "
+        "Cot[ArcCsc[x_]] :> Sqrt[x^2 - 1], "
+        "Sec[ArcCsc[x_]] :> 1 / Sqrt[1 - 1/x^2], "
+        /* Hyperbolic-of-inverse-hyperbolic compositions (real branch). */
+        "Cosh[ArcSinh[x_]] :> Sqrt[1 + x^2], "
+        "Sinh[ArcCosh[x_]] :> Sqrt[-1 + x^2], "
+        "Tanh[ArcSinh[x_]] :> x / Sqrt[1 + x^2], "
+        "Coth[ArcSinh[x_]] :> Sqrt[1 + x^2] / x, "
+        "Sech[ArcSinh[x_]] :> 1 / Sqrt[1 + x^2], "
+        "Csch[ArcSinh[x_]] :> 1 / x, "
+        "Tanh[ArcCosh[x_]] :> Sqrt[-1 + x^2] / x, "
+        "Coth[ArcCosh[x_]] :> x / Sqrt[-1 + x^2], "
+        "Sech[ArcCosh[x_]] :> 1 / x, "
+        "Csch[ArcCosh[x_]] :> 1 / Sqrt[-1 + x^2], "
+        "Sinh[ArcTanh[x_]] :> x / Sqrt[1 - x^2], "
+        "Cosh[ArcTanh[x_]] :> 1 / Sqrt[1 - x^2], "
+        "Coth[ArcTanh[x_]] :> 1 / x, "
+        "Sech[ArcTanh[x_]] :> Sqrt[1 - x^2], "
+        "Csch[ArcTanh[x_]] :> Sqrt[1 - x^2] / x "
     "}";
 
     trig_expand_rules = parse_expression(expand_rules_str);
@@ -711,7 +762,13 @@ void trigsimp_init(void) {
         "2 Sin[x_] Cos[x_] r___ :> Sin[2 x] r, "
         "-2 Sin[x_] Cos[x_] r___ :> -Sin[2 x] r, "
         "2 Sinh[x_] Cosh[x_] r___ :> Sinh[2 x] r, "
-        "-2 Sinh[x_] Cosh[x_] r___ :> -Sinh[2 x] r "
+        "-2 Sinh[x_] Cosh[x_] r___ :> -Sinh[2 x] r, "
+        /* Linear-combination factoring: a Sin[x] + b Cos[x] -> Sqrt[a^2+b^2]
+         * Sin[x + ArcTan[a, b]]. Only fires when both coefficients are
+         * numeric; for symbolic coefficients the result would be more complex
+         * than the input. The 2-arg ArcTan handles quadrant correctly. */
+        "a_. Sin[x_] + b_. Cos[x_] + r___ /; (NumberQ[a] && NumberQ[b]) "
+            ":> Sqrt[a^2 + b^2] Sin[x + ArcTan[a, b]] + r "
     "}";
     trig_factor_identities = parse_expression(identities_str);
 
