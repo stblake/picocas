@@ -1836,16 +1836,82 @@ static SimpShape simp_classify(const Expr* e) {
 static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                          const Expr* complexity_func);
 
+/* ----------------------------------------------------------------------- */
+/* Specialised pipelines                                                   */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * Polynomial pipeline. Skips every transform that targets trig, log,
+ * abs, rational, or assumption-driven structure -- none of which can
+ * fire on a SHAPE_POLYNOMIAL input. The candidate set is:
+ *   - the input itself
+ *   - Expand[input]
+ *   - Factor[input], FactorTerms[input]   (gated by has_non_integer_power)
+ *   - Collect[input, v]   for each variable v
+ *   - Collect[Expand[input], v]   for each variable v
+ *
+ * The Expand-then-Collect path is the one that recovers c + x*(a+b)
+ * from a*x + b*x + c (test_simplify_collect_by_variable). Factor wins
+ * on cases like (x-1)*(x+1)*(x^2+1)+1 -> x^4 because it emits the
+ * already-expanded form when no nontrivial factorisation exists, but
+ * it ties on score and the Expand candidate wins by SimplifyCount.
+ *
+ * No round loop: every winning move on a polynomial is reachable in
+ * one application of the listed transforms; iterating doesn't help.
+ */
+static Expr* simp_pipeline_polynomial(const Expr* input,
+                                      const AssumeCtx* ctx,
+                                      const Expr* complexity_func) {
+    (void)ctx;
+    Expr* best = expr_copy((Expr*)input);
+    size_t bs = score_with_func(best, complexity_func);
+
+    Expr* expanded = traced_call_unary("Expand", input);
+    if (expanded) update_best(&best, &bs, expanded, complexity_func);
+
+    if (!has_non_integer_power(input)) {
+        Expr* factored = traced_call_unary("Factor", input);
+        if (factored) update_best(&best, &bs, factored, complexity_func);
+        if (factored) expr_free(factored);
+        Expr* fterms = traced_call_unary("FactorTerms", input);
+        if (fterms) update_best(&best, &bs, fterms, complexity_func);
+        if (fterms) expr_free(fterms);
+    }
+
+    /* Per-variable Collect on input AND on the expanded form. The
+     * Expand-then-Collect path catches cases the input-Collect misses,
+     * because Collect groups like powers of v and a Plus-of-Times input
+     * already in factored shape doesn't expose them. */
+    if (transform_can_fire("CollectPerVariable", input, NULL)) {
+        CandSet next; cs_init(&next);
+        try_collect_per_variable(input, bs, &next, &best, &bs, complexity_func);
+        if (expanded) {
+            try_collect_per_variable(expanded, bs, &next, &best, &bs, complexity_func);
+        }
+        cs_free(&next);
+    }
+
+    if (expanded) expr_free(expanded);
+    return best;
+}
+
 /* simp_dispatch is the public entry point. It runs the shape classifier
- * and forwards to a specialised pipeline. Specialised pipelines for
- * POLYNOMIAL / RATIONAL / LOGEXP land in subsequent commits; for now the
- * dispatcher hands every shape off to simp_search so behaviour is
- * exactly preserved. */
+ * and forwards to a specialised pipeline. Pipelines that aren't yet
+ * implemented fall through to simp_search (the GENERAL pipeline), so
+ * behaviour is preserved on those shapes. */
 static Expr* simp_dispatch(const Expr* input, const AssumeCtx* ctx,
                            const Expr* complexity_func) {
     SimpShape shape = simp_classify(input);
-    (void)shape;
-    return simp_search(input, ctx, complexity_func);
+    switch (shape) {
+        case SIMP_SHAPE_POLYNOMIAL:
+            return simp_pipeline_polynomial(input, ctx, complexity_func);
+        case SIMP_SHAPE_RATIONAL:
+        case SIMP_SHAPE_LOGEXP:
+        case SIMP_SHAPE_TRIG:
+        case SIMP_SHAPE_GENERAL:
+        default:
+            return simp_search(input, ctx, complexity_func);
+    }
 }
 
 static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
