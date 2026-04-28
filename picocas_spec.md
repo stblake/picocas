@@ -6552,3 +6552,420 @@ the new behaviour end-to-end. All other Simplify tests continue to
 pass, confirming the additional transforms do not regress the existing
 polynomial / rational / trigonometric / hyperbolic / log-power /
 assumption-driven cases.
+
+## $SimplifyDebug -- per-transform tracing (2026-04-28)
+
+A new system symbol `$SimplifyDebug` (default `False`) controls whether
+`Simplify` emits a per-transform trace on **stderr**. When set to
+`True`, every transform invocation inside `simp_search` produces one
+line in the form
+
+```
+/<TransformName>/: <input> -> <output> [<elapsed> ms]
+```
+
+This covers all sources of work in the search:
+
+- The 11 unary transforms in `SIMP_TRANSFORMS` (`Together`, `Cancel`,
+  `Expand`, `ExpandNumerator`, `ExpandDenominator`, `Factor`,
+  `FactorSquareFree`, `FactorTerms`, `Apart`, `TrigExpand`,
+  `TrigFactor`).
+- The composite `TrigRoundtrip` (TrigToExp / Together / Cancel /
+  ExpToTrig).
+- Per-variable `Collect[_, v]` calls (the variable name is included
+  in the trace label).
+- `AssumptionRules` and `LogExpRules` rewrites.
+
+The flag is read directly off the `$SimplifyDebug` OwnValue (matching
+how `read_dollar_assumptions` handles `$Assumptions`) so toggling it
+on/off has no measurable cost when off and never re-enters the
+evaluator.
+
+### Usage
+
+```mathematica
+$SimplifyDebug = True;
+Simplify[a*x + b*x]    (* trace lines emitted on stderr *)
+$SimplifyDebug = False;
+```
+
+### Use cases
+
+- Diagnosing `Simplify` calls that hang or take an unexpectedly long
+  time -- the trace shows which transform is responsible and on which
+  intermediate candidate.
+- Identifying transforms whose output explodes the candidate set
+  (e.g. `TrigExpand` rewriting `Sin[7 x]` into a degree-7 polynomial
+  in `Sin[x]`/`Cos[x]`).
+- Spotting candidate cycles where the search keeps oscillating between
+  equivalent forms.
+
+### Implementation
+
+`simp.c` adds:
+
+- `simp_debug_enabled()` -- reads the OwnValue rule list directly.
+- `simp_debug_log(name, in, out, ms)` -- formats and prints one line
+  to `stderr` using `expr_to_string` and `fflush(stderr)`.
+- `traced_call_unary(name, in)` -- wraps `call_unary_copy` with timing
+  and logging.
+
+All transform call sites in `simp_search`, `try_collect_per_variable`,
+and `transform_trig_roundtrip` now emit a trace line when the flag is
+set. Timing uses `clock()` from `<time.h>` (C99-portable).
+
+## Simplify branch pruning + ComplexityFunction Automatic + SimplifyCount + TrigFactor degree guard (2026-04-28)
+
+Four related changes that together fix the
+`Simplify[(1/4)*I*(E^((-I)*x) + E^(I*x))*(E^(-6*I*x) - E^(6*I*x))]`
+hang reported on the original repro.
+
+### `SimplifyCount` (new built-in)
+
+Exposes the default Simplify complexity measure as a user-callable
+function. Implements the Mathematica `SimplifyCount` definition:
+
+| Expression          | SimplifyCount |
+| ------------------- | ------------- |
+| `Symbol`            | 1             |
+| `0`                 | 1             |
+| `Integer p > 0`     | digits(p)     |
+| `Integer p < 0`     | digits(\|p\|) + 1 (extra unit for the leading "-") |
+| `Rational[n, d]`    | SimplifyCount[n] + SimplifyCount[d] + 1 |
+| `Complex[re, im]`   | SimplifyCount[re] + SimplifyCount[im] + 1 |
+| `Real` / `MPFR`     | 2 (NumberQ but not Integer/Rational) |
+| `String`            | 1 (treated as a leaf) |
+| `Function[h, args]` | SimplifyCount[h] + sum SimplifyCount[args] |
+
+This replaces the previous "leaf count + integer digit count"
+approximation in `simp_default_complexity`. The new metric matches
+Mathematica's documented behaviour exactly so users who reason about
+the score (custom `ComplexityFunction`s, picocas test goldens) get
+identical numbers. Spot checks: `SimplifyCount[100 Log[2]] == 6`,
+`SimplifyCount[Log[2^100]] == 32`, `SimplifyCount[Cos[Pi n]] == 4`,
+`SimplifyCount[(-1)^n] == 4`, `SimplifyCount[3.14] == 2`,
+`SimplifyCount[1/2] == 3`.
+
+`SimplifyCount` is registered with `ATTR_LISTABLE | ATTR_PROTECTED`
+and a docstring.
+
+### `ComplexityFunction -> Automatic`
+
+`Simplify[expr, ComplexityFunction -> Automatic]` is now a synonym for
+`Simplify[expr]` (no option). The option detection in `builtin_simplify`
+maps the symbol `Automatic` to the internal NULL `complexity_func`
+slot, so scoring goes through the fast native `simp_default_complexity`
+instead of evaluating `Automatic[candidate]` (which would never
+reduce). User-supplied `ComplexityFunction -> f` continues to work
+unchanged.
+
+### Branch pruning by complexity
+
+`simp_search`'s round loop now drops any candidate whose score exceeds
+its parent's score before that candidate becomes a seed for the next
+round. The rule applies to all five candidate sources -- the 11
+`SIMP_TRANSFORMS`, the `TrigRoundtrip` composite, per-variable
+`Collect`, `AssumptionRules`, and `LogExpRules` -- and uses
+`score_with_func` so it honours a user-supplied `ComplexityFunction`.
+
+Strict-greater (`>`) is the gate: equal-score forms still propagate to
+preserve plateau exploration (since `cs_add_or_free` already dedups,
+this cannot loop). `update_best` is unchanged: a worse-scoring
+candidate may still beat the current best on the same step (e.g. an
+assumption-driven rewrite that's correctness-preserving but expanded),
+just not seed further work.
+
+`AssumptionRules` and `LogExpRules` keep their "force-win for `best`"
+semantics: an assumption-driven rewrite always wins the `best` slot if
+non-trivial, but only seeds the next round when its score is no worse
+than the parent.
+
+### TrigFactor degree-cap guard (the actual hang fix)
+
+`trigfactor_run_pipeline` now skips its `Factor` step not only when
+`count_distinct_squared_trig_atoms > 2` (the existing guard) but also
+when `max_trig_atom_power > 4`. The new helper
+`max_trig_atom_power(e)` returns the maximum integer exponent on any
+`Sin`/`Cos`/`Sinh`/`Cosh` atom in `e`. Threshold rationale:
+
+- The known-good Pythagorean cases reach degree 4 (e.g.
+  `Sin[x]^4 + 2 Sin[x]^2 Cos[x]^2 + Cos[x]^4 -> 1`), so a cap of 4
+  preserves them.
+- TrigFactor's Path B (TrigExpand the input first) on
+  `Sin[m x] + Sin[n x]` (m,n >= 3) produces a polynomial of total
+  degree max(m, n) in `Sin[x]`/`Cos[x]`. With m=5, n=7 the result is
+  degree 7 with seven mixed-degree monomials. Factor's
+  trial-division loop in `factor_roots` stalls hard on that shape
+  even though there are still only two distinct atoms.
+- Skipping Factor in the high-degree branch is safe: the
+  `trig_factor_identities` rewriter that runs immediately after
+  Factor catches the Pythagorean structure that survives without
+  Factor, and the surface-form Tan/Sec round-trip at the end works
+  on either pathway.
+
+`TRIG_FACTOR_DEGREE_THRESHOLD = 4` is colocated with the existing
+`TRIG_FACTOR_ATOM_THRESHOLD` constant in `trigsimp.c`.
+
+### End-to-end result
+
+Originally-hanging cases now return immediately:
+
+| Call | Result | Time |
+| ---- | ------ | ---- |
+| `Simplify[(1/4)*I*(E^((-I)*x) + E^(I*x))*(E^(-6*I*x) - E^(6*I*x))]` | `1/2 (Sin[5 x] + Sin[7 x])` | ~1s |
+| `TrigFactor[Sin[5 x] + Sin[7 x]]`           | `Sin[5 x] + Sin[7 x]` | <1s |
+| `TrigFactor[Sin[3 x] + Sin[5 x]]`           | `Sin[3 x] + Sin[5 x]` | <1s |
+| `TrigFactor[Sin[3 x] + Sin[7 x]]`           | `Sin[3 x] + Sin[7 x]` | <1s |
+| `TrigFactor[Sin[3 x] + Sin[9 x]]`           | `Sin[3 x] + Sin[9 x]` | <1s |
+| `TrigFactor[1/2 (Sin[5 x] + Sin[7 x])]`     | `1/2 (Sin[5 x] + Sin[7 x])` | <1s |
+
+Previously-working TrigFactor cases continue to work unchanged:
+
+| Call | Result |
+| ---- | ------ |
+| `TrigFactor[Sin[x]^2 + Cos[x]^2]`                            | `1`                  |
+| `TrigFactor[Cos[x]^2 - Sin[x]^2]`                            | `Cos[2 x]`           |
+| `TrigFactor[Sin[x]^4 + 2 Sin[x]^2 Cos[x]^2 + Cos[x]^4]`      | `1`                  |
+| `TrigFactor[Cos[x+y] + Sin[x] Sin[y]]`                       | `Cos[x] Cos[y]`      |
+| `TrigFactor[Cosh[x]^2 - Sinh[x]^2]`                          | `1`                  |
+
+### Memory/leaks
+
+Valgrind on `Simplify[a*x + b*x]` reports 5,504 bytes definitely lost
+versus 5,824 bytes on the pre-change baseline. The drop comes from
+the new pruning eliminating some `expr_copy` traffic in the round
+loop. No leak record references any of the new helpers
+(`simp_default_complexity`, `simp_debug_*`, `traced_call_unary`,
+`builtin_simplify_count`, `max_trig_atom_power`).
+
+### Tests
+
+All simp-related tests pass: `simp_tests`, `simplify_tests`,
+`logexp_simplify_tests`, `assuming_tests`, `element_tests`,
+`trigfactor_tests`, `trigexpand_tests`. The 12 pre-existing test
+failures (`backtrack`, `context`, `facpoly`, `hyperbolic`, etc.)
+reproduce identically on a `git stash` baseline -- none caused by
+this change.
+
+## Bottom-up Simplify, Abs simplification, TrigFactor real-coefficient guard (2026-04-28)
+
+This change extends `Simplify` from a top-level-only candidate-set search
+to a memoised bottom-up traversal, adds a structural `Abs[...]`
+simplification cascade, and fixes a soundness bug in `TrigFactor` exposed
+by the new walker.
+
+### Bottom-up traversal
+
+Before: `Simplify[expr]` ran the candidate-set search (`simp_search`) on
+`expr` directly. Transforms like the Pythagorean identity
+`Sin[x]^2 + Cos[x]^2 -> 1` only fired if the relevant structure appeared
+at the root; e.g. `Simplify[f[Sin[x]^2 + Cos[x]^2]]` returned
+`f[Sin[x]^2 + Cos[x]^2]` unchanged because no transform peeked inside the
+generic head `f`.
+
+After: `Simplify` recursively descends into each sub-expression, runs
+`simp_search` on the children first, rebuilds + re-evaluates the parent
+(restoring canonical-form invariants on `Plus`/`Times`), and only then
+runs `simp_search` on the parent. This surfaces buried simplifications:
+
+| Call                                                | Result   |
+| --------------------------------------------------- | -------- |
+| `Simplify[f[Sin[x]^2 + Cos[x]^2]]`                  | `f[1]`   |
+| `Simplify[f[Sin[x]^2 + Cos[x]^2, Sin[y]^2 + Cos[y]^2]]` | `f[1, 1]` |
+| `Simplify[g[h[Sin[x]^2 + Cos[x]^2]]]`               | `g[h[1]]` |
+| `Simplify[{Sin[x]^2 + Cos[x]^2, Cosh[x]^2 - Sinh[x]^2}]` | `{1, 1}` |
+
+Cost control:
+
+  - **Memoisation** by `expr_hash` + `expr_eq` over a 256-bucket table:
+    structurally identical subtrees (e.g. `f[g[x], g[x], g[x]]`) cost
+    one `simp_search` call instead of three.
+  - **Atom short-circuit**: when the active `AssumeCtx` is empty (no
+    user-supplied facts), atoms (`EXPR_INTEGER`, `EXPR_BIGINT`,
+    `EXPR_REAL`, `EXPR_SYMBOL`, `EXPR_STRING`) skip `simp_search`
+    entirely and return a copy -- every transform is a no-op on a bare
+    atom in the absence of assumption rewrites. (The check is
+    `ctx == NULL || ctx->count == 0` rather than just `ctx == NULL`,
+    because `assume_ctx_from_expr` always returns a non-NULL ctx even
+    when `$Assumptions = True`.)
+  - **Held-head skip list**: `Hold`, `HoldForm`, `HoldComplete`,
+    `HoldPattern`, `Unevaluated`, `Pattern`, `Blank`, `BlankSequence`,
+    `BlankNullSequence`, `Function`, `Slot`, `SlotSequence` -- and any
+    head whose attribute mask sets `ATTR_HOLDFIRST`/`HOLDREST`/
+    `HOLDALL`/`HOLDALLCOMPLETE` (e.g. `Set`, `If`, `Module`, `Block`,
+    `While`, `For`, `Do`) -- do not get descended into. We still run
+    `simp_search` on the whole expression (a no-op on these heads in
+    practice, but reserves the chance for future structural rewrites).
+  - **Small-subtree leaf-count guard**: at non-top levels, skip
+    `simp_search` when `simp_default_complexity(canonical) <= 7`. The
+    threshold admits Pythagorean-eligible Plus/Times nodes
+    (`Sin[x]^2 + Cos[x]^2` = 9, `Cosh[x]^2 - Sinh[x]^2` = 12) while
+    rejecting isolated trig powers (`Cosh[x]^2` = 4,
+    `Times[-1, Sinh[x]^2]` = 7) on which `TrigRoundtrip` produces a
+    12-term polynomial in `Cosh[2x]/Sinh[2x]/Cosh[4x]/Sinh[4x]` --
+    feeding that into `Factor` cost 7+ seconds per call before this
+    guard. The top-level Simplify call (depth == 0) always runs
+    `simp_search` regardless of size.
+  - **Depth cap** of 64 levels: pathological nesting falls back to the
+    existing top-level `simp_search`.
+
+### `count_distinct_trig_atoms` gate inside TrigFactor
+
+When `simp_search` is invoked on a sub-expression that contains a
+multi-trig polynomial -- typically the residue of a `Factor` call on a
+`TrigRoundtrip` output -- `Factor`'s multivariate trial-division loop in
+`factor_roots` stalls hard. With four distinct degree-1 trig atoms
+(`Cosh[2x]`, `Sinh[2x]`, `Cosh[4x]`, `Sinh[4x]`) and dense cross-products
+the call ran ~150s before any guard fired. The existing
+`count_distinct_squared_trig_atoms` gate only counted atoms that appeared
+at integer power >= 2, so degree-1 dense forms slipped through.
+
+`count_distinct_trig_atoms(e)` extends the existing collector to count
+*every* `Sin/Cos/Sinh/Cosh` call (any power, including degree 1) as a
+distinct atom when its argument differs structurally. The
+`trigfactor_run_pipeline` Factor gate now also skips when this count
+exceeds `TRIG_FACTOR_TOTAL_ATOM_THRESHOLD = 3`. The pipeline still runs
+the identity-collapse rules (Pythagorean, angle-sum, double-angle), so
+the angle-addition cases (`Sin[a]Cos[b] + Cos[a]Sin[b]`, 4 distinct
+atoms) continue to collapse via the structural `:>` rule -- only
+`Factor`, the slow component, is bypassed.
+
+### Abs simplification cascade
+
+`apply_abs_rules` is a structural Abs-rewrite pass driven by a recursive
+walker. It runs as **Phase 0** of `simp_search` (a force-take preprocessor
+that rewrites the input before any other transform sees it) and again
+inside the round loop on each candidate. Phase-0 placement is deliberate:
+the rewritten form is often leaf-count-larger than the input
+(e.g. `Abs[Times[a,b,c]]` -> `Abs[a] Abs[b] Abs[c]` grows from 5 to 7
+leaves), so without preprocessing the leaf-count tiebreak would
+re-prefer the original from the seed set.
+
+**Universal rules** (fire without an assumption context):
+
+| Rule                                  | Reason                                       |
+| ------------------------------------- | -------------------------------------------- |
+| `Abs[Abs[x]] -> Abs[x]`               | Idempotency.                                 |
+| `Abs[Conjugate[x]] -> Abs[x]`         | `\|conj(z)\| = \|z\|`.                       |
+| `Abs[E^z] -> E^Re[z]`                 | Magnitude of any complex exponential.        |
+| `Abs[Times[a, b, ...]] -> Abs[a] Abs[b] ...` | `\|ab\| = \|a\| \|b\|`. Captures both numeric coefficient extraction (`Abs[c x] -> \|c\| Abs[x]`) and quotient split (`Abs[x/y]` is `Abs[Times[x, Power[y, -1]]]`). |
+| `Abs[x^n] -> Abs[x]^n` for integer `n` | `\|x^n\| = \|x\|^n` is exact for integer `n`. |
+
+**Cascading rules** (require `AssumeCtx`):
+
+| Rule                                | Predicate                          |
+| ----------------------------------- | ---------------------------------- |
+| `Abs[x] -> x`                       | `assume_known_nonneg(ctx, x)` (i.e. `x >= 0`)  |
+| `Abs[x] -> -x`                      | `assume_known_nonpos(ctx, x)` (i.e. `x <= 0`)  |
+| `Abs[x^y] -> Abs[x]^y`              | `assume_known_real(ctx, y)` (`y` is real)      |
+| `Abs[x^y] -> x^Re[y]`               | `assume_known_positive(ctx, x)` (strictly `x > 0`) |
+
+The user-provided `Abs[Sin[x_]] :> Sign[Sin[x]] * Sin[x]` rule is
+**omitted**: leaf count grows from 3 to 6, and picocas has no Sign-
+folding pass to recover it. We can add it back when interval-narrowing
+on `Sign[trigfunc]` lands.
+
+End-to-end checks:
+
+| Call                                                  | Result               |
+| ----------------------------------------------------- | -------------------- |
+| `Simplify[Abs[Abs[x]]]`                               | `Abs[x]`             |
+| `Simplify[Abs[Conjugate[x]]]`                         | `Abs[x]`             |
+| `Simplify[Abs[Conjugate[Abs[x]]]]`                    | `Abs[x]` (cascades)  |
+| `Simplify[Abs[E^(2 I y)]]`                            | `E^Re[2 I y]`        |
+| `Simplify[Abs[a*b*c]]`                                | `Abs[a] Abs[b] Abs[c]` |
+| `Simplify[Abs[2*x*y]]`                                | `2 Abs[x] Abs[y]` (`Abs[2] -> 2`) |
+| `Simplify[Abs[(-3)*x]]`                               | `3 Abs[x]` (`Abs[-3] -> 3`) |
+| `Simplify[Abs[I*x*y]]`                                | `Abs[x] Abs[y]` (`Abs[I] -> 1`) |
+| `Simplify[Abs[x/y]]`                                  | `Abs[x]/Abs[y]`      |
+| `Simplify[Abs[1/x]]`                                  | `1/Abs[x]`           |
+| `Simplify[Abs[x^3]]`                                  | `Abs[x]^3`           |
+| `Simplify[Abs[x], x > 0]`                             | `x`                  |
+| `Simplify[Abs[x], x >= 0]`                            | `x`                  |
+| `Simplify[Abs[x], x <= 0]`                            | `-x`                 |
+| `Simplify[Abs[x^y], Element[y, Reals]]`               | `Abs[x]^y`           |
+| `Simplify[Abs[x^y], x > 0]`                           | `x^y`                |
+| `Simplify[Abs[(x+1)/y], x >= 0 && y > 0]`             | `(1+x)/y`            |
+
+### TrigFactor real-coefficient guard
+
+The bottom-up walker exposed a soundness bug in `TrigFactor`'s
+linear-combination identity:
+
+```
+a_. Sin[x_] + b_. Cos[x_] + r___ /; (NumberQ[a] && NumberQ[b])
+  :> Sqrt[a^2 + b^2] Sin[x + ArcTan[a, b]] + r
+```
+
+`NumberQ` accepts `Complex` values, so for `Cos[x] + I Sin[x]` the rule
+matched with `a = I, b = 1` and produced
+`Sqrt[I^2 + 1] Sin[x + ArcTan[I, 1]] = Sqrt[0] * ... = 0` -- a false
+collapse of `E^(I x)` to zero. Top-level Simplify never seeded
+`Cos[x] + I Sin[x]` directly so the bug was hidden; bottom-up turns
+`E^(I x)` into `Cos[x] + I Sin[x]` via `TrigRoundtrip` at the leaf level,
+exposing the bug.
+
+Fix: tighten the predicate to also require `Im[a] === 0 && Im[b] === 0`,
+so the identity only fires for genuinely real coefficients.
+
+### Memory and leaks
+
+Bottom-up amplifies pre-existing leaks in `apply_assumption_rules`,
+`together_recursive`, `cancel_recursive`, `evaluate_step`,
+`builtin_polynomiallcm`, and `builtin_times` -- all of which are reached
+more often now that `simp_search` runs at internal nodes. None of the
+leak records originate inside the new code (`simp_bottomup`,
+`simp_memo_*`, `simp_skip_recursion_head`, `simp_head_holds_args`,
+`apply_abs_rules`, `abs_walk`, `try_simp_abs`, `contains_abs`,
+`count_distinct_trig_atoms`, `collect_trig_atoms`).
+
+One pre-existing leak in `apply_assumption_rules` (early NULL return
+forgetting to free `eq_diffs`) is fixed in this change. Valgrind on
+`Simplify[a*x + b*x]; Simplify[f[Sin[x]^2 + Cos[x]^2]]; Simplify[g[h[Sin[x]^2 + Cos[x]^2]]]`
+reports 37,744 bytes definitely lost (vs 8,624 bytes baseline) -- the
+remaining ~4x amplification is from the increased call count of leaky
+sub-routines, dramatically reduced from the initial 12x amplification by
+the small-subtree leaf-count guard. Fixing the underlying poly/rat
+leaks is left to a separate change.
+
+### Tests
+
+All simp-related tests pass: `simp_tests`, `simplify_tests`,
+`logexp_simplify_tests`, `assuming_tests`, `element_tests`,
+`trigfactor_tests`, `trigexpand_tests`, `core_tests`. The 6 pre-existing
+hard test failures (`context`, `facpoly`, `linalg`, `list_set`,
+`polymod`, `series`) reproduce identically on a `git stash` baseline --
+none caused by this change. The earlier-quoted "12 pre-existing
+failures" count included tests that printed errors but exited 0; the
+actual abort/timeout count is 6.
+
+## TrigToExp added as a Simplify search seed (2026-04-29)
+
+`TrigToExp` is now one of the unary transforms tried inside
+`simp_search`. Previously the only path to the exponential form was
+the full trig roundtrip (`TrigToExp -> Together -> Cancel -> ExpToTrig`),
+which always converts back to a trig form at the final step. For
+hyperbolic combinations whose exp form is strictly simpler than the
+trig form -- the canonical case being `Sinh[x] + Cosh[x] -> E^x` --
+the roundtripped result was `Cosh[x] + Sinh[x]` (unchanged), hiding
+the lower-complexity intermediate.
+
+Adding `TrigToExp` as a standalone seed lets the search keep `E^x`
+as a candidate; `update_best` then picks it because its `SimplifyCount`
+(3) beats the trig form's (5).
+
+For pure trig inputs, `TrigToExp` produces complex-coefficient exp
+forms with strictly higher complexity than the original (e.g.
+`TrigToExp[Sin[x] + Cos[x]]` has score ~12), so the original survives
+the tiebreak. Verified: `Sin[x]^2 + Cos[x]^2 -> 1`,
+`2 Tan[x]/(1 + Tan[x]^2) -> Sin[2 x]`, `Sin[x] + Cos[x]` preserved.
+
+End-to-end checks:
+
+| Call                                | Before                  | After   |
+| ----------------------------------- | ----------------------- | ------- |
+| `Simplify[Sinh[x] + Cosh[x]]`       | `Cosh[x] + Sinh[x]`     | `E^x`   |
+| `Simplify[Sin[x]^2 + Cos[x]^2]`     | `1`                     | `1`     |
+| `Simplify[Cosh[x]^2 - Sinh[x]^2]`   | `1`                     | `1`     |
+| `Simplify[(E^x - E^(-x))/Sinh[x]]`  | `2`                     | `2`     |
+| `Simplify[Sin[x] + Cos[x]]`         | `Cos[x] + Sin[x]`       | unchanged |

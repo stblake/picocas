@@ -204,6 +204,65 @@ static size_t count_distinct_squared_trig_atoms(const Expr* e) {
     return distinct;
 }
 
+/* Count every Sin/Cos/Sinh/Cosh call in the tree (any power or none).
+ * Two calls match if same head and structurally equal argument. Used as
+ * a gate against feeding Factor a 4+-variable trig polynomial -- when
+ * TrigRoundtrip on a sub-expression produces forms like
+ *   Cosh[2 x] - Cosh[2 x] Cosh[4 x] - Sinh[2 x] - Sinh[4 x] + ...
+ * (4 distinct trig atoms at degree 1, dense cross-products), Factor
+ * stalls for tens of seconds even though no atom appears squared. */
+static void collect_trig_atoms(const Expr* e, TrigSquareList* L) {
+    if (!e || L->overflow) return;
+    if (e->type != EXPR_FUNCTION) return;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        e->data.function.arg_count == 1) {
+        int k = trig_pair_kind(e->data.function.head->data.symbol);
+        if (k >= 0) {
+            if (L->count < TRIG_PAIR_CAP) {
+                L->kinds[L->count] = k;
+                L->args[L->count]  = e->data.function.args[0];
+                L->count++;
+            } else {
+                L->overflow = 1;
+                return;
+            }
+        }
+    }
+    collect_trig_atoms(e->data.function.head, L);
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        collect_trig_atoms(e->data.function.args[i], L);
+    }
+}
+
+static size_t count_distinct_trig_atoms(const Expr* e) {
+    TrigSquareList L = {{0}, {0}, 0, 0};
+    collect_trig_atoms(e, &L);
+    if (L.overflow) return TRIG_PAIR_CAP;
+    size_t distinct = 0;
+    for (size_t i = 0; i < L.count; i++) {
+        int already_seen = 0;
+        for (size_t j = 0; j < i; j++) {
+            if (L.kinds[i] == L.kinds[j] &&
+                expr_eq((Expr*)L.args[i], (Expr*)L.args[j])) {
+                already_seen = 1;
+                break;
+            }
+        }
+        if (!already_seen) distinct++;
+    }
+    return distinct;
+}
+
+/* Threshold above which Factor on a polynomial whose variables are trig
+ * atoms (any power, not just squared) stalls. The motivating case from
+ * bottom-up Simplify is the post-TrigRoundtrip form of
+ * Cosh[x]^2 - Sinh[x]^2 which has 4 distinct degree-1 trig atoms
+ * (Cosh[2x], Sinh[2x], Cosh[4x], Sinh[4x]) -- Factor took ~150s before
+ * this guard was added. With <= 3 distinct atoms Factor remains
+ * tractable. */
+#define TRIG_FACTOR_TOTAL_ATOM_THRESHOLD 3
+
 /*
  * Threshold above which Factor's multivariate cost becomes prohibitive on
  * trig expansions. With <= 2 distinct squared trig atoms (the typical
@@ -212,6 +271,50 @@ static size_t count_distinct_squared_trig_atoms(const Expr* e) {
  * trial-division loop in factor_roots stalls.
  */
 #define TRIG_FACTOR_ATOM_THRESHOLD 2
+
+/*
+ * Maximum integer exponent on any squared trig atom that we still feed to
+ * Factor. Even when only Sin[x] and Cos[x] appear (atom count == 2), the
+ * post-TrigExpand polynomial for Sin[n x] / Cos[n x] grows to total degree n,
+ * and Factor's multivariate trial-division loop stalls hard on dense forms
+ * of that shape. The known-good Pythagorean cases reach degree 4
+ * (e.g. Sin[x]^4 + 2 Sin[x]^2 Cos[x]^2 + Cos[x]^4 -> 1), so a cap of 4
+ * preserves them while ruling out the high-degree blow-ups produced by
+ * TrigFactor's Path B on inputs like Sin[5 x] + Sin[7 x].
+ */
+#define TRIG_FACTOR_DEGREE_THRESHOLD 4
+
+/*
+ * Maximum integer exponent appearing on any Sin/Cos/Sinh/Cosh atom in `e`.
+ * Returns 0 if no such Power[trig_atom, k>=2] subterm exists. Used together
+ * with count_distinct_squared_trig_atoms to gate Factor in the TrigFactor
+ * pipeline. */
+static int64_t max_trig_atom_power(const Expr* e) {
+    if (!e || e->type != EXPR_FUNCTION) return 0;
+    int64_t best = 0;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        const Expr* base = e->data.function.args[0];
+        const Expr* exp  = e->data.function.args[1];
+        if (base->type == EXPR_FUNCTION &&
+            base->data.function.head &&
+            base->data.function.head->type == EXPR_SYMBOL &&
+            base->data.function.arg_count == 1 &&
+            exp->type == EXPR_INTEGER && exp->data.integer >= 2 &&
+            trig_pair_kind(base->data.function.head->data.symbol) >= 0) {
+            best = exp->data.integer;
+        }
+    }
+    int64_t hp = max_trig_atom_power(e->data.function.head);
+    if (hp > best) best = hp;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        int64_t cp = max_trig_atom_power(e->data.function.args[i]);
+        if (cp > best) best = cp;
+    }
+    return best;
+}
 
 /*
  * Test whether an expression tree contains any Power[_, n] subterm with a
@@ -358,16 +461,28 @@ static Expr* trigfactor_run_pipeline(Expr* input) {
     expr_free(tog_expr);
 
     /* Factor -- picocas Factor treats trig atoms as polynomial variables.
-     * Skip Factor when the polynomial has more than two distinct squared trig
-     * atoms: with that many high-degree multivariate variables, Factor's
-     * trial-division loop in factor_roots stalls (e.g. on the polynomial that
-     * TrigExpand produces for Sin[2 x + 3 y]) and would not produce a useful
-     * factorization regardless. The identity rules applied below still match
-     * Pythagorean structure that survives in the post-Together factored form
-     * (e.g. (Sin[x]^2 + Cos[x]^2)(Cosh[y]^2 - Sinh[y]^2) collapses to 1
-     * directly via the Times-context identity rules). */
+     * Skip Factor when the polynomial would be too expensive to factor:
+     *
+     *   1. More than two distinct squared trig atoms: the multivariate
+     *      polynomial has too many high-degree variables and Factor's
+     *      trial-division loop in factor_roots stalls (e.g. on the
+     *      polynomial that TrigExpand produces for Sin[2 x + 3 y]).
+     *   2. Even with only two atoms (Sin[x] and Cos[x], the typical
+     *      Pythagorean pair), an exponent above
+     *      TRIG_FACTOR_DEGREE_THRESHOLD signals a dense high-degree
+     *      polynomial. Path B of TrigFactor on Sin[m x] + Sin[n x]
+     *      (m,n >= 3) produces exactly such a form -- TrigExpand turns
+     *      Sin[7 x] into a degree-7 polynomial in Sin[x], Cos[x], and
+     *      Factor stalls on it.
+     *
+     * In either case the identity rules applied below still match the
+     * Pythagorean structure that survives without Factor (e.g.
+     * (Sin[x]^2 + Cos[x]^2)(Cosh[y]^2 - Sinh[y]^2) collapses to 1 directly
+     * via the Times-context identity rules). */
     Expr* factored;
-    if (count_distinct_squared_trig_atoms(togethered) > TRIG_FACTOR_ATOM_THRESHOLD) {
+    if (count_distinct_squared_trig_atoms(togethered) > TRIG_FACTOR_ATOM_THRESHOLD ||
+        max_trig_atom_power(togethered) > TRIG_FACTOR_DEGREE_THRESHOLD ||
+        count_distinct_trig_atoms(togethered) > TRIG_FACTOR_TOTAL_ATOM_THRESHOLD) {
         factored = togethered;
     } else {
         Expr* fac_args[1] = { togethered };
@@ -765,9 +880,12 @@ void trigsimp_init(void) {
         "-2 Sinh[x_] Cosh[x_] r___ :> -Sinh[2 x] r, "
         /* Linear-combination factoring: a Sin[x] + b Cos[x] -> Sqrt[a^2+b^2]
          * Sin[x + ArcTan[a, b]]. Only fires when both coefficients are
-         * numeric; for symbolic coefficients the result would be more complex
-         * than the input. The 2-arg ArcTan handles quadrant correctly. */
-        "a_. Sin[x_] + b_. Cos[x_] + r___ /; (NumberQ[a] && NumberQ[b]) "
+         * numeric AND real; for complex coefficients Sqrt[a^2+b^2] can
+         * collapse to zero (e.g. a=I, b=1 gives Sqrt[I^2+1] = Sqrt[0] = 0,
+         * which would falsely rewrite Cos[x] + I Sin[x] = E^(I x) to 0).
+         * For symbolic coefficients the result would be more complex than
+         * the input. The 2-arg ArcTan handles quadrant correctly. */
+        "a_. Sin[x_] + b_. Cos[x_] + r___ /; (NumberQ[a] && NumberQ[b] && Im[a] === 0 && Im[b] === 0) "
             ":> Sqrt[a^2 + b^2] Sin[x + ArcTan[a, b]] + r "
     "}";
     trig_factor_identities = parse_expression(identities_str);

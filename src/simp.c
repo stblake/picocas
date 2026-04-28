@@ -2,12 +2,14 @@
 #include "attr.h"
 #include "eval.h"
 #include "parse.h"
+#include "print.h"
 #include "symtab.h"
 #include "expr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <gmp.h>
 
 /*
@@ -33,9 +35,8 @@
 static size_t int_digit_count_int64(int64_t v) {
     if (v == 0) return 1;
     if (v < 0) {
-        /* INT64_MIN edge case: |v| not representable; mpz_sizeinbase via
-         * temp avoids the sign overflow. The 19-digit upper bound is
-         * tight enough that direct counting is fine after offsetting. */
+        /* INT64_MIN edge case: |v| not representable; count digits of the
+         * negated value digit-at-a-time without ever forming -INT64_MIN. */
         size_t n = 1;
         int64_t t = v;
         while (t <= -10) { n++; t /= 10; }
@@ -46,26 +47,79 @@ static size_t int_digit_count_int64(int64_t v) {
     return n;
 }
 
+/*
+ * simp_default_complexity implements Mathematica's SimplifyCount:
+ *
+ *   Symbol      -> 1
+ *   Integer 0   -> 1
+ *   Integer p>0 -> Floor[Log10[p]] + 1            == digits(p)
+ *   Integer p<0 -> Floor[Log10[|p|]] + 2          == digits(|p|) + 1
+ *   Rational    -> SimplifyCount[num] + SimplifyCount[den] + 1
+ *   Complex     -> SimplifyCount[re]  + SimplifyCount[im]  + 1
+ *   Real / MPFR -> 2                              (NumberQ but not Integer/Rational)
+ *   String      -> 1                              (treated as a leaf, picocas extension)
+ *   Function    -> SimplifyCount[head] + sum SimplifyCount[args]
+ *
+ * The negative-integer adjustment matches Mathematica's behaviour where
+ * the leading "-" contributes one unit of complexity. The explicit
+ * Rational/Complex cases keep e.g. 100 Log[2] (score 6) preferred over
+ * Log[2^100] (score 32). */
 size_t simp_default_complexity(const Expr* e) {
     if (!e) return 0;
     switch (e->type) {
-        case EXPR_INTEGER: return int_digit_count_int64(e->data.integer);
-        case EXPR_BIGINT:  return mpz_sizeinbase(e->data.bigint, 10);
-        case EXPR_REAL:    return 1;
+        case EXPR_INTEGER: {
+            int64_t v = e->data.integer;
+            if (v == 0) return 1;
+            size_t d = int_digit_count_int64(v);
+            return v > 0 ? d : d + 1;
+        }
+        case EXPR_BIGINT: {
+            int sgn = mpz_sgn(e->data.bigint);
+            if (sgn == 0) return 1;
+            size_t digits = mpz_sizeinbase(e->data.bigint, 10);
+            return sgn > 0 ? digits : digits + 1;
+        }
+        case EXPR_REAL:    return 2;
         case EXPR_SYMBOL:  return 1;
         case EXPR_STRING:  return 1;
         case EXPR_FUNCTION: {
-            size_t total = simp_default_complexity(e->data.function.head);
-            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+            const Expr* head = e->data.function.head;
+            size_t argc = e->data.function.arg_count;
+            /* Rational[n, d] and Complex[re, im] are Mathematica-specials:
+             * SimplifyCount adds 1 for the wrapper, not the head's own
+             * SimplifyCount. */
+            if (head && head->type == EXPR_SYMBOL && argc == 2) {
+                if (strcmp(head->data.symbol, "Rational") == 0 ||
+                    strcmp(head->data.symbol, "Complex")  == 0) {
+                    return simp_default_complexity(e->data.function.args[0])
+                         + simp_default_complexity(e->data.function.args[1])
+                         + 1;
+                }
+            }
+            size_t total = simp_default_complexity(head);
+            for (size_t i = 0; i < argc; i++) {
                 total += simp_default_complexity(e->data.function.args[i]);
             }
             return total;
         }
 #ifdef USE_MPFR
-        case EXPR_MPFR: return 1;
+        case EXPR_MPFR: return 2;
 #endif
     }
     return 1;
+}
+
+/* Builtin SimplifyCount[expr] -- exposes the default complexity to users
+ * so they can inspect or use it inside a custom ComplexityFunction.
+ * The caller (evaluate_step) frees `res` after we return a non-NULL Expr;
+ * we must NOT free it here. */
+Expr* builtin_simplify_count(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    if (res->data.function.arg_count != 1) return NULL;
+    size_t s = simp_default_complexity(res->data.function.args[0]);
+    /* size_t comfortably fits in EXPR_INTEGER for any expression we'd
+     * realistically see; on 64-bit size_t = 8 bytes, int64_t = 8 bytes. */
+    return expr_new_integer((int64_t)s);
 }
 
 /* ----------------------------------------------------------------------- */
@@ -539,6 +593,52 @@ static Expr* call_unary_copy(const char* head_name, const Expr* arg) {
     return call_unary_owned(head_name, expr_copy((Expr*)arg));
 }
 
+/* ----------------------------------------------------------------------- */
+/* $SimplifyDebug -- per-transform tracing                                 */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * When $SimplifyDebug is set to True, every transform invocation inside
+ * simp_search emits one line on stderr in the format
+ *   /<TransformName>/: <input> -> <output> [<elapsed> ms]
+ * This is used to diagnose pathological inputs (Simplify hangs, runaway
+ * candidate explosion, expensive single transforms). The check is read
+ * directly off the OwnValue list -- evaluating $SimplifyDebug would
+ * itself fire the OwnValue rule on every call. */
+static bool simp_debug_enabled(void) {
+    Rule* r = symtab_get_own_values("$SimplifyDebug");
+    if (!r || !r->replacement) return false;
+    Expr* v = r->replacement;
+    return v->type == EXPR_SYMBOL && strcmp(v->data.symbol, "True") == 0;
+}
+
+static double simp_debug_elapsed_ms(clock_t t0) {
+    return (double)(clock() - t0) * 1000.0 / (double)CLOCKS_PER_SEC;
+}
+
+static void simp_debug_log(const char* xform, const Expr* in,
+                           const Expr* out, double ms) {
+    char* sin  = expr_to_string((Expr*)in);
+    char* sout = out ? expr_to_string((Expr*)out) : NULL;
+    fprintf(stderr, "/%s/: %s -> %s [%.2f ms]\n",
+            xform,
+            sin  ? sin  : "?",
+            sout ? sout : "(no change)",
+            ms);
+    free(sin);
+    free(sout);
+    fflush(stderr);
+}
+
+/* Wrap call_unary_copy with tracing when $SimplifyDebug is True. */
+static Expr* traced_call_unary(const char* xform, const Expr* in) {
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
+    Expr* r = call_unary_copy(xform, in);
+    if (dbg) simp_debug_log(xform, in, r, simp_debug_elapsed_ms(t0));
+    return r;
+}
+
 static bool is_rule_with_lhs(const Expr* e, const char* lhs_symbol) {
     if (!e || e->type != EXPR_FUNCTION) return false;
     if (e->data.function.arg_count != 2) return false;
@@ -827,7 +927,10 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
         }
     }
 
-    if (!string_rules && eq_count == 0) return NULL;
+    if (!string_rules && eq_count == 0) {
+        free(eq_diffs);
+        return NULL;
+    }
 
     size_t string_len = 0;
     if (string_rules && string_rules->type == EXPR_FUNCTION) {
@@ -929,10 +1032,13 @@ overflow:
 /* ----------------------------------------------------------------------- */
 
 static Expr* transform_trig_roundtrip(const Expr* e) {
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
     Expr* a = call_unary_copy("TrigToExp", e);
     Expr* b = call_unary_owned("Together", a);
     Expr* c = call_unary_owned("Cancel", b);
     Expr* d = call_unary_owned("ExpToTrig", c);
+    if (dbg) simp_debug_log("TrigRoundtrip", e, d, simp_debug_elapsed_ms(t0));
     return d;
 }
 
@@ -1143,6 +1249,203 @@ static Expr* apply_logexp_rules(const Expr* input, const AssumeCtx* ctx) {
 }
 
 /* ----------------------------------------------------------------------- */
+/* Abs simplification: structural rewrites over Abs[...] subexpressions   */
+/* ----------------------------------------------------------------------- */
+
+/* Cheap pre-check: skip the walker when the input is Abs-free. */
+static bool contains_abs(const Expr* e) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Abs") == 0) return true;
+    if (contains_abs(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_abs(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+/* Try to simplify a single Abs[arg] node. `arg` is the inner expression
+ * (i.e. the argument to Abs). Returns a new Expr* on success, NULL if no
+ * rule fires. */
+static Expr* try_simp_abs(const Expr* arg, const AssumeCtx* ctx) {
+    /* Universal: idempotency Abs[Abs[x]] -> Abs[x]. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Abs") == 0 &&
+        arg->data.function.arg_count == 1) {
+        return expr_copy((Expr*)arg);
+    }
+
+    /* Universal: conjugate symmetry Abs[Conjugate[x]] -> Abs[x]. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Conjugate") == 0 &&
+        arg->data.function.arg_count == 1) {
+        Expr* a[1] = { expr_copy(arg->data.function.args[0]) };
+        return expr_new_function(expr_new_symbol("Abs"), a, 1);
+    }
+
+    /* Universal: Abs[E^z] -> E^Re[z]. The magnitude of any complex
+     * exponential is e^(real part of the exponent). */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Power") == 0 &&
+        arg->data.function.arg_count == 2 &&
+        arg->data.function.args[0]->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.args[0]->data.symbol, "E") == 0) {
+        Expr* re_in[1] = { expr_copy(arg->data.function.args[1]) };
+        Expr* re_call = expr_new_function(expr_new_symbol("Re"), re_in, 1);
+        Expr* pa[2] = { expr_new_symbol("E"), re_call };
+        return expr_new_function(expr_new_symbol("Power"), pa, 2);
+    }
+
+    /* Universal: split products. Abs[Times[a, b, ...]] -> Abs[a] Abs[b] ...
+     * Captures both Abs[c x] (numeric coefficient extraction) and the
+     * Abs[x/y] case since x/y is Times[x, Power[y, -1]]. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Times") == 0 &&
+        arg->data.function.arg_count >= 2) {
+        size_t n = arg->data.function.arg_count;
+        Expr** new_args = (Expr**)calloc(n, sizeof(Expr*));
+        for (size_t i = 0; i < n; i++) {
+            Expr* a[1] = { expr_copy(arg->data.function.args[i]) };
+            new_args[i] = expr_new_function(expr_new_symbol("Abs"), a, 1);
+        }
+        Expr* result = expr_new_function(expr_new_symbol("Times"), new_args, n);
+        free(new_args);
+        return result;
+    }
+
+    /* Universal: integer-power split. Abs[x^n] -> Abs[x]^n for integer n.
+     * For complex x and integer n the identity |x^n| = |x|^n is exact;
+     * for non-integer n it can fail (branch-cut), so the unconditional
+     * rule applies only to integer exponents. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Power") == 0 &&
+        arg->data.function.arg_count == 2 &&
+        (arg->data.function.args[1]->type == EXPR_INTEGER ||
+         arg->data.function.args[1]->type == EXPR_BIGINT)) {
+        Expr* base = arg->data.function.args[0];
+        Expr* exp  = arg->data.function.args[1];
+        Expr* a[1] = { expr_copy(base) };
+        Expr* abs_call = expr_new_function(expr_new_symbol("Abs"), a, 1);
+        Expr* pa[2] = { abs_call, expr_copy(exp) };
+        return expr_new_function(expr_new_symbol("Power"), pa, 2);
+    }
+
+    /* The remaining rules need an assumption context. */
+    if (!ctx) return NULL;
+
+    /* Cascading: Abs[x] -> x  if x >= 0 (provably nonnegative). */
+    if (assume_known_nonneg(ctx, arg)) {
+        return expr_copy((Expr*)arg);
+    }
+
+    /* Cascading: Abs[x] -> -x  if x <= 0 (provably nonpositive). */
+    if (assume_known_nonpos(ctx, arg)) {
+        Expr* na[2] = { expr_new_integer(-1), expr_copy((Expr*)arg) };
+        return expr_new_function(expr_new_symbol("Times"), na, 2);
+    }
+
+    /* Cascading: Abs[x^y] -> Abs[x]^y if y is real. The integer-power
+     * rule above handles n in Z; this generalises to any real y under
+     * an Element[y, Reals] assumption. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Power") == 0 &&
+        arg->data.function.arg_count == 2 &&
+        assume_known_real(ctx, arg->data.function.args[1])) {
+        Expr* base = arg->data.function.args[0];
+        Expr* exp  = arg->data.function.args[1];
+        Expr* a[1] = { expr_copy(base) };
+        Expr* abs_call = expr_new_function(expr_new_symbol("Abs"), a, 1);
+        Expr* pa[2] = { abs_call, expr_copy(exp) };
+        return expr_new_function(expr_new_symbol("Power"), pa, 2);
+    }
+
+    /* Cascading: Abs[x^y] -> x^Re[y] if x > 0 (strictly positive).
+     * Proof: for x > 0, x^y = x^(Re[y] + I Im[y]) = x^Re[y] * Exp[I Im[y]
+     * Log[x]] and the second factor has unit modulus. */
+    if (arg->type == EXPR_FUNCTION &&
+        arg->data.function.head && arg->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(arg->data.function.head->data.symbol, "Power") == 0 &&
+        arg->data.function.arg_count == 2 &&
+        assume_known_positive(ctx, arg->data.function.args[0])) {
+        Expr* base = arg->data.function.args[0];
+        Expr* exp  = arg->data.function.args[1];
+        Expr* re_in[1] = { expr_copy(exp) };
+        Expr* re_call = expr_new_function(expr_new_symbol("Re"), re_in, 1);
+        Expr* pa[2] = { expr_copy(base), re_call };
+        return expr_new_function(expr_new_symbol("Power"), pa, 2);
+    }
+
+    /* The Abs[Sin[x]] -> Sign[Sin[x]] Sin[x] rule from the user-provided
+     * cascade is omitted: the rewrite expands leaf count (3 -> 6) and only
+     * pays off when a downstream Sign-folding pass narrows Sign[Sin[x]] on
+     * a known interval, which picocas does not currently perform. Adding
+     * it without that infrastructure produces a strictly larger expression
+     * with no observable benefit. */
+    return NULL;
+}
+
+/* Bottom-up walker that rewrites Abs[...] subexpressions. Returns a new
+ * Expr* if any rewrite fired anywhere in the tree, NULL otherwise. */
+static Expr* abs_walk(const Expr* e, const AssumeCtx* ctx) {
+    if (!e || e->type != EXPR_FUNCTION) return NULL;
+
+    size_t argc = e->data.function.arg_count;
+    Expr** new_args = (Expr**)calloc(argc ? argc : 1, sizeof(Expr*));
+    bool any = false;
+    for (size_t i = 0; i < argc; i++) {
+        Expr* sub = abs_walk(e->data.function.args[i], ctx);
+        if (sub) {
+            new_args[i] = sub;
+            any = true;
+        } else {
+            new_args[i] = expr_copy(e->data.function.args[i]);
+        }
+    }
+
+    Expr* this_form;
+    if (any) {
+        this_form = expr_new_function(expr_copy(e->data.function.head),
+                                       new_args, argc);
+    } else {
+        for (size_t i = 0; i < argc; i++) expr_free(new_args[i]);
+        this_form = NULL;
+    }
+    free(new_args);
+
+    /* Rule fires only on Abs[_]. */
+    bool is_abs = e->data.function.head &&
+                  e->data.function.head->type == EXPR_SYMBOL &&
+                  strcmp(e->data.function.head->data.symbol, "Abs") == 0 &&
+                  e->data.function.arg_count == 1;
+    if (is_abs) {
+        const Expr* inner = this_form ? this_form->data.function.args[0]
+                                       : e->data.function.args[0];
+        Expr* simp = try_simp_abs(inner, ctx);
+        if (simp) {
+            if (this_form) expr_free(this_form);
+            return simp;
+        }
+    }
+
+    return this_form;
+}
+
+/* Returns a rewritten copy of `input` if any Abs simplification fired,
+ * NULL otherwise. ctx may be NULL (universal rules still fire). */
+static Expr* apply_abs_rules(const Expr* input, const AssumeCtx* ctx) {
+    if (!contains_abs(input)) return NULL;
+    return abs_walk(input, ctx);
+}
+
+/* ----------------------------------------------------------------------- */
 /* Heuristic search                                                        */
 /* ----------------------------------------------------------------------- */
 
@@ -1157,7 +1460,17 @@ static const char* SIMP_TRANSFORMS[] = {
     "FactorTerms",
     "Apart",
     "TrigExpand",
-    "TrigFactor"
+    "TrigFactor",
+    /* TrigToExp surfaces the exp form directly so that hyperbolic
+     * combinations whose exp form is strictly simpler (e.g. Sinh[x] +
+     * Cosh[x] -> E^x) win the score tiebreak. The full trig roundtrip
+     * (TrigToExp -> Together -> Cancel -> ExpToTrig) ends with ExpToTrig
+     * and converts E^x back to Cosh[x] + Sinh[x], hiding the simpler
+     * intermediate; offering TrigToExp as its own seed avoids that. For
+     * pure trig inputs, TrigToExp yields a complex-coefficient exp form
+     * with strictly higher complexity than the original, so the original
+     * still wins -- no regression on Sin/Cos identities. */
+    "TrigToExp"
 };
 static const size_t SIMP_TRANSFORM_COUNT =
     sizeof(SIMP_TRANSFORMS) / sizeof(SIMP_TRANSFORMS[0]);
@@ -1217,7 +1530,8 @@ static void update_best(Expr** best, size_t* best_score, const Expr* c,
  * recover x*(a+b) from a*x + b*x), and which variable to collect by is
  * not knowable up front -- Mathematica's Simplify likewise tries each
  * variable. We rely on Variables[] to enumerate the candidates. */
-static void try_collect_per_variable(const Expr* seed, CandSet* next,
+static void try_collect_per_variable(const Expr* seed, size_t parent_score,
+                                     CandSet* next,
                                      Expr** best, size_t* best_score,
                                      const Expr* complexity_func) {
     Expr* vars = call_unary_copy("Variables", seed);
@@ -1230,15 +1544,30 @@ static void try_collect_per_variable(const Expr* seed, CandSet* next,
         return;
     }
     size_t nv = vars->data.function.arg_count;
+    bool dbg = simp_debug_enabled();
     for (size_t i = 0; i < nv; i++) {
         Expr* v = vars->data.function.args[i];
         Expr* args[2] = { expr_copy((Expr*)seed), expr_copy(v) };
         Expr* call = expr_new_function(expr_new_symbol("Collect"), args, 2);
+        clock_t t0 = dbg ? clock() : 0;
         Expr* r = evaluate(call);
         expr_free(call);
+        if (dbg) {
+            char* vname = expr_to_string(v);
+            char buf[64];
+            snprintf(buf, sizeof(buf), "Collect[_,%s]",
+                     vname ? vname : "?");
+            simp_debug_log(buf, seed, r, simp_debug_elapsed_ms(t0));
+            free(vname);
+        }
         if (!r) continue;
         update_best(best, best_score, r, complexity_func);
+        /* Branch-pruning: only propagate if the candidate is no worse
+         * than its parent. Strictly worse forms cannot lead to a better
+         * result through any further unary transform we run. */
         if (expr_eq(r, seed)) {
+            expr_free(r);
+        } else if (score_with_func(r, complexity_func) > parent_score) {
             expr_free(r);
         } else {
             cs_add_or_free(next, r);
@@ -1247,8 +1576,27 @@ static void try_collect_per_variable(const Expr* seed, CandSet* next,
     expr_free(vars);
 }
 
-static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
+static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                          const Expr* complexity_func) {
+    /* Phase 0: pre-apply the Abs structural rules. These (idempotent,
+     * force-take) rewrites canonicalise Abs[Times[...]] -> product of Abs,
+     * Abs[Abs[x]] -> Abs[x], Abs[E^z] -> E^Re[z], etc. Doing it here
+     * (rather than as a regular seed) means the rest of the search starts
+     * from the rewritten form -- otherwise the original (often smaller in
+     * leaf count) re-enters the candidate set and the leaf-count tiebreak
+     * brings us right back. */
+    Expr* abs_pre = apply_abs_rules(original_input, ctx);
+    const Expr* input;
+    if (abs_pre && !expr_eq(abs_pre, original_input)) {
+        if (simp_debug_enabled()) {
+            simp_debug_log("AbsRules", original_input, abs_pre, 0.0);
+        }
+        input = abs_pre;
+    } else {
+        if (abs_pre) { expr_free(abs_pre); abs_pre = NULL; }
+        input = original_input;
+    }
+
     Expr* best = expr_copy((Expr*)input);
     size_t best_score = score_with_func(best, complexity_func);
 
@@ -1263,7 +1611,10 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
      * Log[x^p] -> p Log[x] both score 4). Force-take it as the new best
      * so long as it isn't strictly worse. */
     if (ctx) {
+        bool dbg = simp_debug_enabled();
+        clock_t t0 = dbg ? clock() : 0;
         Expr* alt = apply_assumption_rules(input, ctx);
+        if (dbg) simp_debug_log("AssumptionRules", input, alt, simp_debug_elapsed_ms(t0));
         if (alt && !expr_eq(alt, input)) {
             size_t s = score_with_func(alt, complexity_func);
             if (s <= best_score) {
@@ -1287,7 +1638,10 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
      * Together, ...) cannot recombine an expanded log/power, so the
      * expanded form persists through the rest of the search. */
     if (ctx) {
+        bool dbg = simp_debug_enabled();
+        clock_t t0 = dbg ? clock() : 0;
         Expr* alt = apply_logexp_rules(input, ctx);
+        if (dbg) simp_debug_log("LogExpRules", input, alt, simp_debug_elapsed_ms(t0));
         if (alt && !expr_eq(alt, input)) {
             expr_free(best);
             best = expr_copy(alt);
@@ -1309,63 +1663,126 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
         }
     }
 
-    /* Per-variable Collect seed. */
-    try_collect_per_variable(input, &seeds, &best, &best_score, complexity_func);
+    /* Per-variable Collect seed. parent_score = score(input). */
+    try_collect_per_variable(input, best_score, &seeds, &best, &best_score,
+                             complexity_func);
 
+    /*
+     * Round loop. Branch-pruning rule: a candidate produced by a
+     * transform on `seed` is propagated to `next` only when its
+     * complexity is no greater than `seed`'s. Strictly worse forms
+     * cannot lead to a better best through any further unary transform
+     * we apply (they'd just feed transforms more work and grow the
+     * candidate set), so we drop them. They may still beat the running
+     * best on this very step (update_best already handles that), but
+     * they won't seed further exploration.
+     *
+     * Assumption-aware rewrites and the logexp cascade keep their
+     * "force-win" behaviour for the best slot (they're correctness-
+     * preserving under the assumption set and qualitatively "more
+     * simplified"), but the same parent-score gate applies to whether
+     * they propagate as a new seed.
+     */
     for (int round = 0; round < SIMP_ROUNDS; round++) {
         CandSet next;
         cs_init(&next);
         for (size_t i = 0; i < seeds.count; i++) {
+            const Expr* seed = seeds.items[i];
+            size_t parent_score = score_with_func(seed, complexity_func);
+
             for (size_t t = 0; t < SIMP_TRANSFORM_COUNT; t++) {
-                if (!transform_safe_for(SIMP_TRANSFORMS[t], seeds.items[i])) continue;
-                Expr* r = call_unary_copy(SIMP_TRANSFORMS[t], seeds.items[i]);
+                if (!transform_safe_for(SIMP_TRANSFORMS[t], seed)) continue;
+                Expr* r = traced_call_unary(SIMP_TRANSFORMS[t], seed);
                 if (!r) continue;
                 update_best(&best, &best_score, r, complexity_func);
-                if (expr_eq(r, seeds.items[i])) {
+                if (expr_eq(r, seed)) {
+                    expr_free(r);
+                } else if (score_with_func(r, complexity_func) > parent_score) {
                     expr_free(r);
                 } else {
                     cs_add_or_free(&next, r);
                 }
             }
             /* Also try the trig roundtrip on each candidate. */
-            Expr* tr = transform_trig_roundtrip(seeds.items[i]);
+            Expr* tr = transform_trig_roundtrip(seed);
             if (tr) {
                 update_best(&best, &best_score, tr, complexity_func);
-                if (expr_eq(tr, seeds.items[i])) {
+                if (expr_eq(tr, seed)) {
+                    expr_free(tr);
+                } else if (score_with_func(tr, complexity_func) > parent_score) {
                     expr_free(tr);
                 } else {
                     cs_add_or_free(&next, tr);
                 }
             }
+            /* Abs rewrites on each candidate. Same force-take semantics
+             * as the seed phase (idempotent rules, structural answer). */
+            {
+                bool dbg = simp_debug_enabled();
+                clock_t t0 = dbg ? clock() : 0;
+                Expr* abr = apply_abs_rules(seed, ctx);
+                if (dbg) simp_debug_log("AbsRules", seed, abr, simp_debug_elapsed_ms(t0));
+                if (abr) {
+                    if (!expr_eq(abr, seed)) {
+                        size_t s = score_with_func(abr, complexity_func);
+                        expr_free(best);
+                        best = expr_copy(abr);
+                        best_score = s;
+                        if (s <= parent_score) {
+                            cs_add_or_free(&next, abr);
+                        } else {
+                            expr_free(abr);
+                        }
+                    } else {
+                        expr_free(abr);
+                    }
+                }
+            }
             /* And per-variable Collect on each candidate. */
-            try_collect_per_variable(seeds.items[i], &next, &best, &best_score,
+            try_collect_per_variable(seed, parent_score, &next, &best, &best_score,
                                      complexity_func);
             /* And the assumption rewriter on each candidate. Bias as in
              * the seed phase: prefer assumption-driven forms at equal
-             * complexity. */
+             * complexity for `best`; gate seeding on parent_score. */
             if (ctx) {
-                Expr* ar = apply_assumption_rules(seeds.items[i], ctx);
+                bool dbg = simp_debug_enabled();
+                clock_t t0 = dbg ? clock() : 0;
+                Expr* ar = apply_assumption_rules(seed, ctx);
+                if (dbg) simp_debug_log("AssumptionRules", seed, ar, simp_debug_elapsed_ms(t0));
                 if (ar) {
-                    if (!expr_eq(ar, seeds.items[i])) {
+                    if (!expr_eq(ar, seed)) {
                         size_t s = score_with_func(ar, complexity_func);
                         if (s <= best_score) {
                             expr_free(best);
                             best = expr_copy(ar);
                             best_score = s;
                         }
-                        cs_add_or_free(&next, ar);
+                        if (s <= parent_score) {
+                            cs_add_or_free(&next, ar);
+                        } else {
+                            expr_free(ar);
+                        }
                     } else {
                         expr_free(ar);
                     }
                 }
-                Expr* lr = apply_logexp_rules(seeds.items[i], ctx);
+                clock_t t1 = dbg ? clock() : 0;
+                Expr* lr = apply_logexp_rules(seed, ctx);
+                if (dbg) simp_debug_log("LogExpRules", seed, lr, simp_debug_elapsed_ms(t1));
                 if (lr) {
-                    if (!expr_eq(lr, seeds.items[i])) {
-                        /* Force-win as in the seed phase. */
+                    if (!expr_eq(lr, seed)) {
+                        /* Force-win for `best` (correctness-preserving
+                         * under positivity assumptions). Still gate the
+                         * seeding step. */
+                        size_t s = score_with_func(lr, complexity_func);
                         expr_free(best);
                         best = expr_copy(lr);
-                        best_score = score_with_func(best, complexity_func);
-                        cs_add_or_free(&next, lr);
+                        best_score = s;
+                        if (s <= parent_score) {
+                            cs_add_or_free(&next, lr);
+                        } else {
+                            expr_free(lr);
+                        }
                     } else {
                         expr_free(lr);
                     }
@@ -1377,7 +1794,203 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
         if (seeds.count == 0) break;
     }
     cs_free(&seeds);
+    if (abs_pre) expr_free(abs_pre);
     return best;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Bottom-up Simplify: memoised recursive descent over subtrees            */
+/* ----------------------------------------------------------------------- */
+
+#define SIMP_BOTTOMUP_MAX_DEPTH 64
+#define SIMP_MEMO_BUCKETS 256
+
+typedef struct SimpMemoEntry {
+    Expr* key;
+    Expr* value;
+    struct SimpMemoEntry* next;
+} SimpMemoEntry;
+
+typedef struct {
+    SimpMemoEntry* buckets[SIMP_MEMO_BUCKETS];
+} SimpMemo;
+
+static void simp_memo_init(SimpMemo* m) {
+    for (int i = 0; i < SIMP_MEMO_BUCKETS; i++) m->buckets[i] = NULL;
+}
+
+static void simp_memo_free(SimpMemo* m) {
+    for (int i = 0; i < SIMP_MEMO_BUCKETS; i++) {
+        SimpMemoEntry* e = m->buckets[i];
+        while (e) {
+            SimpMemoEntry* next = e->next;
+            expr_free(e->key);
+            expr_free(e->value);
+            free(e);
+            e = next;
+        }
+        m->buckets[i] = NULL;
+    }
+}
+
+/* Borrowed pointer to cached value, or NULL on miss. */
+static const Expr* simp_memo_get(SimpMemo* m, const Expr* key) {
+    uint64_t h = expr_hash(key) % SIMP_MEMO_BUCKETS;
+    for (SimpMemoEntry* e = m->buckets[h]; e; e = e->next) {
+        if (expr_eq(e->key, key)) return e->value;
+    }
+    return NULL;
+}
+
+/* Stores deep copies of both key and value. */
+static void simp_memo_put(SimpMemo* m, const Expr* key, const Expr* value) {
+    uint64_t h = expr_hash(key) % SIMP_MEMO_BUCKETS;
+    SimpMemoEntry* e = (SimpMemoEntry*)malloc(sizeof(SimpMemoEntry));
+    if (!e) return;
+    e->key = expr_copy((Expr*)key);
+    e->value = expr_copy((Expr*)value);
+    e->next = m->buckets[h];
+    m->buckets[h] = e;
+}
+
+/* Heads whose internal structure must not be rewritten by Simplify even
+ * when no Hold attribute is set. Pattern/Blank* would change matcher
+ * semantics; Function captures named slots; Hold* are explicitly
+ * preserved by the user. */
+static bool simp_skip_recursion_head(const char* h) {
+    return strcmp(h, "Hold") == 0 ||
+           strcmp(h, "HoldForm") == 0 ||
+           strcmp(h, "HoldComplete") == 0 ||
+           strcmp(h, "HoldPattern") == 0 ||
+           strcmp(h, "Unevaluated") == 0 ||
+           strcmp(h, "Pattern") == 0 ||
+           strcmp(h, "Blank") == 0 ||
+           strcmp(h, "BlankSequence") == 0 ||
+           strcmp(h, "BlankNullSequence") == 0 ||
+           strcmp(h, "Function") == 0 ||
+           strcmp(h, "Slot") == 0 ||
+           strcmp(h, "SlotSequence") == 0;
+}
+
+/* Heads whose evaluator-level Hold attributes mean we must not descend
+ * (Set, SetDelayed, Module, Block, With, If, While, For, Do, ...): a
+ * bottom-up rewrite would change which sub-expression is the assignment
+ * target / loop variable / branch body. */
+static bool simp_head_holds_args(const char* h) {
+    SymbolDef* def = symtab_lookup(h);
+    if (!def) return false;
+    return (def->attributes & (ATTR_HOLDFIRST | ATTR_HOLDREST |
+                               ATTR_HOLDALL | ATTR_HOLDALLCOMPLETE)) != 0;
+}
+
+/* Recursive bottom-up Simplify.
+ *
+ * Strategy: simplify each child in isolation, then re-evaluate the
+ * rebuilt parent (so canonical-form invariants on Plus/Times/etc. are
+ * restored if children changed shape), then run the standard top-level
+ * candidate-set search on the result.
+ *
+ * Why this helps: a transform like the Pythagorean identity may be
+ * inapplicable at the root (e.g. f[Sin[x]^2 + Cos[x]^2]) but applies
+ * cleanly to a subtree. Top-level search alone would miss it.
+ *
+ * Cost control:
+ *   - Memoisation keyed by expr_hash + expr_eq: identical subtrees are
+ *     simplified once per Simplify call (e.g. f[g[x], g[x], g[x]]).
+ *   - Atoms and held heads bottom out into a single simp_search.
+ *   - SIMP_BOTTOMUP_MAX_DEPTH guards against pathological nesting; once
+ *     hit, we fall back to the existing top-level simp_search. */
+static Expr* simp_bottomup(const Expr* input, const AssumeCtx* ctx,
+                           const Expr* complexity_func, SimpMemo* memo,
+                           int depth) {
+    if (!input) return NULL;
+
+    /* Atoms have no children. Without active assumptions every transform
+     * is a no-op on a bare atom, so skip the entire candidate-set search
+     * and return a copy. (assume_ctx_from_expr always returns non-NULL
+     * even for trivial $Assumptions=True, so we test the fact count
+     * rather than the pointer.) With assumptions, atom-targeted rewrites
+     * (e.g. Equal facts that name a leaf) still fire via simp_search. */
+    if (input->type != EXPR_FUNCTION) {
+        if (!ctx || ctx->count == 0) return expr_copy((Expr*)input);
+        return simp_search(input, ctx, complexity_func);
+    }
+
+    /* Depth cap: bail to top-level. */
+    if (depth >= SIMP_BOTTOMUP_MAX_DEPTH) {
+        return simp_search(input, ctx, complexity_func);
+    }
+
+    /* Memo lookup. */
+    const Expr* hit = simp_memo_get(memo, input);
+    if (hit) return expr_copy((Expr*)hit);
+
+    /* Held heads: don't descend, but still run top-level search. */
+    const Expr* head = input->data.function.head;
+    if (head && head->type == EXPR_SYMBOL) {
+        const char* hn = head->data.symbol;
+        if (simp_skip_recursion_head(hn) || simp_head_holds_args(hn)) {
+            Expr* result = simp_search(input, ctx, complexity_func);
+            simp_memo_put(memo, input, result);
+            return result;
+        }
+    }
+
+    /* Recurse into each child. */
+    size_t argc = input->data.function.arg_count;
+    Expr** new_args = (Expr**)calloc(argc ? argc : 1, sizeof(Expr*));
+    bool any_changed = false;
+    for (size_t i = 0; i < argc; i++) {
+        new_args[i] = simp_bottomup(input->data.function.args[i], ctx,
+                                    complexity_func, memo, depth + 1);
+        if (!new_args[i]) {
+            new_args[i] = expr_copy(input->data.function.args[i]);
+        }
+        if (!expr_eq(new_args[i], input->data.function.args[i])) {
+            any_changed = true;
+        }
+    }
+
+    Expr* canonical;
+    if (any_changed) {
+        Expr* new_head = expr_copy((Expr*)head);
+        Expr* rebuilt = expr_new_function(new_head, new_args, argc);
+        canonical = evaluate(rebuilt);
+        expr_free(rebuilt);
+    } else {
+        for (size_t i = 0; i < argc; i++) expr_free(new_args[i]);
+        canonical = expr_copy((Expr*)input);
+    }
+    free(new_args);
+
+    /* Skip simp_search at non-top levels for "trivially small" subtrees.
+     * Identity-collapse transforms (TrigFactor's Pythagorean rules,
+     * LogExpRules, etc.) fire only when the subtree contains a *compound*
+     * structure -- a sum, a product with multiple factors, a Power whose
+     * base is itself a non-trivial expression. For something like
+     * Cosh[x]^2 (4 leaves) or -Sinh[x]^2 (Times[-1, Power[Sinh[x],2]],
+     * 7 leaves) in isolation, there is no useful identity to find, but
+     * transforms like TrigRoundtrip on them produce explosive
+     * intermediate forms (TrigToExp -> ExpToTrig of an isolated Cosh^2
+     * leaves a 12-term polynomial in Cosh[2x], Sinh[2x], Cosh[4x],
+     * Sinh[4x]) that drag the per-call cost into the seconds range.
+     *
+     * Pythagorean-eligible Plus/Times have at least 8 leaves
+     * (Plus[Power[Sin,x,2], Power[Cos,x,2]] = 9; Plus[Power[Cosh,x,2],
+     * Times[-1, Power[Sinh,x,2]]] = 12), so threshold 7 includes them
+     * while excluding the explosive single-trig-power forms. The
+     * top-level Simplify call (depth == 0) always runs simp_search,
+     * regardless of size. */
+    Expr* result;
+    if (depth > 0 && simp_default_complexity(canonical) <= 7) {
+        result = canonical;
+    } else {
+        result = simp_search(canonical, ctx, complexity_func);
+        expr_free(canonical);
+    }
+
+    simp_memo_put(memo, input, result);
+    return result;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -1598,6 +2211,16 @@ Expr* builtin_simplify(Expr* res) {
         }
     }
 
+    /* ComplexityFunction -> Automatic is a synonym for the built-in
+     * default. Treating it as NULL makes score_with_func use the fast
+     * native simp_default_complexity path instead of evaluating
+     * Automatic[candidate] (which would never reduce). */
+    if (opt_complexity &&
+        opt_complexity->type == EXPR_SYMBOL &&
+        strcmp(opt_complexity->data.symbol, "Automatic") == 0) {
+        opt_complexity = NULL;
+    }
+
     /* Compute the effective assumption expression.
      *   - With Assumptions->X, X overrides the $Assumptions default.
      *   - Without, the positional assumption is appended to $Assumptions.
@@ -1661,7 +2284,10 @@ Expr* builtin_simplify(Expr* res) {
         return threaded_eval;
     }
 
-    Expr* best = simp_search(expr, ctx, opt_complexity);
+    SimpMemo memo;
+    simp_memo_init(&memo);
+    Expr* best = simp_bottomup(expr, ctx, opt_complexity, &memo, 0);
+    simp_memo_free(&memo);
     assume_ctx_free(ctx);
     return best;
 }
@@ -1727,8 +2353,31 @@ void simp_init(void) {
     expr_free(dollar_pat);
     expr_free(dollar_val);
 
+    /* $SimplifyDebug defaults to False. When set to True, Simplify emits
+     * one stderr line per transform invocation in the form
+     *   /<TransformName>/: <input> -> <output> [<elapsed> ms]
+     * to help diagnose hangs and runaway candidate explosion. */
+    Expr* dbg_pat = expr_new_symbol("$SimplifyDebug");
+    Expr* dbg_val = expr_new_symbol("False");
+    symtab_add_own_value("$SimplifyDebug", dbg_pat, dbg_val);
+    expr_free(dbg_pat);
+    expr_free(dbg_val);
+    symtab_set_docstring("$SimplifyDebug",
+        "$SimplifyDebug\n\tWhen set to True, Simplify prints one stderr line per\n"
+        "\ttransform invocation: /Name/: <input> -> <output> [<ms> ms].\n"
+        "\tDefaults to False. Useful for diagnosing slow Simplify calls.");
+
     symtab_add_builtin("Simplify", builtin_simplify);
     symtab_get_def("Simplify")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
+
+    symtab_add_builtin("SimplifyCount", builtin_simplify_count);
+    symtab_get_def("SimplifyCount")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
+    symtab_set_docstring("SimplifyCount",
+        "SimplifyCount[expr]\n\tThe complexity measure used by Simplify when no\n"
+        "\tComplexityFunction option (or ComplexityFunction -> Automatic) is\n"
+        "\tgiven. Counts subexpressions; integers contribute their decimal\n"
+        "\tdigit count plus a constant for the sign. Real numbers contribute\n"
+        "\t2 (NumberQ but not Integer/Rational).");
 
     symtab_add_builtin("Assuming", builtin_assuming);
     symtab_get_def("Assuming")->attributes |= (ATTR_HOLDREST | ATTR_PROTECTED);
