@@ -176,7 +176,196 @@ Expr* builtin_expand(Expr* res) {
     return ret;
 }
 
+/* Returns true when e has the form Power[base, k] with k a negative integer. */
+static bool is_negative_int_power(Expr* e) {
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head->type != EXPR_SYMBOL) return false;
+    if (strcmp(e->data.function.head->data.symbol, "Power") != 0) return false;
+    if (e->data.function.arg_count != 2) return false;
+    Expr* exp = e->data.function.args[1];
+    return exp->type == EXPR_INTEGER && exp->data.integer < 0;
+}
+
+/* Threading head test: ExpandNumerator/ExpandDenominator descend into List,
+ * Equal, Unequal, Less, LessEqual, Greater, GreaterEqual, And, Or, Not, and
+ * Plus. (Plus is handled because the operations apply per-summand.) */
+static bool is_thread_head(const char* head) {
+    return strcmp(head, "List") == 0 || strcmp(head, "Equal") == 0 ||
+           strcmp(head, "Unequal") == 0 || strcmp(head, "Less") == 0 ||
+           strcmp(head, "LessEqual") == 0 || strcmp(head, "Greater") == 0 ||
+           strcmp(head, "GreaterEqual") == 0 || strcmp(head, "And") == 0 ||
+           strcmp(head, "Or") == 0 || strcmp(head, "Not") == 0 ||
+           strcmp(head, "Plus") == 0;
+}
+
+Expr* expr_expand_numerator(Expr* e) {
+    if (!e) return NULL;
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+
+    const char* head = (e->data.function.head->type == EXPR_SYMBOL)
+        ? e->data.function.head->data.symbol : "";
+
+    if (is_thread_head(head)) {
+        size_t n = e->data.function.arg_count;
+        Expr** args = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        for (size_t i = 0; i < n; i++) args[i] = expr_expand_numerator(e->data.function.args[i]);
+        Expr* ret = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, n));
+        free(args);
+        return ret;
+    }
+
+    if (strcmp(head, "Times") == 0) {
+        size_t n = e->data.function.arg_count;
+        Expr** num_args = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        Expr** den_args = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        size_t nc = 0, dc = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = e->data.function.args[i];
+            if (is_negative_int_power(arg)) {
+                den_args[dc++] = expr_copy(arg);
+            } else {
+                num_args[nc++] = expr_copy(arg);
+            }
+        }
+
+        Expr* num;
+        if (nc == 0) {
+            num = expr_new_integer(1);
+        } else if (nc == 1) {
+            num = num_args[0]; /* takes ownership */
+        } else {
+            num = eval_and_free(expr_new_function(expr_new_symbol("Times"), num_args, nc));
+        }
+        free(num_args);
+
+        Expr* expanded_num = expr_expand(num);
+        expr_free(num);
+
+        if (dc == 0) {
+            free(den_args);
+            return expanded_num;
+        }
+
+        Expr** result_args = malloc(sizeof(Expr*) * (dc + 1));
+        result_args[0] = expanded_num;
+        for (size_t i = 0; i < dc; i++) result_args[i + 1] = den_args[i];
+        free(den_args);
+        Expr* ret = eval_and_free(expr_new_function(expr_new_symbol("Times"), result_args, dc + 1));
+        free(result_args);
+        return ret;
+    }
+
+    if (strcmp(head, "Power") == 0 && e->data.function.arg_count == 2) {
+        Expr* exp = e->data.function.args[1];
+        if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+            /* Pure denominator: ExpandNumerator leaves it unchanged. */
+            return expr_copy(e);
+        }
+        /* Positive integer power (or symbolic): try to expand at the top level. */
+        return expr_expand(e);
+    }
+
+    return expr_copy(e);
+}
+
+Expr* expr_expand_denominator(Expr* e) {
+    if (!e) return NULL;
+    if (e->type != EXPR_FUNCTION) return expr_copy(e);
+
+    const char* head = (e->data.function.head->type == EXPR_SYMBOL)
+        ? e->data.function.head->data.symbol : "";
+
+    if (is_thread_head(head)) {
+        size_t n = e->data.function.arg_count;
+        Expr** args = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        for (size_t i = 0; i < n; i++) args[i] = expr_expand_denominator(e->data.function.args[i]);
+        Expr* ret = eval_and_free(expr_new_function(expr_copy(e->data.function.head), args, n));
+        free(args);
+        return ret;
+    }
+
+    if (strcmp(head, "Times") == 0) {
+        size_t n = e->data.function.arg_count;
+        Expr** num_args = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        Expr** den_pos = malloc(sizeof(Expr*) * (n > 0 ? n : 1));
+        size_t nc = 0, dc = 0;
+        for (size_t i = 0; i < n; i++) {
+            Expr* arg = e->data.function.args[i];
+            if (is_negative_int_power(arg)) {
+                Expr* base = arg->data.function.args[0];
+                int64_t k = -arg->data.function.args[1]->data.integer; /* k > 0 */
+                den_pos[dc++] = eval_and_free(expr_new_function(
+                    expr_new_symbol("Power"),
+                    (Expr*[]){expr_copy(base), expr_new_integer(k)}, 2));
+            } else {
+                num_args[nc++] = expr_copy(arg);
+            }
+        }
+
+        if (dc == 0) {
+            for (size_t i = 0; i < nc; i++) expr_free(num_args[i]);
+            free(num_args);
+            free(den_pos);
+            return expr_copy(e);
+        }
+
+        Expr* den_product;
+        if (dc == 1) {
+            den_product = den_pos[0];
+        } else {
+            den_product = eval_and_free(expr_new_function(expr_new_symbol("Times"), den_pos, dc));
+        }
+        free(den_pos);
+
+        Expr* expanded_den = expr_expand(den_product);
+        expr_free(den_product);
+
+        Expr* den_inv = eval_and_free(expr_new_function(expr_new_symbol("Power"),
+            (Expr*[]){expanded_den, expr_new_integer(-1)}, 2));
+
+        Expr** result_args = malloc(sizeof(Expr*) * (nc + 1));
+        for (size_t i = 0; i < nc; i++) result_args[i] = num_args[i];
+        result_args[nc] = den_inv;
+        free(num_args);
+        Expr* ret = eval_and_free(expr_new_function(expr_new_symbol("Times"), result_args, nc + 1));
+        free(result_args);
+        return ret;
+    }
+
+    if (strcmp(head, "Power") == 0 && e->data.function.arg_count == 2) {
+        Expr* exp = e->data.function.args[1];
+        if (exp->type == EXPR_INTEGER && exp->data.integer < 0) {
+            int64_t k = -exp->data.integer;
+            Expr* base = e->data.function.args[0];
+            Expr* pos = eval_and_free(expr_new_function(expr_new_symbol("Power"),
+                (Expr*[]){expr_copy(base), expr_new_integer(k)}, 2));
+            Expr* expanded = expr_expand(pos);
+            expr_free(pos);
+            Expr* ret = eval_and_free(expr_new_function(expr_new_symbol("Power"),
+                (Expr*[]){expanded, expr_new_integer(-1)}, 2));
+            return ret;
+        }
+        return expr_copy(e);
+    }
+
+    return expr_copy(e);
+}
+
+Expr* builtin_expand_numerator(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return expr_expand_numerator(res->data.function.args[0]);
+}
+
+Expr* builtin_expand_denominator(Expr* res) {
+    if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+    return expr_expand_denominator(res->data.function.args[0]);
+}
+
 void expand_init(void) {
     symtab_add_builtin("Expand", builtin_expand);
     symtab_get_def("Expand")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("ExpandNumerator", builtin_expand_numerator);
+    symtab_get_def("ExpandNumerator")->attributes |= ATTR_PROTECTED;
+    symtab_add_builtin("ExpandDenominator", builtin_expand_denominator);
+    symtab_get_def("ExpandDenominator")->attributes |= ATTR_PROTECTED;
 }

@@ -332,6 +332,21 @@ void info_init(void) {
 
     // Polynomials
     symtab_set_docstring("Expand", "Expand[expr] expands out products and powers in expr.\nExpand[expr, patt] leaves unexpanded any parts of expr that are free of the pattern patt.");
+    symtab_set_docstring("ExpandNumerator",
+        "ExpandNumerator[expr]\n\texpands out products and powers that appear in the numerator of expr.\n"
+        "ExpandNumerator works on terms that have positive integer exponents.\n"
+        "ExpandNumerator applies only to the top level in expr.\n"
+        "ExpandNumerator does not separate the fraction; Expand does.\n"
+        "ExpandNumerator leaves the denominator unexpanded.\n"
+        "ExpandNumerator automatically threads over lists, as well as equations,\n"
+        "\tinequalities, and logic functions.");
+    symtab_set_docstring("ExpandDenominator",
+        "ExpandDenominator[expr]\n\texpands out products and powers that appear as denominators in expr.\n"
+        "ExpandDenominator works only on negative integer powers.\n"
+        "ExpandDenominator applies only to the top level in expr.\n"
+        "ExpandDenominator leaves the numerator unexpanded.\n"
+        "ExpandDenominator automatically threads over lists, as well as equations,\n"
+        "\tinequalities, and logic functions.");
     symtab_set_docstring("Coefficient", "Coefficient[expr, form] gives the coefficient of form in expr.\nCoefficient[expr, form, n] gives the coefficient of form^n in expr.");
     symtab_set_docstring("CoefficientList", "CoefficientList[poly, var] gives a list of coefficients of powers of var in poly, starting with power 0.\nCoefficientList[poly, {var1, var2, ...}] gives an array of coefficients of the variables.");
     symtab_set_docstring("PolynomialGCD", "PolynomialGCD[poly1, poly2, ...] gives the greatest common divisor of the polynomials.");

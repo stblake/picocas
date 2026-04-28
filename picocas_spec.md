@@ -594,6 +594,52 @@ In[3]:= Expand[(x+1)^2 + (y+1)^2, x]
 Out[3]= 1 + 2x + x^2 + (1+y)^2
 ```
 
+#### ExpandNumerator
+Expands out products and powers that appear in the numerator of an expression.
+- `ExpandNumerator[expr]`
+
+**Features**:
+- `Protected`.
+- Acts only on factors with positive integer exponents (the "numerator part" of `expr`).
+- Applies only to the top level in `expr`; it does not descend into function bodies.
+- Leaves the denominator factors (those with negative integer exponents) unchanged.
+- Does not separate the fraction into a sum of fractions; only `Expand` does that.
+- Threads over `List`, `Equal`, `Unequal`, `Less`, `LessEqual`, `Greater`, `GreaterEqual`, `And`, `Or`, `Not`, and `Plus` (so each summand of a sum-of-fractions is processed independently).
+
+```mathematica
+In[1]:= ExpandNumerator[(x-1)(x-2)/((x-3)(x-4))]
+Out[1]= (2 - 3 x + x^2)/((x-3)(x-4))
+
+In[2]:= ExpandNumerator[(a+b)^2/x + (c+d)(c-d)/y]
+Out[2]= (a^2 + 2 a b + b^2)/x + (c^2 - d^2)/y
+
+In[3]:= ExpandNumerator[x == (a+b)^2/c && y >= (a-b)^2/c]
+Out[3]= x == (a^2 + 2 a b + b^2)/c && y >= (a^2 - 2 a b + b^2)/c
+```
+
+#### ExpandDenominator
+Expands out products and powers that appear as denominators in an expression.
+- `ExpandDenominator[expr]`
+
+**Features**:
+- `Protected`.
+- Acts only on factors with negative integer exponents (the "denominator part" of `expr`).
+- Combines all denominator factors of a top-level `Times` into a single expanded polynomial wrapped in `Power[..., -1]`.
+- Applies only to the top level in `expr`; it does not descend into function bodies.
+- Leaves the numerator factors unchanged.
+- Threads over `List`, `Equal`, `Unequal`, `Less`, `LessEqual`, `Greater`, `GreaterEqual`, `And`, `Or`, `Not`, and `Plus`.
+
+```mathematica
+In[1]:= ExpandDenominator[(x-1)(x-2)/((x-3)(x-4))]
+Out[1]= ((x-1)(x-2))/(12 - 7 x + x^2)
+
+In[2]:= ExpandDenominator[1/(x+1) + 2/(x+1)^2 + 3/(x+1)^3]
+Out[2]= 1/(1 + x) + 2/(1 + 2 x + x^2) + 3/(1 + 3 x + 3 x^2 + x^3)
+
+In[3]:= ExpandDenominator[(a+b)(a-b)/((c+d)(c-d))]
+Out[3]= ((a+b)(a-b))/(c^2 - d^2)
+```
+
 #### Coefficient
 Gives the coefficient of a specific form in a polynomial.
 - `Coefficient[expr, form]`

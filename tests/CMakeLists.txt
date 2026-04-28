@@ -203,6 +203,9 @@ target_include_directories(poly_tests PRIVATE ../src)
 add_executable(expand_tests test_expand.c ${COMMON_SRC})
 target_include_directories(expand_tests PRIVATE ../src)
 
+add_executable(expandfrac_tests test_expandfrac.c ${COMMON_SRC})
+target_include_directories(expandfrac_tests PRIVATE ../src)
+
 add_executable(stats_tests test_stats.c ${COMMON_SRC})
 target_include_directories(stats_tests PRIVATE ../src)
 
@@ -341,6 +344,7 @@ if(USE_ECM)
     add_dependencies(backtrack_tests build_ecm)
     add_dependencies(poly_tests build_ecm)
     add_dependencies(expand_tests build_ecm)
+    add_dependencies(expandfrac_tests build_ecm)
     add_dependencies(stats_tests build_ecm)
     add_dependencies(datetime_tests build_ecm)
     add_dependencies(facpoly_tests build_ecm)
