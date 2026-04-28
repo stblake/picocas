@@ -1150,8 +1150,11 @@ static const char* SIMP_TRANSFORMS[] = {
     "Together",
     "Cancel",
     "Expand",
+    "ExpandNumerator",
+    "ExpandDenominator",
     "Factor",
     "FactorSquareFree",
+    "FactorTerms",
     "Apart",
     "TrigExpand",
     "TrigFactor"
@@ -1182,12 +1185,13 @@ static bool has_non_integer_power(const Expr* e) {
 }
 
 static bool transform_safe_for(const char* name, const Expr* e) {
-    /* Factor / FactorSquareFree -- and TrigFactor, which calls Factor
-     * inside its pipeline -- can stall when fed non-polynomial inputs
-     * containing Sqrt or other fractional powers. Skip them in that
-     * case. */
+    /* Factor / FactorSquareFree / FactorTerms -- and TrigFactor, which
+     * calls Factor inside its pipeline -- share the same polynomial
+     * machinery and can stall when fed non-polynomial inputs containing
+     * Sqrt or other fractional powers. Skip them in that case. */
     if (strcmp(name, "Factor") == 0 ||
         strcmp(name, "FactorSquareFree") == 0 ||
+        strcmp(name, "FactorTerms") == 0 ||
         strcmp(name, "TrigFactor") == 0) {
         if (has_non_integer_power(e)) return false;
     }
@@ -1205,6 +1209,42 @@ static void update_best(Expr** best, size_t* best_score, const Expr* c,
         *best = expr_copy((Expr*)c);
         *best_score = s;
     }
+}
+
+/* Apply Collect[expr, v] for each free variable v of expr, scoring the
+ * results against `best` and adding novel ones to `next`. Collect can
+ * surface a more compact form by grouping like powers (e.g. it can
+ * recover x*(a+b) from a*x + b*x), and which variable to collect by is
+ * not knowable up front -- Mathematica's Simplify likewise tries each
+ * variable. We rely on Variables[] to enumerate the candidates. */
+static void try_collect_per_variable(const Expr* seed, CandSet* next,
+                                     Expr** best, size_t* best_score,
+                                     const Expr* complexity_func) {
+    Expr* vars = call_unary_copy("Variables", seed);
+    if (!vars) return;
+    if (vars->type != EXPR_FUNCTION ||
+        !vars->data.function.head ||
+        vars->data.function.head->type != EXPR_SYMBOL ||
+        strcmp(vars->data.function.head->data.symbol, "List") != 0) {
+        expr_free(vars);
+        return;
+    }
+    size_t nv = vars->data.function.arg_count;
+    for (size_t i = 0; i < nv; i++) {
+        Expr* v = vars->data.function.args[i];
+        Expr* args[2] = { expr_copy((Expr*)seed), expr_copy(v) };
+        Expr* call = expr_new_function(expr_new_symbol("Collect"), args, 2);
+        Expr* r = evaluate(call);
+        expr_free(call);
+        if (!r) continue;
+        update_best(best, best_score, r, complexity_func);
+        if (expr_eq(r, seed)) {
+            expr_free(r);
+        } else {
+            cs_add_or_free(next, r);
+        }
+    }
+    expr_free(vars);
 }
 
 static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
@@ -1269,6 +1309,9 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
         }
     }
 
+    /* Per-variable Collect seed. */
+    try_collect_per_variable(input, &seeds, &best, &best_score, complexity_func);
+
     for (int round = 0; round < SIMP_ROUNDS; round++) {
         CandSet next;
         cs_init(&next);
@@ -1294,6 +1337,9 @@ static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
                     cs_add_or_free(&next, tr);
                 }
             }
+            /* And per-variable Collect on each candidate. */
+            try_collect_per_variable(seeds.items[i], &next, &best, &best_score,
+                                     complexity_func);
             /* And the assumption rewriter on each candidate. Bias as in
              * the seed phase: prefer assumption-driven forms at equal
              * complexity. */

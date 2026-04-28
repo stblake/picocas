@@ -25,6 +25,13 @@ void test_simplify_rational(void) {
     assert_eval_eq("Simplify[3/(x+3)+x/(x+3)]", "1", 0);
 }
 
+void test_simplify_collect_by_variable(void) {
+    /* a x + b x + c -> c + x (a + b) is a Collect win that no other
+     * transform in the heuristic produces; the search must pick the
+     * variable to collect by automatically (Variables[]). */
+    assert_eval_eq("Simplify[a x + b x + c]", "c + x (a + b)", 0);
+}
+
 /* ---- Trigonometric ---- */
 
 void test_simplify_pythagorean(void) {
@@ -143,6 +150,7 @@ int main(void) {
     TEST(test_simplify_trivial);
     TEST(test_simplify_polynomial);
     TEST(test_simplify_rational);
+    TEST(test_simplify_collect_by_variable);
     TEST(test_simplify_pythagorean);
     TEST(test_simplify_double_angle);
     TEST(test_simplify_exp_sinh_ratio);

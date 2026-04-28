@@ -6503,3 +6503,52 @@ plus round-trip checks
 on every multi-step input, and a sanity check that both functions are
 `Protected`. 35+ assertions in 7 test groups, all passing under
 valgrind with no leaks attributable to the new code.
+
+## Simplify uses ExpandNumerator, ExpandDenominator, FactorTerms, and per-variable Collect (2026-04-28)
+
+`Simplify`'s heuristic search now considers four additional algebraic
+transforms on every candidate it generates:
+
+- `ExpandNumerator` -- distribute products only inside the numerator.
+- `ExpandDenominator` -- distribute products only inside the denominator.
+- `FactorTerms` -- pull out an overall numerical factor.
+- `Collect[expr, v]` for each free variable `v` of `expr`, automatically
+  enumerated by calling `Variables[expr]`. This is the variant
+  Mathematica's `Simplify` performs to surface a more compact regrouped
+  form (e.g. `a x + b x + c -> c + x (a + b)`) without the user having
+  to specify which variable to collect by.
+
+The first three are wired into the existing `SIMP_TRANSFORMS` table and
+participate in the same per-round candidate scoring as `Expand`,
+`Factor`, etc. The Collect step is implemented separately
+(`try_collect_per_variable` in `simp.c`) because it is not a unary
+transform: it must enumerate variables and try one Collect per
+variable. It is invoked once on the input (seed phase) and once on each
+surviving seed inside the round loop, mirroring how
+`transform_trig_roundtrip` is wired.
+
+`FactorTerms` is also added to the `transform_safe_for` non-integer-
+power exclusion alongside `Factor`/`FactorSquareFree`/`TrigFactor`
+because it shares the same polynomial-content machinery and would
+otherwise stall on inputs containing `Sqrt[]` or other fractional
+exponents.
+
+### Example
+
+```
+Simplify[a x + b x + c]      (* -> c + x (a + b) *)
+```
+
+Previously this returned `a x + b x + c` unchanged because none of
+`Expand`, `Factor`, `Together`, etc. produces the regrouped form. The
+new per-variable Collect step tries `Collect[a x + b x + c, x]`,
+obtains `c + x (a + b)`, and the heuristic accepts it as the new best
+candidate via the standard `update_best` complexity tiebreak.
+
+### Tests
+
+`tests/test_simplify.c::test_simplify_collect_by_variable` exercises
+the new behaviour end-to-end. All other Simplify tests continue to
+pass, confirming the additional transforms do not regress the existing
+polynomial / rational / trigonometric / hyperbolic / log-power /
+assumption-driven cases.
