@@ -1895,6 +1895,91 @@ static Expr* simp_pipeline_polynomial(const Expr* input,
     return best;
 }
 
+/*
+ * Rational pipeline. For inputs whose Together-form is poly/poly with
+ * no trig/log/abs heads. The candidate set covers:
+ *   - Together  (canonical fraction form)
+ *   - Cancel    (gcd reduction)
+ *   - ExpandNumerator / ExpandDenominator
+ *   - Apart     (partial-fraction decomposition)
+ *   - Factor on the Cancel'd form
+ *   - Per-variable Collect on the Cancel'd form
+ *   - AssumptionRules force-take, when ctx has facts (covers cases like
+ *     (1-a^2)/b^2 with a^2+b^2==1)
+ *
+ * No round loop. Every meaningful win on a rational expression is one
+ * of these transforms applied directly.
+ */
+static Expr* simp_pipeline_rational(const Expr* input,
+                                    const AssumeCtx* ctx,
+                                    const Expr* complexity_func) {
+    Expr* best = expr_copy((Expr*)input);
+    size_t bs = score_with_func(best, complexity_func);
+
+    /* AssumptionRules force-take, mirroring the seed-phase semantics in
+     * simp_search: assumption-driven rewrites are correctness-preserving
+     * under the assumption set and qualitatively "more simplified", so we
+     * accept them at equal or lower complexity. */
+    Expr* assum_seed = NULL;
+    if (transform_can_fire("AssumptionRules", input, ctx)) {
+        Expr* ar = apply_assumption_rules(input, ctx);
+        if (ar && !expr_eq(ar, input)) {
+            size_t s = score_with_func(ar, complexity_func);
+            if (s <= bs) {
+                expr_free(best);
+                best = expr_copy(ar);
+                bs = s;
+            }
+            assum_seed = ar;  /* keep for downstream Together/Cancel */
+        } else if (ar) {
+            expr_free(ar);
+        }
+    }
+
+    const Expr* seed = assum_seed ? assum_seed : input;
+
+    Expr* tg = traced_call_unary("Together", seed);
+    if (tg) update_best(&best, &bs, tg, complexity_func);
+
+    Expr* cn_src = tg ? tg : (Expr*)seed;
+    Expr* cn = traced_call_unary("Cancel", cn_src);
+    if (cn) update_best(&best, &bs, cn, complexity_func);
+
+    Expr* en = traced_call_unary("ExpandNumerator", cn ? cn : (Expr*)seed);
+    if (en) update_best(&best, &bs, en, complexity_func);
+
+    Expr* ed = traced_call_unary("ExpandDenominator", cn ? cn : (Expr*)seed);
+    if (ed) update_best(&best, &bs, ed, complexity_func);
+
+    Expr* ap = traced_call_unary("Apart", seed);
+    if (ap) update_best(&best, &bs, ap, complexity_func);
+
+    /* Factor on the Cancel'd form (gated against non-integer powers, which
+     * shouldn't appear on a SHAPE_RATIONAL input but is defensive). */
+    if (cn && !has_non_integer_power(cn)) {
+        Expr* fc = traced_call_unary("Factor", cn);
+        if (fc) {
+            update_best(&best, &bs, fc, complexity_func);
+            expr_free(fc);
+        }
+    }
+
+    /* Per-variable Collect on the Cancel'd form. */
+    if (cn && transform_can_fire("CollectPerVariable", cn, NULL)) {
+        CandSet next; cs_init(&next);
+        try_collect_per_variable(cn, bs, &next, &best, &bs, complexity_func);
+        cs_free(&next);
+    }
+
+    if (tg) expr_free(tg);
+    if (cn) expr_free(cn);
+    if (en) expr_free(en);
+    if (ed) expr_free(ed);
+    if (ap) expr_free(ap);
+    if (assum_seed) expr_free(assum_seed);
+    return best;
+}
+
 /* simp_dispatch is the public entry point. It runs the shape classifier
  * and forwards to a specialised pipeline. Pipelines that aren't yet
  * implemented fall through to simp_search (the GENERAL pipeline), so
@@ -1906,6 +1991,7 @@ static Expr* simp_dispatch(const Expr* input, const AssumeCtx* ctx,
         case SIMP_SHAPE_POLYNOMIAL:
             return simp_pipeline_polynomial(input, ctx, complexity_func);
         case SIMP_SHAPE_RATIONAL:
+            return simp_pipeline_rational(input, ctx, complexity_func);
         case SIMP_SHAPE_LOGEXP:
         case SIMP_SHAPE_TRIG:
         case SIMP_SHAPE_GENERAL:
