@@ -1,0 +1,1692 @@
+#include "simp.h"
+#include "attr.h"
+#include "eval.h"
+#include "parse.h"
+#include "symtab.h"
+#include "expr.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <gmp.h>
+
+/*
+ * simp.c -- Simplify, Assuming, $Assumptions, and AssumeCtx.
+ *
+ * Simplify implements a small heuristic search over the existing battery
+ * of algebraic transforms. The default complexity measure is
+ * LeafCount(expr) + decimal-digit count of integer leaves; this matches
+ * Mathematica's default and stops e.g. "100 Log[2]" from being rewritten
+ * to "Log[2^100]". A user-supplied ComplexityFunction option overrides
+ * this. See simp.h for the AssumeCtx contract.
+ *
+ * Assuming desugars to Block[{$Assumptions = $Assumptions && a}, body],
+ * which reuses Block's existing scope-restoration code path. Nested
+ * Assuming calls compose because each Block reads the current
+ * $Assumptions OwnValue before extending it.
+ */
+
+/* ----------------------------------------------------------------------- */
+/* Default complexity measure                                              */
+/* ----------------------------------------------------------------------- */
+
+static size_t int_digit_count_int64(int64_t v) {
+    if (v == 0) return 1;
+    if (v < 0) {
+        /* INT64_MIN edge case: |v| not representable; mpz_sizeinbase via
+         * temp avoids the sign overflow. The 19-digit upper bound is
+         * tight enough that direct counting is fine after offsetting. */
+        size_t n = 1;
+        int64_t t = v;
+        while (t <= -10) { n++; t /= 10; }
+        return n;
+    }
+    size_t n = 0;
+    while (v > 0) { n++; v /= 10; }
+    return n;
+}
+
+size_t simp_default_complexity(const Expr* e) {
+    if (!e) return 0;
+    switch (e->type) {
+        case EXPR_INTEGER: return int_digit_count_int64(e->data.integer);
+        case EXPR_BIGINT:  return mpz_sizeinbase(e->data.bigint, 10);
+        case EXPR_REAL:    return 1;
+        case EXPR_SYMBOL:  return 1;
+        case EXPR_STRING:  return 1;
+        case EXPR_FUNCTION: {
+            size_t total = simp_default_complexity(e->data.function.head);
+            for (size_t i = 0; i < e->data.function.arg_count; i++) {
+                total += simp_default_complexity(e->data.function.args[i]);
+            }
+            return total;
+        }
+#ifdef USE_MPFR
+        case EXPR_MPFR: return 1;
+#endif
+    }
+    return 1;
+}
+
+/* ----------------------------------------------------------------------- */
+/* AssumeCtx -- normalised fact set                                        */
+/* ----------------------------------------------------------------------- */
+
+static void ctx_push(AssumeCtx* ctx, const Expr* fact) {
+    if (ctx->count >= ctx->capacity) {
+        size_t new_cap = ctx->capacity ? ctx->capacity * 2 : 8;
+        Expr** np = (Expr**)realloc(ctx->facts, new_cap * sizeof(Expr*));
+        if (!np) return;
+        ctx->facts = np;
+        ctx->capacity = new_cap;
+    }
+    ctx->facts[ctx->count++] = expr_copy((Expr*)fact);
+}
+
+static void ctx_walk(AssumeCtx* ctx, const Expr* a) {
+    if (!a) return;
+    if (a->type == EXPR_SYMBOL) {
+        if (strcmp(a->data.symbol, "True") == 0) return;
+        if (strcmp(a->data.symbol, "False") == 0) {
+            ctx->inconsistent = true;
+            return;
+        }
+        ctx_push(ctx, a);
+        return;
+    }
+    if (a->type == EXPR_FUNCTION &&
+        a->data.function.head &&
+        a->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = a->data.function.head->data.symbol;
+        if (strcmp(h, "And") == 0 || strcmp(h, "List") == 0) {
+            for (size_t i = 0; i < a->data.function.arg_count; i++) {
+                ctx_walk(ctx, a->data.function.args[i]);
+            }
+            return;
+        }
+    }
+    ctx_push(ctx, a);
+}
+
+AssumeCtx* assume_ctx_from_expr(const Expr* assum) {
+    AssumeCtx* ctx = (AssumeCtx*)calloc(1, sizeof(AssumeCtx));
+    if (!ctx) return NULL;
+    ctx_walk(ctx, assum);
+    return ctx;
+}
+
+void assume_ctx_free(AssumeCtx* ctx) {
+    if (!ctx) return;
+    for (size_t i = 0; i < ctx->count; i++) expr_free(ctx->facts[i]);
+    free(ctx->facts);
+    free(ctx);
+}
+
+/* ----------------------------------------------------------------------- */
+/* Domain queries                                                          */
+/* ----------------------------------------------------------------------- */
+
+/* Three-valued sign for numeric literals: -1, 0, +1, or 2 (unknown). */
+static int numeric_sign(const Expr* e) {
+    if (!e) return 2;
+    if (e->type == EXPR_INTEGER) {
+        if (e->data.integer > 0) return 1;
+        if (e->data.integer < 0) return -1;
+        return 0;
+    }
+    if (e->type == EXPR_BIGINT) return mpz_sgn(e->data.bigint);
+    if (e->type == EXPR_REAL) {
+        if (e->data.real > 0) return 1;
+        if (e->data.real < 0) return -1;
+        return 0;
+    }
+    return 2;
+}
+
+static bool fact_is_function(const Expr* f, const char* head, size_t arity) {
+    return f && f->type == EXPR_FUNCTION
+        && f->data.function.head
+        && f->data.function.head->type == EXPR_SYMBOL
+        && strcmp(f->data.function.head->data.symbol, head) == 0
+        && f->data.function.arg_count == arity;
+}
+
+static bool fact_implies_strict_positive(const Expr* f, const Expr* x) {
+    if (f->type != EXPR_FUNCTION) return false;
+    if (f->data.function.arg_count != 2) return false;
+    if (f->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* h = f->data.function.head->data.symbol;
+    Expr* a = f->data.function.args[0];
+    Expr* b = f->data.function.args[1];
+
+    /* Greater[x, c] with c >= 0 (any sign with c == 0 still means x > 0). */
+    if (strcmp(h, "Greater") == 0) {
+        if (expr_eq(a, x)) {
+            int s = numeric_sign(b);
+            return (s == 0 || s == 1);
+        }
+    }
+    /* Less[c, x] with c >= 0. */
+    if (strcmp(h, "Less") == 0) {
+        if (expr_eq(b, x)) {
+            int s = numeric_sign(a);
+            return (s == 0 || s == 1);
+        }
+    }
+    /* GreaterEqual[x, c] with c > 0. */
+    if (strcmp(h, "GreaterEqual") == 0) {
+        if (expr_eq(a, x)) {
+            int s = numeric_sign(b);
+            return s == 1;
+        }
+    }
+    /* LessEqual[c, x] with c > 0. */
+    if (strcmp(h, "LessEqual") == 0) {
+        if (expr_eq(b, x)) {
+            int s = numeric_sign(a);
+            return s == 1;
+        }
+    }
+    return false;
+}
+
+static bool fact_implies_nonneg(const Expr* f, const Expr* x) {
+    if (fact_implies_strict_positive(f, x)) return true;
+    if (f->type != EXPR_FUNCTION) return false;
+    if (f->data.function.arg_count != 2) return false;
+    if (f->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* h = f->data.function.head->data.symbol;
+    Expr* a = f->data.function.args[0];
+    Expr* b = f->data.function.args[1];
+    /* x >= c with c >= 0 ; or c <= x with c >= 0. */
+    if (strcmp(h, "GreaterEqual") == 0 && expr_eq(a, x)) {
+        int s = numeric_sign(b);
+        return (s == 0 || s == 1);
+    }
+    if (strcmp(h, "LessEqual") == 0 && expr_eq(b, x)) {
+        int s = numeric_sign(a);
+        return (s == 0 || s == 1);
+    }
+    return false;
+}
+
+static bool fact_implies_strict_negative(const Expr* f, const Expr* x) {
+    if (f->type != EXPR_FUNCTION) return false;
+    if (f->data.function.arg_count != 2) return false;
+    if (f->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* h = f->data.function.head->data.symbol;
+    Expr* a = f->data.function.args[0];
+    Expr* b = f->data.function.args[1];
+    /* Less[x, c] with c <= 0. */
+    if (strcmp(h, "Less") == 0 && expr_eq(a, x)) {
+        int s = numeric_sign(b);
+        return (s == 0 || s == -1);
+    }
+    /* Greater[c, x] with c <= 0. */
+    if (strcmp(h, "Greater") == 0 && expr_eq(b, x)) {
+        int s = numeric_sign(a);
+        return (s == 0 || s == -1);
+    }
+    /* LessEqual[x, c] with c < 0. */
+    if (strcmp(h, "LessEqual") == 0 && expr_eq(a, x)) {
+        int s = numeric_sign(b);
+        return s == -1;
+    }
+    /* GreaterEqual[c, x] with c < 0. */
+    if (strcmp(h, "GreaterEqual") == 0 && expr_eq(b, x)) {
+        int s = numeric_sign(a);
+        return s == -1;
+    }
+    return false;
+}
+
+static bool fact_implies_nonpos(const Expr* f, const Expr* x) {
+    if (fact_implies_strict_negative(f, x)) return true;
+    if (f->type != EXPR_FUNCTION) return false;
+    if (f->data.function.arg_count != 2) return false;
+    if (f->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* h = f->data.function.head->data.symbol;
+    Expr* a = f->data.function.args[0];
+    Expr* b = f->data.function.args[1];
+    if (strcmp(h, "LessEqual") == 0 && expr_eq(a, x)) {
+        int s = numeric_sign(b);
+        return (s == 0 || s == -1);
+    }
+    if (strcmp(h, "GreaterEqual") == 0 && expr_eq(b, x)) {
+        int s = numeric_sign(a);
+        return (s == 0 || s == -1);
+    }
+    return false;
+}
+
+/* Element[x, Domain] match. */
+static bool fact_in_domain(const Expr* f, const Expr* x, const char* dom) {
+    if (!fact_is_function(f, "Element", 2)) return false;
+    if (!expr_eq(f->data.function.args[0], x)) return false;
+    Expr* d = f->data.function.args[1];
+    return d->type == EXPR_SYMBOL && strcmp(d->data.symbol, dom) == 0;
+}
+
+/* Standard positive real symbols recognised without a fact. */
+static bool is_positive_constant_symbol(const char* s) {
+    return strcmp(s, "Pi") == 0 ||
+           strcmp(s, "E") == 0 ||
+           strcmp(s, "EulerGamma") == 0 ||
+           strcmp(s, "GoldenRatio") == 0 ||
+           strcmp(s, "Catalan") == 0 ||
+           strcmp(s, "Degree") == 0 ||
+           strcmp(s, "Glaisher") == 0 ||
+           strcmp(s, "Khinchin") == 0;
+}
+
+/* Symbols whose value is always real-valued. */
+static bool is_real_constant_symbol(const char* s) {
+    if (is_positive_constant_symbol(s)) return true;
+    return strcmp(s, "MachineEpsilon") == 0;
+}
+
+/* Forward declarations for mutual recursion across the predicate family. */
+static bool prov_pos(const AssumeCtx* ctx, const Expr* x);
+static bool prov_nn (const AssumeCtx* ctx, const Expr* x);
+static bool prov_neg(const AssumeCtx* ctx, const Expr* x);
+static bool prov_np (const AssumeCtx* ctx, const Expr* x);
+static bool prov_int(const AssumeCtx* ctx, const Expr* x);
+static bool prov_re (const AssumeCtx* ctx, const Expr* x);
+
+/* True iff every argument of `e` is provably real-valued. */
+static bool all_real(const AssumeCtx* ctx, const Expr* e) {
+    if (!e || e->type != EXPR_FUNCTION) return false;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (!prov_re(ctx, e->data.function.args[i])) return false;
+    }
+    return true;
+}
+
+static bool fact_directly_positive(const AssumeCtx* ctx, const Expr* x) {
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_implies_strict_positive(ctx->facts[i], x)) return true;
+    }
+    return false;
+}
+
+static bool fact_directly_nonneg(const AssumeCtx* ctx, const Expr* x) {
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_implies_nonneg(ctx->facts[i], x)) return true;
+    }
+    return false;
+}
+
+static bool fact_directly_negative(const AssumeCtx* ctx, const Expr* x) {
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_implies_strict_negative(ctx->facts[i], x)) return true;
+    }
+    return false;
+}
+
+static bool fact_directly_nonpos(const AssumeCtx* ctx, const Expr* x) {
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_implies_nonpos(ctx->facts[i], x)) return true;
+    }
+    return false;
+}
+
+static bool prov_pos(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    if (numeric_sign(x) == 1) return true;
+    if (fact_directly_positive(ctx, x)) return true;
+    if (x->type == EXPR_SYMBOL && is_positive_constant_symbol(x->data.symbol)) return true;
+    if (x->type == EXPR_FUNCTION &&
+        x->data.function.head &&
+        x->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = x->data.function.head->data.symbol;
+        size_t n = x->data.function.arg_count;
+        Expr** a = x->data.function.args;
+        /* Times: positive iff every factor positive. */
+        if (strcmp(h, "Times") == 0 && n > 0) {
+            for (size_t i = 0; i < n; i++) {
+                if (!prov_pos(ctx, a[i])) return false;
+            }
+            return true;
+        }
+        /* Plus: at least one strictly positive, all others non-negative. */
+        if (strcmp(h, "Plus") == 0 && n > 0) {
+            bool any = false;
+            for (size_t i = 0; i < n; i++) {
+                if (prov_pos(ctx, a[i])) { any = true; continue; }
+                if (prov_nn(ctx, a[i])) continue;
+                return false;
+            }
+            return any;
+        }
+        /* Power: positive base raised to anything is positive. */
+        if (strcmp(h, "Power") == 0 && n == 2) {
+            if (prov_pos(ctx, a[0])) return true;
+        }
+        /* Exp[real] is strictly positive. */
+        if (strcmp(h, "Exp") == 0 && n == 1) {
+            if (prov_re(ctx, a[0])) return true;
+        }
+        /* Abs[x] >= 0; strictly > 0 only when x != 0, which we cannot prove
+         * from sign alone, so fall back to nonneg here. */
+        /* Cosh[real] >= 1 > 0. */
+        if (strcmp(h, "Cosh") == 0 && n == 1 && prov_re(ctx, a[0])) return true;
+        /* Sqrt[positive] is positive (and Sqrt is Power[_, 1/2]; that path
+         * handled above already). */
+    }
+    return false;
+}
+
+static bool prov_nn(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    int s = numeric_sign(x);
+    if (s == 1 || s == 0) return true;
+    if (prov_pos(ctx, x)) return true;
+    if (fact_directly_nonneg(ctx, x)) return true;
+    if (x->type == EXPR_FUNCTION &&
+        x->data.function.head &&
+        x->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = x->data.function.head->data.symbol;
+        size_t n = x->data.function.arg_count;
+        Expr** a = x->data.function.args;
+        if (strcmp(h, "Times") == 0 && n > 0) {
+            for (size_t i = 0; i < n; i++) {
+                if (!prov_nn(ctx, a[i])) return false;
+            }
+            return true;
+        }
+        if (strcmp(h, "Plus") == 0 && n > 0) {
+            for (size_t i = 0; i < n; i++) {
+                if (!prov_nn(ctx, a[i])) return false;
+            }
+            return true;
+        }
+        /* Abs[real] >= 0. */
+        if (strcmp(h, "Abs") == 0 && n == 1 && prov_re(ctx, a[0])) return true;
+        /* x^(2k) is non-negative for real x and integer k -- common case
+         * x^2 covered via the integer-2 literal exponent. */
+        if (strcmp(h, "Power") == 0 && n == 2 && prov_re(ctx, a[0])) {
+            if (a[1]->type == EXPR_INTEGER && (a[1]->data.integer % 2) == 0) return true;
+        }
+    }
+    return false;
+}
+
+static bool prov_neg(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    if (numeric_sign(x) == -1) return true;
+    if (fact_directly_negative(ctx, x)) return true;
+    /* Times: even number of negatives among factors, with the rest positive,
+     * gives positive (not negative). For "negative" we need an odd number of
+     * negative factors and the rest positive. v1 keeps this simple. */
+    return false;
+}
+
+static bool prov_np(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    int s = numeric_sign(x);
+    if (s == -1 || s == 0) return true;
+    if (prov_neg(ctx, x)) return true;
+    if (fact_directly_nonpos(ctx, x)) return true;
+    return false;
+}
+
+static bool prov_int(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT) return true;
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_in_domain(ctx->facts[i], x, "Integers")) return true;
+    }
+    if (x->type == EXPR_FUNCTION &&
+        x->data.function.head &&
+        x->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = x->data.function.head->data.symbol;
+        size_t n = x->data.function.arg_count;
+        Expr** a = x->data.function.args;
+        if ((strcmp(h, "Times") == 0 || strcmp(h, "Plus") == 0) && n > 0) {
+            for (size_t i = 0; i < n; i++) {
+                if (!prov_int(ctx, a[i])) return false;
+            }
+            return true;
+        }
+        /* Power[int, nonneg-int] is integer. */
+        if (strcmp(h, "Power") == 0 && n == 2 &&
+            prov_int(ctx, a[0]) &&
+            a[1]->type == EXPR_INTEGER && a[1]->data.integer >= 0) return true;
+    }
+    return false;
+}
+
+static bool prov_re(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT || x->type == EXPR_REAL) return true;
+    if (prov_int(ctx, x)) return true;
+    if (x->type == EXPR_SYMBOL) {
+        if (is_real_constant_symbol(x->data.symbol)) return true;
+    }
+    if (ctx) {
+        for (size_t i = 0; i < ctx->count; i++) {
+            const Expr* f = ctx->facts[i];
+            if (fact_in_domain(f, x, "Reals") ||
+                fact_in_domain(f, x, "Rationals") ||
+                fact_in_domain(f, x, "Integers") ||
+                fact_in_domain(f, x, "Algebraics")) return true;
+            if (fact_implies_nonneg(f, x) || fact_implies_nonpos(f, x)) return true;
+        }
+    }
+    if (x->type == EXPR_FUNCTION &&
+        x->data.function.head &&
+        x->data.function.head->type == EXPR_SYMBOL) {
+        const char* h = x->data.function.head->data.symbol;
+        size_t n = x->data.function.arg_count;
+        Expr** a = x->data.function.args;
+        if ((strcmp(h, "Times") == 0 || strcmp(h, "Plus") == 0) && n > 0 && all_real(ctx, x)) {
+            return true;
+        }
+        /* Power[positive, real] is real. Power[real, integer] is real. */
+        if (strcmp(h, "Power") == 0 && n == 2) {
+            if (prov_pos(ctx, a[0]) && prov_re(ctx, a[1])) return true;
+            if (prov_re(ctx, a[0]) && prov_int(ctx, a[1])) return true;
+        }
+        /* Real-valued elementary functions of real arguments. */
+        if (n == 1 && prov_re(ctx, a[0])) {
+            if (strcmp(h, "Sin")  == 0 || strcmp(h, "Cos")  == 0 ||
+                strcmp(h, "Tan")  == 0 || strcmp(h, "Cot")  == 0 ||
+                strcmp(h, "Sec")  == 0 || strcmp(h, "Csc")  == 0 ||
+                strcmp(h, "Sinh") == 0 || strcmp(h, "Cosh") == 0 ||
+                strcmp(h, "Tanh") == 0 || strcmp(h, "Coth") == 0 ||
+                strcmp(h, "Sech") == 0 || strcmp(h, "Csch") == 0 ||
+                strcmp(h, "Exp")  == 0 || strcmp(h, "Abs")  == 0 ||
+                strcmp(h, "Floor") == 0 || strcmp(h, "Ceiling") == 0 ||
+                strcmp(h, "Round") == 0 || strcmp(h, "Sign") == 0) return true;
+        }
+        /* Log[positive] is real. */
+        if (strcmp(h, "Log") == 0 && n == 1 && prov_pos(ctx, a[0])) return true;
+        /* ArcTan[real] is real, ArcSinh[real] real. */
+        if (n == 1 && prov_re(ctx, a[0])) {
+            if (strcmp(h, "ArcTan") == 0 || strcmp(h, "ArcSinh") == 0 ||
+                strcmp(h, "ArcCot") == 0) return true;
+        }
+    }
+    return false;
+}
+
+bool assume_known_positive(const AssumeCtx* ctx, const Expr* x) { return prov_pos(ctx, x); }
+bool assume_known_nonneg  (const AssumeCtx* ctx, const Expr* x) { return prov_nn (ctx, x); }
+bool assume_known_negative(const AssumeCtx* ctx, const Expr* x) { return prov_neg(ctx, x); }
+bool assume_known_nonpos  (const AssumeCtx* ctx, const Expr* x) { return prov_np (ctx, x); }
+bool assume_known_integer (const AssumeCtx* ctx, const Expr* x) { return prov_int(ctx, x); }
+bool assume_known_real    (const AssumeCtx* ctx, const Expr* x) { return prov_re (ctx, x); }
+
+/* ----------------------------------------------------------------------- */
+/* Helpers                                                                 */
+/* ----------------------------------------------------------------------- */
+
+/* Build f[arg], evaluate, and return the result. Takes ownership of `arg`. */
+static Expr* call_unary_owned(const char* head_name, Expr* arg) {
+    Expr* a[1] = { arg };
+    Expr* call = expr_new_function(expr_new_symbol(head_name), a, 1);
+    Expr* r = evaluate(call);
+    expr_free(call);
+    return r;
+}
+
+static Expr* call_unary_copy(const char* head_name, const Expr* arg) {
+    return call_unary_owned(head_name, expr_copy((Expr*)arg));
+}
+
+static bool is_rule_with_lhs(const Expr* e, const char* lhs_symbol) {
+    if (!e || e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.arg_count != 2) return false;
+    if (!e->data.function.head || e->data.function.head->type != EXPR_SYMBOL) return false;
+    const char* h = e->data.function.head->data.symbol;
+    if (strcmp(h, "Rule") != 0 && strcmp(h, "RuleDelayed") != 0) return false;
+    Expr* k = e->data.function.args[0];
+    return k && k->type == EXPR_SYMBOL && strcmp(k->data.symbol, lhs_symbol) == 0;
+}
+
+static bool head_threads_over(const char* h) {
+    return strcmp(h, "Equal") == 0 ||
+           strcmp(h, "Unequal") == 0 ||
+           strcmp(h, "Less") == 0 ||
+           strcmp(h, "LessEqual") == 0 ||
+           strcmp(h, "Greater") == 0 ||
+           strcmp(h, "GreaterEqual") == 0 ||
+           strcmp(h, "And") == 0 ||
+           strcmp(h, "Or") == 0 ||
+           strcmp(h, "Not") == 0 ||
+           strcmp(h, "Xor") == 0 ||
+           strcmp(h, "Implies") == 0;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Candidate set                                                           */
+/* ----------------------------------------------------------------------- */
+
+#define SIMP_CAND_CAP 12
+#define SIMP_ROUNDS   2
+
+typedef struct {
+    Expr** items;
+    size_t count;
+    size_t capacity;
+} CandSet;
+
+static void cs_init(CandSet* cs) {
+    cs->items = NULL;
+    cs->count = 0;
+    cs->capacity = 0;
+}
+
+static void cs_free(CandSet* cs) {
+    for (size_t i = 0; i < cs->count; i++) expr_free(cs->items[i]);
+    free(cs->items);
+    cs->items = NULL;
+    cs->count = 0;
+    cs->capacity = 0;
+}
+
+static bool cs_contains(const CandSet* cs, const Expr* e) {
+    for (size_t i = 0; i < cs->count; i++) {
+        if (expr_eq(cs->items[i], e)) return true;
+    }
+    return false;
+}
+
+/* Take ownership of `e`; free if duplicate or set is full. */
+static void cs_add_or_free(CandSet* cs, Expr* e) {
+    if (!e) return;
+    if (cs->count >= SIMP_CAND_CAP || cs_contains(cs, e)) {
+        expr_free(e);
+        return;
+    }
+    if (cs->count >= cs->capacity) {
+        size_t new_cap = cs->capacity ? cs->capacity * 2 : 4;
+        Expr** np = (Expr**)realloc(cs->items, new_cap * sizeof(Expr*));
+        if (!np) { expr_free(e); return; }
+        cs->items = np;
+        cs->capacity = new_cap;
+    }
+    cs->items[cs->count++] = e;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Scoring                                                                 */
+/* ----------------------------------------------------------------------- */
+
+#define SIMP_SCORE_INF ((size_t)-1)
+
+static size_t score_with_func(const Expr* e, const Expr* complexity_func) {
+    if (!complexity_func) return simp_default_complexity(e);
+    Expr* a[1] = { expr_copy((Expr*)e) };
+    Expr* call = expr_new_function(expr_copy((Expr*)complexity_func), a, 1);
+    Expr* result = evaluate(call);
+    expr_free(call);
+    size_t s;
+    if (result->type == EXPR_INTEGER) {
+        s = (result->data.integer < 0) ? 0 : (size_t)result->data.integer;
+    } else if (result->type == EXPR_BIGINT) {
+        s = SIMP_SCORE_INF;
+    } else {
+        s = simp_default_complexity(e);
+    }
+    expr_free(result);
+    return s;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Assumption-driven seed rewriters                                        */
+/* ----------------------------------------------------------------------- */
+
+/* For each direct EXPR_SYMBOL fact-target, generate context-specific
+ * rewrite rules and apply them via ReplaceRepeated. The rules are
+ * unconditional in pattern form: their conditional nature is captured by
+ * the choice of the rule's free symbol -- e.g., we only emit
+ *   Power[Power[<x>, 2], Rational[1, 2]] :> <x>
+ * when <x> is the literal symbol that the assumption set says is
+ * positive. So the rules are valid by construction whenever applied.
+ *
+ * The generated rule list is built as a string and parsed; this is
+ * cheaper to maintain than constructing the AST by hand and matches the
+ * style used in trigsimp.c.
+ */
+
+static bool sym_already_listed(char** list, size_t n, const char* s) {
+    for (size_t i = 0; i < n; i++) if (strcmp(list[i], s) == 0) return true;
+    return false;
+}
+
+/* Walk the assumption fact list and collect every EXPR_SYMBOL that the
+ * context proves positive, real, or integer. The caller passes pre-sized
+ * arrays plus the maximum count. */
+static void collect_known_symbols(const AssumeCtx* ctx,
+                                  char** positives, size_t* npos,
+                                  char** reals,     size_t* nreal,
+                                  char** integers,  size_t* nint,
+                                  char** negatives, size_t* nneg,
+                                  size_t cap) {
+    *npos = *nreal = *nint = *nneg = 0;
+    if (!ctx) return;
+    for (size_t i = 0; i < ctx->count; i++) {
+        const Expr* f = ctx->facts[i];
+        if (f->type != EXPR_FUNCTION) continue;
+        /* Inspect each operand-position symbol. */
+        for (size_t j = 0; j < f->data.function.arg_count; j++) {
+            Expr* a = f->data.function.args[j];
+            if (a->type != EXPR_SYMBOL) continue;
+            const char* nm = a->data.symbol;
+            if (assume_known_positive(ctx, a) && *npos < cap && !sym_already_listed(positives, *npos, nm)) {
+                positives[(*npos)++] = (char*)nm;
+            }
+            if (assume_known_negative(ctx, a) && *nneg < cap && !sym_already_listed(negatives, *nneg, nm)) {
+                negatives[(*nneg)++] = (char*)nm;
+            }
+            if (assume_known_real(ctx, a) && *nreal < cap && !sym_already_listed(reals, *nreal, nm)) {
+                reals[(*nreal)++] = (char*)nm;
+            }
+            if (assume_known_integer(ctx, a) && *nint < cap && !sym_already_listed(integers, *nint, nm)) {
+                integers[(*nint)++] = (char*)nm;
+            }
+        }
+    }
+}
+
+/* Produce a rewritten expression by applying assumption-derived rules via
+ * ReplaceRepeated. Returns a newly owned expression, or NULL if no rules
+ * were generated. The input is not consumed. */
+static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
+    if (!ctx) return NULL;
+
+    /* Conservative caps for the per-symbol rule synthesis. */
+    enum { MAX_SYM = 16 };
+    char* positives[MAX_SYM]; size_t npos;
+    char* reals    [MAX_SYM]; size_t nreal;
+    char* integers [MAX_SYM]; size_t nint;
+    char* negatives[MAX_SYM]; size_t nneg;
+    collect_known_symbols(ctx, positives, &npos, reals, &nreal,
+                          integers, &nint, negatives, &nneg, MAX_SYM);
+
+    /* Build a single rule list "{r1, r2, ...}" as a string, then parse. */
+    char buf[8192];
+    size_t off = 0;
+    int wrote_any = 0;
+
+    #define EMIT(...) do { \
+        int w = snprintf(buf + off, sizeof(buf) - off, __VA_ARGS__); \
+        if (w < 0 || (size_t)w >= sizeof(buf) - off) goto overflow; \
+        off += (size_t)w; \
+    } while (0)
+    #define SEP() do { if (wrote_any) EMIT(", "); wrote_any = 1; } while (0)
+
+    EMIT("{");
+
+    for (size_t i = 0; i < npos; i++) {
+        const char* x = positives[i];
+        /* Sqrt[x^2] forms */
+        SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> %s", x, x);
+        SEP(); EMIT("Power[Power[%s, -1], Rational[1, 2]] :> Power[%s, Rational[-1, 2]]", x, x);
+        SEP(); EMIT("Power[Power[%s, -2], Rational[1, 2]] :> Power[%s, -1]", x, x);
+        /* Abs[x] -> x  for x > 0 */
+        SEP(); EMIT("Abs[%s] :> %s", x, x);
+        /* Log[x^p] -> p Log[x]  for x > 0 (any real p; v1 accepts symbolic p too) */
+        SEP(); EMIT("Log[Power[%s, p_]] :> p Log[%s]", x, x);
+    }
+
+    for (size_t i = 0; i < nneg; i++) {
+        const char* x = negatives[i];
+        /* Abs[x] -> -x  for x < 0 */
+        SEP(); EMIT("Abs[%s] :> -%s", x, x);
+        /* Sqrt[x^2] -> -x  for x < 0  (Power[Power[x,2], 1/2]) */
+        SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> -%s", x, x);
+    }
+
+    /* For real-but-unknown-sign, Sqrt[x^2] -> Abs[x]. Skip symbols already
+     * proven positive or negative (their stronger rule above wins). */
+    for (size_t i = 0; i < nreal; i++) {
+        const char* x = reals[i];
+        if (sym_already_listed(positives, npos, x)) continue;
+        if (sym_already_listed(negatives, nneg, x)) continue;
+        SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> Abs[%s]", x, x);
+    }
+
+    /* Sin[n Pi] -> 0, Cos[n Pi] -> (-1)^n, Tan[n Pi] -> 0 for integer n. */
+    for (size_t i = 0; i < nint; i++) {
+        const char* n = integers[i];
+        SEP(); EMIT("Sin[%s Pi] :> 0", n);
+        SEP(); EMIT("Sin[Pi %s] :> 0", n);
+        SEP(); EMIT("Cos[%s Pi] :> Power[-1, %s]", n, n);
+        SEP(); EMIT("Cos[Pi %s] :> Power[-1, %s]", n, n);
+        SEP(); EMIT("Tan[%s Pi] :> 0", n);
+        SEP(); EMIT("Tan[Pi %s] :> 0", n);
+    }
+
+    /* Equal[u, v] facts -> two-way substitution rules. We use immediate
+     * Rule (->) so the pattern uses exact structural matching. */
+    for (size_t i = 0; i < ctx->count; i++) {
+        const Expr* f = ctx->facts[i];
+        if (!fact_is_function(f, "Equal", 2)) continue;
+        /* We can't easily re-emit arbitrary Expr* into our string buffer;
+         * instead, build these rules as Expr* and merge them in below. */
+        (void)f; /* handled in the Expr* merge step below */
+    }
+
+    EMIT("}");
+
+    if (!wrote_any) {
+        /* No string-built rules. We may still have Equal substitutions. */
+    }
+
+    Expr* string_rules = wrote_any ? parse_expression(buf) : NULL;
+
+    /* Now build Equal-substitution rules.
+     *
+     * Two complementary rules per equation:
+     *   1. The direct rule heavier(lhs,rhs) -> lighter (catches cases
+     *      where the equation's LHS appears verbatim as a subterm).
+     *   2. ONE monomial-isolation rule when diff = lhs - rhs is a Plus
+     *      with >= 3 terms: pick the heaviest non-numeric term t and
+     *      emit t -> -(other terms). Polynomial relations like
+     *      a^2 + b^2 == 1 then rewrite occurrences of a^2 even when
+     *      the full "a^2 + b^2" sum is not present in the input.
+     *
+     * Emitting only one monomial rule (instead of one per term) avoids
+     * the bidirectional cycle a^2 -> 1-b^2 ; b^2 -> 1-a^2 that
+     * ReplaceRepeated would chase up to its 65536 iteration cap. */
+    Expr** eq_diffs = (Expr**)calloc(ctx->count, sizeof(Expr*));
+    size_t eq_count = 0;
+    for (size_t i = 0; i < ctx->count; i++) {
+        const Expr* f = ctx->facts[i];
+        if (!fact_is_function(f, "Equal", 2)) continue;
+        Expr* lhs = f->data.function.args[0];
+        Expr* rhs = f->data.function.args[1];
+        Expr* sub_args[2] = { expr_copy(lhs),
+                              expr_new_function(expr_new_symbol("Times"),
+                                  (Expr*[]){ expr_new_integer(-1), expr_copy(rhs) }, 2) };
+        Expr* sum = expr_new_function(expr_new_symbol("Plus"), sub_args, 2);
+        Expr* diff = evaluate(sum);
+        eq_diffs[i] = diff;
+        /* Always emit the direct heavier->lighter rule. */
+        eq_count++;
+        /* Plus extra monomial-isolation rule for polynomial relations. */
+        if (diff->type == EXPR_FUNCTION &&
+            diff->data.function.head &&
+            diff->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(diff->data.function.head->data.symbol, "Plus") == 0 &&
+            diff->data.function.arg_count >= 3) {
+            for (size_t j = 0; j < diff->data.function.arg_count; j++) {
+                Expr* term = diff->data.function.args[j];
+                if (term->type == EXPR_INTEGER || term->type == EXPR_BIGINT ||
+                    term->type == EXPR_REAL) continue;
+                eq_count++;
+                break; /* one monomial rule per equation */
+            }
+        }
+    }
+
+    if (!string_rules && eq_count == 0) return NULL;
+
+    size_t string_len = 0;
+    if (string_rules && string_rules->type == EXPR_FUNCTION) {
+        string_len = string_rules->data.function.arg_count;
+    }
+    size_t total = string_len + eq_count;
+    Expr** all = (Expr**)calloc(total, sizeof(Expr*));
+    size_t fill = 0;
+    if (string_rules && string_rules->type == EXPR_FUNCTION) {
+        for (size_t i = 0; i < string_len; i++) {
+            all[fill++] = expr_copy(string_rules->data.function.args[i]);
+        }
+    }
+    for (size_t i = 0; i < ctx->count; i++) {
+        const Expr* f = ctx->facts[i];
+        if (!fact_is_function(f, "Equal", 2)) continue;
+        Expr* lhs = f->data.function.args[0];
+        Expr* rhs = f->data.function.args[1];
+        Expr* diff = eq_diffs[i];
+
+        /* Direct heavier->lighter rule. */
+        Expr *src, *dst;
+        if (simp_default_complexity(lhs) >= simp_default_complexity(rhs)) {
+            src = lhs; dst = rhs;
+        } else {
+            src = rhs; dst = lhs;
+        }
+        Expr* direct[2] = { expr_copy(src), expr_copy(dst) };
+        all[fill++] = expr_new_function(expr_new_symbol("Rule"), direct, 2);
+
+        /* Polynomial-relation monomial-isolation rule (one per fact). */
+        if (diff->type == EXPR_FUNCTION &&
+            diff->data.function.head &&
+            diff->data.function.head->type == EXPR_SYMBOL &&
+            strcmp(diff->data.function.head->data.symbol, "Plus") == 0 &&
+            diff->data.function.arg_count >= 3) {
+            size_t n = diff->data.function.arg_count;
+            /* Pick the first non-numeric term, breaking ties by canonical
+             * (Plus-Orderless) order which is already applied by the
+             * evaluator. */
+            size_t pick = (size_t)-1;
+            size_t pick_score = 0;
+            for (size_t j = 0; j < n; j++) {
+                Expr* term = diff->data.function.args[j];
+                if (term->type == EXPR_INTEGER || term->type == EXPR_BIGINT ||
+                    term->type == EXPR_REAL) continue;
+                size_t s = simp_default_complexity(term);
+                if (pick == (size_t)-1 || s > pick_score) {
+                    pick = j;
+                    pick_score = s;
+                }
+            }
+            if (pick != (size_t)-1) {
+                Expr* term = diff->data.function.args[pick];
+                Expr** other_args = (Expr**)calloc(n - 1, sizeof(Expr*));
+                size_t oi = 0;
+                for (size_t k = 0; k < n; k++) {
+                    if (k == pick) continue;
+                    other_args[oi++] = expr_new_function(expr_new_symbol("Times"),
+                        (Expr*[]){ expr_new_integer(-1),
+                                   expr_copy(diff->data.function.args[k]) }, 2);
+                }
+                Expr* iso_rhs;
+                if (n - 1 == 1) {
+                    iso_rhs = other_args[0];
+                    free(other_args);
+                } else {
+                    iso_rhs = expr_new_function(expr_new_symbol("Plus"), other_args, n - 1);
+                    free(other_args);
+                }
+                Expr* iso[2] = { expr_copy(term), iso_rhs };
+                all[fill++] = expr_new_function(expr_new_symbol("Rule"), iso, 2);
+            }
+        }
+    }
+    for (size_t i = 0; i < ctx->count; i++) if (eq_diffs[i]) expr_free(eq_diffs[i]);
+    free(eq_diffs);
+    if (string_rules) expr_free(string_rules);
+
+    Expr* rules_list = expr_new_function(expr_new_symbol("List"), all, fill);
+    free(all);
+
+    Expr* call_args[2] = { expr_copy((Expr*)input), rules_list };
+    Expr* call = expr_new_function(expr_new_symbol("ReplaceRepeated"), call_args, 2);
+    Expr* out = evaluate(call);
+    expr_free(call);
+    return out;
+
+overflow:
+    /* Buffer was too small; bail out, no rules applied. */
+    return NULL;
+
+    #undef EMIT
+    #undef SEP
+}
+
+/* ----------------------------------------------------------------------- */
+/* Trig/exp roundtrip composite                                            */
+/* ----------------------------------------------------------------------- */
+
+static Expr* transform_trig_roundtrip(const Expr* e) {
+    Expr* a = call_unary_copy("TrigToExp", e);
+    Expr* b = call_unary_owned("Together", a);
+    Expr* c = call_unary_owned("Cancel", b);
+    Expr* d = call_unary_owned("ExpToTrig", c);
+    return d;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Log/Power rewriter (positive-real cascade, v1)                          */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * The strict-positive cascade implements the Log/Power identities that
+ * are sound under positivity / reality assumptions on the operands.
+ * Identities cover (1) log of products and quotients, (2) log of a power
+ * of a positive base, (3) power of a product, and (4) tower-of-powers
+ * collapse for a positive base.
+ *
+ * The general-real and general-complex branches of the user's cascade
+ * (with Boole / Floor / Ceiling phase corrections) are deliberately not
+ * implemented in v1; see picocas_spec.md for v2 scope.
+ *
+ * Implementation: a bottom-up structural walker that consults the
+ * AssumeCtx for positivity/reality of operands. Each top-level rewrite
+ * emits a freshly evaluated tree, so e.g. nested Log[Times[x, 1/y]] ->
+ * Log[x] + Log[1/y] -> Log[x] - Log[y] (via the Power[..., -1] case)
+ * stabilises after a small fixed number of passes.
+ */
+
+static Expr* logexp_top_rewrite(const Expr* e, const AssumeCtx* ctx);
+
+/* Returns NULL if the recursive walk produced no change. Otherwise returns
+ * a newly owned, evaluated tree. */
+static Expr* logexp_walk(const Expr* e, const AssumeCtx* ctx) {
+    if (!e) return NULL;
+    if (e->type != EXPR_FUNCTION) {
+        return logexp_top_rewrite(e, ctx);
+    }
+
+    /* First rewrite children. */
+    size_t n = e->data.function.arg_count;
+    Expr** new_args = NULL;
+    bool any = false;
+    for (size_t i = 0; i < n; i++) {
+        Expr* r = logexp_walk(e->data.function.args[i], ctx);
+        if (r) {
+            if (!new_args) {
+                new_args = (Expr**)calloc(n, sizeof(Expr*));
+                for (size_t j = 0; j < i; j++) new_args[j] = expr_copy(e->data.function.args[j]);
+            }
+            new_args[i] = r;
+            any = true;
+        } else if (new_args) {
+            new_args[i] = expr_copy(e->data.function.args[i]);
+        }
+    }
+
+    Expr* current_owned = NULL;
+    const Expr* target;
+    if (any) {
+        Expr* head_copy = expr_copy(e->data.function.head);
+        Expr* rebuilt = expr_new_function(head_copy, new_args, n);
+        free(new_args);
+        current_owned = evaluate(rebuilt);
+        expr_free(rebuilt);
+        target = current_owned;
+    } else {
+        target = e;
+    }
+
+    Expr* top = logexp_top_rewrite(target, ctx);
+    if (top) {
+        if (current_owned) expr_free(current_owned);
+        return top;
+    }
+    return current_owned;  /* may be NULL if no change anywhere */
+}
+
+static Expr* build_unary(const char* head, Expr* owned_arg) {
+    Expr* a[1] = { owned_arg };
+    return expr_new_function(expr_new_symbol(head), a, 1);
+}
+
+static Expr* build_binary(const char* head, Expr* a0, Expr* a1) {
+    Expr* a[2] = { a0, a1 };
+    return expr_new_function(expr_new_symbol(head), a, 2);
+}
+
+static Expr* logexp_top_rewrite(const Expr* e, const AssumeCtx* ctx) {
+    if (!e || e->type != EXPR_FUNCTION) return NULL;
+    if (!e->data.function.head ||
+        e->data.function.head->type != EXPR_SYMBOL) return NULL;
+    const char* h = e->data.function.head->data.symbol;
+    Expr** a = e->data.function.args;
+    size_t n = e->data.function.arg_count;
+
+    /* Log[Times[u1,...,un]] -> Sum Log[ui]  when every ui is positive.
+     * Log[Power[x, p]]      -> p Log[x]      when x positive and p real. */
+    if (strcmp(h, "Log") == 0 && n == 1) {
+        Expr* inner = a[0];
+        if (inner->type == EXPR_FUNCTION &&
+            inner->data.function.head &&
+            inner->data.function.head->type == EXPR_SYMBOL) {
+            const char* ih = inner->data.function.head->data.symbol;
+            size_t in = inner->data.function.arg_count;
+            Expr** ia = inner->data.function.args;
+
+            if (strcmp(ih, "Times") == 0 && in > 0) {
+                bool all_pos = true;
+                for (size_t i = 0; i < in; i++) {
+                    if (!prov_pos(ctx, ia[i])) { all_pos = false; break; }
+                }
+                if (all_pos) {
+                    Expr** logs = (Expr**)calloc(in, sizeof(Expr*));
+                    for (size_t i = 0; i < in; i++) {
+                        logs[i] = build_unary("Log", expr_copy(ia[i]));
+                    }
+                    Expr* sum = expr_new_function(expr_new_symbol("Plus"), logs, in);
+                    free(logs);
+                    Expr* canon = evaluate(sum);
+                    expr_free(sum);
+                    return canon;
+                }
+            }
+            if (strcmp(ih, "Power") == 0 && in == 2) {
+                Expr* base = ia[0];
+                Expr* p    = ia[1];
+                if (prov_pos(ctx, base) && prov_re(ctx, p)) {
+                    Expr* logx = build_unary("Log", expr_copy(base));
+                    Expr* mul  = build_binary("Times", expr_copy(p), logx);
+                    Expr* canon = evaluate(mul);
+                    expr_free(mul);
+                    return canon;
+                }
+            }
+        }
+    }
+
+    /* Power[Times[u1,...,un], a]  -> Times[ui^a]  when every ui positive.
+     * Power[Power[x, p], q]       -> Power[x, p*q] when x positive, p real. */
+    if (strcmp(h, "Power") == 0 && n == 2) {
+        Expr* base = a[0];
+        Expr* exp_  = a[1];
+
+        if (base->type == EXPR_FUNCTION &&
+            base->data.function.head &&
+            base->data.function.head->type == EXPR_SYMBOL) {
+            const char* bh = base->data.function.head->data.symbol;
+            size_t bn = base->data.function.arg_count;
+            Expr** ba = base->data.function.args;
+
+            if (strcmp(bh, "Times") == 0 && bn > 0) {
+                bool all_pos = true;
+                for (size_t i = 0; i < bn; i++) {
+                    if (!prov_pos(ctx, ba[i])) { all_pos = false; break; }
+                }
+                if (all_pos) {
+                    Expr** powers = (Expr**)calloc(bn, sizeof(Expr*));
+                    for (size_t i = 0; i < bn; i++) {
+                        powers[i] = build_binary("Power", expr_copy(ba[i]), expr_copy(exp_));
+                    }
+                    Expr* prod = expr_new_function(expr_new_symbol("Times"), powers, bn);
+                    free(powers);
+                    Expr* canon = evaluate(prod);
+                    expr_free(prod);
+                    return canon;
+                }
+            }
+            if (strcmp(bh, "Power") == 0 && bn == 2) {
+                Expr* xx = ba[0];
+                Expr* pp = ba[1];
+                if (prov_pos(ctx, xx) && prov_re(ctx, pp)) {
+                    Expr* prod = build_binary("Times", expr_copy(pp), expr_copy(exp_));
+                    Expr* prod_canon = evaluate(prod);
+                    expr_free(prod);
+                    Expr* pow_ = build_binary("Power", expr_copy(xx), prod_canon);
+                    Expr* canon = evaluate(pow_);
+                    expr_free(pow_);
+                    return canon;
+                }
+            }
+        }
+    }
+
+    return NULL;
+}
+
+/* Apply the rewriter to a fixed point. Returns NULL if unchanged.
+ * Bounded iteration count protects against pathological alternations
+ * with the evaluator's canonicalisation. */
+static Expr* apply_logexp_rules(const Expr* input, const AssumeCtx* ctx) {
+    if (!ctx) return NULL;
+    Expr* current = expr_copy((Expr*)input);
+    bool changed = false;
+    for (int iter = 0; iter < 8; iter++) {
+        Expr* r = logexp_walk(current, ctx);
+        if (!r) break;
+        if (expr_eq(r, current)) { expr_free(r); break; }
+        expr_free(current);
+        current = r;
+        changed = true;
+    }
+    if (!changed) {
+        expr_free(current);
+        return NULL;
+    }
+    if (expr_eq(current, input)) {
+        expr_free(current);
+        return NULL;
+    }
+    return current;
+}
+
+/* ----------------------------------------------------------------------- */
+/* Heuristic search                                                        */
+/* ----------------------------------------------------------------------- */
+
+static const char* SIMP_TRANSFORMS[] = {
+    "Together",
+    "Cancel",
+    "Expand",
+    "Factor",
+    "FactorSquareFree",
+    "Apart",
+    "TrigExpand",
+    "TrigFactor"
+};
+static const size_t SIMP_TRANSFORM_COUNT =
+    sizeof(SIMP_TRANSFORMS) / sizeof(SIMP_TRANSFORMS[0]);
+
+/* Returns true if the expression contains any Power with a non-integer
+ * exponent (e.g. Sqrt forms, Rational exponents, symbolic exponents).
+ * picocas's Factor / FactorSquareFree call its trial-division loop in
+ * factor_roots which can stall on multivariate inputs that include such
+ * Power atoms, so we skip those transforms when this returns true. */
+static bool has_non_integer_power(const Expr* e) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0 &&
+        e->data.function.arg_count == 2) {
+        Expr* exp = e->data.function.args[1];
+        if (exp->type != EXPR_INTEGER && exp->type != EXPR_BIGINT) return true;
+    }
+    if (has_non_integer_power(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (has_non_integer_power(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+static bool transform_safe_for(const char* name, const Expr* e) {
+    /* Factor / FactorSquareFree -- and TrigFactor, which calls Factor
+     * inside its pipeline -- can stall when fed non-polynomial inputs
+     * containing Sqrt or other fractional powers. Skip them in that
+     * case. */
+    if (strcmp(name, "Factor") == 0 ||
+        strcmp(name, "FactorSquareFree") == 0 ||
+        strcmp(name, "TrigFactor") == 0) {
+        if (has_non_integer_power(e)) return false;
+    }
+    return true;
+}
+
+/* Score a candidate; if it beats the running best, replace best. The
+ * candidate `c` is *borrowed* (caller still owns the source); `best` is
+ * a slot the caller manages. */
+static void update_best(Expr** best, size_t* best_score, const Expr* c,
+                        const Expr* complexity_func) {
+    size_t s = score_with_func(c, complexity_func);
+    if (s < *best_score) {
+        expr_free(*best);
+        *best = expr_copy((Expr*)c);
+        *best_score = s;
+    }
+}
+
+static Expr* simp_search(const Expr* input, const AssumeCtx* ctx,
+                         const Expr* complexity_func) {
+    Expr* best = expr_copy((Expr*)input);
+    size_t best_score = score_with_func(best, complexity_func);
+
+    CandSet seeds;
+    cs_init(&seeds);
+    cs_add_or_free(&seeds, expr_copy((Expr*)input));
+
+    /* Assumption-derived alternatives. An assumption-aware rewrite that
+     * actually changed the form is correctness-preserving under the
+     * assumption set and is by definition more "simplified" than the
+     * input, even if the leaf-count tiebreak is even (e.g.
+     * Log[x^p] -> p Log[x] both score 4). Force-take it as the new best
+     * so long as it isn't strictly worse. */
+    if (ctx) {
+        Expr* alt = apply_assumption_rules(input, ctx);
+        if (alt && !expr_eq(alt, input)) {
+            size_t s = score_with_func(alt, complexity_func);
+            if (s <= best_score) {
+                expr_free(best);
+                best = expr_copy(alt);
+                best_score = s;
+            }
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    /* Logexp rewriter seed. The Log/Power identities (Log[a b] -> Log[a] +
+     * Log[b], (a b)^c -> a^c b^c, (a^p)^q -> a^(p q), ...) typically
+     * INCREASE leaf count, so they cannot win the standard complexity
+     * tiebreak. We force them as the new best regardless of score: the
+     * cascade is correctness-preserving under positivity assumptions and
+     * the user's intent (per the documented rule cascade) is that they
+     * fire whenever conditions are met. Downstream transforms (Cancel,
+     * Together, ...) cannot recombine an expanded log/power, so the
+     * expanded form persists through the rest of the search. */
+    if (ctx) {
+        Expr* alt = apply_logexp_rules(input, ctx);
+        if (alt && !expr_eq(alt, input)) {
+            expr_free(best);
+            best = expr_copy(alt);
+            best_score = score_with_func(best, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    /* Roundtrip seed. */
+    {
+        Expr* alt = transform_trig_roundtrip(input);
+        if (alt && !expr_eq(alt, input)) {
+            update_best(&best, &best_score, alt, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    for (int round = 0; round < SIMP_ROUNDS; round++) {
+        CandSet next;
+        cs_init(&next);
+        for (size_t i = 0; i < seeds.count; i++) {
+            for (size_t t = 0; t < SIMP_TRANSFORM_COUNT; t++) {
+                if (!transform_safe_for(SIMP_TRANSFORMS[t], seeds.items[i])) continue;
+                Expr* r = call_unary_copy(SIMP_TRANSFORMS[t], seeds.items[i]);
+                if (!r) continue;
+                update_best(&best, &best_score, r, complexity_func);
+                if (expr_eq(r, seeds.items[i])) {
+                    expr_free(r);
+                } else {
+                    cs_add_or_free(&next, r);
+                }
+            }
+            /* Also try the trig roundtrip on each candidate. */
+            Expr* tr = transform_trig_roundtrip(seeds.items[i]);
+            if (tr) {
+                update_best(&best, &best_score, tr, complexity_func);
+                if (expr_eq(tr, seeds.items[i])) {
+                    expr_free(tr);
+                } else {
+                    cs_add_or_free(&next, tr);
+                }
+            }
+            /* And the assumption rewriter on each candidate. Bias as in
+             * the seed phase: prefer assumption-driven forms at equal
+             * complexity. */
+            if (ctx) {
+                Expr* ar = apply_assumption_rules(seeds.items[i], ctx);
+                if (ar) {
+                    if (!expr_eq(ar, seeds.items[i])) {
+                        size_t s = score_with_func(ar, complexity_func);
+                        if (s <= best_score) {
+                            expr_free(best);
+                            best = expr_copy(ar);
+                            best_score = s;
+                        }
+                        cs_add_or_free(&next, ar);
+                    } else {
+                        expr_free(ar);
+                    }
+                }
+                Expr* lr = apply_logexp_rules(seeds.items[i], ctx);
+                if (lr) {
+                    if (!expr_eq(lr, seeds.items[i])) {
+                        /* Force-win as in the seed phase. */
+                        expr_free(best);
+                        best = expr_copy(lr);
+                        best_score = score_with_func(best, complexity_func);
+                        cs_add_or_free(&next, lr);
+                    } else {
+                        expr_free(lr);
+                    }
+                }
+            }
+        }
+        cs_free(&seeds);
+        seeds = next;
+        if (seeds.count == 0) break;
+    }
+    cs_free(&seeds);
+    return best;
+}
+
+/* ----------------------------------------------------------------------- */
+/* builtin_simplify                                                        */
+/* ----------------------------------------------------------------------- */
+
+static Expr* read_dollar_assumptions(void) {
+    /* Read the OwnValue directly. We must NOT evaluate $Assumptions, because
+     * once an assumption like Element[x, Reals] becomes the bound value, our
+     * own Element evaluator would recurse on it (Element reads $Assumptions
+     * to decide -> evaluator fires the OwnValue rule -> Element[x, Reals]
+     * gets re-evaluated -> ...). The first OwnValue rule on a symbol is its
+     * current value (newest first); we deep-copy its replacement. */
+    Rule* r = symtab_get_own_values("$Assumptions");
+    if (!r || !r->replacement) return expr_new_symbol("True");
+    return expr_copy(r->replacement);
+}
+
+/* ----------------------------------------------------------------------- */
+/* builtin_element -- Element[x, Domain]                                   */
+/* ----------------------------------------------------------------------- */
+
+static bool is_complex_literal(const Expr* e) {
+    return e && e->type == EXPR_FUNCTION
+        && e->data.function.head
+        && e->data.function.head->type == EXPR_SYMBOL
+        && strcmp(e->data.function.head->data.symbol, "Complex") == 0
+        && e->data.function.arg_count == 2;
+}
+
+static bool is_rational_literal(const Expr* e) {
+    return e && e->type == EXPR_FUNCTION
+        && e->data.function.head
+        && e->data.function.head->type == EXPR_SYMBOL
+        && strcmp(e->data.function.head->data.symbol, "Rational") == 0
+        && e->data.function.arg_count == 2;
+}
+
+/* True iff `r` is exactly representable as a 64-bit integer. */
+static bool real_is_integer(double r) {
+    if (r != r) return false;                       /* NaN */
+    if (r > 9.2233720368547758e18) return false;    /* > INT64_MAX */
+    if (r < -9.2233720368547758e18) return false;
+    long long i = (long long)r;
+    return (double)i == r;
+}
+
+/* Element[x, dom] decision: 1 = True, 0 = False, -1 = undetermined. */
+static int element_decide(const Expr* x, const char* dom, const AssumeCtx* ctx) {
+    if (!x || !dom) return -1;
+
+    /* Direct fact lookup is always safe regardless of domain. */
+    if (ctx) {
+        for (size_t i = 0; i < ctx->count; i++) {
+            if (fact_in_domain(ctx->facts[i], x, dom)) return 1;
+        }
+    }
+
+    if (strcmp(dom, "Integers") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT) return 1;
+        if (x->type == EXPR_REAL) return real_is_integer(x->data.real) ? 1 : 0;
+        if (is_rational_literal(x)) return 0;
+        if (is_complex_literal(x)) return 0;
+        if (prov_int(ctx, x)) return 1;
+        return -1;
+    }
+
+    if (strcmp(dom, "Rationals") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT) return 1;
+        if (is_rational_literal(x)) return 1;
+        if (x->type == EXPR_REAL) return 1;             /* every double is dyadic */
+        if (is_complex_literal(x)) return 0;
+        if (prov_int(ctx, x)) return 1;
+        return -1;
+    }
+
+    if (strcmp(dom, "Algebraics") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT) return 1;
+        if (is_rational_literal(x)) return 1;
+        if (x->type == EXPR_REAL) return 1;
+        if (is_complex_literal(x)) return 1;            /* canonical Complex parts are rational */
+        if (prov_int(ctx, x)) return 1;
+        return -1;
+    }
+
+    if (strcmp(dom, "Reals") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT || x->type == EXPR_REAL) return 1;
+        if (is_rational_literal(x)) return 1;
+        if (is_complex_literal(x)) {
+            /* canonical Complex always carries a non-zero imaginary part */
+            Expr* im = x->data.function.args[1];
+            if (im->type == EXPR_INTEGER && im->data.integer == 0) return 1;
+            return 0;
+        }
+        if (prov_re(ctx, x)) return 1;
+        return -1;
+    }
+
+    if (strcmp(dom, "Complexes") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT || x->type == EXPR_REAL) return 1;
+        if (is_rational_literal(x)) return 1;
+        if (is_complex_literal(x)) return 1;
+        if (prov_re(ctx, x)) return 1;
+        return -1;
+    }
+
+    if (strcmp(dom, "Booleans") == 0) {
+        if (x->type == EXPR_SYMBOL) {
+            if (strcmp(x->data.symbol, "True") == 0)  return 1;
+            if (strcmp(x->data.symbol, "False") == 0) return 1;
+        }
+        return -1;
+    }
+
+    if (strcmp(dom, "Primes") == 0) {
+        if (x->type == EXPR_INTEGER || x->type == EXPR_BIGINT) {
+            Expr* primeq = call_unary_copy("PrimeQ", x);
+            int ans = -1;
+            if (primeq && primeq->type == EXPR_SYMBOL) {
+                if (strcmp(primeq->data.symbol, "True")  == 0) ans = 1;
+                if (strcmp(primeq->data.symbol, "False") == 0) ans = 0;
+            }
+            if (primeq) expr_free(primeq);
+            return ans;
+        }
+        return -1;
+    }
+
+    if (strcmp(dom, "Composites") == 0) {
+        if ((x->type == EXPR_INTEGER && x->data.integer >= 2) || x->type == EXPR_BIGINT) {
+            Expr* primeq = call_unary_copy("PrimeQ", x);
+            int ans = -1;
+            if (primeq && primeq->type == EXPR_SYMBOL) {
+                if (strcmp(primeq->data.symbol, "True")  == 0) ans = 0;
+                if (strcmp(primeq->data.symbol, "False") == 0) ans = 1;
+            }
+            if (primeq) expr_free(primeq);
+            return ans;
+        }
+        return -1;
+    }
+
+    return -1;
+}
+
+Expr* builtin_element(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    if (res->data.function.arg_count != 2) return NULL;
+
+    Expr* x   = res->data.function.args[0];
+    Expr* dom = res->data.function.args[1];
+
+    /* Threading: Element[{x1, x2, ...}, dom] -> {Element[x1, dom], ...}.
+     * Mathematica returns this only when ALL elements decide; if any are
+     * undetermined we leave them as Element[xi, dom]. */
+    if (x->type == EXPR_FUNCTION && x->data.function.head &&
+        x->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(x->data.function.head->data.symbol, "List") == 0) {
+        size_t n = x->data.function.arg_count;
+        Expr** out = (Expr**)calloc(n, sizeof(Expr*));
+        for (size_t i = 0; i < n; i++) {
+            Expr* sub_args[2] = { expr_copy(x->data.function.args[i]), expr_copy(dom) };
+            Expr* call = expr_new_function(expr_new_symbol("Element"), sub_args, 2);
+            out[i] = evaluate(call);
+            expr_free(call);
+        }
+        Expr* list = expr_new_function(expr_new_symbol("List"), out, n);
+        free(out);
+        return list;
+    }
+
+    if (dom->type != EXPR_SYMBOL) return NULL;
+    const char* d = dom->data.symbol;
+
+    /* Build context from current $Assumptions. */
+    Expr* dollar = read_dollar_assumptions();
+    AssumeCtx* ctx = assume_ctx_from_expr(dollar);
+    expr_free(dollar);
+
+    int decision = element_decide(x, d, ctx);
+    assume_ctx_free(ctx);
+
+    if (decision == 1)  return expr_new_symbol("True");
+    if (decision == 0)  return expr_new_symbol("False");
+    return NULL;
+}
+
+static Expr* combine_with_and(Expr* a, Expr* b) {
+    /* Both inputs owned and consumed. */
+    Expr* args[2] = { a, b };
+    Expr* call = expr_new_function(expr_new_symbol("And"), args, 2);
+    Expr* r = evaluate(call);
+    expr_free(call);
+    return r;
+}
+
+Expr* builtin_simplify(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    size_t argc = res->data.function.arg_count;
+    if (argc < 1) return NULL;
+
+    Expr* expr = res->data.function.args[0];
+
+    /* Parse remaining args: at most one positional assumption, plus
+     * options Rule[Assumptions, X] and Rule[ComplexityFunction, f]. */
+    Expr* positional_assum = NULL;
+    Expr* opt_assumptions  = NULL;
+    Expr* opt_complexity   = NULL;
+
+    for (size_t i = 1; i < argc; i++) {
+        Expr* a = res->data.function.args[i];
+        if (is_rule_with_lhs(a, "Assumptions")) {
+            opt_assumptions = a->data.function.args[1];
+        } else if (is_rule_with_lhs(a, "ComplexityFunction")) {
+            opt_complexity = a->data.function.args[1];
+        } else if (positional_assum == NULL) {
+            positional_assum = a;
+        }
+    }
+
+    /* Compute the effective assumption expression.
+     *   - With Assumptions->X, X overrides the $Assumptions default.
+     *   - Without, the positional assumption is appended to $Assumptions.
+     * Then evaluate to canonicalise (e.g. And[True, x>0] -> x>0). */
+    Expr* effective;
+    if (opt_assumptions) {
+        if (positional_assum) {
+            effective = combine_with_and(expr_copy(positional_assum),
+                                         expr_copy(opt_assumptions));
+        } else {
+            effective = evaluate(expr_copy(opt_assumptions));
+        }
+    } else {
+        Expr* dollar = read_dollar_assumptions();
+        if (positional_assum) {
+            effective = combine_with_and(expr_copy(positional_assum), dollar);
+        } else {
+            effective = dollar;
+        }
+    }
+
+    AssumeCtx* ctx = assume_ctx_from_expr(effective);
+    expr_free(effective);
+
+    /* If the input is a predicate that appears literally as one of our
+     * assumed facts, it folds to True. This is a narrow win for simple
+     * cases like Simplify[x > 0, x > 0]; it does not constitute a real
+     * inequality reasoner (see picocas_spec.md for v1 gaps). */
+    if (ctx) {
+        for (size_t i = 0; i < ctx->count; i++) {
+            if (expr_eq(expr, ctx->facts[i])) {
+                assume_ctx_free(ctx);
+                return expr_new_symbol("True");
+            }
+        }
+    }
+
+    /* Manual threading over Equal/Less/.../And/Or (List handled by
+     * ATTR_LISTABLE on the Simplify symbol itself). v1 simplifies each
+     * side independently; equation rebalancing is a known gap. */
+    if (expr->type == EXPR_FUNCTION &&
+        expr->data.function.head &&
+        expr->data.function.head->type == EXPR_SYMBOL &&
+        head_threads_over(expr->data.function.head->data.symbol)) {
+        size_t n = expr->data.function.arg_count;
+        Expr** new_args = (Expr**)calloc(n, sizeof(Expr*));
+        for (size_t i = 0; i < n; i++) {
+            Expr** sub_args = (Expr**)calloc(argc, sizeof(Expr*));
+            sub_args[0] = expr_copy(expr->data.function.args[i]);
+            for (size_t k = 1; k < argc; k++) {
+                sub_args[k] = expr_copy(res->data.function.args[k]);
+            }
+            Expr* call = expr_new_function(expr_new_symbol("Simplify"), sub_args, argc);
+            new_args[i] = evaluate(call);
+            expr_free(call);
+        }
+        Expr* threaded = expr_new_function(expr_copy(expr->data.function.head), new_args, n);
+        free(new_args);
+        Expr* threaded_eval = evaluate(threaded);
+        assume_ctx_free(ctx);
+        return threaded_eval;
+    }
+
+    Expr* best = simp_search(expr, ctx, opt_complexity);
+    assume_ctx_free(ctx);
+    return best;
+}
+
+/* ----------------------------------------------------------------------- */
+/* builtin_assuming -- desugar to Block[{$Assumptions = $A && a}, body]    */
+/* ----------------------------------------------------------------------- */
+
+Expr* builtin_assuming(Expr* res) {
+    if (res->type != EXPR_FUNCTION) return NULL;
+    if (res->data.function.arg_count != 2) return NULL;
+
+    Expr* assum = res->data.function.args[0];   /* already evaluated */
+    Expr* body  = res->data.function.args[1];   /* held by HoldRest */
+
+    /* Convert lists of assumptions to conjunctions, per Mathematica
+     * semantics. */
+    Expr* assum_norm;
+    if (assum->type == EXPR_FUNCTION &&
+        assum->data.function.head &&
+        assum->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(assum->data.function.head->data.symbol, "List") == 0) {
+        size_t n = assum->data.function.arg_count;
+        Expr** copies = (Expr**)calloc(n, sizeof(Expr*));
+        for (size_t i = 0; i < n; i++) copies[i] = expr_copy(assum->data.function.args[i]);
+        Expr* and_call = expr_new_function(expr_new_symbol("And"), copies, n);
+        free(copies);
+        assum_norm = and_call;  /* not yet evaluated; Block will evaluate it */
+    } else {
+        assum_norm = expr_copy(assum);
+    }
+
+    /* Build $Assumptions && assum_norm */
+    Expr* and_args[2] = { expr_new_symbol("$Assumptions"), assum_norm };
+    Expr* combined = expr_new_function(expr_new_symbol("And"), and_args, 2);
+
+    /* Build Set[$Assumptions, combined] -- represents
+     * "$Assumptions = $Assumptions && a" inside the Block var list. */
+    Expr* set_args[2] = { expr_new_symbol("$Assumptions"), combined };
+    Expr* set_call = expr_new_function(expr_new_symbol("Set"), set_args, 2);
+
+    /* Block[{Set[$Assumptions, ...]}, body] */
+    Expr* var_list_args[1] = { set_call };
+    Expr* var_list = expr_new_function(expr_new_symbol("List"), var_list_args, 1);
+
+    Expr* block_args[2] = { var_list, expr_copy(body) };
+    Expr* block_call = expr_new_function(expr_new_symbol("Block"), block_args, 2);
+
+    Expr* result = evaluate(block_call);
+    expr_free(block_call);
+    return result;
+}
+
+/* ----------------------------------------------------------------------- */
+/* simp_init                                                               */
+/* ----------------------------------------------------------------------- */
+
+void simp_init(void) {
+    /* $Assumptions defaults to True. */
+    Expr* dollar_pat = expr_new_symbol("$Assumptions");
+    Expr* dollar_val = expr_new_symbol("True");
+    symtab_add_own_value("$Assumptions", dollar_pat, dollar_val);
+    expr_free(dollar_pat);
+    expr_free(dollar_val);
+
+    symtab_add_builtin("Simplify", builtin_simplify);
+    symtab_get_def("Simplify")->attributes |= (ATTR_LISTABLE | ATTR_PROTECTED);
+
+    symtab_add_builtin("Assuming", builtin_assuming);
+    symtab_get_def("Assuming")->attributes |= (ATTR_HOLDREST | ATTR_PROTECTED);
+
+    symtab_add_builtin("Element", builtin_element);
+    symtab_get_def("Element")->attributes |= ATTR_PROTECTED;
+}

@@ -330,6 +330,8 @@ void core_init(void) {
     hyperbolic_init();
     void trigsimp_init(void);
     trigsimp_init();
+    void simp_init(void);
+    simp_init();
     logexp_init();
     piecewise_init();
     attr_init();

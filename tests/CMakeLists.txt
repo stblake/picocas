@@ -60,6 +60,7 @@ set(COMMON_SRC
     ../src/patterns.c
     ../src/replace.c
     ${CMAKE_SOURCE_DIR}/../src/trigsimp.c
+    ${CMAKE_SOURCE_DIR}/../src/simp.c
     ../src/complex.c
     ../src/trig.c
     ../src/hyperbolic.c
@@ -288,6 +289,18 @@ target_include_directories(increment_tests PRIVATE ../src)
 add_executable(numeric_tests test_numeric.c ${COMMON_SRC})
 target_include_directories(numeric_tests PRIVATE ../src)
 
+add_executable(simplify_tests test_simplify.c ${COMMON_SRC})
+target_include_directories(simplify_tests PRIVATE ../src)
+
+add_executable(assuming_tests test_assuming.c ${COMMON_SRC})
+target_include_directories(assuming_tests PRIVATE ../src)
+
+add_executable(element_tests test_element.c ${COMMON_SRC})
+target_include_directories(element_tests PRIVATE ../src)
+
+add_executable(logexp_simplify_tests test_logexp_simplify.c ${COMMON_SRC})
+target_include_directories(logexp_simplify_tests PRIVATE ../src)
+
 if(USE_ECM)
     add_dependencies(expr_tests build_ecm)
     add_dependencies(parse_tests build_ecm)
@@ -348,6 +361,10 @@ if(USE_ECM)
     add_dependencies(infinity_tests build_ecm)
     add_dependencies(increment_tests build_ecm)
     add_dependencies(numeric_tests build_ecm)
+    add_dependencies(simplify_tests build_ecm)
+    add_dependencies(assuming_tests build_ecm)
+    add_dependencies(element_tests build_ecm)
+    add_dependencies(logexp_simplify_tests build_ecm)
 endif()
 
 add_executable(simp_tests test_simp.c ${COMMON_SRC})

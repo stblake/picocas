@@ -352,6 +352,27 @@ void info_init(void) {
     symtab_set_docstring("Denominator", "Denominator[expr] gives the denominator of expr.\nDenominator picks out terms which have superficially negative exponents.");
     symtab_set_docstring("Cancel", "Cancel[expr] cancels out common factors in the numerator and denominator of expr.");
     symtab_set_docstring("Apart", "Apart[expr] rewrites a rational expression as a sum of terms with minimal denominators.\nApart[expr,var] treats all variables other than var as constants.");
+    symtab_set_docstring("Simplify",
+        "Simplify[expr]\n\tperforms a sequence of algebraic and other transformations on expr and returns the simplest form it finds.\n"
+        "Simplify[expr, assum]\n\tdoes simplification using assumptions assum.\n"
+        "Simplify accepts the options ComplexityFunction (default: leaf count plus integer-digit count, matching Mathematica) and Assumptions (default: $Assumptions).\n"
+        "Simplify tries Together, Cancel, Expand, Factor, FactorSquareFree, Apart, TrigExpand, TrigFactor, and a TrigToExp/ExpToTrig roundtrip, keeping the smallest result.\n"
+        "Under positivity / reality assumptions Simplify also applies Log/Power identities -- Log[a b] -> Log[a] + Log[b], (a b)^c -> a^c b^c, (a^p)^q -> a^(p q), Log[a^p] -> p Log[a] and the like -- whenever the operand-domain conditions are provable from the assumption set.\n"
+        "Assumptions can be equations, inequalities, domain specifications such as Element[x, Integers], or logical combinations of these. Lists of assumptions are converted to conjunctions.\n"
+        "Simplify automatically threads over lists, equations, inequalities, and logic functions.");
+    symtab_set_docstring("Assuming",
+        "Assuming[assum, expr]\n\tevaluates expr with assum appended to $Assumptions, so that assum is included in the default assumptions used by functions such as Simplify.\n"
+        "Assuming converts lists of assumptions to conjunctions.\n"
+        "Assuming[assum, expr] is effectively equivalent to Block[{$Assumptions = $Assumptions && assum}, expr], so nested invocations compose and the rebinding of $Assumptions is restored on exit.");
+    symtab_set_docstring("$Assumptions",
+        "$Assumptions\n\tis the default setting for the Assumptions option used in Simplify and other functions that take assumptions.\n"
+        "$Assumptions defaults to True (no assumptions). Functions like Assuming temporarily extend $Assumptions for the duration of their body.");
+    symtab_set_docstring("Element",
+        "Element[x, dom]\n\treturns True if x is provably an element of the domain dom under the current $Assumptions, False if it is provably not, and stays unevaluated otherwise.\n"
+        "Supported domains: Integers, Rationals, Reals, Algebraics, Complexes, Booleans, Primes, Composites.\n"
+        "Numeric and structural literals decide directly: Element[5, Integers] -> True, Element[5/2, Integers] -> False, Element[1+I, Reals] -> False, Element[2.5, Integers] -> False.\n"
+        "Element consults $Assumptions for symbolic queries, so under Assuming[Element[x, Integers], ...] a query Element[x, Reals] returns True via the Integer => Real lattice.\n"
+        "Element threads over lists in its first argument: Element[{x1, x2, ...}, dom] returns the list of per-element decisions.");
     symtab_set_docstring("LeafCount", "LeafCount[expr] gives the total number of indivisible subexpressions in expr.");
     symtab_set_docstring("ByteCount", "ByteCount[expr] gives the number of bytes used internally by PicoCAS to store expr.");
 

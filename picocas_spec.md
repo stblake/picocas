@@ -5955,3 +5955,338 @@ factorization.
 - `Factor` does not factor over `Z[i]` (the Gaussian rationals). When
   Gaussian coefficients appear, the polynomial is returned unfactored
   rather than incorrectly factored over `Z`.
+
+## Simplify, Assuming, $Assumptions (2026-04-28)
+
+Added `Simplify`, `Assuming`, and the `$Assumptions` system symbol in a
+new `src/simp.c` / `src/simp.h` module. The module also exposes an
+`AssumeCtx` API that future consumers (`Refine`, `Integrate`, ...) can
+share once they need assumption-aware behaviour.
+
+### Simplify
+
+`Simplify[expr]` runs a small heuristic search over picocas's existing
+algebraic transforms and returns the candidate of minimum complexity.
+The default complexity measure matches Mathematica's: leaf count plus
+the decimal-digit count of any integer/bigint leaves, so e.g.
+`Simplify[100 Log[2]]` stays `100 Log[2]` rather than collapsing to
+`Log[1267650600228229401496703205376]`.
+
+`Simplify[expr, assum]` does simplification using assumptions `assum`,
+which can be equations, inequalities, domain specifications such as
+`Element[x, Integers]`, or logical combinations of these. Lists of
+assumptions `{a1, a2, ...}` are converted to conjunctions
+`And[a1, a2, ...]`.
+
+Options:
+
+- `Assumptions -> X` overrides the `$Assumptions` default. When given
+  explicitly the option *replaces* `$Assumptions` rather than appending
+  to it, matching Mathematica's documented behaviour:
+  `Assuming[x>0, Simplify[Sqrt[x^2 y^2], Assumptions -> y<0]]` simplifies
+  under `y<0` only -- the outer `Assuming` is suppressed by the explicit
+  option.
+- `ComplexityFunction -> f` overrides the default complexity. The user
+  function is called as `f[candidate]`; it must return an integer (or
+  bigint) score. Non-integer return values fall back to the default.
+
+#### Search algorithm
+
+1. Build an `AssumeCtx` from the resolved assumption set
+   (`positional && Assumptions-or-$Assumptions`).
+2. If `expr` literally appears in the fact list, return `True` (narrow
+   predicate-membership shortcut).
+3. Manually thread over `Equal`/`Less`/`LessEqual`/`Greater`/
+   `GreaterEqual`/`And`/`Or`/`Not`/`Xor`/`Implies`. List threading is
+   delivered by `ATTR_LISTABLE`.
+4. Seed the candidate set with the input.
+5. Apply the assumption-aware rewriter to the input. If it produces a
+   different form whose score does not exceed `best_score`, force-prefer
+   it as the new best (assumption-aware rewrites are correctness-
+   preserving and qualitatively "more simplified" by definition; this
+   biases ties toward the rewritten form).
+6. Apply a TrigToExp/Together/Cancel/ExpToTrig roundtrip seed (catches
+   identities such as `(E^x - E^-x)/Sinh[x] -> 2`).
+7. For up to `SIMP_ROUNDS` (= 2) rounds, apply each transform in
+   {`Together`, `Cancel`, `Expand`, `Factor`, `FactorSquareFree`,
+   `Apart`, `TrigExpand`, `TrigFactor`} plus the trig roundtrip and the
+   assumption rewriter to every seed. Update `best` whenever a candidate
+   strictly beats `best_score`. Capped at `SIMP_CAND_CAP` (= 12)
+   candidates per round.
+8. Return the lowest-scoring candidate.
+
+`Factor`, `FactorSquareFree`, and `TrigFactor` are skipped on inputs
+that contain any `Power` with a non-integer exponent. The picocas
+`Factor` trial-loop in `factor_roots` can stall on multivariate inputs
+that include Sqrt or other fractional Powers as polynomial atoms; this
+guard mirrors `trigsimp.c`'s `count_distinct_squared_trig_atoms` cap.
+
+#### Assumption-aware rewriters
+
+For each symbol the assumption set proves positive, real, negative, or
+integer, `apply_assumption_rules` synthesises rewrite rules and applies
+them via `ReplaceRepeated`:
+
+- `x` known positive: `Sqrt[x^2] -> x`, `Sqrt[1/x] -> 1/Sqrt[x]`,
+  `1/Sqrt[1/x] -> Sqrt[x]`, `Abs[x] -> x`, `Log[x^p_] -> p Log[x]`.
+- `x` known negative: `Sqrt[x^2] -> -x`, `Abs[x] -> -x`.
+- `x` known real (and not already positive/negative):
+  `Sqrt[x^2] -> Abs[x]`.
+- `n` known integer: `Sin[n Pi] -> 0`, `Cos[n Pi] -> (-1)^n`,
+  `Tan[n Pi] -> 0` (also commuted forms `Sin[Pi n]`, etc).
+
+For each `Equal[u, v]` fact, two complementary rules are emitted:
+
+1. The direct heavier->lighter substitution, matched structurally
+   (catches cases where `u` appears verbatim as a subterm of the input).
+2. A polynomial-relation monomial-isolation rule when
+   `diff = u - v` evaluates to a `Plus` with `>= 3` terms. For the
+   highest-complexity non-numeric term `t`, emit
+   `t -> -(Plus of other terms)`. This lets relations such as
+   `a^2 + b^2 == 1` rewrite occurrences of `a^2` or `b^2` even when the
+   full sum `a^2 + b^2` is not present in the input. Only one
+   monomial rule per equation is emitted; emitting both directions
+   would make `ReplaceRepeated` cycle to its 65536 iteration cap.
+
+The choice of which monomial to isolate uses canonical (Plus-Orderless)
+order on tie. As Mathematica's documentation notes, "results of
+simplification may depend on the names of symbols" -- picocas
+reproduces this property by alphabetical preference. Concretely:
+
+```
+Simplify[(1 - a^2)/b^2, a^2 + b^2 == 1]   (* -> 1 *)
+Simplify[(1 - c^2)/b^2, c^2 + b^2 == 1]   (* -> (1 - c^2)/b^2 *)
+```
+
+`Simplify` is registered with `ATTR_LISTABLE | ATTR_PROTECTED`. Its
+docstring lives in `src/info.c`.
+
+### Assuming
+
+`Assuming[assum, expr]` evaluates `expr` with `assum` appended to
+`$Assumptions`. The implementation desugars at runtime to
+`Block[{$Assumptions = $Assumptions && assum}, expr]`, reusing Block's
+existing scope-restoration code path. Nested `Assuming` calls compose
+naturally because each Block reads the current `$Assumptions` OwnValue
+before extending it. Lists of assumptions are first converted to
+conjunctions per the standard Mathematica semantics.
+
+`Assuming` has attributes `ATTR_HOLDREST | ATTR_PROTECTED`: the
+assumption (arg 1) evaluates normally so users can write things like
+`Assuming[x > 0, ...]`, but the body (arg 2) is held until the Block
+fires, ensuring `$Assumptions` is in scope when the body runs.
+
+### $Assumptions
+
+`$Assumptions` is a system symbol with an OwnValue of `True`
+(no assumptions). `Assuming` rebinds it for the dynamic extent of its
+body via Block, so the rebinding is automatically restored on exit
+(including on exception paths that propagate out of Block normally).
+Functions like `Simplify` read its current value when no explicit
+`Assumptions` option is provided.
+
+### AssumeCtx (public API in `simp.h`)
+
+```c
+AssumeCtx* assume_ctx_from_expr(const Expr* assum);
+void       assume_ctx_free(AssumeCtx* ctx);
+
+bool assume_known_positive(const AssumeCtx* ctx, const Expr* x);
+bool assume_known_nonneg  (const AssumeCtx* ctx, const Expr* x);
+bool assume_known_negative(const AssumeCtx* ctx, const Expr* x);
+bool assume_known_nonpos  (const AssumeCtx* ctx, const Expr* x);
+bool assume_known_real    (const AssumeCtx* ctx, const Expr* x);
+bool assume_known_integer (const AssumeCtx* ctx, const Expr* x);
+```
+
+`assume_ctx_from_expr` flattens `And` and `List` heads, drops `True`
+facts, and marks the context inconsistent on `False`. The predicates
+combine direct fact matches with the obvious lattice (Integer => Real,
+strict positive => non-negative, etc.) but do not perform transitive
+chaining across multiple inequality facts.
+
+### v1 known gaps (recorded for v2)
+
+- **Inequality bound-propagation proofs.** Examples like
+  `Simplify[x^2 > 3, x > 2]` and `Simplify[Abs[x] < 2, x^2 + y^2 < 4]`
+  require a real bound-propagation reasoner; v1 returns the predicate
+  unchanged unless it appears literally in the assumption set.
+- **General Sqrt distribution under sign assumptions.** Mathematica's
+  `Simplify[Sqrt[x^2 y^2], Assumptions -> y < 0]` returns
+  `-Sqrt[x^2] y` by distributing Sqrt over the product. v1 does not
+  distribute Sqrt over products and leaves the form unchanged.
+- **Multi-variable polynomial reduction beyond direct/single-monomial
+  substitution.** No Gröbner basis. Higher-arity polynomial relations
+  (e.g. three-variable equalities) may simplify only partially.
+- **Equation rebalancing in results.** v1 simplifies each side of an
+  equation independently. `Simplify[2x - 4y + 6z - 10 == -8]` returns
+  `True` (because the simplified pair is trivially equal) rather than
+  Mathematica's `x + 3z == 1 + 2y`.
+- **Reasoning over composite expressions.** Predicates such as
+  `assume_known_positive(Plus[x, y], ctx)` for `x>0 && y>0` are not
+  inferred (the Plus expression isn't a fact-target itself).
+- **Domain coverage.** `Algebraics`, `Primes`, and `Booleans` are
+  parsed but not used for reasoning beyond what `Reals` already implies
+  for `Algebraics`.
+
+## Element and logexp Simplify cascade (2026-04-28)
+
+Two related additions in `src/simp.c`. `Element[x, dom]` is now a
+first-class evaluator that reads `$Assumptions` to decide domain
+membership, and `Simplify` gains an assumption-driven Log/Power
+identity rewriter that fires on compound bases (the previous code only
+emitted per-symbol rules from a string template, missing patterns like
+`Log[a*b]` and `(a*b)^c`).
+
+### Element
+
+`Element[x, dom]` returns `True` when `x` is provably in `dom`,
+`False` when `x` is provably outside `dom`, and stays unevaluated
+otherwise. Supported domains: `Integers`, `Rationals`, `Reals`,
+`Algebraics`, `Complexes`, `Booleans`, `Primes`, `Composites`.
+
+Numeric and structural literals decide directly without consulting any
+assumption set:
+
+| Input | Result |
+|-------|--------|
+| `Element[5, Integers]` | `True` |
+| `Element[5/2, Integers]` | `False` |
+| `Element[5/2, Rationals]` | `True` |
+| `Element[2.5, Reals]` | `True` |
+| `Element[2.5, Integers]` | `False` |
+| `Element[1+I, Complexes]` | `True` |
+| `Element[1+I, Reals]` | `False` |
+| `Element[7, Primes]` | `True` |
+| `Element[15, Composites]` | `True` |
+| `Element[True, Booleans]` | `True` |
+
+For symbolic queries, `Element` reads the current `$Assumptions` and
+delegates to the AssumeCtx domain queries. Crucially, `Element` reads
+`$Assumptions` raw via `symtab_get_own_values` rather than via
+`evaluate()`, because `evaluate("$Assumptions")` would re-fire the
+OwnValue rule and recursively call `builtin_element` on the assumption
+itself -- an infinite loop when the bound value is, say, the literal
+expression `Element[x, Reals]`. Reading the OwnValue replacement
+directly breaks the cycle.
+
+The Integer => Rational => Algebraic => Real => Complex lattice is
+honoured automatically through `prov_int` / `prov_re` -- so under
+`Assuming[Element[x, Integers], ...]` a query for
+`Element[x, Reals]` returns `True`. Inequality facts that pin down a
+real numeric bound (e.g. `x > 0`) also imply `Element[x, Reals]`.
+
+`Element[{x1, x2, ...}, dom]` threads over its first argument and
+returns the list of per-element decisions, leaving any undecided
+components in their original `Element[xi, dom]` form.
+
+`Element` is registered with `ATTR_PROTECTED` and a docstring in
+`src/info.c`. After `Assuming` exits, the OwnValue stack on
+`$Assumptions` pops automatically and symbolic Element queries return
+to the unevaluated form.
+
+### Recursive predicates
+
+`assume_known_positive`, `assume_known_nonneg`, `assume_known_real`,
+and `assume_known_integer` have been generalised from per-symbol
+direct-fact lookup to recursive structural reasoning. The internal
+helpers `prov_pos`, `prov_nn`, `prov_neg`, `prov_np`, `prov_int`, and
+`prov_re` form a small lattice with bounded mutual recursion:
+
+- Standard positive constants (`Pi`, `E`, `EulerGamma`, `GoldenRatio`,
+  `Catalan`, `Degree`, `Glaisher`, `Khinchin`) are inferred positive.
+- `Times[u, v, ...]` is positive iff every factor is positive.
+- `Plus[u, v, ...]` is positive iff at least one term is strictly
+  positive and all others are non-negative.
+- `Power[positive, _]` is positive (any exponent).
+- `Exp[real]`, `Cosh[real]` are positive.
+- `Times` and `Plus` of reals are real; integer-only Times/Plus is
+  integer.
+- Real-valued elementary functions of real arguments are real
+  (`Sin`/`Cos`/`Tan`/`Cot`/`Sec`/`Csc`, the hyperbolics, `Exp`, `Abs`,
+  `Floor`/`Ceiling`/`Round`/`Sign`, `ArcTan`/`ArcCot`/`ArcSinh`).
+- `Log[positive]` is real.
+- `Power[positive, real]` is real; `Power[real, integer]` is real.
+- `Power[real, even-integer]` is non-negative.
+- `Abs[real]` is non-negative.
+
+Every existing call site continues to work: the public `assume_known_*`
+functions delegate to the new `prov_*` helpers, so callers automatically
+benefit from the more powerful reasoning.
+
+### Logexp identity cascade (positive-real subset)
+
+A new bottom-up AST walker `apply_logexp_rules` applies the following
+identities under provable positivity / reality of operands:
+
+| Pattern | Result | Conditions |
+|---------|--------|------------|
+| `Log[Times[u1, ..., un]]` | `Plus[Log[u1], ..., Log[un]]` | every `ui` positive |
+| `Log[Power[x, p]]` | `p Log[x]` | `x` positive, `p` real |
+| `Power[Times[u1, ..., un], a]` | `Times[u1^a, ..., un^a]` | every `ui` positive |
+| `Power[Power[x, p], q]` | `Power[x, p q]` | `x` positive, `p` real |
+
+The walker is invoked as both a seed candidate and a per-round
+candidate inside `simp_search`. Because the expanded forms have
+strictly larger leaf counts than their compact source forms (e.g.
+`Log[a b]` is 4 leaves but `Log[a] + Log[b]` is 6), the rewriter is
+**force-biased**: any change it produces under sound assumptions is
+unconditionally accepted as the new running best. Downstream transforms
+(`Cancel`, `Together`, `Factor`, ...) cannot recombine an expanded log
+or power, so the expanded form persists through the rest of the search.
+
+Quotient handling is automatic: `Log[a/b]` is canonicalised to
+`Log[Times[a, Power[b, -1]]]`, the Times rule expands it to
+`Log[a] + Log[Power[b, -1]]`, and the Power rule (with `b > 0`,
+`-1` trivially real) collapses `Log[Power[b, -1]]` to `-Log[b]`. A
+fixed-point loop in `apply_logexp_rules` (capped at 8 iterations)
+ensures the cascade reaches its full extent.
+
+Examples:
+
+| Input | Result |
+|-------|--------|
+| `Simplify[Log[a*b], a > 0 && b > 0]` | `Log[a] + Log[b]` |
+| `Simplify[Log[a/b], a > 0 && b > 0]` | `Log[a] - Log[b]` |
+| `Simplify[Log[5*x], x > 0]` | `Log[5] + Log[x]` |
+| `Simplify[Sqrt[a*b], a > 0 && b > 0]` | `Sqrt[a] Sqrt[b]` |
+| `Simplify[(a*b)^c, a > 0 && b > 0]` | `a^c b^c` |
+| `Simplify[(a/b)^c, a > 0 && b > 0]` | `a^c b^(-c)` |
+| `Simplify[(a^p)^q, a > 0 && Element[p, Reals]]` | `a^(p q)` |
+| `Simplify[Log[a^p], a > 0 && Element[p, Reals]]` | `p Log[a]` |
+| `Simplify[Log[2 x] - Log[x], x > 0]` | `Log[2]` |
+| `Simplify[Log[x^2] + Log[1/x^2], x > 0]` | `0` |
+| `Simplify[(a/b)^c * b^c, a > 0 && b > 0]` | `a^c` |
+
+When the conditions are not met (e.g. `Simplify[Log[a*b]]` with no
+assumption, or `Simplify[Log[a^p], a > 0]` without proving `p` real)
+the rewrite stays inert and the input is returned unchanged.
+
+### v1 gaps (recorded for v2)
+
+- **General-real cascade with Boole / Floor corrections.** The
+  user-supplied rule set includes a "general reals" branch where
+  `Log[x y]` and `(x y)^a` for arbitrary real (possibly negative) `x`,
+  `y` carry an additional `2 Pi I Boole[x < 0 && y < 0]` correction
+  term. v1 implements only the strict-positive subset; the
+  Boole-corrected branch is deferred.
+- **General-complex fallback.** Mathematica's most general identities
+  use `Arg`, `Im[a Log[x]]`, and `Ceiling` to produce phase-corrected
+  expansions for arbitrary complex operands. Not implemented in v1.
+- **Universal power-merge rules.** `x^a x^b -> x^(a+b)`, `1/x^a ->
+  x^(-a)`, etc. are largely already handled by the `Times` and `Power`
+  evaluators' coefficient mergers, but no separate `Simplify` pass
+  enforces them under assumptions; cases that escape the canonicaliser
+  (e.g. structurally unmerged forms after a transform) won't be merged.
+
+### Tests
+
+`tests/test_element.c` covers literal numeric / structural decisions,
+list threading, the `$Assumptions` lattice, restoration after
+`Assuming` exits, and direct compound-expression facts. 26 tests.
+
+`tests/test_logexp_simplify.c` covers each row of the cascade table
+above plus several "not enough assumption" negative cases that verify
+the rewriter does NOT fire when its conditions are unmet, plus
+composite cancellation cases (e.g. `Log[2 x] - Log[x] -> Log[2]`)
+where the cascade enables downstream Plus-cancellation. 22 tests.
