@@ -1266,6 +1266,121 @@ static bool contains_abs(const Expr* e) {
     return false;
 }
 
+/* True iff `h` is a 1-arg head whose presence makes a transform that
+ * targets trig or hyperbolic functions potentially fire. Covers the six
+ * canonical pairs and their inverses. */
+static bool head_is_trig_or_hyperbolic(const char* h) {
+    static const char* const TRIG_HEADS[] = {
+        "Sin","Cos","Tan","Cot","Sec","Csc",
+        "ArcSin","ArcCos","ArcTan","ArcCot","ArcSec","ArcCsc",
+        "Sinh","Cosh","Tanh","Coth","Sech","Csch",
+        "ArcSinh","ArcCosh","ArcTanh","ArcCoth","ArcSech","ArcCsch",
+        NULL
+    };
+    for (size_t i = 0; TRIG_HEADS[i]; i++) {
+        if (strcmp(h, TRIG_HEADS[i]) == 0) return true;
+    }
+    return false;
+}
+
+static bool contains_trig_or_hyperbolic(const Expr* e) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        head_is_trig_or_hyperbolic(e->data.function.head->data.symbol)) return true;
+    if (contains_trig_or_hyperbolic(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_trig_or_hyperbolic(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+static bool contains_log(const Expr* e) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Log") == 0) return true;
+    if (contains_log(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_log(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+static bool contains_power(const Expr* e) {
+    if (!e) return false;
+    if (e->type != EXPR_FUNCTION) return false;
+    if (e->data.function.head &&
+        e->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(e->data.function.head->data.symbol, "Power") == 0) return true;
+    if (contains_power(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_power(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+/* True iff any non-numeric-constant symbol leaf appears anywhere in `e`.
+ * Pi, E, EulerGamma, Degree, Catalan, Glaisher, Khinchin do not count --
+ * they are positive numeric constants. Used to short-circuit transforms
+ * that have nothing to do on a purely numeric input (Factor, Apart, ...). */
+static bool contains_variable(const Expr* e) {
+    if (!e) return false;
+    if (e->type == EXPR_SYMBOL) {
+        return !is_real_constant_symbol(e->data.symbol);
+    }
+    if (e->type != EXPR_FUNCTION) return false;
+    if (contains_variable(e->data.function.head)) return true;
+    for (size_t i = 0; i < e->data.function.arg_count; i++) {
+        if (contains_variable(e->data.function.args[i])) return true;
+    }
+    return false;
+}
+
+/* Number of distinct non-constant symbol leaves in `e`, capped at `cap`.
+ * Returns as soon as the count reaches `cap`, so callers that only need
+ * "0 / 1 / >=2" can pass cap=2 and early-out. Constant symbols (Pi, E,
+ * ...) are excluded, matching contains_variable. */
+static size_t expr_variables_count_capped_walk(const Expr* e,
+                                               char** seen, size_t* nseen,
+                                               size_t cap) {
+    if (!e || *nseen >= cap) return *nseen;
+    if (e->type == EXPR_SYMBOL) {
+        if (is_real_constant_symbol(e->data.symbol)) return *nseen;
+        for (size_t i = 0; i < *nseen; i++) {
+            if (strcmp(seen[i], e->data.symbol) == 0) return *nseen;
+        }
+        seen[*nseen] = e->data.symbol;
+        (*nseen)++;
+        return *nseen;
+    }
+    if (e->type != EXPR_FUNCTION) return *nseen;
+    expr_variables_count_capped_walk(e->data.function.head, seen, nseen, cap);
+    for (size_t i = 0; i < e->data.function.arg_count && *nseen < cap; i++) {
+        expr_variables_count_capped_walk(e->data.function.args[i],
+                                         seen, nseen, cap);
+    }
+    return *nseen;
+}
+
+static size_t expr_variables_count_capped(const Expr* e, size_t cap) {
+    if (cap == 0) return 0;
+    char* seen[8];  /* cap is at most 2 in our call sites; 8 is a safe ceiling */
+    size_t nseen = 0;
+    if (cap > 8) cap = 8;
+    expr_variables_count_capped_walk(e, seen, &nseen, cap);
+    return nseen;
+}
+
+/* True iff the assumption ctx has at least one usable fact. NULL ctx, an
+ * empty fact list, or an inconsistent ctx all return false -- no
+ * assumption-driven rewrite can do anything in those cases. */
+static bool ctx_has_facts(const AssumeCtx* ctx) {
+    return ctx != NULL && ctx->count > 0 && !ctx->inconsistent;
+}
+
 /* Try to simplify a single Abs[arg] node. `arg` is the inner expression
  * (i.e. the argument to Abs). Returns a new Expr* on success, NULL if no
  * rule fires. */
@@ -1497,16 +1612,61 @@ static bool has_non_integer_power(const Expr* e) {
     return false;
 }
 
-static bool transform_safe_for(const char* name, const Expr* e) {
-    /* Factor / FactorSquareFree / FactorTerms -- and TrigFactor, which
-     * calls Factor inside its pipeline -- share the same polynomial
-     * machinery and can stall when fed non-polynomial inputs containing
-     * Sqrt or other fractional powers. Skip them in that case. */
+/* Centralised cheap-precondition gate. Returns false only when the
+ * predicate proves the named transform cannot possibly fire on `e` (and
+ * `ctx`, where applicable). Conservative: returns true if uncertain.
+ *
+ * Names cover both the SIMP_TRANSFORMS table entries and the open-coded
+ * seed/round transforms ("AbsRules", "LogExpRules", "AssumptionRules",
+ * "TrigRoundtrip", "CollectPerVariable") so every call site shares one
+ * dispatch table.
+ *
+ * `ctx` may be NULL; transforms that don't consult it ignore the parameter. */
+static bool transform_can_fire(const char* name, const Expr* e,
+                               const AssumeCtx* ctx) {
+    /* Polynomial machinery: Factor / FactorSquareFree / FactorTerms / TrigFactor
+     * stall on non-integer Power exponents (Sqrt, Rational exponents, ...). */
     if (strcmp(name, "Factor") == 0 ||
         strcmp(name, "FactorSquareFree") == 0 ||
         strcmp(name, "FactorTerms") == 0 ||
         strcmp(name, "TrigFactor") == 0) {
         if (has_non_integer_power(e)) return false;
+    }
+    /* Polynomial / partial-fraction transforms are no-ops on numeric-only
+     * inputs (no symbol leaves). */
+    if (strcmp(name, "Factor") == 0 ||
+        strcmp(name, "FactorSquareFree") == 0 ||
+        strcmp(name, "FactorTerms") == 0 ||
+        strcmp(name, "Apart") == 0) {
+        if (!contains_variable(e)) return false;
+    }
+    /* Trig family: skip when there's no trig or hyperbolic head anywhere.
+     * The roundtrip composite is gated identically. */
+    if (strcmp(name, "TrigExpand") == 0 ||
+        strcmp(name, "TrigFactor") == 0 ||
+        strcmp(name, "TrigToExp") == 0 ||
+        strcmp(name, "TrigRoundtrip") == 0) {
+        if (!contains_trig_or_hyperbolic(e)) return false;
+    }
+    /* Abs rules. */
+    if (strcmp(name, "AbsRules") == 0) {
+        if (!contains_abs(e)) return false;
+    }
+    /* LogExp identity cascade: nothing fires unless Log or Power is present
+     * AND the assumption ctx has at least one fact (the cascade reads
+     * positivity/reality of operands from ctx). */
+    if (strcmp(name, "LogExpRules") == 0) {
+        if (!ctx_has_facts(ctx)) return false;
+        if (!contains_log(e) && !contains_power(e)) return false;
+    }
+    /* Assumption rewriter: nothing fires without facts. */
+    if (strcmp(name, "AssumptionRules") == 0) {
+        if (!ctx_has_facts(ctx)) return false;
+    }
+    /* Per-variable Collect: meaningful only when there are at least two
+     * distinct variables to choose between. */
+    if (strcmp(name, "CollectPerVariable") == 0) {
+        if (expr_variables_count_capped(e, 2) < 2) return false;
     }
     return true;
 }
@@ -1585,7 +1745,9 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
      * from the rewritten form -- otherwise the original (often smaller in
      * leaf count) re-enters the candidate set and the leaf-count tiebreak
      * brings us right back. */
-    Expr* abs_pre = apply_abs_rules(original_input, ctx);
+    Expr* abs_pre = transform_can_fire("AbsRules", original_input, ctx)
+                        ? apply_abs_rules(original_input, ctx)
+                        : NULL;
     const Expr* input;
     if (abs_pre && !expr_eq(abs_pre, original_input)) {
         if (simp_debug_enabled()) {
@@ -1610,7 +1772,7 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
      * input, even if the leaf-count tiebreak is even (e.g.
      * Log[x^p] -> p Log[x] both score 4). Force-take it as the new best
      * so long as it isn't strictly worse. */
-    if (ctx) {
+    if (transform_can_fire("AssumptionRules", input, ctx)) {
         bool dbg = simp_debug_enabled();
         clock_t t0 = dbg ? clock() : 0;
         Expr* alt = apply_assumption_rules(input, ctx);
@@ -1637,7 +1799,7 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
      * fire whenever conditions are met. Downstream transforms (Cancel,
      * Together, ...) cannot recombine an expanded log/power, so the
      * expanded form persists through the rest of the search. */
-    if (ctx) {
+    if (transform_can_fire("LogExpRules", input, ctx)) {
         bool dbg = simp_debug_enabled();
         clock_t t0 = dbg ? clock() : 0;
         Expr* alt = apply_logexp_rules(input, ctx);
@@ -1653,7 +1815,7 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
     }
 
     /* Roundtrip seed. */
-    {
+    if (transform_can_fire("TrigRoundtrip", input, NULL)) {
         Expr* alt = transform_trig_roundtrip(input);
         if (alt && !expr_eq(alt, input)) {
             update_best(&best, &best_score, alt, complexity_func);
@@ -1664,8 +1826,10 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
     }
 
     /* Per-variable Collect seed. parent_score = score(input). */
-    try_collect_per_variable(input, best_score, &seeds, &best, &best_score,
-                             complexity_func);
+    if (transform_can_fire("CollectPerVariable", input, NULL)) {
+        try_collect_per_variable(input, best_score, &seeds, &best, &best_score,
+                                 complexity_func);
+    }
 
     /*
      * Round loop. Branch-pruning rule: a candidate produced by a
@@ -1691,7 +1855,7 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
             size_t parent_score = score_with_func(seed, complexity_func);
 
             for (size_t t = 0; t < SIMP_TRANSFORM_COUNT; t++) {
-                if (!transform_safe_for(SIMP_TRANSFORMS[t], seed)) continue;
+                if (!transform_can_fire(SIMP_TRANSFORMS[t], seed, ctx)) continue;
                 Expr* r = traced_call_unary(SIMP_TRANSFORMS[t], seed);
                 if (!r) continue;
                 update_best(&best, &best_score, r, complexity_func);
@@ -1704,20 +1868,22 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                 }
             }
             /* Also try the trig roundtrip on each candidate. */
-            Expr* tr = transform_trig_roundtrip(seed);
-            if (tr) {
-                update_best(&best, &best_score, tr, complexity_func);
-                if (expr_eq(tr, seed)) {
-                    expr_free(tr);
-                } else if (score_with_func(tr, complexity_func) > parent_score) {
-                    expr_free(tr);
-                } else {
-                    cs_add_or_free(&next, tr);
+            if (transform_can_fire("TrigRoundtrip", seed, NULL)) {
+                Expr* tr = transform_trig_roundtrip(seed);
+                if (tr) {
+                    update_best(&best, &best_score, tr, complexity_func);
+                    if (expr_eq(tr, seed)) {
+                        expr_free(tr);
+                    } else if (score_with_func(tr, complexity_func) > parent_score) {
+                        expr_free(tr);
+                    } else {
+                        cs_add_or_free(&next, tr);
+                    }
                 }
             }
             /* Abs rewrites on each candidate. Same force-take semantics
              * as the seed phase (idempotent rules, structural answer). */
-            {
+            if (transform_can_fire("AbsRules", seed, ctx)) {
                 bool dbg = simp_debug_enabled();
                 clock_t t0 = dbg ? clock() : 0;
                 Expr* abr = apply_abs_rules(seed, ctx);
@@ -1739,12 +1905,14 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                 }
             }
             /* And per-variable Collect on each candidate. */
-            try_collect_per_variable(seed, parent_score, &next, &best, &best_score,
-                                     complexity_func);
+            if (transform_can_fire("CollectPerVariable", seed, NULL)) {
+                try_collect_per_variable(seed, parent_score, &next, &best, &best_score,
+                                         complexity_func);
+            }
             /* And the assumption rewriter on each candidate. Bias as in
              * the seed phase: prefer assumption-driven forms at equal
              * complexity for `best`; gate seeding on parent_score. */
-            if (ctx) {
+            if (transform_can_fire("AssumptionRules", seed, ctx)) {
                 bool dbg = simp_debug_enabled();
                 clock_t t0 = dbg ? clock() : 0;
                 Expr* ar = apply_assumption_rules(seed, ctx);
@@ -1766,6 +1934,9 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                         expr_free(ar);
                     }
                 }
+            }
+            if (transform_can_fire("LogExpRules", seed, ctx)) {
+                bool dbg = simp_debug_enabled();
                 clock_t t1 = dbg ? clock() : 0;
                 Expr* lr = apply_logexp_rules(seed, ctx);
                 if (dbg) simp_debug_log("LogExpRules", seed, lr, simp_debug_elapsed_ms(t1));
