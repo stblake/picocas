@@ -6969,3 +6969,86 @@ End-to-end checks:
 | `Simplify[Cosh[x]^2 - Sinh[x]^2]`   | `1`                     | `1`     |
 | `Simplify[(E^x - E^(-x))/Sinh[x]]`  | `2`                     | `2`     |
 | `Simplify[Sin[x] + Cos[x]]`         | `Cos[x] + Sin[x]`       | unchanged |
+
+## Simplify gating + shape classifier (2026-04-29)
+
+Two layered changes reduce wasted work in `Simplify`. Both are
+performance-only on inputs the existing search already handled
+correctly; correctness on every test case in the suite is preserved.
+
+### Phase 1 -- structural gates
+
+`transform_can_fire(name, expr, ctx)` is the central
+cheap-precondition gate. It is consulted at every transform
+invocation in `simp_search` -- both the `SIMP_TRANSFORMS[]` table
+entries and the open-coded seed/round transforms (`AbsRules`,
+`AssumptionRules`, `LogExpRules`, `TrigRoundtrip`,
+`CollectPerVariable`).
+
+Predicates added (all O(n) one-walk, in `src/simp.c`):
+
+| Predicate                       | Gates                                                |
+| ------------------------------- | ---------------------------------------------------- |
+| `contains_trig_or_hyperbolic`   | `TrigExpand` / `TrigFactor` / `TrigToExp` / `TrigRoundtrip` |
+| `contains_log`, `contains_power`| `LogExpRules`                                        |
+| `contains_variable`             | `Factor` / `FactorSquareFree` / `FactorTerms` / `Apart` on numeric-only input |
+| `expr_variables_count_capped`   | `CollectPerVariable` on <2-variable input            |
+| `ctx_has_facts`                 | `LogExpRules` / `AssumptionRules` on empty/inconsistent ctx |
+| `head_is_trig_or_hyperbolic`    | scalar test underlying `contains_trig_or_hyperbolic` |
+
+Gates are conservative: they return false only when the predicate
+proves the transform cannot fire. False positives (gate passes but
+transform no-ops) keep current behaviour exactly.
+
+### Phase 2 -- shape classifier and dispatcher
+
+`simp_classify` runs one O(n) walk and assigns the input to one of
+five disjoint shape categories, in priority order:
+
+1. **TRIG** -- any Sin/Cos/.../Sinh/.../ArcXxx head present.
+2. **GENERAL** (early) -- Abs present (Abs handled by existing
+   search machinery).
+3. **LOGEXP** -- Log present.
+4. **POLYNOMIAL** -- no trig/log/abs, all integer powers, and
+   `PolynomialQ` over `Variables[input]` is True.
+5. **RATIONAL** -- no trig/log/abs, `Together[input]` yields
+   polynomial / polynomial.
+6. **GENERAL** -- everything else.
+
+`simp_dispatch` routes by shape:
+
+| Shape       | Pipeline                                                   |
+| ----------- | ---------------------------------------------------------- |
+| POLYNOMIAL  | `simp_pipeline_polynomial`: Expand, Factor, FactorTerms, Collect-per-variable on input AND on Expand result. |
+| RATIONAL    | `simp_pipeline_rational`: AssumptionRules force-take, Together, Cancel, ExpandNumerator/Denominator, Apart, Factor on Cancel result, Collect-per-variable on Cancel result. |
+| LOGEXP      | `simp_pipeline_logexp`: LogExpRules cascade force-take, AssumptionRules force-take at equal complexity, Together / Cancel / Expand cleanup. |
+| TRIG        | `simp_search` (the existing heuristic; the gates make it cheap). |
+| GENERAL     | `simp_search`.                                             |
+
+`simp_bottomup` calls `simp_dispatch` instead of `simp_search`, so
+specialisation applies at every recursion level.
+
+### Measured wins
+
+| Input                                                | Before      | After Phase 1 | After Phase 2 |
+| ---------------------------------------------------- | ----------- | ------------- | ------------- |
+| `6*(x/Sqrt[2]-y/Sqrt[2])*(x/Sqrt[2]+y/Sqrt[2])`      | 818 ms      | 125 ms        | 150 ms (RATIONAL) |
+| `(x-1)*(x+1)*(x^2+1)+1`                              | full search | full search   | 2 ms (POLYNOMIAL) |
+| `a x + b x + c`                                      | full search | full search   | 7 ms (POLYNOMIAL) |
+| `3/(x+3) + x/(x+3)`                                  | full search | full search   | 8 ms (RATIONAL)   |
+| `Simplify[Log[a^p], a>0]`                            | full search | full search   | <1 ms (LOGEXP)    |
+| `Sin[x]^2 + Cos[x]^2`                                | full search | full search   | full search (TRIG) |
+
+Trig and Abs inputs continue to use the full heuristic search, where
+`simp_search`'s round loop and force-take seeds are the right tool.
+The Phase 1 gates make every transform on those inputs cheap when
+its precondition fails.
+
+### Tests
+
+All 19 simplify-related test suites pass: `simp_tests`, `simplify_tests`,
+`logexp_simplify_tests`, `trig_tests`, `hyperbolic_tests`,
+`trigexpand_tests`, `trigfactor_tests`, `element_tests`,
+`assuming_tests`, `integrals_tests`, `deriv_tests`, `poly_tests`,
+`rat_tests`, `parfrac_tests`, `expand_tests`, `factor_terms_tests`,
+`limit_tests`, `series_tests`, `core_tests`.
