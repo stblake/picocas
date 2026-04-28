@@ -711,6 +711,96 @@ In[5]:= Factor[(x^3 + 2x^2)/(x^2 - 4y^2) - (x + 2)/(x^2 - 4y^2)]
 Out[5]= ((-1 + x) (1 + x) (2 + x)) / ((x - 2 y) (x + 2 y))
 ```
 
+#### FactorTerms
+Pulls out an overall numerical factor in a polynomial, or factors that do
+not depend on a given set of variables.
+- `FactorTerms[poly]` -- pulls out any overall numerical factor in `poly`.
+- `FactorTerms[poly, x]` -- pulls out any overall factor in `poly` that
+  does not depend on `x` (i.e. extracts the polynomial content of `poly`
+  with respect to `x`).
+- `FactorTerms[poly, {x_1, x_2, ...}]` -- pulls out any overall factor
+  in `poly` that does not depend on any of the `x_i`. The result is then
+  recursively refined by extracting content with respect to the smaller
+  subsets `{x_1, ..., x_{n-1}}`, ..., `{x_1}`.
+
+**Features**:
+- `Protected`.
+- Auto-threads over `List`, `Equal`, `Unequal`, `Less`, `LessEqual`,
+  `Greater`, `GreaterEqual`, `And`, `Or`, `Not`, `Xor`.
+- Together-normalises rational inputs before extracting content from the
+  numerator, then divides the denominator back through, so rational
+  functions round-trip.
+- Numerical content over `Z` is computed via the integer GCD of monomial
+  coefficients. Gaussian-integer content (e.g. `5 I` from `5 I x^2 + ...`)
+  is not extracted as a Gaussian unit; the integer GCD `5` is returned
+  instead, with the leading factor of `I` left inside the residue. The
+  resulting factorization is mathematically equivalent.
+
+```mathematica
+In[1]:= FactorTerms[3 + 6x + 3x^2]
+Out[1]= 3 (1 + 2 x + x^2)
+
+In[2]:= FactorTerms[3 + 3a + 6 a x + 6 x + 12 a x^2 + 12 x^2, x]
+Out[2]= 3 (1 + a) (1 + 2 x + 4 x^2)
+
+In[3]:= FactorTerms[12 a^4 + 9 x^2 + 66 b^2]
+Out[3]= 3 (4 a^4 + 22 b^2 + 3 x^2)
+
+In[4]:= FactorTerms[7 x + (14 y + 21)/z]
+Out[4]= (7 (3 + 2 y + x z))/z
+
+In[5]:= FactorTerms[{5 x^2 - 15, 7 x^4 - 77, 8 x^8 - 24}]
+Out[5]= {5 (-3 + x^2), 7 (-11 + x^4), 8 (-3 + x^8)}
+
+In[6]:= FactorTerms[1 < 77 x^3 - 21 x + 35 < 2]
+Out[6]= 1 < 7 (5 - 3 x + 11 x^3) < 2
+
+In[7]:= f = 2 x^2 y z + 2 x^2 y + 4 x^2 z + 4 x^2 + 4 y^2 z^2 + 4 z y^2
+        + 8 z^2 y + 2 z y - 6 y - 12 z - 12;
+        FactorTerms[f, x]
+Out[7]= 2 (-3 + x^2 + 2 y z) (2 + y + 2 z + y z)
+
+In[8]:= FactorTerms[f, {x, y}]
+Out[8]= 2 (1 + z) (2 + y) (-3 + x^2 + 2 y z)
+```
+
+#### FactorTermsList
+Lists the factors that `FactorTerms` would multiply together.
+- `FactorTermsList[poly]` -- gives `{numerical_factor, residue}`.
+- `FactorTermsList[poly, x]` -- gives
+  `{numerical_factor, x_independent_factor, residue}`.
+- `FactorTermsList[poly, {x_1, ..., x_n}]` -- gives a list whose first
+  element is the overall numerical factor; the second is a factor that
+  does not depend on any of the `x_i`; each subsequent element is a
+  factor depending on progressively more of the `x_i`; and the final
+  element is the residue.
+
+**Features**:
+- `Protected`.
+- The product of the returned list always reproduces the input (after
+  Together-normalisation), so `Apply[Times, FactorTermsList[poly]]` is a
+  faithful round-trip.
+- Variables in the second argument that do not actually appear in `poly`
+  are filtered out, so the output never contains spurious trailing `1`s.
+
+```mathematica
+In[1]:= FactorTermsList[3 + 6 x + 3 x^2]
+Out[1]= {3, 1 + 2 x + x^2}
+
+In[2]:= FactorTermsList[14 x + 21 y + 35 x y + 63]
+Out[2]= {7, 9 + 2 x + 5 x y + 3 y}
+
+In[3]:= FactorTermsList[3 + 3 a + 6 a x + 6 x + 12 a x^2 + 12 x^2, x]
+Out[3]= {3, 1 + a, 1 + 2 x + 4 x^2}
+
+In[4]:= FactorTermsList[-6 y - 6 a y + 2 x^2 y + 2 a x^2 y + 4 a y^2
+                        + 4 a^2 y^2, {x, y}]
+Out[4]= {2, 1 + a, y, -3 + x^2 + 2 a y}
+
+In[5]:= Times @@ FactorTermsList[14 x + 21 y + 35 x y + 63]
+Out[5]= 7 (9 + 2 x + 5 x y + 3 y)
+```
+
 #### PolynomialGCD
 Gives the greatest common divisor of the polynomials.
 - `PolynomialGCD[poly1, poly2, ...]`
@@ -6290,3 +6380,80 @@ above plus several "not enough assumption" negative cases that verify
 the rewriter does NOT fire when its conditions are unmet, plus
 composite cancellation cases (e.g. `Log[2 x] - Log[x] -> Log[2]`)
 where the cascade enables downstream Plus-cancellation. 22 tests.
+
+## FactorTerms / FactorTermsList (2026-04-28)
+
+Two new builtins in `facpoly.c` extract polynomial content without
+performing a full factorization:
+
+- `FactorTerms[poly]` returns the overall numerical factor multiplied
+  by the residue. `FactorTerms[poly, x]` (or with a list of variables
+  `FactorTerms[poly, {x_1, ..., x_n}]`) returns instead the content of
+  `poly` with respect to those variables, recursively peeling off
+  contents of progressively smaller subsets.
+- `FactorTermsList[...]` returns the same factors as a `List` instead of
+  multiplying them together: the first element is always the integer
+  content, the next `n` elements are the progressively-extracted
+  polynomial contents (in order of *decreasing* variable subset), and
+  the final element is the residue. `Apply[Times, FactorTermsList[p]]`
+  reproduces `p` (modulo `Together` normalization).
+
+### Algorithm
+
+The core helper is `ft_content_wrt_set(poly, S, ground)`: a recursive
+multivariate-content routine that views `poly` as a polynomial in
+`K[ground][S]` and computes the GCD of its `S`-monomial coefficients in
+`K[ground]`. It peels variables from `S` one at a time, collecting
+coefficients via `get_coeff` and combining them with the existing
+`poly_gcd_internal` over `ground`. The base case (`S` empty) returns
+`expr_expand(poly)`, which is already in `K[ground]`.
+
+`ft_compute_list` orchestrates the layered extraction:
+
+1. **Numerical content**: call `ft_content_wrt_set(poly, all_vars, [])`
+   so the gcd lives in `Z` (via `my_number_gcd`).
+2. For `k = n, n-1, ..., 1`: extract content with respect to the
+   subset `{x_1, ..., x_k}`, treating the complement
+   `all_vars \ {x_1, ..., x_k}` as the polynomial ground ring.
+3. The residue (the running quotient after each peel) is the last
+   element. For rational inputs the algorithm runs `Together` first and
+   the residue absorbs the denominator on the way out.
+
+`exact_poly_div` is used to perform each division, with a graceful
+`Times[poly, content^-1]` fallback if exact polynomial division fails.
+
+### Threading
+
+`FactorTerms` auto-threads over `List`, `Equal`, `Unequal`, `Less`,
+`LessEqual`, `Greater`, `GreaterEqual`, `And`, `Or`, `Not`, `Xor`. This
+matches Mathematica's behaviour: e.g.
+`FactorTerms[1 < 77 x^3 - 21 x + 35 < 2]` returns
+`1 < 7 (5 - 3 x + 11 x^3) < 2`. `FactorTermsList` does *not* thread,
+because its result is itself a `List`.
+
+### Attributes
+
+Both functions carry `Protected` (no other attributes -- they are not
+`Listable`, since their threading semantics over `Equal`/`Less`/etc.
+are richer than simple element-wise mapping).
+
+### Known limitation
+
+Gaussian-integer content is not extracted as a Gaussian unit:
+`FactorTerms[5 I x^2 + 20 I x + 10]` returns
+`5 (2 + I x^2 + 4 I x)` rather than Mathematica's
+`5 I (-2 I + 4 x + x^2)`. Both forms are valid factorizations and
+multiply back out to the input; the picocas output simply uses the
+real-integer GCD `5` as the leading factor. This is documented in the
+implementation comment.
+
+### Tests
+
+`tests/test_factor_terms.c` covers all the documented Mathematica
+examples (numerical-only, single-variable, multi-variable, threading
+over `List` / `Equal` / `Less`, rational input, complex coefficients)
+plus round-trip checks
+(`Expand[Together[poly - Apply[Times, FactorTermsList[poly]]]] == 0`)
+on every multi-step input, and a sanity check that both functions are
+`Protected`. 35+ assertions in 7 test groups, all passing under
+valgrind with no leaks attributable to the new code.

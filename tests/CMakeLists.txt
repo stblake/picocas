@@ -212,6 +212,9 @@ target_include_directories(datetime_tests PRIVATE ../src)
 add_executable(facpoly_tests test_facpoly.c ${COMMON_SRC})
 target_include_directories(facpoly_tests PRIVATE ../src)
 
+add_executable(factor_terms_tests test_factor_terms.c ${COMMON_SRC})
+target_include_directories(factor_terms_tests PRIVATE ../src)
+
 add_executable(rat_tests test_rat.c ${COMMON_SRC})
 target_include_directories(rat_tests PRIVATE ../src)
 
@@ -341,6 +344,7 @@ if(USE_ECM)
     add_dependencies(stats_tests build_ecm)
     add_dependencies(datetime_tests build_ecm)
     add_dependencies(facpoly_tests build_ecm)
+    add_dependencies(factor_terms_tests build_ecm)
     add_dependencies(rat_tests build_ecm)
     add_dependencies(linalg_tests build_ecm)
     add_dependencies(parfrac_tests build_ecm)

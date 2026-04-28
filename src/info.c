@@ -342,6 +342,15 @@ void info_init(void) {
     symtab_set_docstring("PolynomialMod", "PolynomialMod[poly,m] gives the polynomial poly reduced modulo m.\nPolynomialMod[poly,{Subscript[m, 1],Subscript[m, 2],...}] reduces modulo all of the Subscript[m, i].");
     symtab_set_docstring("FactorSquareFree", "FactorSquareFree[poly] pulls out any multiple factors in a polynomial.");
     symtab_set_docstring("Factor", "Factor[poly] factors a polynomial over the integers.");
+    symtab_set_docstring("FactorTerms",
+        "FactorTerms[poly]\n\tpulls out any overall numerical factor in poly.\n"
+        "FactorTerms[poly, x]\n\tpulls out any overall factor in poly that does not depend on x.\n"
+        "FactorTerms[poly, {x1, x2, ...}]\n\tpulls out any overall factor in poly that does not depend on any of the xi, then progressively factors with respect to smaller subsets {x1, ..., x_{k-1}}.\n"
+        "FactorTerms[poly, x] extracts the content of poly with respect to x.\n"
+        "FactorTerms automatically threads over lists, equations, inequalities and logic functions.");
+    symtab_set_docstring("FactorTermsList",
+        "FactorTermsList[poly]\n\tgives a list in which the first element is the overall numerical factor in poly, and the second element is the polynomial with the overall factor removed.\n"
+        "FactorTermsList[poly, {x1, x2, ...}]\n\tgives a list of factors of poly. The first element in the list is the overall numerical factor. The second element is a factor that does not depend on any of the xi. Subsequent elements are factors which depend on progressively more of the xi.");
     symtab_set_docstring("Variables", "Variables[poly] gives a list of all independent variables in the polynomial poly.");
     symtab_set_docstring("PolynomialQ", "PolynomialQ[expr, var] yields True if expr is a polynomial in var.");
     symtab_set_docstring("Decompose", "Decompose[poly, x] decomposes a polynomial, if possible, into a composition of simpler polynomials.");
