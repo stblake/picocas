@@ -1980,10 +1980,75 @@ static Expr* simp_pipeline_rational(const Expr* input,
     return best;
 }
 
+/*
+ * Log/Exp pipeline. For inputs containing Log (and no trig/hyperbolic).
+ * The cascade in apply_logexp_rules implements the positivity-aware
+ * Log/Power identities (Log[a*b] -> Log[a]+Log[b], (a*b)^c -> a^c b^c,
+ * Log[x^p] -> p Log[x], (x^p)^q -> x^(p*q)). It is force-take in
+ * simp_search (correctness-preserving under positivity assumptions) and
+ * we replicate that here.
+ *
+ * Candidate set:
+ *   - LogExpRules cascade (force-take when it changes the form)
+ *   - AssumptionRules (e.g. Log[Exp[x]] -> x via Log[E^x] -> x*Log[E])
+ *   - Together, Cancel, Expand on the cascade output
+ *
+ * No round loop; no trig transforms.
+ */
+static Expr* simp_pipeline_logexp(const Expr* input,
+                                  const AssumeCtx* ctx,
+                                  const Expr* complexity_func) {
+    Expr* best = expr_copy((Expr*)input);
+    size_t bs = score_with_func(best, complexity_func);
+
+    /* Cascade force-take. */
+    if (transform_can_fire("LogExpRules", input, ctx)) {
+        Expr* lr = apply_logexp_rules(input, ctx);
+        if (lr && !expr_eq(lr, input)) {
+            expr_free(best);
+            best = expr_copy(lr);
+            bs = score_with_func(best, complexity_func);
+        }
+        if (lr) expr_free(lr);
+    }
+
+    /* Assumption-driven rewrites on the (possibly rewritten) best.
+     * Force-take semantics: an assumption-aware rewrite that actually
+     * changed the form is correctness-preserving under the assumption
+     * set and counts as "more simplified" even when the leaf-count
+     * tiebreak is even (e.g. Log[a^p] -> p Log[a] both score 4). This
+     * matches the seed-phase behaviour in simp_search. */
+    if (transform_can_fire("AssumptionRules", best, ctx)) {
+        Expr* ar = apply_assumption_rules(best, ctx);
+        if (ar && !expr_eq(ar, best)) {
+            size_t s = score_with_func(ar, complexity_func);
+            if (s <= bs) {
+                expr_free(best);
+                best = expr_copy(ar);
+                bs = s;
+            }
+        }
+        if (ar) expr_free(ar);
+    }
+
+    /* Standard cleanup. */
+    Expr* tg = traced_call_unary("Together", best);
+    if (tg) update_best(&best, &bs, tg, complexity_func);
+    Expr* cn = traced_call_unary("Cancel", best);
+    if (cn) update_best(&best, &bs, cn, complexity_func);
+    Expr* ex = traced_call_unary("Expand", best);
+    if (ex) update_best(&best, &bs, ex, complexity_func);
+
+    if (tg) expr_free(tg);
+    if (cn) expr_free(cn);
+    if (ex) expr_free(ex);
+    return best;
+}
+
 /* simp_dispatch is the public entry point. It runs the shape classifier
- * and forwards to a specialised pipeline. Pipelines that aren't yet
- * implemented fall through to simp_search (the GENERAL pipeline), so
- * behaviour is preserved on those shapes. */
+ * and forwards to a specialised pipeline. SHAPE_TRIG and SHAPE_GENERAL
+ * fall through to simp_search; trig is the heuristic search's strongest
+ * domain, and general inputs need the full machinery. */
 static Expr* simp_dispatch(const Expr* input, const AssumeCtx* ctx,
                            const Expr* complexity_func) {
     SimpShape shape = simp_classify(input);
@@ -1993,6 +2058,7 @@ static Expr* simp_dispatch(const Expr* input, const AssumeCtx* ctx,
         case SIMP_SHAPE_RATIONAL:
             return simp_pipeline_rational(input, ctx, complexity_func);
         case SIMP_SHAPE_LOGEXP:
+            return simp_pipeline_logexp(input, ctx, complexity_func);
         case SIMP_SHAPE_TRIG:
         case SIMP_SHAPE_GENERAL:
         default:
