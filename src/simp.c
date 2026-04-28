@@ -1736,6 +1736,118 @@ static void try_collect_per_variable(const Expr* seed, size_t parent_score,
     expr_free(vars);
 }
 
+/* ----------------------------------------------------------------------- */
+/* Shape classifier + pipeline dispatch                                    */
+/* ----------------------------------------------------------------------- */
+
+/*
+ * simp_classify performs one O(n) walk over the input and assigns it to a
+ * shape bucket. simp_dispatch then routes to a specialised pipeline that
+ * runs only the transforms relevant for that shape. The classifier is
+ * conservative: borderline inputs fall through to SIMP_SHAPE_GENERAL,
+ * which calls simp_search (the original full search), so misclassification
+ * cannot change behaviour, only performance.
+ *
+ * Priority order (first matching wins):
+ *   1. TRIG       -- any Sin/Cos/.../Sinh/.../ArcXxx head present
+ *   2. LOGEXP     -- Log present (after trig is excluded)
+ *   3. POLYNOMIAL -- no trig/log/abs, every Power has integer exponent,
+ *                    PolynomialQ over Variables[input] is True
+ *   4. RATIONAL   -- no trig/log/abs, Together[input] is poly/poly
+ *   5. GENERAL    -- everything else
+ *
+ * Inputs containing Abs route to GENERAL: Abs rewrites are best handled
+ * by the existing search machinery (the bottom-up walker hits Abs heads
+ * directly via apply_abs_rules), and a specialised Abs pipeline buys
+ * little.
+ */
+typedef enum {
+    SIMP_SHAPE_POLYNOMIAL,
+    SIMP_SHAPE_RATIONAL,
+    SIMP_SHAPE_TRIG,
+    SIMP_SHAPE_LOGEXP,
+    SIMP_SHAPE_GENERAL
+} SimpShape;
+
+/* Helper: PolynomialQ[e, Variables[e]] using the existing builtins. */
+static bool simp_is_polynomial_in_own_vars(const Expr* e) {
+    Expr* vars = call_unary_copy("Variables", e);
+    if (!vars) return false;
+    if (vars->type != EXPR_FUNCTION ||
+        !vars->data.function.head ||
+        vars->data.function.head->type != EXPR_SYMBOL ||
+        strcmp(vars->data.function.head->data.symbol, "List") != 0) {
+        expr_free(vars);
+        return false;
+    }
+    /* Zero-variable input: a numeric literal. PolynomialQ returns True
+     * trivially, but a numeric leaf doesn't benefit from the polynomial
+     * pipeline (no Factor / Collect target), so report false to fall
+     * through to GENERAL. */
+    if (vars->data.function.arg_count == 0) {
+        expr_free(vars);
+        return false;
+    }
+    Expr* args[2] = { expr_copy((Expr*)e), vars };
+    Expr* pq = expr_new_function(expr_new_symbol("PolynomialQ"), args, 2);
+    Expr* r = evaluate(pq);
+    expr_free(pq);
+    bool ok = (r && r->type == EXPR_SYMBOL &&
+               strcmp(r->data.symbol, "True") == 0);
+    if (r) expr_free(r);
+    return ok;
+}
+
+/* Helper: build Together[e], extract Numerator/Denominator, check both
+ * are polynomial in their own variables. Returns false (and frees nothing
+ * external) if any step fails. */
+static bool simp_is_rational(const Expr* e) {
+    Expr* tg = call_unary_copy("Together", e);
+    if (!tg) return false;
+    Expr* num = call_unary_copy("Numerator", tg);
+    Expr* den = call_unary_copy("Denominator", tg);
+    bool ok = false;
+    if (num && den &&
+        !has_non_integer_power(num) &&
+        !has_non_integer_power(den) &&
+        simp_is_polynomial_in_own_vars(num) &&
+        simp_is_polynomial_in_own_vars(den)) {
+        ok = true;
+    }
+    if (num) expr_free(num);
+    if (den) expr_free(den);
+    expr_free(tg);
+    return ok;
+}
+
+static SimpShape simp_classify(const Expr* e) {
+    if (contains_trig_or_hyperbolic(e)) return SIMP_SHAPE_TRIG;
+    if (contains_abs(e))                return SIMP_SHAPE_GENERAL;
+    if (contains_log(e))                return SIMP_SHAPE_LOGEXP;
+    /* No trig, no abs, no log. Decide poly / rational / general. */
+    if (!has_non_integer_power(e) && simp_is_polynomial_in_own_vars(e)) {
+        return SIMP_SHAPE_POLYNOMIAL;
+    }
+    if (simp_is_rational(e)) return SIMP_SHAPE_RATIONAL;
+    return SIMP_SHAPE_GENERAL;
+}
+
+/* Forward declaration: simp_search is the GENERAL pipeline. */
+static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
+                         const Expr* complexity_func);
+
+/* simp_dispatch is the public entry point. It runs the shape classifier
+ * and forwards to a specialised pipeline. Specialised pipelines for
+ * POLYNOMIAL / RATIONAL / LOGEXP land in subsequent commits; for now the
+ * dispatcher hands every shape off to simp_search so behaviour is
+ * exactly preserved. */
+static Expr* simp_dispatch(const Expr* input, const AssumeCtx* ctx,
+                           const Expr* complexity_func) {
+    SimpShape shape = simp_classify(input);
+    (void)shape;
+    return simp_search(input, ctx, complexity_func);
+}
+
 static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                          const Expr* complexity_func) {
     /* Phase 0: pre-apply the Abs structural rules. These (idempotent,
@@ -2084,12 +2196,12 @@ static Expr* simp_bottomup(const Expr* input, const AssumeCtx* ctx,
      * (e.g. Equal facts that name a leaf) still fire via simp_search. */
     if (input->type != EXPR_FUNCTION) {
         if (!ctx || ctx->count == 0) return expr_copy((Expr*)input);
-        return simp_search(input, ctx, complexity_func);
+        return simp_dispatch(input, ctx, complexity_func);
     }
 
     /* Depth cap: bail to top-level. */
     if (depth >= SIMP_BOTTOMUP_MAX_DEPTH) {
-        return simp_search(input, ctx, complexity_func);
+        return simp_dispatch(input, ctx, complexity_func);
     }
 
     /* Memo lookup. */
@@ -2101,7 +2213,7 @@ static Expr* simp_bottomup(const Expr* input, const AssumeCtx* ctx,
     if (head && head->type == EXPR_SYMBOL) {
         const char* hn = head->data.symbol;
         if (simp_skip_recursion_head(hn) || simp_head_holds_args(hn)) {
-            Expr* result = simp_search(input, ctx, complexity_func);
+            Expr* result = simp_dispatch(input, ctx, complexity_func);
             simp_memo_put(memo, input, result);
             return result;
         }
@@ -2156,7 +2268,7 @@ static Expr* simp_bottomup(const Expr* input, const AssumeCtx* ctx,
     if (depth > 0 && simp_default_complexity(canonical) <= 7) {
         result = canonical;
     } else {
-        result = simp_search(canonical, ctx, complexity_func);
+        result = simp_dispatch(canonical, ctx, complexity_func);
         expr_free(canonical);
     }
 
