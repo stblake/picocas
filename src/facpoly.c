@@ -7,6 +7,7 @@
 #include "arithmetic.h"
 #include "internal.h"
 #include "parse.h"
+#include "rationalize.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -282,6 +283,13 @@ static Expr* factor_square_free_dispatcher(Expr* e) {
 
 Expr* builtin_factorsquarefree(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+
+    /* The square-free factorisation pipeline (PolynomialGCD against the
+     * derivative) requires rational coefficients. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_factorsquarefree);
+    }
+
     return factor_square_free_dispatcher(res->data.function.args[0]);
 }
 
@@ -622,6 +630,14 @@ static Expr* heuristic_factor(Expr* P) {
 
 Expr* builtin_factor(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+
+    /* Berlekamp–Zassenhaus and the heuristic multivariate paths assume
+     * integer (rational) coefficients; route inexact inputs through the
+     * standard rationalise / numericalise round-trip. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_factor);
+    }
+
     Expr* arg = res->data.function.args[0];
 
     Expr* together = eval_and_free(expr_new_function(expr_new_symbol("Together"), (Expr*[]){expr_copy(arg)}, 1));

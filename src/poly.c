@@ -48,6 +48,7 @@
 #include "replace.h"
 #include "print.h"
 #include "match.h"
+#include "rationalize.h"
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -1185,6 +1186,15 @@ Expr* poly_gcd_internal(Expr* A, Expr* B, Expr** vars, size_t var_count) {
 Expr* builtin_polynomialgcd(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
 
+    /* Inexact coefficients (e.g. PolynomialGCD[x^2 - 1.0, x - 1.0]) cannot
+     * be reasoned about by the rational-arithmetic GCD machinery below.
+     * Force-rationalise the inputs, run the exact algorithm, and
+     * numericalise the result so the caller observes inexact-in /
+     * inexact-out semantics. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_polynomialgcd);
+    }
+
     size_t count = res->data.function.arg_count;
     BPList* bps = malloc(sizeof(BPList) * count);
     for (size_t i = 0; i < count; i++) {
@@ -1348,7 +1358,14 @@ static Expr* my_number_lcm(Expr* a, Expr* b) {
 /* rational expressions.                                                */
 Expr* builtin_polynomiallcm(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 1) return NULL;
-    
+
+    /* Force-rationalise inexact coefficients so the exact LCM algorithm
+     * applies; numericalise the final result. See builtin_polynomialgcd
+     * above for the rationale. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_polynomiallcm);
+    }
+
     size_t count = res->data.function.arg_count;
     BPList* bps = malloc(sizeof(BPList) * count);
     for (size_t i = 0; i < count; i++) {

@@ -8,6 +8,7 @@
 #include "arithmetic.h"
 #include "expand.h"
 #include "core.h"
+#include "rationalize.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,7 +16,13 @@
 
 Expr* builtin_apart(Expr* res) {
     if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
-    
+
+    /* Apart relies on PolynomialQuotient/Remainder and partial-fraction
+     * decomposition over rationals — inexact coefficients break both. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_apart);
+    }
+
     Expr* expr = res->data.function.args[0];
     
     // Check if it's an equation, inequality, list, or logical function to thread over

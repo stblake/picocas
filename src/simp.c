@@ -6,6 +6,7 @@
 #include "print.h"
 #include "symtab.h"
 #include "expr.h"
+#include "rationalize.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3251,6 +3252,15 @@ Expr* builtin_simplify(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     size_t argc = res->data.function.arg_count;
     if (argc < 1) return NULL;
+
+    /* The simplification pipeline routes through Together/Cancel/Apart/
+     * Factor and the polynomial GCD machinery, all of which need rational
+     * coefficients. Rationalise on entry, run the exact pipeline, then
+     * numericalise on the way out so callers still see inexact-in /
+     * inexact-out semantics. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_simplify);
+    }
 
     Expr* expr = res->data.function.args[0];
 

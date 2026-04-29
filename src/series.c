@@ -30,6 +30,7 @@
 #include "eval.h"
 #include "arithmetic.h"
 #include "poly.h"
+#include "rationalize.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -2296,6 +2297,15 @@ static Expr* do_series_single(Expr* f, Expr* x, Expr* x0, int64_t n, bool leadin
 
 Expr* builtin_series(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count < 2) return NULL;
+
+    /* Series uses PolynomialQuotient/Remainder, GCD and Together while
+     * extracting the leading-term expansion — coefficients must be
+     * rational. Convert inexact inputs, run, and numericalise the
+     * resulting series back. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_series);
+    }
+
     Expr* f = res->data.function.args[0];
 
     /* List threading on the first argument (not ATTR_LISTABLE since the

@@ -5,6 +5,7 @@
 #include "arithmetic.h"
 #include "poly.h"
 #include "expand.h"
+#include "rationalize.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -252,6 +253,14 @@ static Expr* cancel_recursive(Expr* e) {
 
 Expr* builtin_cancel(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+
+    /* Inexact coefficients block the rational-arithmetic cancellation
+     * machinery (e.g. (x^2/9 - y^2/25.) — the 25. defeats Polynomial GCD).
+     * Force-rationalise on the way in, numericalise on the way out. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_cancel);
+    }
+
     Expr* arg = res->data.function.args[0];
 
     const char* base_sym = NULL;
@@ -488,6 +497,13 @@ static Expr* subst_g_back(Expr* e, const char* base_sym, int64_t m, const char* 
 
 Expr* builtin_together(Expr* res) {
     if (res->type != EXPR_FUNCTION || res->data.function.arg_count != 1) return NULL;
+
+    /* Inexact coefficients can't be combined by exact polynomial-LCM
+     * machinery; rationalise inputs, run, then re-numericalise. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_together);
+    }
+
     Expr* arg = res->data.function.args[0];
 
     const char* base_sym = NULL;

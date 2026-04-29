@@ -50,6 +50,7 @@
 #include "context.h"
 #include "numeric.h"
 #include "precision.h"
+#include "rationalize.h"
 
 void core_init(void) {
     /* Context system must come first: the parser calls context_resolve_name
@@ -352,6 +353,7 @@ void core_init(void) {
     limit_init();
     numeric_init();
     precision_init();
+    rationalize_init();
 }
 
 Expr* builtin_compoundexpression(Expr* res) {

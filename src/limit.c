@@ -36,6 +36,7 @@
 #include "eval.h"
 #include "symtab.h"
 #include "attr.h"
+#include "rationalize.h"
 #include "arithmetic.h"  /* arith_warnings_mute_push/pop -- silences the
                           * Power::infy / Infinity::indet messages that our
                           * internal probes would otherwise emit while poking
@@ -2722,6 +2723,13 @@ static Expr* builtin_limit_impl(Expr* res) {
  * the divergent sub-expression is expected and handled. Muting applies only
  * while Limit is running; nested Limit calls nest cleanly via the counter. */
 Expr* builtin_limit(Expr* res) {
+    /* Inexact coefficients break the symbolic limit machinery (which
+     * leans on Together / Cancel / Series, all rational-coefficient
+     * algorithms). Rationalise inputs, run, and numericalise the limit
+     * value — done outside the mute_push so warnings still nest cleanly. */
+    if (internal_args_contain_inexact(res)) {
+        return internal_rationalize_then_numericalize(res, builtin_limit);
+    }
     arith_warnings_mute_push();
     Expr* out = builtin_limit_impl(res);
     arith_warnings_mute_pop();

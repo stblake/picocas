@@ -375,6 +375,16 @@ void info_init(void) {
     symtab_set_docstring("Numerator", "Numerator[expr] gives the numerator of expr.\nNumerator picks out terms which do not have superficially negative exponents.");
     symtab_set_docstring("Denominator", "Denominator[expr] gives the denominator of expr.\nDenominator picks out terms which have superficially negative exponents.");
     symtab_set_docstring("Cancel", "Cancel[expr] cancels out common factors in the numerator and denominator of expr.");
+    symtab_set_docstring("Rationalize",
+        "Rationalize[x]\n"
+        "\tconverts an approximate number x to a nearby rational with small denominator.\n"
+        "Rationalize[x, dx]\n"
+        "\tyields the rational number with smallest denominator that lies within dx of x.\n"
+        "\n"
+        "Rationalize[x] yields x unchanged if there is no rational number close enough to x to satisfy |p/q - x| < c/q^2, with c = 10^-4.\n"
+        "Rationalize[x, dx] works with exact numbers x: the value is first numericalised, then rationalised.\n"
+        "Rationalize[x, 0] forces conversion of any inexact number x to rational form, using a tolerance derived from the precision of x.\n"
+        "Rationalize threads over compound expressions and Complex[re, im], so e.g. Rationalize[1.2 + 6.7 x] gives 6/5 + (67 x)/10.");
     symtab_set_docstring("Apart", "Apart[expr] rewrites a rational expression as a sum of terms with minimal denominators.\nApart[expr,var] treats all variables other than var as constants.");
     symtab_set_docstring("Simplify",
         "Simplify[expr]\n\tperforms a sequence of algebraic and other transformations on expr and returns the simplest form it finds.\n"

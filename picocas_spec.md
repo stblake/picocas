@@ -7243,3 +7243,172 @@ Simplify[5 x + 2]                                                     -> 2 + 5 x
 
 The pre-existing `test_simplify_cos_n_pi_integer` updates its expected
 output from `-1^n` to `(-1)^n` to reflect the printer fix.
+
+## Rationalize
+
+`Rationalize` converts approximate (Real / MPFR) numbers to nearby
+rationals. It mirrors the Mathematica builtin in both surface API and
+threading semantics.
+
+| Form | Behaviour |
+|------|-----------|
+| `Rationalize[x]`     | Convert `x` to a small-denominator rational only when a continued-fraction convergent of `x` satisfies <code>&#124;p/q − x&#124; &lt; 10⁻⁴ / q²</code>. Otherwise `x` is returned unchanged. |
+| `Rationalize[x, dx]` | Return the rational with the smallest denominator lying in `[x − dx, x + dx]`. The classical "simplest rational in interval" continued-fraction algorithm. |
+| `Rationalize[x, 0]`  | Force conversion of any inexact `x` to rational form using a tolerance derived from the ulp of `x` (≈ ½ ulp). For `N[Pi]` this lands on `245850922/78256779`. |
+
+Threading rules:
+
+* Numeric leaves (`Integer`, `BigInt`, `Real`, `Rational`, `MPFR`) are
+  rationalised in place. In default mode, exact leaves pass through
+  unchanged; only `Real` / `MPFR` are rewritten.
+* `Complex[re, im]` recurses on its components, so e.g.
+  `Rationalize[N[Pi + 33/211 E I], 0]` becomes
+  `245850922/78256779 + (42051801/98914198) I`.
+* Any `NumericQ` subexpression — `Sqrt[2]`, `Exp[Sqrt[2]]`, `Pi` — is
+  numericalised then rationalised when an explicit `dx` is supplied.
+  This is what makes `Rationalize[Exp[Sqrt[2]], 2^-12]` collapse to
+  `218/53`.
+* `Hold` / `HoldForm` / `HoldComplete` / `HoldPattern` / `Unevaluated`
+  wrappers are passed through.
+
+Attributes: `Protected`. (Threading is implemented internally via the
+expression descent rather than via `Listable`.)
+
+### Algorithm notes
+
+Two distinct kernels back the builtin:
+
+1. **Default mode** (`rationalize_default_double`) walks the convergents
+   of the continued fraction of `x` in arbitrary-precision GMP, and
+   accepts the first convergent satisfying the `c / q²` bound. The
+   denominator is capped at `~2.5×10⁶` — past that point, double-
+   precision noise produces spurious "good" convergents that would
+   otherwise let `Rationalize[N[Pi]]` find a deep, fictitious match.
+2. **Tolerance / zero modes** use the standard "simplest rational in
+   `[lo, hi]`" descent on the continued fraction of the interval, with
+   GMP scratch for the result. The zero case (`dx = 0`) walks
+   convergents in GMP directly because the interval-based algorithm
+   cannot maintain enough double-precision dynamic range to reach the
+   ~15-deep convergent that `Rationalize[N[Pi], 0]` requires.
+
+### C-level API
+
+In addition to the `Rationalize` symbol, the module exports two C
+entry points that other internal algorithms (Simplify, NSolve, etc.)
+can use without going through the symbol table:
+
+```c
+typedef enum {
+    RATIONALIZE_DEFAULT,    /* c/q² bound, may report failure        */
+    RATIONALIZE_TOLERANCE,  /* explicit dx > 0                        */
+    RATIONALIZE_ZERO,       /* dx = 0, ulp-derived tolerance          */
+} RationalizeMode;
+
+bool internal_rationalize_double(double x, double dx, RationalizeMode m,
+                                 mpz_t out_n, mpz_t out_d);
+
+Expr* internal_rationalize_expr(const Expr* e, double dx, RationalizeMode m);
+```
+
+Both `out_n` and `out_d` are `mpz_init`'d on success. In default mode
+the function reports `false` when no convergent satisfies the bound;
+the caller is expected to leave `x` alone in that case. The expression-
+level entry returns the original expression unchanged for inputs the
+core declines to convert.
+
+### Inexact-coefficient round-trip in exact-symbolic functions
+
+The exact-symbolic builtins
+`PolynomialGCD`, `PolynomialLCM`, `Cancel`, `Together`, `Apart`,
+`Factor`, `FactorSquareFree`, `Simplify`, `Series`, and `Limit`
+all assume rational coefficients — their algorithms (subresultant PRS,
+Berlekamp–Zassenhaus, partial-fraction matrix solve, leading-term
+series extraction, Together-based limit cancellation) cannot reason
+about an `EXPR_REAL` / `EXPR_MPFR` leaf. Without a fix-up they would
+silently return un-simplified residues such as
+
+```
+Cancel[(x^2/9 + (2 x y)/15 + y^2/25) / (x^2/9. - y^2/25.)]
+```
+
+leaving the polynomial GCD on the table.
+
+The fix lives in `src/rationalize.c` and is plumbed in at the entry
+point of every affected builtin via three helpers:
+
+```c
+bool  internal_contains_inexact      (const Expr* e);
+bool  internal_args_contain_inexact  (const Expr* res);
+Expr* internal_force_rationalize     (const Expr* e);
+Expr* internal_rationalize_then_numericalize(Expr* res,
+                                             Expr* (*core)(Expr*));
+```
+
+`internal_force_rationalize` is functionally close to
+`Rationalize[expr, 0]` but with two pragmatic differences tuned for
+internal use:
+
+1. Per inexact leaf the lenient `RATIONALIZE_DEFAULT` algorithm runs
+   first, with a fall-back to bit-exact `RATIONALIZE_ZERO` only when
+   no convergent fits the `c/q²` bound. This recovers `1/9.` as `1/9`
+   instead of the bit-exact `562949953421312/5066549580791809`.
+2. Symbolic constants (`Pi`, `E`, `EulerGamma`, …) are *not*
+   rationalised — they stay symbolic so that e.g.
+   `Together[Pi/x + 1.5]` still works algebraically with `Pi` and
+   only converts the `1.5`.
+
+`internal_rationalize_then_numericalize` is the wrapper plumbed at the
+top of each affected builtin:
+
+```c
+if (internal_args_contain_inexact(res))
+    return internal_rationalize_then_numericalize(res, builtin_xxx);
+```
+
+It builds a clone of `res` with every argument force-rationalised,
+recursively dispatches to the original builtin (which now sees no
+inexact leaf and runs the exact-arithmetic path), and finally feeds
+the result back through `numericalize` so callers observe
+inexact-in / inexact-out semantics. Ownership matches the in-tree
+convention — the evaluator (eval.c) frees `res` after a non-NULL
+return, so the wrapper never touches `res` itself; the locally-built
+clone is freed by the wrapper unconditionally.
+
+Test coverage in `tests/test_inexact_dispatch.c` pins both required
+behaviours for each of the ten affected builtins:
+
+* the exact-arithmetic path actually fires (cancellations and
+  factorisations happen, the result is not the un-simplified
+  unevaluated form), and
+* the result contains an `EXPR_REAL` leaf, so an inexact input
+  produces an inexact output as expected.
+
+The headline regression test is
+
+```
+Cancel[(x^2/9 + (2 x y)/15 + y^2/25) / (x^2/9. - y^2/25.)]
+  → (12.5 x + 7.5 y) / (12.5 x - 7.5 y)^1.0
+```
+
+which hinges on the rationalised intermediate `(25/2 x + 15/2 y)/(25/2 x - 15/2 y)` actually computing.
+
+### Tests
+
+`tests/test_rationalize.c` exercises the full API:
+
+* C-level core: terminating decimals, `27/4` recovery, π rejection in
+  default mode, `22/7` and `201/64` for the documented Mathematica
+  tolerance values, negative tolerances, zero / negative inputs,
+  non-finite inputs.
+* `Rationalize[x]` default mode: `6.75 → 27/4`, `N[Pi]` unchanged,
+  threading over `Plus`, exact-input pass-through, negative reals,
+  `Complex` componentwise.
+* `Rationalize[x, dx]` tolerance mode: `Pi/0.01 → 22/7`,
+  `Exp[Sqrt[2]]/2^-12 → 218/53`, multi-term polynomial
+  rationalisation, the zero-in-interval shortcut, negatives.
+* `Rationalize[x, 0]` zero mode: `N[Pi] → 245850922/78256779`,
+  short decimals, `Complex[re, im]` componentwise (the Mathematica
+  example `Rationalize[N[Pi + 33/211 E I], 0]`).
+* Edge cases: 0-arg / 3-arg malformed calls, symbolic and negative
+  tolerances stay unevaluated, threading through `List`,
+  `Protected` attribute.
