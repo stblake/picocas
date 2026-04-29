@@ -1490,7 +1490,26 @@ Expr* builtin_polynomiallcm(Expr* res) {
         collect_variables(rems[i], &vars, &v_count, &v_cap);
     }
     if (v_count > 0) qsort(vars, v_count, sizeof(Expr*), compare_expr_ptrs);
-    
+
+    /* If any input is not a polynomial in the collected variables (e.g.   */
+    /* contains rational/symbolic exponents like y^(1/3)), bail out and    */
+    /* leave the expression unevaluated -- otherwise poly_gcd_internal /   */
+    /* exact_poly_div will loop forever on non-polynomial inputs.          */
+    bool all_poly = true;
+    for (size_t i = 0; i < count; i++) {
+        if (!is_polynomial(rems[i], vars, v_count)) { all_poly = false; break; }
+    }
+    if (!all_poly) {
+        for (size_t i = 0; i < count; i++) expr_free(rems[i]);
+        free(rems);
+        for (size_t i = 0; i < v_count; i++) expr_free(vars[i]);
+        free(vars);
+        expr_free(numL);
+        for (size_t i = 0; i < common_count; i++) expr_free(common_args[i]);
+        free(common_args);
+        return NULL;
+    }
+
     Expr* cur_lcm = expr_copy(rems[0]);
     for (size_t i = 1; i < count; i++) {
         Expr* cur_gcd = poly_gcd_internal(cur_lcm, rems[i], vars, v_count);

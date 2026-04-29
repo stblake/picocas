@@ -143,6 +143,23 @@ void test_simplify_obvious_truth(void) {
     assert_eval_eq("Simplify[x > 0, x > 0]", "True", 0);
 }
 
+/* Regression: a fractional-power subexpression (1/(y^(2/3) - 1/y^(1/3)))
+ * must not Simplify to 0. The original failure was Apart producing 0 on
+ * the Together'd form y^(1/3)/(y - 1) -- get_coeff(y^(1/3), y, 0) = 0
+ * yielded a zero-row matrix, and the bottom-up Simplify recursion picked
+ * the spurious 0 as the lowest-complexity candidate, collapsing the
+ * outer Times to y^(19/8) * y^(5/8) = y^3 instead of -y^3/(-1+y). */
+void test_simplify_fractional_power_subexpr_not_zero(void) {
+    assert_eval_eq("Simplify[1/(y^(2/3) - 1/y^(1/3))]",
+                   "y^(1/3)/(-1 + y)", 0);
+}
+
+void test_simplify_fractional_power_combine(void) {
+    assert_eval_eq(
+        "Simplify[y^(5/8) (y^(19/8) - y^(73/24)/(y^(2/3) - 1/y^(1/3)))]",
+        "-y^3/(-1 + y)", 0);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -168,6 +185,8 @@ int main(void) {
     TEST(test_simplify_eq_substitution);
     TEST(test_simplify_negative_assumption);
     TEST(test_simplify_obvious_truth);
+    TEST(test_simplify_fractional_power_subexpr_not_zero);
+    TEST(test_simplify_fractional_power_combine);
 
     printf("All Simplify tests passed!\n");
     return 0;

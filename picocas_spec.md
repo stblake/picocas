@@ -2433,6 +2433,8 @@ Cancels out common factors in the numerator and denominator of an expression.
 - `Protected`, `Listable`.
 - Threads over equations, inequalities, logic functions, and sums dynamically.
 - Evaluates greatest common divisors via polynomial GCD derivations avoiding extraneous expansions.
+- Handles a single symbolic base appearing with rational fractional exponents (e.g. `Sqrt[y]`, `y^(1/3)`) by treating it as an algebraic generator: substitutes `y -> g^m` where `m` is the LCM of denominators, runs the polynomial cancellation in `g`, then substitutes back.
+- The algebraic-generator pass runs `Together` on the substituted form (not just GCD-cancellation), so inputs whose `g`-substituted denominator is a Plus of terms with different `g`-denominators (e.g. `1/(g^2 - 1/g)` from `1/(y^(2/3) - 1/y^(1/3))`) are handled correctly.
 
 ```mathematica
 In[1]:= Cancel[(x^2 - 1) / (x - 1)]
@@ -2440,6 +2442,15 @@ Out[1]= 1 + x
 
 In[2]:= Cancel[(x - y)/(x^2 - y^2) + (x^3 - 27)/(x^2 - 9)]
 Out[2]= (9 + 3 x + x^2)/(3 + x) + 1/(x + y)
+
+In[3]:= Cancel[(y - 1)/(Sqrt[y] - 1)]
+Out[3]= 1 + Sqrt[y]
+
+In[4]:= Cancel[(y - 1)/(y^(1/3) - 1)]
+Out[4]= 1 + y^(1/3) + y^(2/3)
+
+In[5]:= Cancel[1/(y^(2/3) - 1/y^(1/3))]
+Out[5]= y^(1/3)/(-1 + y)
 ```
 
 #### Together
@@ -2450,6 +2461,7 @@ Puts terms in a sum over a common denominator, and cancels factors in the result
 - `Protected`, `Listable`.
 - Makes a sum of terms into a single rational function.
 - Computes lowest common multiples (LCM) of denominators securely without unconditionally destroying pre-factored bases unnecessarily.
+- Handles a single symbolic base appearing with rational fractional exponents (e.g. `y^(1/3)`, `y^(2/3)`, `y^(73/24)`) by treating it as an algebraic generator: substitutes `y -> g^m` where `m` is the LCM of denominators, runs the polynomial pipeline in `g`, then substitutes back.
 
 ```mathematica
 In[1]:= Together[a/b + c/d]
@@ -2463,6 +2475,9 @@ Out[3]= (2 (3 + 11 x + 9 x^2 + 2 x^3)) / (x (1 + x) (2 + x) (3 + x))
 
 In[4]:= Together[x^2/(x - y) - x y/(x - y)]
 Out[4]= x
+
+In[5]:= Together[y^(5/8)*(y^(19/8) - y^(73/24)/(y^(2/3) - 1/y^(1/3)))]
+Out[5]= -y^3 / (-1 + y)
 ```
 
 #### Apart
@@ -2475,6 +2490,7 @@ Gives the partial fraction decomposition of a rational expression.
 - Writes `expr` as a polynomial in `var` together with a sum of ratios of polynomials with minimal denominators.
 - If `var` is not specified, intelligently selects the main polynomial variable natively.
 - Implements exact undetermined coefficients algebraically leveraging row-reduced identity expansions over algebraic inputs avoiding recursive fractional losses natively.
+- When `Together[expr]` produces a numerator or denominator that is not polynomial in the chosen variable (e.g. fractional-power inputs whose Together'd form is `y^(1/3)/(y - 1)`), the matrix-of-coefficients algorithm cannot apply; Apart returns the `Together` form unchanged rather than synthesising a spurious zero.
 
 ```mathematica
 In[1]:= Apart[1/((1+x)(5+x))]
@@ -2485,6 +2501,9 @@ Out[2]= 2 - x + (-1 - x/3)/(1 + x + x^2) + 1/(9 (-1 + x)) - 34/(9 (2 + x))
 
 In[3]:= Apart[(x+y)/((x+1)(y+1)(x-y)), x]
 Out[3]= 2 y/((1 + y)^2 (x - y)) - (-1 + y)/((1 + x) (1 + y)^2)
+
+In[4]:= Apart[1/(y^(2/3) - 1/y^(1/3))]
+Out[4]= y^(1/3)/(-1 + y)
 ```
 
 #### Mod, Quotient, QuotientRemainder

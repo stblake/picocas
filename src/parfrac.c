@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 Expr* builtin_apart(Expr* res) {
     if (res->type != EXPR_FUNCTION || (res->data.function.arg_count != 1 && res->data.function.arg_count != 2)) return NULL;
@@ -58,8 +59,29 @@ Expr* builtin_apart(Expr* res) {
     
     Expr* N = eval_and_free(expr_new_function(expr_new_symbol("Numerator"), (Expr*[]){expr_copy(together)}, 1));
     Expr* D = eval_and_free(expr_new_function(expr_new_symbol("Denominator"), (Expr*[]){expr_copy(together)}, 1));
+
+    /* Apart's matrix-construction step assumes both N and D are polynomials
+     * in `var`. When Together produces a numerator or denominator with
+     * non-integer powers of var (e.g. Together[1/(y^(2/3)-1/y^(1/3))] =
+     * y^(1/3)/(y-1)), get_coeff(y^(1/3), y, 0) returns 0 for every row,
+     * yielding a zero solution and a wrong answer of 0. Detect this case
+     * up front and return the Together'd form unchanged -- partial-fraction
+     * decomposition is undefined when the numerator is not polynomial in
+     * the chosen variable. */
+    Expr* npq_args[2] = { expr_copy(N), expr_copy(var) };
+    Expr* npq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), npq_args, 2));
+    Expr* dpq_args[2] = { expr_copy(D), expr_copy(var) };
+    Expr* dpq = eval_and_free(expr_new_function(expr_new_symbol("PolynomialQ"), dpq_args, 2));
+    bool n_poly = (npq->type == EXPR_SYMBOL && strcmp(npq->data.symbol, "True") == 0);
+    bool d_poly = (dpq->type == EXPR_SYMBOL && strcmp(dpq->data.symbol, "True") == 0);
+    expr_free(npq); expr_free(dpq);
+    if (!n_poly || !d_poly) {
+        expr_free(N); expr_free(D); expr_free(var);
+        return together;
+    }
+
     expr_free(together);
-    
+
     if (get_degree_poly(D, var) == 0) {
         Expr* expanded = eval_and_free(expr_new_function(expr_new_symbol("Expand"), (Expr*[]){eval_and_free(expr_new_function(expr_new_symbol("Times"), (Expr*[]){N, eval_and_free(expr_new_function(expr_new_symbol("Power"), (Expr*[]){D, expr_new_integer(-1)}, 2))}, 2))}, 1));
         expr_free(var);
