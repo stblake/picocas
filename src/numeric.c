@@ -427,6 +427,16 @@ static Expr* numericalize_function(const Expr* e, NumericSpec spec) {
     const size_t n = e->data.function.arg_count;
     Expr* new_head = numericalize(e->data.function.head, spec);
 
+    /* Power[base, exp] with an integer (or bigint) exponent: preserve the
+     * exponent verbatim. This matches Mathematica — N[x^2] is x^2, not
+     * x^2.0 — and keeps polynomial structure intact under N[]. */
+    const bool is_power_int_exp =
+        (n == 2)
+        && e->data.function.head->type == EXPR_SYMBOL
+        && strcmp(e->data.function.head->data.symbol, "Power") == 0
+        && (e->data.function.args[1]->type == EXPR_INTEGER
+            || e->data.function.args[1]->type == EXPR_BIGINT);
+
     Expr** new_args = (Expr**)malloc(n * sizeof(Expr*));
     if (!new_args) {
         /* Out-of-memory: return an uncomputed copy rather than crash. */
@@ -434,7 +444,11 @@ static Expr* numericalize_function(const Expr* e, NumericSpec spec) {
         return expr_copy((Expr*)e);
     }
     for (size_t i = 0; i < n; ++i) {
-        new_args[i] = numericalize(e->data.function.args[i], spec);
+        if (is_power_int_exp && i == 1) {
+            new_args[i] = expr_copy(e->data.function.args[i]);
+        } else {
+            new_args[i] = numericalize(e->data.function.args[i], spec);
+        }
     }
     Expr* rebuilt = expr_new_function(new_head, new_args, n);
     free(new_args);  /* expr_new_function copies the pointer list. */

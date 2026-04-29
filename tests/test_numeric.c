@@ -96,6 +96,19 @@ static void test_n_nested(void) {
                    "foo[3.14159, List[0.333333, 2.71828]]", 1);
 }
 
+static void test_n_preserves_integer_exponents(void) {
+    /* Mathematica-compatible: N[] leaves integer exponents alone, since
+     * polynomial structure (and the integer power's meaning as repeated
+     * multiplication) is more useful than a real-valued exponent. */
+    assert_eval_eq("N[x^2]", "x^2", 0);
+    assert_eval_eq("N[x^3]", "x^3", 0);
+    assert_eval_eq("N[3 x^2 + 3 x + 1]", "1.0 + 3.0 x + 3.0 x^2", 0);
+    /* Base is still numericalized. */
+    assert_eval_eq("N[(Pi)^2]", "9.8696", 0);
+    /* Non-integer exponents are still numericalized. */
+    assert_eval_eq("N[x^(1/2)]", "x^0.5", 0);
+}
+
 static void test_n_two_arg_fallback(void) {
     /* In a USE_MPFR=0 build, N[expr, n] emits a one-shot stderr warning
      * and returns a machine-precision double. With USE_MPFR enabled we
@@ -276,6 +289,7 @@ int main(void) {
     TEST(test_n_complex);
     TEST(test_n_preserves_hold);
     TEST(test_n_nested);
+    TEST(test_n_preserves_integer_exponents);
     TEST(test_n_two_arg_fallback);
     TEST(test_n_bad_precision_arg);
     TEST(test_machineprecision_is_protected);
