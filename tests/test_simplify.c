@@ -121,10 +121,7 @@ void test_simplify_sin_n_pi_integer(void) {
 }
 
 void test_simplify_cos_n_pi_integer(void) {
-    /* picocas prints Power[-1, n] without parentheses, so the printed
-     * form is "-1^n" -- this is the canonical Mathematica result
-     * (-1)^n, not the unary negation -(1^n). */
-    assert_eval_eq("Simplify[Cos[n Pi], Element[n, Integers]]", "-1^n", 0);
+    assert_eval_eq("Simplify[Cos[n Pi], Element[n, Integers]]", "(-1)^n", 0);
 }
 
 void test_simplify_eq_substitution(void) {
@@ -160,6 +157,85 @@ void test_simplify_fractional_power_combine(void) {
         "-y^3/(-1 + y)", 0);
 }
 
+/* Equation rebalancing: Simplify[lhs == rhs] reduces by GCD of integer
+ * coefficients and partitions positive/negative variable terms across
+ * the relation, matching Mathematica's canonical form. */
+void test_simplify_equation_rebalance(void) {
+    assert_eval_eq("Simplify[2 x - 4 y + 6 z - 10 == -8]",
+                   "x + 3 z == 1 + 2 y", 0);
+}
+
+void test_simplify_equation_polarity_flip(void) {
+    /* Negative leading variable coefficient -> divide both sides by -1. */
+    assert_eval_eq("Simplify[-2 x == 4]", "x == -2", 0);
+}
+
+void test_simplify_inequality_polarity_flip(void) {
+    /* Strict inequality must reverse when dividing by negative. */
+    assert_eval_eq("Simplify[-2 x < 4]", "x > -2", 0);
+}
+
+/* Sqrt[product of squares] under sign assumptions: each known-real
+ * factor's Power[Power[s, 2], 1/2] reduces independently. */
+void test_simplify_sqrt_product_signs(void) {
+    assert_eval_eq("Simplify[Sqrt[x^2 y^2], x > 0 && y < 0]", "-x y", 0);
+}
+
+void test_simplify_sqrt_product_three(void) {
+    assert_eval_eq("Simplify[Sqrt[x^2 y^2 z^2], x > 0 && y < 0 && z > 0]",
+                   "-x y z", 0);
+}
+
+/* Cos[k Pi]^m with k integer and m even should collapse to 1 -- both via
+ * the explicit even-integer rule (literal 4) and via the Mod[m, 2] == 0
+ * symbolic-even path. */
+void test_simplify_cos_k_pi_to_even_int_power(void) {
+    assert_eval_eq("Simplify[Cos[k Pi]^4, Element[k, Integers]]", "1", 0);
+}
+
+void test_simplify_cos_k_pi_to_even_symbolic_power(void) {
+    assert_eval_eq(
+        "Simplify[Cos[k Pi]^m, Element[k, Integers], Assumptions->Mod[m,2]==0]",
+        "1", 0);
+}
+
+/* (Cos + Sin)^4 perfect-square completion: reaches Mathematica's form
+ * via 1 + 2 Sin Cos -> (Sin + Cos)^2. */
+void test_simplify_cos_sin_fourth_power(void) {
+    assert_eval_eq("Simplify[4 Sin[x]^2 Cos[x]^2 + 4 Sin[x] Cos[x] + 1]",
+                   "(Cos[x] + Sin[x])^4", 0);
+}
+
+/* Primitive cube root of -1 satisfies z^2 - z + 1 = 0. */
+void test_simplify_cube_root_of_neg_one(void) {
+    assert_eval_eq("Simplify[1 - (-1)^(1/3) + (-1)^(2/3)]", "0", 0);
+}
+
+/* General roots-of-unity algorithm: lifts the input to a polynomial
+ * in omega = (-1)^(1/Q) (Q the LCM of all (-1)^(p/q) and E^(I p Pi/q)
+ * denominators) and reduces modulo Phi_{2Q}(omega). The 5th and 7th
+ * cases are alternating sums that match Phi_{10}(x) and Phi_{14}(x),
+ * so both reduce to 0. */
+void test_simplify_fifth_root_of_unity_alternating_sum(void) {
+    assert_eval_eq(
+        "Simplify[1 - (-1)^(1/5) + (-1)^(2/5) - (-1)^(3/5) + (-1)^(4/5)]",
+        "0", 0);
+}
+
+void test_simplify_seventh_root_of_unity_alternating_sum(void) {
+    assert_eval_eq(
+        "Simplify[1 - (-1)^(1/7) + (-1)^(2/7) - (-1)^(3/7) + (-1)^(4/7) "
+        "          - (-1)^(5/7) + (-1)^(6/7)]",
+        "0", 0);
+}
+
+/* E^(+/- 2 I Pi / 3) are the primitive cube roots of unity (zeta and
+ * zeta^2). zeta + zeta^2 = -1, so 3 + 2(zeta + zeta^2) = 1. */
+void test_simplify_complex_exp_cube_root(void) {
+    assert_eval_eq(
+        "Simplify[3 + 2 E^(-2 I Pi/3) + 2 E^(2 I Pi/3)]", "1", 0);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -187,6 +263,18 @@ int main(void) {
     TEST(test_simplify_obvious_truth);
     TEST(test_simplify_fractional_power_subexpr_not_zero);
     TEST(test_simplify_fractional_power_combine);
+    TEST(test_simplify_equation_rebalance);
+    TEST(test_simplify_equation_polarity_flip);
+    TEST(test_simplify_inequality_polarity_flip);
+    TEST(test_simplify_sqrt_product_signs);
+    TEST(test_simplify_sqrt_product_three);
+    TEST(test_simplify_cos_k_pi_to_even_int_power);
+    TEST(test_simplify_cos_k_pi_to_even_symbolic_power);
+    TEST(test_simplify_cos_sin_fourth_power);
+    TEST(test_simplify_cube_root_of_neg_one);
+    TEST(test_simplify_fifth_root_of_unity_alternating_sum);
+    TEST(test_simplify_seventh_root_of_unity_alternating_sum);
+    TEST(test_simplify_complex_exp_cube_root);
 
     printf("All Simplify tests passed!\n");
     return 0;

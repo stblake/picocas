@@ -7071,3 +7071,175 @@ All 19 simplify-related test suites pass: `simp_tests`, `simplify_tests`,
 `assuming_tests`, `integrals_tests`, `deriv_tests`, `poly_tests`,
 `rat_tests`, `parfrac_tests`, `expand_tests`, `factor_terms_tests`,
 `limit_tests`, `series_tests`, `core_tests`.
+
+## Simplify: equation rebalancing, even-exponent and Sqrt-of-product assumption rules, Pythagorean square completion, cube-root-of-unity identity, Power printer fix (2026-04-29)
+
+Six fixes that close known gaps reported against `Simplify`. Each is
+modular and tested in isolation in `tests/test_simplify.c`.
+
+### 1. Power printer for negative numeric bases (`src/print.c`)
+
+`Power[-1, 1/3]` previously printed as `-1^(1/3)`, which round-trips
+through the parser as `-(1^(1/3))` because unary minus has lower
+precedence than `^`. Both the standard and the TeX printers now emit
+explicit parens around any negative numeric base (`Integer`, `Real`,
+`BigInt`, `Rational`), producing `(-1)^(1/3)` instead.
+
+### 2. Equation / inequality rebalancing (`src/simp.c`)
+
+`Simplify` on a binary `Equal/Less/Greater/...` head now also tries a
+rebalanced candidate: compute `d = Expand[lhs - rhs]`, divide every
+term's integer coefficient by their GCD, and partition into
+positive-coefficient terms (LHS) and negated negative-coefficient terms
+(RHS). The "polarity" is chosen so the leading variable term's
+coefficient ends up positive; for strict inequalities a negative
+divisor flips `<` to `>` (etc.). The rebalanced form is scored against
+the threaded form via `SimplifyCount` and the simpler one wins.
+
+| Input                                       | Before                          | After                  |
+| ------------------------------------------- | ------------------------------- | ---------------------- |
+| `Simplify[2 x - 4 y + 6 z - 10 == -8]`      | `2 (-5 + x - 2 y + 3 z) == -8`  | `x + 3 z == 1 + 2 y`   |
+| `Simplify[-2 x == 4]`                       | `-2 x == 4`                     | `x == -2`              |
+| `Simplify[-2 x < 4]`                        | `-2 x < 4`                      | `x > -2`               |
+| `Simplify[10 == 5 x]`                       | `10 == 5 x`                     | `x == 2`               |
+
+Skipped when any term has a non-`int64` numeric coefficient
+(`Real`, `BigInt`, `Rational`) so floating-point or symbolic
+denominators are preserved.
+
+### 3. Sqrt over a product of squares (`src/simp.c`, `apply_assumption_rules`)
+
+For each known-positive symbol `x` the assumption-rule list now
+additionally emits
+
+```
+Power[Times[Power[x, 2], rest___], Rational[1, 2]] :> x Power[Times[rest], Rational[1, 2]]
+```
+
+(and analogous rules with `-x` for negatives, `Abs[x]` for unsigned
+reals). `ReplaceRepeated` then peels factors off `Sqrt[x^2 y^2 z^2 ...]`
+one symbol at a time:
+
+```
+Simplify[Sqrt[x^2 y^2], x > 0 && y < 0]            -> -x y
+Simplify[Sqrt[x^2 y^2 z^2], x>0 && y<0 && z>0]    -> -x y z
+Assuming[x > 0, Simplify[Sqrt[x^2 y^2], y < 0]]    -> -x y
+```
+
+### 4. Even-exponent collapse for `(-1)^...` (`src/simp.c`)
+
+Added a fifth assumption category, `evens`, populated by the new
+`prov_even` helper. It accepts `Mod[x, 2] == 0` (in either Equal-arg
+order) and `Element[x, Evens]`. For each even symbol `m` and each
+integer symbol `k`, the rule list grows by
+
+```
+Power[-1, m] :> 1
+Power[-1, k_Integer m] :> 1
+Power[Power[-1, k_Integer], m] :> 1
+Power[-1, k m] :> 1                       (* paired *)
+Power[Power[-1, k], m] :> 1
+```
+
+For each integer symbol `n` (independent of any even fact) it also
+emits the literal-multiplier rules
+
+```
+Power[-1, Times[m_Integer /; EvenQ[m], n]] :> 1
+Power[Power[-1, n], m_Integer /; EvenQ[m]] :> 1
+```
+
+so e.g. `Cos[k Pi]^4` collapses all the way:
+
+```
+Simplify[Cos[k Pi]^4, Element[k, Integers]]                            -> 1
+Simplify[Cos[k Pi]^m, Element[k, Integers], Assumptions->Mod[m,2]==0]  -> 1
+Simplify[(-1)^(2 k), Element[k, Integers]]                             -> 1
+```
+
+`Simplify[Cos[k Pi]^3, Element[k, Integers]]` correctly stays at
+`(-1)^(3 k)` because `3 k` may be odd.
+
+### 5. Pythagorean perfect-square completion (`src/simp.c`)
+
+A new transform `transform_pythag_square_complete` applies just two
+targeted rules
+
+```
+1 + 2 Sin[x_] Cos[x_] + r___ :> (Sin[x] + Cos[x])^2 + r
+1 - 2 Sin[x_] Cos[x_] + r___ :> (Sin[x] - Cos[x])^2 + r
+```
+
+It runs both as a top-level seed in `simp_search` and inside the round
+loop on every candidate, so a `Factor` result like `(1 + 2 Sin Cos)^2`
+also has the rule applied to its sub-expression. Kept separate from
+`TrigFactor`'s identity rule list because the linear-combination rule
+inside that list (`a Sin + b Cos -> Sqrt[a^2+b^2] Sin[x + ArcTan]`)
+would re-rewrite `(Sin + Cos)^2` into `2 Sin[x + Pi/4]^2` in the same
+ReplaceRepeated pass, hiding the factored form from the score
+selection.
+
+```
+Simplify[4 Sin[x]^2 Cos[x]^2 + 4 Sin[x] Cos[x] + 1] -> (Cos[x] + Sin[x])^4
+```
+
+### 6. Roots-of-unity simplifier (`src/simp.c`)
+
+A new transform `simp_roots_of_unity` recognises every
+`Power[-1, p/q]` and `Power[E, Times[Complex[0, p/q], Pi]]` atom in
+the input and reduces the expression modulo the cyclotomic polynomial
+of the corresponding primitive root of unity. The procedure:
+
+1. Walk the expression and collect denominators `q_i` of all
+   root-of-unity atoms (via `Cases[..., Infinity]`).
+2. Set `Q = LCM(q_i)`. Every atom is now expressible as `omega^k` for
+   `omega = (-1)^(1/Q) = e^(I Pi / Q)`, a primitive `(2Q)`-th root of
+   unity.
+3. Lift the input to a polynomial in a fresh variable `$ru`,
+   substituting each atom as `$ru^Mod[a Q/b, 2 Q]` so negative or
+   over-period exponents fold into `[0, 2Q)`.
+4. Compute `Phi_{2Q}($ru)` recursively from
+   `Phi_n(x) = (x^n - 1) / Prod_{d | n, d < n} Phi_d(x)` using
+   `PolynomialQuotient`.
+5. Reduce by `PolynomialRemainder[polyForm, Phi_{2Q}, $ru]`. Because
+   `Phi_{2Q}` is the minimal polynomial of `omega` over Q, the
+   remainder is the unique degree-`< deg(Phi_{2Q})` representative.
+6. Substitute `$ru -> Power[-1, 1/Q]` to recover the surface form.
+
+The algorithm is entirely general -- it handles the cube case, every
+prime denominator, mixed `(-1)^(p/q)` and `E^(I p Pi /q)` forms, and
+expressions with free coefficients (which carry through as polynomial
+coefficients during `PolynomialRemainder`). The cyclotomic helper
+`$ruCyclotomic[n, x]` and the driver `$ruSimplify[expr]` are added
+as DownValues on internal `$ru*` symbols by
+`simp_install_roots_of_unity_helpers` on first call (lazy, idempotent).
+
+```
+Simplify[1 - (-1)^(1/3) + (-1)^(2/3)]                                 -> 0
+Simplify[1 - (-1)^(1/5) + (-1)^(2/5) - (-1)^(3/5) + (-1)^(4/5)]       -> 0
+Simplify[1 - (-1)^(1/7) + (-1)^(2/7) - ... + (-1)^(6/7)]              -> 0
+Simplify[3 + 2 E^(-2 I Pi/3) + 2 E^(2 I Pi/3)]                        -> 1
+Simplify[(-1)^(1/3) + (-1)^(2/3)]                                     -> -1 + 2 (-1)^(1/3)
+Simplify[(-1)^(2/3)]                                                  -> (-1)^(2/3)   (* unchanged: original shorter *)
+Simplify[5 x + 2]                                                     -> 2 + 5 x      (* no atoms; helper short-circuits *)
+```
+
+### Tests
+
+`tests/test_simplify.c` adds twelve focused tests:
+
+- `test_simplify_equation_rebalance`
+- `test_simplify_equation_polarity_flip`
+- `test_simplify_inequality_polarity_flip`
+- `test_simplify_sqrt_product_signs`
+- `test_simplify_sqrt_product_three`
+- `test_simplify_cos_k_pi_to_even_int_power`
+- `test_simplify_cos_k_pi_to_even_symbolic_power`
+- `test_simplify_cos_sin_fourth_power`
+- `test_simplify_cube_root_of_neg_one`
+- `test_simplify_fifth_root_of_unity_alternating_sum`
+- `test_simplify_seventh_root_of_unity_alternating_sum`
+- `test_simplify_complex_exp_cube_root`
+
+The pre-existing `test_simplify_cos_n_pi_integer` updates its expected
+output from `-1^n` to `(-1)^n` to reflect the printer fix.

@@ -222,7 +222,23 @@ static void print_standard(Expr* e, int parent_prec) {
                 print_standard(e->data.function.args[0], 0);
                 printf("]");
             } else {
-                print_standard(e->data.function.args[0], 590);
+                /* Negative numeric atoms parse as unary-minus, which has lower
+                 * precedence than Power. So `(-1)^(1/3)` round-trips as
+                 * `-1^(1/3)` -> `-(1^(1/3))`. Wrap explicitly. */
+                Expr* base = e->data.function.args[0];
+                bool base_paren = false;
+                int64_t bn, bd;
+                if (base->type == EXPR_INTEGER && base->data.integer < 0) base_paren = true;
+                else if (base->type == EXPR_REAL && base->data.real < 0.0) base_paren = true;
+                else if (base->type == EXPR_BIGINT && mpz_sgn(base->data.bigint) < 0) base_paren = true;
+                else if (is_rational(base, &bn, &bd) && bn < 0) base_paren = true;
+                if (base_paren) {
+                    printf("(");
+                    print_standard(base, 0);
+                    printf(")");
+                } else {
+                    print_standard(base, 590);
+                }
                 printf("^");
                 print_standard(e->data.function.args[1], 590);
             }
@@ -955,7 +971,21 @@ static void print_tex(Expr* e, int parent_prec) {
                 print_tex(base, 0);
                 printf("}");
             } else {
-                print_tex(base, 600); /* force parens for compound bases */
+                /* Negative numeric atoms parse as unary-minus, so render
+                 * `-1^{1/3}` as `(-1)^{1/3}` to keep the meaning unambiguous. */
+                bool base_paren = false;
+                int64_t bn, bd;
+                if (base->type == EXPR_INTEGER && base->data.integer < 0) base_paren = true;
+                else if (base->type == EXPR_REAL && base->data.real < 0.0) base_paren = true;
+                else if (base->type == EXPR_BIGINT && mpz_sgn(base->data.bigint) < 0) base_paren = true;
+                else if (is_rational(base, &bn, &bd) && bn < 0) base_paren = true;
+                if (base_paren) {
+                    printf("\\left(");
+                    print_tex(base, 0);
+                    printf("\\right)");
+                } else {
+                    print_tex(base, 600); /* force parens for compound bases */
+                }
                 printf("^{");
                 print_tex(exp, 0);
                 printf("}");

@@ -1,4 +1,5 @@
 #include "simp.h"
+#include "arithmetic.h"
 #include "attr.h"
 #include "eval.h"
 #include "parse.h"
@@ -321,6 +322,39 @@ static bool fact_in_domain(const Expr* f, const Expr* x, const char* dom) {
     return d->type == EXPR_SYMBOL && strcmp(d->data.symbol, dom) == 0;
 }
 
+/* Recognise facts that prove `x` is an even integer. The most common form
+ * users write is Mod[x, 2] == 0; Equal is Orderless so we accept the args
+ * in either order. Element[x, Evens] is also accepted. v1 doesn't try to
+ * decompose `x == 2 k` style facts -- those would need a follow-up
+ * "k is integer" check that the assumption layer doesn't surface yet. */
+static bool fact_implies_even(const Expr* f, const Expr* x) {
+    if (fact_in_domain(f, x, "Evens")) return true;
+    if (!fact_is_function(f, "Equal", 2)) return false;
+    Expr* a = f->data.function.args[0];
+    Expr* b = f->data.function.args[1];
+    /* Look for Mod[x, 2] on either side, with 0 on the other side. */
+    Expr* mod = NULL;
+    Expr* zero = NULL;
+    if (a->type == EXPR_FUNCTION &&
+        a->data.function.head &&
+        a->data.function.head->type == EXPR_SYMBOL &&
+        strcmp(a->data.function.head->data.symbol, "Mod") == 0) {
+        mod = a; zero = b;
+    } else if (b->type == EXPR_FUNCTION &&
+               b->data.function.head &&
+               b->data.function.head->type == EXPR_SYMBOL &&
+               strcmp(b->data.function.head->data.symbol, "Mod") == 0) {
+        mod = b; zero = a;
+    }
+    if (!mod || !zero) return false;
+    if (mod->data.function.arg_count != 2) return false;
+    if (!expr_eq(mod->data.function.args[0], x)) return false;
+    Expr* m = mod->data.function.args[1];
+    if (m->type != EXPR_INTEGER || m->data.integer != 2) return false;
+    if (zero->type != EXPR_INTEGER || zero->data.integer != 0) return false;
+    return true;
+}
+
 /* Standard positive real symbols recognised without a fact. */
 static bool is_positive_constant_symbol(const char* s) {
     return strcmp(s, "Pi") == 0 ||
@@ -386,6 +420,26 @@ static bool fact_directly_nonpos(const AssumeCtx* ctx, const Expr* x) {
         if (fact_implies_nonpos(ctx->facts[i], x)) return true;
     }
     return false;
+}
+
+/* True iff `x` is provably an even integer under `ctx`. Recognises
+ * Mod[x, 2] == 0 and Element[x, Evens]; integer literals are handled at
+ * the leaf level so we don't need a separate fact for them. v1 does not
+ * propagate evenness through Times/Plus -- those would need a stronger
+ * "two of these are even" reasoner. */
+static bool prov_even(const AssumeCtx* ctx, const Expr* x) {
+    if (!x) return false;
+    if (x->type == EXPR_INTEGER) return (x->data.integer % 2) == 0;
+    if (x->type == EXPR_BIGINT) return mpz_even_p(x->data.bigint) != 0;
+    if (!ctx) return false;
+    for (size_t i = 0; i < ctx->count; i++) {
+        if (fact_implies_even(ctx->facts[i], x)) return true;
+    }
+    return false;
+}
+
+bool assume_known_even(const AssumeCtx* ctx, const Expr* x) {
+    return prov_even(ctx, x);
 }
 
 static bool prov_pos(const AssumeCtx* ctx, const Expr* x) {
@@ -761,35 +815,53 @@ static bool sym_already_listed(char** list, size_t n, const char* s) {
 }
 
 /* Walk the assumption fact list and collect every EXPR_SYMBOL that the
- * context proves positive, real, or integer. The caller passes pre-sized
- * arrays plus the maximum count. */
+ * context proves positive, real, integer, or even. The caller passes
+ * pre-sized arrays plus the maximum count. */
 static void collect_known_symbols(const AssumeCtx* ctx,
                                   char** positives, size_t* npos,
                                   char** reals,     size_t* nreal,
                                   char** integers,  size_t* nint,
                                   char** negatives, size_t* nneg,
+                                  char** evens,     size_t* neven,
                                   size_t cap) {
-    *npos = *nreal = *nint = *nneg = 0;
+    *npos = *nreal = *nint = *nneg = *neven = 0;
     if (!ctx) return;
+    /* Mod[m, 2] == 0 hides `m` inside a function argument, so a top-level
+     * "scan operands of facts" alone misses it. We additionally walk
+     * Mod[s, _] for any symbol s that appears under an even-type fact. */
     for (size_t i = 0; i < ctx->count; i++) {
         const Expr* f = ctx->facts[i];
         if (f->type != EXPR_FUNCTION) continue;
-        /* Inspect each operand-position symbol. */
         for (size_t j = 0; j < f->data.function.arg_count; j++) {
             Expr* a = f->data.function.args[j];
-            if (a->type != EXPR_SYMBOL) continue;
-            const char* nm = a->data.symbol;
-            if (assume_known_positive(ctx, a) && *npos < cap && !sym_already_listed(positives, *npos, nm)) {
-                positives[(*npos)++] = (char*)nm;
-            }
-            if (assume_known_negative(ctx, a) && *nneg < cap && !sym_already_listed(negatives, *nneg, nm)) {
-                negatives[(*nneg)++] = (char*)nm;
-            }
-            if (assume_known_real(ctx, a) && *nreal < cap && !sym_already_listed(reals, *nreal, nm)) {
-                reals[(*nreal)++] = (char*)nm;
-            }
-            if (assume_known_integer(ctx, a) && *nint < cap && !sym_already_listed(integers, *nint, nm)) {
-                integers[(*nint)++] = (char*)nm;
+            if (a->type == EXPR_SYMBOL) {
+                const char* nm = a->data.symbol;
+                if (assume_known_positive(ctx, a) && *npos < cap && !sym_already_listed(positives, *npos, nm)) {
+                    positives[(*npos)++] = (char*)nm;
+                }
+                if (assume_known_negative(ctx, a) && *nneg < cap && !sym_already_listed(negatives, *nneg, nm)) {
+                    negatives[(*nneg)++] = (char*)nm;
+                }
+                if (assume_known_real(ctx, a) && *nreal < cap && !sym_already_listed(reals, *nreal, nm)) {
+                    reals[(*nreal)++] = (char*)nm;
+                }
+                if (assume_known_integer(ctx, a) && *nint < cap && !sym_already_listed(integers, *nint, nm)) {
+                    integers[(*nint)++] = (char*)nm;
+                }
+                if (assume_known_even(ctx, a) && *neven < cap && !sym_already_listed(evens, *neven, nm)) {
+                    evens[(*neven)++] = (char*)nm;
+                }
+            } else if (a->type == EXPR_FUNCTION &&
+                       a->data.function.head &&
+                       a->data.function.head->type == EXPR_SYMBOL &&
+                       strcmp(a->data.function.head->data.symbol, "Mod") == 0 &&
+                       a->data.function.arg_count == 2 &&
+                       a->data.function.args[0]->type == EXPR_SYMBOL) {
+                Expr* sym = a->data.function.args[0];
+                const char* nm = sym->data.symbol;
+                if (assume_known_even(ctx, sym) && *neven < cap && !sym_already_listed(evens, *neven, nm)) {
+                    evens[(*neven)++] = (char*)nm;
+                }
             }
         }
     }
@@ -807,8 +879,10 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
     char* reals    [MAX_SYM]; size_t nreal;
     char* integers [MAX_SYM]; size_t nint;
     char* negatives[MAX_SYM]; size_t nneg;
+    char* evens    [MAX_SYM]; size_t neven;
     collect_known_symbols(ctx, positives, &npos, reals, &nreal,
-                          integers, &nint, negatives, &nneg, MAX_SYM);
+                          integers, &nint, negatives, &nneg,
+                          evens, &neven, MAX_SYM);
 
     /* Build a single rule list "{r1, r2, ...}" as a string, then parse. */
     char buf[8192];
@@ -830,6 +904,9 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
         SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> %s", x, x);
         SEP(); EMIT("Power[Power[%s, -1], Rational[1, 2]] :> Power[%s, Rational[-1, 2]]", x, x);
         SEP(); EMIT("Power[Power[%s, -2], Rational[1, 2]] :> Power[%s, -1]", x, x);
+        /* Sqrt[x^2 * rest] -> x * Sqrt[rest] for x > 0; lets multi-factor
+         * radicals like Sqrt[x^2 y^2] reduce one symbol at a time. */
+        SEP(); EMIT("Power[Times[Power[%s, 2], rest___], Rational[1, 2]] :> %s Power[Times[rest], Rational[1, 2]]", x, x);
         /* Abs[x] -> x  for x > 0 */
         SEP(); EMIT("Abs[%s] :> %s", x, x);
         /* Log[x^p] -> p Log[x]  for x > 0 (any real p; v1 accepts symbolic p too) */
@@ -842,6 +919,8 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
         SEP(); EMIT("Abs[%s] :> -%s", x, x);
         /* Sqrt[x^2] -> -x  for x < 0  (Power[Power[x,2], 1/2]) */
         SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> -%s", x, x);
+        /* Sqrt[x^2 * rest] -> -x * Sqrt[rest] for x < 0. */
+        SEP(); EMIT("Power[Times[Power[%s, 2], rest___], Rational[1, 2]] :> -%s Power[Times[rest], Rational[1, 2]]", x, x);
     }
 
     /* For real-but-unknown-sign, Sqrt[x^2] -> Abs[x]. Skip symbols already
@@ -851,9 +930,14 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
         if (sym_already_listed(positives, npos, x)) continue;
         if (sym_already_listed(negatives, nneg, x)) continue;
         SEP(); EMIT("Power[Power[%s, 2], Rational[1, 2]] :> Abs[%s]", x, x);
+        /* Sqrt[x^2 * rest] -> Abs[x] * Sqrt[rest] for real x. */
+        SEP(); EMIT("Power[Times[Power[%s, 2], rest___], Rational[1, 2]] :> Abs[%s] Power[Times[rest], Rational[1, 2]]", x, x);
     }
 
-    /* Sin[n Pi] -> 0, Cos[n Pi] -> (-1)^n, Tan[n Pi] -> 0 for integer n. */
+    /* Sin[n Pi] -> 0, Cos[n Pi] -> (-1)^n, Tan[n Pi] -> 0 for integer n.
+     * Plus: (-1)^(even_int * n) -> 1 and ((-1)^n)^even_int -> 1, so the
+     * Cos rule can collapse all the way (the standalone Cos result
+     * Cos[k Pi]^4 -> Power[-1, 4 k], for instance). */
     for (size_t i = 0; i < nint; i++) {
         const char* n = integers[i];
         SEP(); EMIT("Sin[%s Pi] :> 0", n);
@@ -862,6 +946,28 @@ static Expr* apply_assumption_rules(const Expr* input, const AssumeCtx* ctx) {
         SEP(); EMIT("Cos[Pi %s] :> Power[-1, %s]", n, n);
         SEP(); EMIT("Tan[%s Pi] :> 0", n);
         SEP(); EMIT("Tan[Pi %s] :> 0", n);
+        SEP(); EMIT("Power[-1, Times[m_Integer /; EvenQ[m], %s]] :> 1", n);
+        SEP(); EMIT("Power[Power[-1, %s], m_Integer /; EvenQ[m]] :> 1", n);
+    }
+
+    /* Even-exponent identities: (-1)^m = 1 when m is even, and the
+     * lifted forms ((-1)^k)^m and (-1)^(k m) when additionally k is an
+     * integer (so k m is also even). The pair-wise integer/even rules
+     * cover the common Cos[k Pi]^m -> 1 path -- the existing Cos rule
+     * above rewrites Cos[k Pi] to Power[-1, k], so the Power surface form
+     * we land on is Power[Power[-1, k], m]. */
+    for (size_t i = 0; i < neven; i++) {
+        const char* m = evens[i];
+        SEP(); EMIT("Power[-1, %s] :> 1", m);
+        /* Literal-integer multiplier (handles concrete numbers without
+         * needing them in the integer set). */
+        SEP(); EMIT("Power[-1, k_Integer %s] :> 1", m);
+        SEP(); EMIT("Power[Power[-1, k_Integer], %s] :> 1", m);
+        for (size_t j = 0; j < nint; j++) {
+            const char* k = integers[j];
+            SEP(); EMIT("Power[-1, %s %s] :> 1", k, m);
+            SEP(); EMIT("Power[Power[-1, %s], %s] :> 1", k, m);
+        }
     }
 
     /* Equal[u, v] facts -> two-way substitution rules. We use immediate
@@ -1040,6 +1146,117 @@ static Expr* transform_trig_roundtrip(const Expr* e) {
     Expr* d = call_unary_owned("ExpToTrig", c);
     if (dbg) simp_debug_log("TrigRoundtrip", e, d, simp_debug_elapsed_ms(t0));
     return d;
+}
+
+/* Roots-of-unity simplification.
+ *
+ * Recognises every (-1)^(p/q) and E^(I p Pi / q) atom in the input,
+ * lifts the expression to a univariate polynomial in
+ *   omega = (-1)^(1/Q),  Q = LCM of denominators,
+ * reduces modulo the cyclotomic polynomial Phi_{2Q}(omega) (the minimal
+ * polynomial of omega = e^(I Pi / Q) over Q), and substitutes back. The
+ * reduction is exact: omega is a primitive (2Q)-th root of unity, so
+ * Phi_{2Q}(omega) = 0, and any polynomial p(omega) is identically zero
+ * iff Phi_{2Q}(x) divides p(x). The substitute -> reduce -> substitute
+ * round-trip preserves correctness for any polynomial in omega regardless
+ * of the choice of free coefficients.
+ *
+ * Handles e.g.
+ *   1 - (-1)^(1/3) + (-1)^(2/3)                 -> 0
+ *   1 - (-1)^(1/5) + (-1)^(2/5) - ... + (-1)^(4/5) -> 0
+ *   3 + 2 E^(-2 I Pi/3) + 2 E^(2 I Pi/3)        -> 1
+ *
+ * Implemented as a small Mathematica-syntax helper installed lazily
+ * into the symbol table on first call. The cyclotomic polynomial is
+ * computed on-the-fly by recursive division: Phi_n(x) = (x^n - 1) /
+ * Prod_{d | n, d < n} Phi_d(x). Cache pressure is light because the
+ * recursion is bounded by the LCM 2Q (typically < 30 for hand-written
+ * inputs) and PolynomialQuotient memoises subresults via the term
+ * structure of x^n - 1. */
+static void simp_install_roots_of_unity_helpers(void) {
+    static bool installed = false;
+    if (installed) return;
+    /* Definitions are added as DownValues on internal `$ru*` symbols so
+     * they don't shadow anything user-visible. parse_expression returns
+     * a SetDelayed Expr*; evaluate runs the assignment and returns Null
+     * (we free that). */
+    const char* defs[] = {
+        "$ruCyclotomic[1, x_] := x - 1",
+        "$ruCyclotomic[n_Integer, x_] := Module["
+        "  {d, num = x^n - 1, denom = 1},"
+        "  Do[If[Mod[n, d] == 0, denom = denom * $ruCyclotomic[d, x]], {d, 1, n - 1}];"
+        "  PolynomialQuotient[num, denom, x]]",
+        /* Main simplifier: collect denominators, lift to polynomial in
+         * $ru, reduce mod Phi_{2Q}($ru), substitute back. The mod 2Q
+         * normalisation on the exponent handles negative-exponent forms
+         * like E^(-I Pi p / q) without leaving x^(-k) terms that
+         * PolynomialRemainder would reject. */
+        "$ruSimplify[expr_] := Module["
+        "  {denoms, Q, polyForm, phiPoly, reduced},"
+        "  denoms = Union[Join["
+        "    Cases[expr, Power[-1, Rational[_, q_]] :> q, {0, Infinity}],"
+        "    Cases[expr, Power[E, Times[Complex[0, Rational[_, q_]], Pi]] :> q, {0, Infinity}]]];"
+        "  If[denoms === {}, expr,"
+        "    Q = Apply[LCM, denoms];"
+        "    polyForm = expr /. {"
+        "      Power[-1, Rational[a_, b_]] :> $ru^Mod[a Q/b, 2 Q],"
+        "      Power[E, Times[Complex[0, Rational[a_, b_]], Pi]] :> $ru^Mod[a Q/b, 2 Q]};"
+        "    phiPoly = $ruCyclotomic[2 Q, $ru];"
+        "    reduced = PolynomialRemainder[polyForm, phiPoly, $ru];"
+        "    reduced /. $ru -> Power[-1, 1/Q]]]"
+    };
+    for (size_t i = 0; i < sizeof(defs)/sizeof(defs[0]); i++) {
+        Expr* parsed = parse_expression(defs[i]);
+        if (!parsed) continue;
+        Expr* r = evaluate(parsed);
+        if (r) expr_free(r);
+    }
+    installed = true;
+}
+
+static Expr* simp_roots_of_unity(const Expr* e) {
+    simp_install_roots_of_unity_helpers();
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
+    Expr* args[1] = { expr_copy((Expr*)e) };
+    Expr* call = expr_new_function(
+        expr_new_symbol("$ruSimplify"), args, 1);
+    Expr* out = evaluate(call);
+    if (dbg) simp_debug_log("RootsOfUnity", e, out,
+                            simp_debug_elapsed_ms(t0));
+    return out;
+}
+
+/* Pythagorean perfect-square completion: 1 +/- 2 Sin[x] Cos[x]
+ * = (Sin[x] +/- Cos[x])^2. Lets Simplify reach factored forms like
+ * (Sin + Cos)^4 from a Factor result of (1 + 2 Sin Cos)^2. We keep
+ * this as its own transform (separate from TrigFactor) because
+ * TrigFactor's identity rule list also contains the linear-combination
+ * rule a Sin[x] + b Cos[x] -> Sqrt[a^2+b^2] Sin[x + ArcTan[a, b]],
+ * which would re-rewrite (Sin + Cos) into a single trig and obscure the
+ * factored form. As a standalone seed the rewrite produces a candidate
+ * Simplify can score directly. */
+static Expr* transform_pythag_square_complete(const Expr* e) {
+    static Expr* rules = NULL;
+    if (!rules) {
+        rules = parse_expression(
+            "{ 1 + 2 Sin[x_] Cos[x_] + r___ :> (Sin[x] + Cos[x])^2 + r, "
+            "  1 - 2 Sin[x_] Cos[x_] + r___ :> (Sin[x] - Cos[x])^2 + r, "
+            "  -1 + Cosh[x_]^2 + Sinh[x_]^2 + 2 Sinh[x_] Cosh[x_] + r___ "
+            "      :> (Sinh[x] + Cosh[x])^2 - 1 + r, "
+            "  -1 + Cosh[x_]^2 + Sinh[x_]^2 - 2 Sinh[x_] Cosh[x_] + r___ "
+            "      :> (Sinh[x] - Cosh[x])^2 - 1 + r }");
+    }
+    if (!rules) return NULL;
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
+    Expr* args[2] = { expr_copy((Expr*)e), expr_copy(rules) };
+    Expr* call = expr_new_function(
+        expr_new_symbol("ReplaceRepeated"), args, 2);
+    Expr* out = evaluate(call);
+    if (dbg) simp_debug_log("PythagSquareComplete", e, out,
+                            simp_debug_elapsed_ms(t0));
+    return out;
 }
 
 /* ----------------------------------------------------------------------- */
@@ -2155,6 +2372,32 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
         }
     }
 
+    /* Pythagorean square-completion seed. Idempotent on inputs without the
+     * 1 +/- 2 Sin Cos shape, so always cheap to try. */
+    {
+        Expr* alt = transform_pythag_square_complete(input);
+        if (alt && !expr_eq(alt, input)) {
+            update_best(&best, &best_score, alt, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    /* Roots-of-unity seed. Reduces sums of (-1)^(p/q) and E^(I p Pi/q)
+     * via the minimal polynomial Phi_{2Q}(x); see
+     * simp_roots_of_unity above. Idempotent and inert when the input
+     * has no root-of-unity atoms. */
+    {
+        Expr* alt = simp_roots_of_unity(input);
+        if (alt && !expr_eq(alt, input)) {
+            update_best(&best, &best_score, alt, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
     /* Per-variable Collect seed. parent_score = score(input). */
     if (transform_can_fire("CollectPerVariable", input, NULL)) {
         try_collect_per_variable(input, best_score, &seeds, &best, &best_score,
@@ -2208,6 +2451,22 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                         expr_free(tr);
                     } else {
                         cs_add_or_free(&next, tr);
+                    }
+                }
+            }
+            /* Pythagorean square completion on each candidate. The Factor
+             * transform run earlier may have produced (1 + 2 Sin Cos)^2;
+             * this round step lets the rule fire on that intermediate. */
+            {
+                Expr* psc = transform_pythag_square_complete(seed);
+                if (psc) {
+                    update_best(&best, &best_score, psc, complexity_func);
+                    if (expr_eq(psc, seed)) {
+                        expr_free(psc);
+                    } else if (score_with_func(psc, complexity_func) > parent_score) {
+                        expr_free(psc);
+                    } else {
+                        cs_add_or_free(&next, psc);
                     }
                 }
             }
@@ -2688,6 +2947,306 @@ static Expr* combine_with_and(Expr* a, Expr* b) {
     return r;
 }
 
+/* ----------------------------------------------------------------------- */
+/* Equation / inequality rebalancing                                       */
+/*                                                                         */
+/* For a binary relation `lhs OP rhs`, compute d = lhs - rhs as an         */
+/* evaluated Plus, then rewrite as `pos OP neg` after dividing through by  */
+/* the GCD of integer coefficients. Negative-coefficient terms move to    */
+/* the opposite side. The result is correctness-preserving for both       */
+/* equality and ordering relations (we never multiply or divide by a      */
+/* negative quantity, only the positive integer GCD).                     */
+/* ----------------------------------------------------------------------- */
+
+static bool simp_eq_head_sym(const Expr* e, const char* name) {
+    return e && e->type == EXPR_FUNCTION &&
+           e->data.function.head &&
+           e->data.function.head->type == EXPR_SYMBOL &&
+           strcmp(e->data.function.head->data.symbol, name) == 0;
+}
+
+/* Decompose a Plus term into integer-coefficient * rest. Returns false
+ * for terms whose leading numeric factor isn't an int64 (Real, BigInt,
+ * Rational), which signals the caller to skip rebalancing -- mixing in
+ * those would risk losing precision or introducing fractions. */
+static bool simp_plus_term_int_coeff(const Expr* term, int64_t* coef,
+                                     Expr** rest_out) {
+    if (term->type == EXPR_INTEGER) {
+        *coef = term->data.integer;
+        *rest_out = expr_new_integer(1);
+        return true;
+    }
+    if (term->type == EXPR_BIGINT || term->type == EXPR_REAL) return false;
+
+    if (simp_eq_head_sym(term, "Times") &&
+        term->data.function.arg_count >= 1) {
+        const Expr* a0 = term->data.function.args[0];
+        if (a0->type == EXPR_INTEGER) {
+            *coef = a0->data.integer;
+            size_t n = term->data.function.arg_count;
+            if (n == 2) {
+                *rest_out = expr_copy(term->data.function.args[1]);
+            } else {
+                Expr** args = (Expr**)calloc(n - 1, sizeof(Expr*));
+                for (size_t i = 1; i < n; i++) {
+                    args[i - 1] = expr_copy(term->data.function.args[i]);
+                }
+                *rest_out = expr_new_function(
+                    expr_new_symbol("Times"), args, n - 1);
+                free(args);
+            }
+            return true;
+        }
+        if (a0->type == EXPR_BIGINT || a0->type == EXPR_REAL) return false;
+        if (simp_eq_head_sym(a0, "Rational")) return false;
+    }
+
+    /* Generic term: implicit coefficient 1, rest = term. */
+    *coef = 1;
+    *rest_out = expr_copy((Expr*)term);
+    return true;
+}
+
+/* Build `c * rest`, dropping a coefficient of 1 and Times wrappers when
+ * rest = 1. Takes ownership of `rest`. */
+static Expr* simp_make_term(int64_t c, Expr* rest) {
+    if (rest->type == EXPR_INTEGER && rest->data.integer == 1) {
+        expr_free(rest);
+        return expr_new_integer(c);
+    }
+    if (c == 1) return rest;
+    /* Flatten into existing Times; otherwise wrap. */
+    if (simp_eq_head_sym(rest, "Times")) {
+        size_t n = rest->data.function.arg_count;
+        Expr** args = (Expr**)calloc(n + 1, sizeof(Expr*));
+        args[0] = expr_new_integer(c);
+        for (size_t i = 0; i < n; i++) {
+            args[i + 1] = expr_copy(rest->data.function.args[i]);
+        }
+        Expr* out = expr_new_function(
+            expr_new_symbol("Times"), args, n + 1);
+        free(args);
+        expr_free(rest);
+        return out;
+    }
+    Expr* args[2] = { expr_new_integer(c), rest };
+    return expr_new_function(expr_new_symbol("Times"), args, 2);
+}
+
+/* Returns NULL when no rebalanced form is produced (non-int64 coeffs,
+ * fully symbolic d, or d = 0). The caller compares scores. */
+static Expr* simp_try_rebalance_relation(const Expr* relation) {
+    if (!relation || relation->type != EXPR_FUNCTION) return NULL;
+    if (relation->data.function.arg_count != 2) return NULL;
+    const Expr* h = relation->data.function.head;
+    if (!h || h->type != EXPR_SYMBOL) return NULL;
+    const char* hn = h->data.symbol;
+    bool ok = (strcmp(hn, "Equal") == 0 ||
+               strcmp(hn, "Unequal") == 0 ||
+               strcmp(hn, "Less") == 0 ||
+               strcmp(hn, "LessEqual") == 0 ||
+               strcmp(hn, "Greater") == 0 ||
+               strcmp(hn, "GreaterEqual") == 0);
+    if (!ok) return NULL;
+
+    /* d = lhs - rhs, evaluated. */
+    Expr* neg_args[2] = {
+        expr_new_integer(-1),
+        expr_copy(relation->data.function.args[1])
+    };
+    Expr* neg_rhs = expr_new_function(
+        expr_new_symbol("Times"), neg_args, 2);
+    Expr* d_args[2] = {
+        expr_copy(relation->data.function.args[0]),
+        neg_rhs
+    };
+    Expr* d_call = expr_new_function(
+        expr_new_symbol("Plus"), d_args, 2);
+    Expr* d_sum = evaluate(d_call);
+    /* Expand so Times[2, Plus[...]] partitions term-by-term. The threaded
+     * input may already have collected common factors via Collect, which
+     * defeats coefficient-level rebalancing. */
+    Expr* exp_args[1] = { d_sum };
+    Expr* d_exp_call = expr_new_function(
+        expr_new_symbol("Expand"), exp_args, 1);
+    Expr* d = evaluate(d_exp_call);
+
+    Expr* d_singleton[1];
+    Expr** terms;
+    size_t n;
+    if (simp_eq_head_sym(d, "Plus")) {
+        n = d->data.function.arg_count;
+        terms = d->data.function.args;
+    } else {
+        d_singleton[0] = d;
+        terms = d_singleton;
+        n = 1;
+    }
+    if (n == 0) { expr_free(d); return NULL; }
+
+    /* Extract integer coefficients. Bail on non-int64. */
+    int64_t* coefs = (int64_t*)calloc(n, sizeof(int64_t));
+    Expr** rests = (Expr**)calloc(n, sizeof(Expr*));
+    bool ok2 = true;
+    for (size_t i = 0; i < n; i++) {
+        if (!simp_plus_term_int_coeff(terms[i], &coefs[i], &rests[i])) {
+            ok2 = false;
+            for (size_t j = 0; j < i; j++) expr_free(rests[j]);
+            break;
+        }
+    }
+    if (!ok2) {
+        free(coefs);
+        free(rests);
+        expr_free(d);
+        return NULL;
+    }
+
+    /* GCD of |coefs|. */
+    int64_t g = 0;
+    for (size_t i = 0; i < n; i++) {
+        int64_t c = coefs[i];
+        if (c == INT64_MIN) { g = 1; break; }
+        if (c < 0) c = -c;
+        g = (g == 0) ? c : gcd(g, c);
+    }
+    if (g == 0) g = 1;
+
+    /* Polarity: pick the first non-constant term's coefficient sign so the
+     * leading variable term ends up positive after dividing through. This
+     * turns `-2 x == 4` into `x == -2` rather than `0 == x + 2`. For strict
+     * inequalities (Less, Greater) a negative divisor flips the operator;
+     * the non-strict and equality forms are direction-symmetric. */
+    int64_t divisor = g;
+    bool flipped = false;
+    for (size_t i = 0; i < n; i++) {
+        bool is_const = (rests[i]->type == EXPR_INTEGER &&
+                         rests[i]->data.integer == 1);
+        if (!is_const) {
+            if (coefs[i] < 0) { divisor = -g; flipped = true; }
+            break;
+        }
+    }
+    for (size_t i = 0; i < n; i++) coefs[i] /= divisor;
+
+    const char* out_head = hn;
+    if (flipped) {
+        if      (strcmp(hn, "Less") == 0)         out_head = "Greater";
+        else if (strcmp(hn, "Greater") == 0)      out_head = "Less";
+        else if (strcmp(hn, "LessEqual") == 0)    out_head = "GreaterEqual";
+        else if (strcmp(hn, "GreaterEqual") == 0) out_head = "LessEqual";
+    }
+
+    /* Build LHS from positive-coef variable terms, RHS from
+     * negated-negative-coef variable terms plus the negated constant. */
+    Expr** pos = (Expr**)calloc(n, sizeof(Expr*));
+    Expr** neg = (Expr**)calloc(n, sizeof(Expr*));
+    size_t pn = 0, nn = 0;
+    int64_t const_sum = 0;       /* moves to RHS as -const_sum */
+    bool const_overflow = false; /* on overflow, fall back to a Plus term */
+    Expr** const_terms = (Expr**)calloc(n, sizeof(Expr*));
+    size_t cn = 0;
+    for (size_t i = 0; i < n; i++) {
+        bool is_const = (rests[i]->type == EXPR_INTEGER &&
+                         rests[i]->data.integer == 1);
+        if (is_const) {
+            int64_t c = coefs[i];
+            /* Track sum but guard against int64 overflow. */
+            int64_t sum;
+            if (!const_overflow &&
+                ((c > 0 && const_sum > INT64_MAX - c) ||
+                 (c < 0 && const_sum < INT64_MIN - c))) {
+                const_overflow = true;
+            }
+            if (!const_overflow) {
+                sum = const_sum + c;
+                const_sum = sum;
+            }
+            /* Always keep the term in case we hit overflow later. */
+            const_terms[cn++] = simp_make_term(c, rests[i]);
+        } else {
+            if (coefs[i] > 0) {
+                pos[pn++] = simp_make_term(coefs[i], rests[i]);
+            } else if (coefs[i] < 0) {
+                neg[nn++] = simp_make_term(-coefs[i], rests[i]);
+            } else {
+                expr_free(rests[i]);
+            }
+        }
+    }
+
+    Expr* new_lhs;
+    if (pn == 0)      new_lhs = expr_new_integer(0);
+    else if (pn == 1) new_lhs = pos[0];
+    else              new_lhs = expr_new_function(
+                          expr_new_symbol("Plus"), pos, pn);
+
+    /* RHS = (negated negative-coef vars) + (-const). */
+    size_t total_rhs = nn + cn;
+    Expr* new_rhs;
+    if (total_rhs == 0) {
+        new_rhs = expr_new_integer(0);
+        for (size_t i = 0; i < cn; i++) expr_free(const_terms[i]);
+    } else {
+        Expr** rhs_terms = (Expr**)calloc(total_rhs, sizeof(Expr*));
+        size_t rt = 0;
+        for (size_t i = 0; i < nn; i++) rhs_terms[rt++] = neg[i];
+        if (!const_overflow) {
+            /* Single integer for the constant: -const_sum (zero is fine). */
+            for (size_t i = 0; i < cn; i++) expr_free(const_terms[i]);
+            if (const_sum != 0 || rt == 0) {
+                /* Build -const_sum, watching INT64_MIN. */
+                int64_t neg_const = (const_sum == INT64_MIN)
+                                        ? INT64_MAX  /* impossible in practice */
+                                        : -const_sum;
+                rhs_terms[rt++] = expr_new_integer(neg_const);
+            }
+        } else {
+            /* Overflow path: keep each constant term, negated. */
+            for (size_t i = 0; i < cn; i++) {
+                /* Negate the leading coefficient. */
+                if (const_terms[i]->type == EXPR_INTEGER) {
+                    const_terms[i]->data.integer = -const_terms[i]->data.integer;
+                    rhs_terms[rt++] = const_terms[i];
+                } else {
+                    /* Wrap in Times[-1, ...]. */
+                    Expr* args[2] = { expr_new_integer(-1), const_terms[i] };
+                    rhs_terms[rt++] = expr_new_function(
+                        expr_new_symbol("Times"), args, 2);
+                }
+            }
+        }
+        if (rt == 0) {
+            new_rhs = expr_new_integer(0);
+            free(rhs_terms);
+        } else if (rt == 1) {
+            new_rhs = rhs_terms[0];
+            free(rhs_terms);
+        } else {
+            new_rhs = expr_new_function(
+                expr_new_symbol("Plus"), rhs_terms, rt);
+            free(rhs_terms);
+        }
+    }
+
+    free(const_terms);
+    free(pos);
+    free(neg);
+    free(coefs);
+    free(rests);
+    expr_free(d);
+
+    /* Re-evaluate each side so canonical ordering / Plus flattening kicks in. */
+    Expr* lhs_e = evaluate(new_lhs);
+    Expr* rhs_e = evaluate(new_rhs);
+
+    Expr* rel_args[2] = { lhs_e, rhs_e };
+    Expr* out = expr_new_function(
+        expr_new_symbol(out_head), rel_args, 2);
+    Expr* out_eval = evaluate(out);
+    return out_eval;
+}
+
 Expr* builtin_simplify(Expr* res) {
     if (res->type != EXPR_FUNCTION) return NULL;
     size_t argc = res->data.function.arg_count;
@@ -2760,8 +3319,10 @@ Expr* builtin_simplify(Expr* res) {
     }
 
     /* Manual threading over Equal/Less/.../And/Or (List handled by
-     * ATTR_LISTABLE on the Simplify symbol itself). v1 simplifies each
-     * side independently; equation rebalancing is a known gap. */
+     * ATTR_LISTABLE on the Simplify symbol itself). For binary
+     * relational heads we additionally try a rebalanced form
+     * `pos OP neg` (after dividing through by the GCD of integer
+     * coefficients) and pick the simpler of the two by SimplifyCount. */
     if (expr->type == EXPR_FUNCTION &&
         expr->data.function.head &&
         expr->data.function.head->type == EXPR_SYMBOL &&
@@ -2781,6 +3342,24 @@ Expr* builtin_simplify(Expr* res) {
         Expr* threaded = expr_new_function(expr_copy(expr->data.function.head), new_args, n);
         free(new_args);
         Expr* threaded_eval = evaluate(threaded);
+
+        /* Rebalance candidate: only meaningful for a binary relation that
+         * survived evaluation (Equal collapsed to True/False is not a
+         * Function any more). */
+        Expr* rebalanced = simp_try_rebalance_relation(threaded_eval);
+        if (rebalanced && !expr_eq(rebalanced, threaded_eval)) {
+            size_t s_threaded = score_with_func(threaded_eval, opt_complexity);
+            size_t s_rebal    = score_with_func(rebalanced, opt_complexity);
+            if (s_rebal < s_threaded) {
+                expr_free(threaded_eval);
+                threaded_eval = rebalanced;
+            } else {
+                expr_free(rebalanced);
+            }
+        } else if (rebalanced) {
+            expr_free(rebalanced);
+        }
+
         assume_ctx_free(ctx);
         return threaded_eval;
     }

@@ -72,5 +72,6 @@ bool assume_known_negative(const AssumeCtx* ctx, const Expr* x);
 bool assume_known_nonpos  (const AssumeCtx* ctx, const Expr* x);
 bool assume_known_real    (const AssumeCtx* ctx, const Expr* x);
 bool assume_known_integer (const AssumeCtx* ctx, const Expr* x);
+bool assume_known_even    (const AssumeCtx* ctx, const Expr* x);
 
 #endif /* PICOCAS_SIMP_H */
