@@ -1260,6 +1260,104 @@ static Expr* transform_pythag_square_complete(const Expr* e) {
     return out;
 }
 
+/* Half-angle tangent identity, applied to both circular and hyperbolic
+ * functions. Folds the Weierstrass forms
+ *
+ *   Sin[x] / (1 + Cos[x])              -> Tan[x/2]
+ *   Sin[x]^a (1 + Cos[x])^(-a)         -> Tan[x/2]^a
+ *   Sin[x] / (c (1 + Cos[x]))          -> Tan[x/2] / c        (FreeQ[c, x])
+ *   Sin[x]^a (c (1 + Cos[x]))^(-a)     -> Tan[x/2]^a / c^a    (FreeQ[c, x])
+ *   (1 - Cos[x]) / Sin[x]              -> Tan[x/2]
+ *   (1 - Cos[x])^a Sin[x]^(-a)         -> Tan[x/2]^a
+ *
+ * and the analogous Sinh/Cosh -> Tanh[x/2] family (with the sign
+ * difference (Cosh[x] - 1)/Sinh[x] == Tanh[x/2]). Each rule has a
+ * trailing `r___` BlankNullSequence inside the Times so the rule fires
+ * on subterms inside larger products (e.g. (1/2) Sin[x] / (1 + Cos[x])
+ * still rewrites). The conditional-pattern guards (a + b === 0,
+ * FreeQ[c, x]) are what keeps the rules general -- there are no
+ * specific-numeric variants.
+ *
+ * Output complexity is uniformly less than or equal to the input on
+ * every shape that fires, so simp_search's leaf-count tiebreak takes
+ * the rewritten form. */
+static Expr* transform_halfangle(const Expr* e) {
+    static Expr* rules = NULL;
+    if (!rules) {
+        rules = parse_expression(
+            "{ "
+            /* Trig: Sin / (1 + Cos) -> Tan[x/2] */
+            "  Sin[x_] Power[1 + Cos[x_], -1] r___ :> Tan[x/2] r, "
+            "  Sin[x_]^a_ (1 + Cos[x_])^b_ r___ "
+            "    /; a + b === 0 :> Tan[x/2]^a r, "
+            /* Trig: Sin / (c (1 + Cos)) -> Tan[x/2]/c */
+            "  Sin[x_] Power[c_ + c_ Cos[x_], -1] r___ "
+            "    /; FreeQ[c, x] :> Tan[x/2] c^(-1) r, "
+            "  Sin[x_]^a_ (c_ + c_ Cos[x_])^b_ r___ "
+            "    /; a + b === 0 && FreeQ[c, x] :> Tan[x/2]^a c^b r, "
+            /* Trig: (1 - Cos) / Sin -> Tan[x/2] */
+            "  (1 - Cos[x_]) Power[Sin[x_], -1] r___ :> Tan[x/2] r, "
+            "  (1 - Cos[x_])^a_ Sin[x_]^b_ r___ "
+            "    /; a + b === 0 :> Tan[x/2]^a r, "
+            /* Hyperbolic: Sinh / (1 + Cosh) -> Tanh[x/2] */
+            "  Sinh[x_] Power[1 + Cosh[x_], -1] r___ :> Tanh[x/2] r, "
+            "  Sinh[x_]^a_ (1 + Cosh[x_])^b_ r___ "
+            "    /; a + b === 0 :> Tanh[x/2]^a r, "
+            /* Hyperbolic: Sinh / (c (1 + Cosh)) -> Tanh[x/2]/c */
+            "  Sinh[x_] Power[c_ + c_ Cosh[x_], -1] r___ "
+            "    /; FreeQ[c, x] :> Tanh[x/2] c^(-1) r, "
+            "  Sinh[x_]^a_ (c_ + c_ Cosh[x_])^b_ r___ "
+            "    /; a + b === 0 && FreeQ[c, x] :> Tanh[x/2]^a c^b r, "
+            /* Hyperbolic: (Cosh - 1) / Sinh -> Tanh[x/2] */
+            "  (-1 + Cosh[x_]) Power[Sinh[x_], -1] r___ :> Tanh[x/2] r, "
+            "  (-1 + Cosh[x_])^a_ Sinh[x_]^b_ r___ "
+            "    /; a + b === 0 :> Tanh[x/2]^a r "
+            "}");
+    }
+    if (!rules) return NULL;
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
+    Expr* args[2] = { expr_copy((Expr*)e), expr_copy(rules) };
+    Expr* call = expr_new_function(
+        expr_new_symbol("ReplaceRepeated"), args, 2);
+    Expr* out = evaluate(call);
+    if (dbg) simp_debug_log("HalfAngle", e, out,
+                            simp_debug_elapsed_ms(t0));
+    return out;
+}
+
+/* Pythagorean reduction:
+ *   1 - Cos[x]^2  -> Sin[x]^2
+ *   1 - Sin[x]^2  -> Cos[x]^2
+ *   Cosh[x]^2 - 1 -> Sinh[x]^2
+ *   1 + Sinh[x]^2 -> Cosh[x]^2
+ *
+ * Each rule is a strict leaf-count reduction (the Plus collapses to a
+ * single Power). The trailing `r___` inside the Plus lets the rule fire
+ * when the matching pair sits among other terms (e.g.
+ * `1 - Cos[x]^2 + 5` -> `5 + Sin[x]^2`). Idempotent on inputs that
+ * don't match. */
+static Expr* transform_pythag_reduce(const Expr* e) {
+    static Expr* rules = NULL;
+    if (!rules) {
+        rules = parse_expression(
+            "{ 1 - Cos[x_]^2 + r___  :> Sin[x]^2 + r, "
+            "  1 - Sin[x_]^2 + r___  :> Cos[x]^2 + r, "
+            "  -1 + Cosh[x_]^2 + r___ :> Sinh[x]^2 + r, "
+            "  1 + Sinh[x_]^2 + r___ :> Cosh[x]^2 + r }");
+    }
+    if (!rules) return NULL;
+    bool dbg = simp_debug_enabled();
+    clock_t t0 = dbg ? clock() : 0;
+    Expr* args[2] = { expr_copy((Expr*)e), expr_copy(rules) };
+    Expr* call = expr_new_function(
+        expr_new_symbol("ReplaceRepeated"), args, 2);
+    Expr* out = evaluate(call);
+    if (dbg) simp_debug_log("PythagReduce", e, out,
+                            simp_debug_elapsed_ms(t0));
+    return out;
+}
+
 /* ----------------------------------------------------------------------- */
 /* Log/Power rewriter (positive-real cascade, v1)                          */
 /* ----------------------------------------------------------------------- */
@@ -2362,12 +2460,28 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
         }
     }
 
-    /* Roundtrip seed. */
+    /* Roundtrip seed. Score-gate the seed propagation: TrigRoundtrip
+     * runs Together inside, which on pure-real Sinh/Cosh exp forms can
+     * factor out an asymmetric E^(-kx) that introduces a high-frequency
+     * E^(2kx) term in the cofactor (e.g.
+     * Together[-1/2 + 1/4 E^(-2x) + 1/4 E^(2x)]
+     *   ->  1/4 E^(-2x) (1 - 2 E^(2x) + E^(4x))).
+     * ExpToTrig then turns that into a 16-term Cosh/Sinh product that
+     * subsequent transforms (Together, Cancel, Factor) all consume
+     * 100s of ms on. update_best still picks the result if it's a win;
+     * we only refuse to propagate dramatic blow-ups as a seed for
+     * further exploration. */
     if (transform_can_fire("TrigRoundtrip", input, NULL)) {
         Expr* alt = transform_trig_roundtrip(input);
         if (alt && !expr_eq(alt, input)) {
             update_best(&best, &best_score, alt, complexity_func);
-            cs_add_or_free(&seeds, alt);
+            size_t alt_score = score_with_func(alt, complexity_func);
+            size_t input_score = score_with_func(input, complexity_func);
+            if (alt_score <= 2 * input_score + 8) {
+                cs_add_or_free(&seeds, alt);
+            } else {
+                expr_free(alt);
+            }
         } else if (alt) {
             expr_free(alt);
         }
@@ -2377,6 +2491,30 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
      * 1 +/- 2 Sin Cos shape, so always cheap to try. */
     {
         Expr* alt = transform_pythag_square_complete(input);
+        if (alt && !expr_eq(alt, input)) {
+            update_best(&best, &best_score, alt, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    /* Pythagorean reduction seed (1 - Cos^2 -> Sin^2, etc.). Strict
+     * leaf-count win when it fires; inert otherwise. */
+    {
+        Expr* alt = transform_pythag_reduce(input);
+        if (alt && !expr_eq(alt, input)) {
+            update_best(&best, &best_score, alt, complexity_func);
+            cs_add_or_free(&seeds, alt);
+        } else if (alt) {
+            expr_free(alt);
+        }
+    }
+
+    /* Half-angle tangent / Tanh seed. Idempotent on inputs without
+     * the Sin/(1+Cos) (resp. Sinh/(1+Cosh)) shape. */
+    {
+        Expr* alt = transform_halfangle(input);
         if (alt && !expr_eq(alt, input)) {
             update_best(&best, &best_score, alt, complexity_func);
             cs_add_or_free(&seeds, alt);
@@ -2468,6 +2606,39 @@ static Expr* simp_search(const Expr* original_input, const AssumeCtx* ctx,
                         expr_free(psc);
                     } else {
                         cs_add_or_free(&next, psc);
+                    }
+                }
+            }
+            /* Pythagorean reduction on each candidate (1 - Cos^2 -> Sin^2,
+             * Cosh^2 - 1 -> Sinh^2, etc.). Strict leaf-count win when
+             * matched. */
+            {
+                Expr* pr = transform_pythag_reduce(seed);
+                if (pr) {
+                    update_best(&best, &best_score, pr, complexity_func);
+                    if (expr_eq(pr, seed)) {
+                        expr_free(pr);
+                    } else if (score_with_func(pr, complexity_func) > parent_score) {
+                        expr_free(pr);
+                    } else {
+                        cs_add_or_free(&next, pr);
+                    }
+                }
+            }
+            /* Half-angle tangent / Tanh on each candidate. Lets Together
+             * /Cancel intermediates (which can surface (1+Cos[x]) or
+             * (1+Cosh[x]) factors after partial cancellation) feed into
+             * the rule. */
+            {
+                Expr* ha = transform_halfangle(seed);
+                if (ha) {
+                    update_best(&best, &best_score, ha, complexity_func);
+                    if (expr_eq(ha, seed)) {
+                        expr_free(ha);
+                    } else if (score_with_func(ha, complexity_func) > parent_score) {
+                        expr_free(ha);
+                    } else {
+                        cs_add_or_free(&next, ha);
                     }
                 }
             }

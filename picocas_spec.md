@@ -5713,6 +5713,13 @@ fast path naturally. This "descend + re-evaluate" strategy keeps
 `src/numeric.c` small and puts each function's numeric implementation
 in its owning module.
 
+One special case lives in `numericalize_function`: when the head is
+`Power` and the exponent is an `EXPR_INTEGER` or `EXPR_BIGINT`, the
+exponent is preserved verbatim and only the base is numericalized.
+This matches Mathematica (`N[3 x^2 + 3 x + 1]` → `1. + 3. x + 3. x^2`,
+not `… 3. x^2.`) and keeps polynomial structure intact under `N`.
+Non-integer exponents (e.g. `1/2`) are still numericalized.
+
 MPFR-aware paths were added to:
 
 - `src/plus.c`, `src/times.c`, `src/power.c` — use `numeric_mpfr_add`,
@@ -7412,3 +7419,114 @@ which hinges on the rationalised intermediate `(25/2 x + 15/2 y)/(25/2 x - 15/2 
 * Edge cases: 0-arg / 3-arg malformed calls, symbolic and negative
   tolerances stay unevaluated, threading through `List`,
   `Protected` attribute.
+
+## Simplify: half-angle Tan / Tanh and Pythagorean reduction (2026-04-29)
+
+Two new transforms in `src/simp.c` close the long-standing gaps where
+`Simplify` could not reach the Weierstrass half-angle form
+`Tan[x/2]` (resp. `Tanh[x/2]`) or fold `1 - Cos[x]^2` into `Sin[x]^2`
+inside a larger product. Both are invoked as seeds and per-candidate
+transforms in `simp_search`, alongside the existing
+`PythagSquareComplete` and `TrigRoundtrip`.
+
+### `transform_halfangle` -- half-angle tangent
+
+Folds the Weierstrass identities
+
+```
+Sin[x] / (1 + Cos[x])              -> Tan[x/2]
+Sin[x]^a (1 + Cos[x])^(-a)         -> Tan[x/2]^a
+Sin[x] / (c (1 + Cos[x]))          -> Tan[x/2] / c          (FreeQ[c, x])
+Sin[x]^a (c (1 + Cos[x]))^b        -> Tan[x/2]^a c^b        (a + b == 0, FreeQ[c, x])
+(1 - Cos[x]) / Sin[x]              -> Tan[x/2]
+(1 - Cos[x])^a Sin[x]^b            -> Tan[x/2]^a            (a + b == 0)
+```
+
+and the corresponding `Sinh / Cosh -> Tanh[x/2]` family with the sign
+flip `(Cosh[x] - 1) / Sinh[x] = Tanh[x/2]`. Each rule has a trailing
+`r___` BlankNullSequence on the enclosing `Times`, so the rule fires
+on subterms inside larger products (e.g.
+`(1/2) Sin[x] / (1 + Cos[x])` rewrites). The general-power forms use
+the conditional pattern `/; a + b === 0` to keep the rule shape
+free of specific exponent values, which is what handles inputs like
+
+```
+Simplify[(Cos[5] + 1)^a Sin[5]^(-a)] -> Tan[5/2]^(-a)
+```
+
+without any case-specific rule.
+
+Output complexity is uniformly less than or equal to the input on
+every shape that fires, so `simp_search`'s leaf-count tiebreak takes
+the rewritten form.
+
+### `transform_pythag_reduce` -- Pythagorean collapse inside products
+
+Strict leaf-count reductions
+
+```
+1 - Cos[x]^2  -> Sin[x]^2
+1 - Sin[x]^2  -> Cos[x]^2
+Cosh[x]^2 - 1 -> Sinh[x]^2
+1 + Sinh[x]^2 -> Cosh[x]^2
+```
+
+via `ReplaceRepeated` with a trailing `+ r___` so the matching pair
+collapses even when it sits among other Plus terms (e.g.
+`1 - Cos[x]^2 + 5` -> `5 + Sin[x]^2`). Together with the bottom-up
+recursion of `simp_bottomup`, this lets
+
+```
+Simplify[Sin[x] (1 - Cos[x]^2)]   -> Sin[x]^3
+Simplify[Cos[x] (1 - Sin[x]^2)]   -> Cos[x]^3
+Simplify[Sinh[x] (Cosh[x]^2 - 1)] -> Sinh[x]^3
+Simplify[Cosh[x] (1 + Sinh[x]^2)] -> Cosh[x]^3
+```
+
+reach the cubed form directly: the inner Plus collapses first via
+`PythagReduce`, leaving a `Sin[x] * Sin[x]^2` (resp. hyperbolic) Times
+that the standard arithmetic simplifier reduces to the cubed form.
+
+### `TrigRoundtrip` seed score-gate
+
+The `TrigRoundtrip` composite (`TrigToExp -> Together -> Cancel ->
+ExpToTrig`) is correctness-preserving but its `Together` step on
+real-exponential forms can factor out an asymmetric `E^(-kx)` and
+introduce a high-frequency `E^(2kx)` cofactor (e.g.
+`Together[-1/2 + 1/4 E^(-2x) + 1/4 E^(2x)]` ->
+`1/4 E^(-2x) (1 - 2 E^(2x) + E^(4x))`). `ExpToTrig` then turns the
+cofactor into a 16-term `Cosh[k x] / Sinh[k x]` product that the
+downstream `Together`, `Cancel`, `Factor`, ... transforms each spend
+hundreds of milliseconds on per round.
+
+The seed-phase `TrigRoundtrip` is therefore now score-gated: the
+result is still considered for `update_best`, but is only added to
+the seed set if its score is at most `2 * input_score + 8`. The
+gate has no effect on inputs where the round-trip simplifies (the
+existing `(E^x - E^(-x))/Sinh[x] -> 2` test is unaffected, alt_score
+1 << input_score 7) and stops `Simplify[Sinh[x] (Cosh[x]^2 - 1)]`
+from running for over a minute on the per-round expansion of the
+16-term cofactor.
+
+### Tests
+
+`tests/test_simplify.c` adds:
+
+* `test_simplify_halfangle_tan_with_factor` -- `Sin[x] / (2 (Cos[x] + 1))`
+  to `(1/2) Tan[x/2]`.
+* `test_simplify_halfangle_tan_numeric_one|two|four` -- `Sin[1]/(1+Cos[1])`,
+  `Sin[2]/(1+Cos[2])`, `Sin[4]/(1+Cos[4])`. The `Sin[2k]/(1+Cos[2k])`
+  forms collapse to `Tan[k]` because `Tan[2/2] = Tan[1]` and
+  `Tan[4/2] = Tan[2]`.
+* `test_simplify_halfangle_tan_power_a` -- general-exponent form.
+* `test_simplify_halfangle_tan_inverse_power` -- inverse-exponent form
+  `(Cos[5] + 1)^a Sin[5]^(-a) -> Tan[5/2]^(-a)`.
+* `test_simplify_halfangle_tan_integer_assumption` -- same with
+  `Element[n, Integers]` (assumption is consistent with but not
+  required by the algebraic identity).
+* `test_simplify_pythag_reduce_sin_cube|cos_cube` -- product collapses.
+* `test_simplify_halfangle_tanh_with_factor|basic|power` -- hyperbolic
+  half-angle, including the `Sinh[x] / (2 (Cosh[x] + 1)) -> (1/2) Tanh[x/2]`
+  form requested by the user.
+* `test_simplify_pythag_reduce_sinh_cube|cosh_cube` -- hyperbolic
+  product collapse, exercising the `TrigRoundtrip` score-gate path.

@@ -236,6 +236,84 @@ void test_simplify_complex_exp_cube_root(void) {
         "Simplify[3 + 2 E^(-2 I Pi/3) + 2 E^(2 I Pi/3)]", "1", 0);
 }
 
+/* ---- Half-angle tangent (Weierstrass) and Pythagorean reduction ---- */
+
+/* Sin[x] / (c (1 + Cos[x])) -> Tan[x/2] / c (the printer renders the
+ * 1/2 coefficient ahead of Tan, with x/2 as `1/2 x` internally). */
+void test_simplify_halfangle_tan_with_factor(void) {
+    assert_eval_eq("Simplify[Sin[x]/(2 (Cos[x] + 1))]",
+                   "1/2 Tan[1/2 x]", 0);
+}
+
+void test_simplify_halfangle_tan_numeric_one(void) {
+    assert_eval_eq("Simplify[Sin[1]/(Cos[1] + 1)]", "Tan[1/2]", 0);
+}
+
+/* Sin[2k] / (1 + Cos[2k]) -> Tan[k] (the half-angle simplifies the integer). */
+void test_simplify_halfangle_tan_numeric_two(void) {
+    assert_eval_eq("Simplify[Sin[2]/(Cos[2] + 1)]", "Tan[1]", 0);
+}
+
+void test_simplify_halfangle_tan_numeric_four(void) {
+    assert_eval_eq("Simplify[Sin[4]/(Cos[4] + 1)]", "Tan[2]", 0);
+}
+
+/* Sin[1]^a / (1 + Cos[1])^a -> Tan[1/2]^a (general power form). */
+void test_simplify_halfangle_tan_power_a(void) {
+    assert_eval_eq("Simplify[(Cos[1] + 1)^(-a) Sin[1]^a]",
+                   "Tan[1/2]^a", 0);
+}
+
+/* (1 + Cos[5])^a / Sin[5]^a -> Tan[5/2]^(-a) (inverse-power form). */
+void test_simplify_halfangle_tan_inverse_power(void) {
+    assert_eval_eq("Simplify[(Cos[5] + 1)^a Sin[5]^(-a)]",
+                   "Tan[5/2]^(-a)", 0);
+}
+
+/* Same with an integer assumption -- assumption is consistent with the
+ * algebraic identity but not required for it. */
+void test_simplify_halfangle_tan_integer_assumption(void) {
+    assert_eval_eq(
+        "Simplify[(Cos[5] + 1)^n Sin[5]^(-n), Assumptions->Element[n, Integers]]",
+        "Tan[5/2]^(-n)", 0);
+}
+
+/* Pythagorean reduction inside a product: Sin[x] (1 - Cos[x]^2) -> Sin[x]^3. */
+void test_simplify_pythag_reduce_sin_cube(void) {
+    assert_eval_eq("Simplify[Sin[x] (1 - Cos[x]^2)]", "Sin[x]^3", 0);
+}
+
+/* Symmetric form: Cos[x] (1 - Sin[x]^2) -> Cos[x]^3. */
+void test_simplify_pythag_reduce_cos_cube(void) {
+    assert_eval_eq("Simplify[Cos[x] (1 - Sin[x]^2)]", "Cos[x]^3", 0);
+}
+
+/* Hyperbolic half-angle: Sinh[x] / (c (1 + Cosh[x])) -> Tanh[x/2] / c. */
+void test_simplify_halfangle_tanh_with_factor(void) {
+    assert_eval_eq("Simplify[Sinh[x]/(2 (Cosh[x] + 1))]",
+                   "1/2 Tanh[1/2 x]", 0);
+}
+
+void test_simplify_halfangle_tanh_basic(void) {
+    assert_eval_eq("Simplify[Sinh[x]/(Cosh[x] + 1)]", "Tanh[1/2 x]", 0);
+}
+
+/* Power form: Sinh[x]^a (1 + Cosh[x])^(-a) -> Tanh[x/2]^a. */
+void test_simplify_halfangle_tanh_power(void) {
+    assert_eval_eq("Simplify[Sinh[1]^a (1 + Cosh[1])^(-a)]",
+                   "Tanh[1/2]^a", 0);
+}
+
+/* Hyperbolic Pythagorean: Sinh[x] (Cosh[x]^2 - 1) -> Sinh[x]^3. */
+void test_simplify_pythag_reduce_sinh_cube(void) {
+    assert_eval_eq("Simplify[Sinh[x] (Cosh[x]^2 - 1)]", "Sinh[x]^3", 0);
+}
+
+/* Hyperbolic Pythagorean: Cosh[x] (1 + Sinh[x]^2) -> Cosh[x]^3. */
+void test_simplify_pythag_reduce_cosh_cube(void) {
+    assert_eval_eq("Simplify[Cosh[x] (1 + Sinh[x]^2)]", "Cosh[x]^3", 0);
+}
+
 int main(void) {
     symtab_init();
     core_init();
@@ -275,6 +353,20 @@ int main(void) {
     TEST(test_simplify_fifth_root_of_unity_alternating_sum);
     TEST(test_simplify_seventh_root_of_unity_alternating_sum);
     TEST(test_simplify_complex_exp_cube_root);
+    TEST(test_simplify_halfangle_tan_with_factor);
+    TEST(test_simplify_halfangle_tan_numeric_one);
+    TEST(test_simplify_halfangle_tan_numeric_two);
+    TEST(test_simplify_halfangle_tan_numeric_four);
+    TEST(test_simplify_halfangle_tan_power_a);
+    TEST(test_simplify_halfangle_tan_inverse_power);
+    TEST(test_simplify_halfangle_tan_integer_assumption);
+    TEST(test_simplify_pythag_reduce_sin_cube);
+    TEST(test_simplify_pythag_reduce_cos_cube);
+    TEST(test_simplify_halfangle_tanh_with_factor);
+    TEST(test_simplify_halfangle_tanh_basic);
+    TEST(test_simplify_halfangle_tanh_power);
+    TEST(test_simplify_pythag_reduce_sinh_cube);
+    TEST(test_simplify_pythag_reduce_cosh_cube);
 
     printf("All Simplify tests passed!\n");
     return 0;
