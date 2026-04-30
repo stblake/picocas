@@ -1438,8 +1438,13 @@ static UPolyList factor_zassenhaus(UPoly* P) {
             // check squarefree
             UPoly* deriv = upoly_new(p_mod->deg - 1);
             for (int i = 1; i <= p_mod->deg; i++) deriv->c[i - 1] = (p_mod->c[i] * i) % p;
+            // When p divides the polynomial degree (e.g. P = x^p - c), every
+            // derivative coefficient is 0 mod p.  Without this trim the
+            // divisor passed to upoly_gcd_mod has positive nominal degree
+            // but all-zero coefficients, and upoly_div_rem_mod loops forever.
+            upoly_trim(deriv);
             UPoly* g = upoly_gcd_mod(p_mod, deriv, p);
-            bool sqf = (g->deg == 0);
+            bool sqf = (g->deg == 0 && g->c[0] != 0);
             upoly_free(deriv); upoly_free(g); upoly_free(p_mod);
             if (sqf) break;
         }

@@ -39,6 +39,27 @@ void test_factorsquarefree() {
     run_test("FactorSquareFree[(1 - x^3)^2]", "Power[Plus[1, Times[-1, Power[x, 3]]], 2]");
 }
 
+/* Regression: x^p - c with p equal to the prime first tried by
+ * factor_zassenhaus (p = 13) used to hang in the squarefree probe.
+ * The derivative p*x^(p-1) is identically zero mod p, leaving an
+ * untrimmed all-zero divisor that drove upoly_div_rem_mod into an
+ * infinite loop.  These cases must complete; for x^13 - 1 the
+ * factorisation is non-trivial; the others are irreducible. */
+void test_factor_xp_minus_c_regression() {
+    run_test("Factor[x^13 - 1]",
+             "Times[Plus[-1, x], Plus[1, x, Power[x, 2], Power[x, 3], Power[x, 4], Power[x, 5], Power[x, 6], Power[x, 7], Power[x, 8], Power[x, 9], Power[x, 10], Power[x, 11], Power[x, 12]]]");
+    run_test("Factor[x^13 - 2]",
+             "Plus[-2, Power[x, 13]]");
+    run_test("Factor[x^26 - 2]",
+             "Plus[-2, Power[x, 26]]");
+    /* End-to-end user case: the irreducibility short-circuit's
+     * univariate images (y^13 - c, z^14 - c) used to trigger the
+     * same hang.  Full factorisation completes in single-digit
+     * hundreds of milliseconds. */
+    run_test("Factor[Expand[x^2 (1 - x^12) (1 + x - y^13) (1 - y - z^14)]]",
+             "Times[Power[x, 2], Plus[-1, x], Plus[1, x], Plus[1, Power[x, 2]], Plus[-1, Times[-1, x], Power[y, 13]], Plus[1, x, Power[x, 2]], Plus[1, Times[-1, x], Power[x, 2]], Plus[1, Times[-1, Power[x, 2]], Power[x, 4]], Plus[1, Times[-1, y], Times[-1, Power[z, 14]]]]");
+}
+
 void test_factor() {
     run_test("Factor[1 + 2 x + x^2]", "Power[Plus[1, x], 2]");
     run_test("Factor[x^10 - 1]", "Times[Plus[-1, x], Plus[1, x], Plus[1, x, Power[x, 2], Power[x, 3], Power[x, 4]], Plus[1, Times[-1, x], Times[-1, Power[x, 3]], Power[x, 2], Power[x, 4]]]");
@@ -57,6 +78,7 @@ int main() {
 
     printf("Running facpoly tests...\n");
     TEST(test_factorsquarefree);
+    TEST(test_factor_xp_minus_c_regression);
     TEST(test_factor);
     printf("All facpoly tests passed!\n");
     return 0;
